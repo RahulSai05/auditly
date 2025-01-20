@@ -1,0 +1,52 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px; /* Final navbar height */
+  background-color: #333;
+  display: flex;
+  justify-content: space-between; /* Space between links and logo */
+  align-items: center; /* Vertical alignment */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  gap: 1rem; /* Consistent spacing between links */
+}
+
+.nav-links li {
+  padding: 0.5rem 1rem;
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.nav-links li a {
+  text-decoration: none;
+  color: white;
+  font-size: 1rem;
+}
+
+.nav-links li:hover {
+  background-color: grey; /* Highlight background */
+  color: #ffd700; /* Gold text color for hover */
+}
+
+.nav-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto; /* Push logo to the far right */
+  overflow: hidden; /* Prevent logo overflow */
+}
+
+.nav-logo img {
+  height: 50px; /* Perfectly align with navbar height */
+  width: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Ensure scaling respects aspect ratio */
+}

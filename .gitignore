@@ -1,0 +1,14 @@
+env/
+
+env/lib/python3.9/site-packages/tensorflow/libtensorflow_cc.2.dylib
+
+# Editor directories and files
+.vscode/*gi 
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

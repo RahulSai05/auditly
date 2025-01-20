@@ -1,0 +1,159 @@
+  /* Inspection Page */
+  .inspection-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: calc(100vh - 60px); /* Full height minus navbar height */
+    padding: 60px 1rem 1rem; /* Offset for navbar with balanced padding */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+  }
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem; /* Increased margin for better spacing */
+    color: #333;
+    text-align: center; /* Center-align heading */
+  }
+
+  .instruction {
+    font-size: 1.2rem;
+    margin-top: -0.5rem; /* Fine-tune spacing relative to h1 */
+    margin-bottom: 2rem; /* Slightly increased bottom margin */
+    color: #555;
+    text-align: center;
+  }
+
+  /* Cards Layout */
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem; /* Adjusted spacing for uniform layout */
+  }
+
+  .card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem; /* Adjusted padding to reduce height */
+    width: 320px; /* Slightly narrower for better fit */
+    text-align: left;
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Reduced gap for compact layout */
+  }
+
+  .checkbox-label {
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkbox-label input {
+    margin-right: 0.5rem;
+    transform: scale(1.2); /* Enlarge checkboxes */
+  }
+  .inspection-page .button-container {
+    display: flex;
+    justify-content: space-between; /* Align buttons to opposite sides */
+    gap: 0.5rem; /* Reduced gap between buttons */
+    margin-top: 1rem; /* Space above the buttons */
+    width: 48%; /* Full width for alignment */
+    max-width: 900px; /* Limit container width for better layout */
+    align-self: center; /* Center the container horizontally */
+    box-sizing: border-box; /* Ensure padding doesn't overflow */
+    padding: 0 1rem; /* Add padding for alignment consistency */
+  }
+  
+  .inspection-page .back-button {
+    background-color: #666;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .inspection-page .back-button:hover {
+    background-color: #333;
+  }
+  
+  .inspection-page .back-button:active {
+    transform: scale(0.95);
+  }
+  
+  .inspection-page .proceed-button {
+    background-color: #666;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-left: auto; /* Ensure the proceed button stays aligned to the right */
+  }
+  
+  .inspection-page .proceed-button:hover {
+    background-color: #333;
+  }
+  
+  .inspection-page .proceed-button:active {
+    transform: scale(0.95);
+  }
+  
+  .inspection-page .proceed-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  
+  .info-icon {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #007bff; /* Blue color for the tooltip icon */
+    cursor: pointer;
+    position: relative;
+}
+
+.info-icon:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    font-size: 0.85rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.info-icon:hover::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+    z-index: 10;
+}
