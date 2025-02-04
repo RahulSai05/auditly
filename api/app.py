@@ -1,11 +1,12 @@
 import os
 import numpy as np
 import csv
+import qrcode
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
 from models import Base, Brand, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +19,6 @@ from skimage.metrics import structural_similarity as ssim
 
 # Initialize the database tables if not already done
 Base.metadata.create_all(bind=engine)
-
 
 def get_db():
     """Provide a database session to the API endpoints."""
@@ -33,25 +33,79 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend URL
+    allow_origins=["http://localhost:5173"],  # React frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+ 
+# @app.get("/item_order_instance")
+# async def get_item_instance_details(order_number: str, db: Session = Depends(get_db)):
+#     """
+#     Retrieve details of an item instance based on the Serial Number or Return Order Number.
+#     """
+#     item_instance = db.query(CustomerItemData).filter(
+#         (CustomerItemData.serial_number == order_number) |
+#         (CustomerItemData.return_order_number == order_number)
+#     ).first()
+
+#     if not item_instance:
+#         raise HTTPException(status_code=404, detail="Item Instance not found")
+
+#     return {
+#         "original_sales_order_number": item_instance.original_sales_order_number,
+#         "original_sales_order_line": item_instance.original_sales_order_line,
+#         "ordered_qty": item_instance.ordered_qty,
+#         "return_order_number": item_instance.return_order_number,
+#         "return_order_line": item_instance.return_order_line,
+#         "return_qty": item_instance.return_qty,
+#         "return_destination": item_instance.return_destination,
+#         "return_condition": item_instance.return_condition,
+#         "return_carrier": item_instance.return_carrier,
+#         "return_warehouse": item_instance.return_warehouse,
+#         "item_id": item_instance.item_id,
+#         "serial_number": item_instance.serial_number,
+#         "sscc_number": item_instance.sscc_number,
+#         "tag_number": item_instance.tag_number,
+#         "vendor_item_number": item_instance.vendor_item_number,
+#         "shipped_from_warehouse": item_instance.shipped_from_warehouse,
+#         "shipped_to_person": item_instance.shipped_to_person,
+#         "shipped_to_address": {
+#             "street_number": item_instance.street_number,
+#             "city": item_instance.city,
+#             "state": item_instance.state,
+#             "country": item_instance.country,
+#         },
+#         "dimensions": {
+#             "depth": item_instance.dimensions_depth,
+#             "length": item_instance.dimensions_length,
+#             "breadth": item_instance.dimensions_breadth,
+#             "weight": item_instance.dimensions_weight,
+#             "volume": item_instance.dimensions_volume,
+#             "size": item_instance.dimensions_size,
+#         },
+#         "customer_id": item_instance.id 
+#     }
 
 
 @app.get("/item_order_instance")
-async def get_item_instance_details(order_number: str, db: Session = Depends(get_db)):
+async def get_item_instance_details(
+    identifier: str = Query(..., title="Serial Number or Return Order Number"),  # Single input field
+    db: Session = Depends(get_db)
+):
     """
-    Retrieve details of an item instance based on the Serial Number or Return Order Number.
+    Retrieve details of an item instance using a single identifier.
+    The identifier can be either a Serial Number or a Return Order Number.
     """
+
+    # Query to check if the identifier matches serial_number or return_order_number
     item_instance = db.query(CustomerItemData).filter(
-        (CustomerItemData.serial_number == order_number) |
-        (CustomerItemData.return_order_number == order_number)
+        (CustomerItemData.serial_number == identifier) |
+        (CustomerItemData.return_order_number == identifier)
     ).first()
 
     if not item_instance:
-        raise HTTPException(status_code=404, detail="Item Instance not found")
+        raise HTTPException(status_code=404, detail="Item Instance not found.")
 
     return {
         "original_sales_order_number": item_instance.original_sales_order_number,
@@ -85,8 +139,9 @@ async def get_item_instance_details(order_number: str, db: Session = Depends(get
             "volume": item_instance.dimensions_volume,
             "size": item_instance.dimensions_size,
         },
-        "customer_id": item_instance.id 
+        "customer_id": item_instance.id,
     }
+
 
 @app.post("/upload-customer-images")
 async def upload_customer_images(
@@ -312,7 +367,6 @@ class CustomerDataCreate(BaseModel):
     customer_id: int
 
 
-
 # Initialize feature extractor globally to avoid reloading it multiple times
 feature_extractor = ResNet50(weights="imagenet", include_top=False, pooling="avg")
 model = Model(inputs=feature_extractor.input, outputs=feature_extractor.output)
@@ -532,7 +586,7 @@ async def upload_base_images(
     db.refresh(new_base_data)
 
     return {
-        "message": "Base images uploaded and saved successfully.",
+        "message": "Images uploaded and saved successfully.",
         "data": {
             "id": new_base_data.id,
             "front_image_path": front_image_path,
@@ -541,10 +595,16 @@ async def upload_base_images(
         }
     }
 
+@app.get("/items")
+async def get_items(db: Session = Depends(get_db)):
+    items = db.query(Item).all()
+    return items
 
 
-
-
+@app.get("/customer-item-data")
+async def get_customer_item_data(db: Session = Depends(get_db)):
+    customer_item_data = db.query(CustomerItemData).all()
+    return customer_item_data
 
 # @app.get("/brands")
 # async def get_brands(db: Session = Depends(get_db)):

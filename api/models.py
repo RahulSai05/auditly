@@ -36,9 +36,42 @@ class User(Base):
     def __str__(self):
         return self.username
 
+# class CustomerItemData(Base):
+#     __tablename__ = 'customer_item_data'
+
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     original_sales_order_number = Column(String(255))
+#     original_sales_order_line = Column(Integer)
+#     ordered_qty = Column(Integer)
+#     return_order_number = Column(String(255))
+#     return_order_line = Column(Integer)
+#     return_qty = Column(Integer)
+#     return_destination = Column(String(255))
+#     return_condition = Column(String(255))
+#     return_carrier = Column(String(255))
+#     return_warehouse = Column(String(255))
+#     item_id = Column(Integer, ForeignKey('item.id'))  # Foreign key referencing the item table
+#     serial_number = Column(String(255))
+#     sscc_number = Column(String(255))
+#     tag_number = Column(String(255))
+#     vendor_item_number = Column(String(255))
+#     shipped_from_warehouse = Column(String(255))
+#     shipped_to_person = Column(String(255))
+#     shipped_to_address = Column(String(255))
+#     street_number = Column(String(255))
+#     city = Column(String(255))
+#     state = Column(String(255))
+#     country = Column(String(255))
+#     dimensions_depth = Column(Float)  # Depth in inches
+#     dimensions_length = Column(Float)  # Length in inches
+#     dimensions_breadth = Column(Float)  # Breadth in inches
+#     dimensions_weight = Column(Float)  # Weight in lbs
+#     dimensions_volume = Column(Float)  # Volume (Depth * Length * Breadth)
+#     dimensions_size = Column(String(255))
+
 class CustomerItemData(Base):
     __tablename__ = 'customer_item_data'
-
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
     original_sales_order_number = Column(String(255))
     original_sales_order_line = Column(Integer)
@@ -50,8 +83,8 @@ class CustomerItemData(Base):
     return_condition = Column(String(255))
     return_carrier = Column(String(255))
     return_warehouse = Column(String(255))
-    item_id = Column(Integer, ForeignKey('item.id'))  # Foreign key referencing the item table
-    serial_number = Column(String(255))
+    item_id = Column(Integer, ForeignKey('item.id'))
+    serial_number = Column(String(255), unique=True)
     sscc_number = Column(String(255))
     tag_number = Column(String(255))
     vendor_item_number = Column(String(255))
@@ -62,14 +95,13 @@ class CustomerItemData(Base):
     city = Column(String(255))
     state = Column(String(255))
     country = Column(String(255))
-    dimensions_depth = Column(Float)  # Depth in inches
-    dimensions_length = Column(Float)  # Length in inches
-    dimensions_breadth = Column(Float)  # Breadth in inches
-    dimensions_weight = Column(Float)  # Weight in lbs
-    dimensions_volume = Column(Float)  # Volume (Depth * Length * Breadth)
+    dimensions_depth = Column(Float)
+    dimensions_length = Column(Float)
+    dimensions_breadth = Column(Float)
+    dimensions_weight = Column(Float)
+    dimensions_volume = Column(Float)
     dimensions_size = Column(String(255))
-    #customer_data = relationship("CustomerData", back_populates="customer_item_data", cascade="all, delete-orphan")  # One-to-many relationship
-
+    barcode = Column(String(255), unique=True)  # New column for storing QR code data
 
     
 
