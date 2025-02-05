@@ -6,4 +6,4 @@ server: {
     open: false
   },
   plugins: [react()]
-})
+});
