@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Options from "./pages/Options";
 import GetAll from "./pages/manual/GetAll";
 import Details from "./pages/manual/return /Details";
-import Inspection from "./pages/manual/return /inspection";
+import Inspection from "./pages/manual/return /Inspection";
 import UploadMedia from "./pages/manual/return /Uploadmedia";
 import Compare from "./pages/manual/return /Compare";
 import Review from "./pages/manual/return /Review";
