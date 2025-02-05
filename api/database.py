@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 _user = "root"
 _password = "Test@12345"
-_host = "127.0.0.1"
+_host = "0.0.0.0"
 _port = 3306
 _database = "auditly"
 
