@@ -8,7 +8,7 @@ import UploadMedia from "./pages/manual/return /Uploadmedia";
 import Compare from "./pages/manual/return /Compare";
 import Review from "./pages/manual/return /Review";
 import Done from "./pages/manual/return /Done";
-import Scan from "./pages/auto/scan";
+import Scan from "./pages/auto/Scan";
 import Dashboard from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
