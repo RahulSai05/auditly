@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react'
 server: {
     open: false
   },
-  plugins: [react()],
+  plugins: [react()]
 })
