@@ -19,7 +19,7 @@ const ItemReturn = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post("http://18.205.235.223:8000/upload-customer-return-item-data", formData, {
+            const response = await axios.post("http://34.207.145.253:8000/upload-customer-return-item-data", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
