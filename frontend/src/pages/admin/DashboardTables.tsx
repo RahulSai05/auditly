@@ -10,7 +10,7 @@ const DashboardTables = () => {
             .then(response => setItems(response.data.slice(0, 20))) // Assuming we only want the top 20 items for display
             .catch(error => console.error('Error fetching items:', error));
 
-        axios.get('http://34.207.145.253/customer-item-data')
+        axios.get('http://34.207.145.253:8000/customer-item-data')
             .then(response => setCustomerData(response.data.slice(0, 10))) // Top 10 customer data items
             .catch(error => console.error('Error fetching customer item data:', error));
     }, []);
