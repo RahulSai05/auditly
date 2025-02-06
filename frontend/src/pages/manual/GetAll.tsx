@@ -15,7 +15,7 @@ const GetAll: React.FC = () => {
     const fetchDetails = async (): Promise<void> => {
         try {
             const response = await axios.get(
-                `http://18.205.235.223:8000/item_order_instance`,
+                `http://34.207.145.253:8000/item_order_instance`,
                 { params: { identifier: searchQuery } }
             );
     
