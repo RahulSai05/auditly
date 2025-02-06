@@ -40,7 +40,7 @@ const ItemReturn = () => {
         }
         setIsLoading(true);
         try {
-            const response = await axios.get("http://18.205.235.223:8000/search-customer-return-item-data", {
+            const response = await axios.get("http://34.207.145.253:8000/search-customer-return-item-data", {
                 params: { query: searchQuery }
             });
             setSearchResults(response.data);
