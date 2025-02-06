@@ -22,7 +22,7 @@ export default function UploadMedia() {
         const fetchComparisonResult = async () => {
             try {
                 const response = await axios.post(
-                    "http://localhost:8000/compare-images/",
+                    "http://18.205.235.223:8000/compare-images/",
                     {
                         customer_id: customerId,
                         item_id: baseId, // `item_id` is the correct field as per your backend
