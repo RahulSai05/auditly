@@ -19,7 +19,7 @@ const ItemReturn = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post("http://localhost:8000/upload-customer-return-item-data", formData, {
+            const response = await axios.post("http://18.205.235.223:8000/upload-customer-return-item-data", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -40,7 +40,7 @@ const ItemReturn = () => {
         }
         setIsLoading(true);
         try {
-            const response = await axios.get("http://localhost:8000/search-customer-return-item-data", {
+            const response = await axios.get("http://18.205.235.223:8000/search-customer-return-item-data", {
                 params: { query: searchQuery }
             });
             setSearchResults(response.data);
