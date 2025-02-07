@@ -18,7 +18,7 @@ const ItemUpload: React.FC = () => {
         formData.append("file", csvFile);
         setIsLoading(true);
         try {
-            const response = await axios.post("http://34.207.145.253:8000/upload-items-csv", formData, {
+            const response = await axios.post("http://54.210.159.220:8000/upload-items-csv", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             setNotification(response.data.message);
@@ -37,7 +37,7 @@ const ItemUpload: React.FC = () => {
         }
         setIsLoading(true);
         try {
-            const response = await axios.get("http://34.207.145.253:8000/search-items", {
+            const response = await axios.get("http://54.210.159.220:8000/search-items", {
                 params: { query: searchQuery },
             });
             setSearchResults(response.data);
