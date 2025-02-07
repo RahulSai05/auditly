@@ -127,11 +127,17 @@ const Scan = () => {
     return (
         <div className="flex flex-col items-center p-6 pt-[10vh] min-h-screen bg-gray-50">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Scan Serial Number or Return Order Number</h2>
-            {!isScanning && (
-                <button onClick={() => setIsScanning(true)} className="mt-4 px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
-                    Start Scanning
-                </button>
-            )}
+{!isScanning && (
+    <button 
+        onClick={() => {
+            alert('Scanning will begin. Please position the barcode in front of your camera.');
+            setIsScanning(true);
+        }} 
+        className="mt-4 px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+    >
+        Start Scanning
+    </button>
+)}
             {isScanning && (
                 <video
                     ref={videoRef}
