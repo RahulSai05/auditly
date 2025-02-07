@@ -26,7 +26,7 @@ const ItemImageUpload: React.FC = () => {
         setIsLoading(true);
         try {
             const response = await axios.post(
-                `http://34.207.145.253:8000/upload-base-images/?item_number=${itemNumber}`, 
+                `http://54.210.159.220:8000/upload-base-images/?item_number=${itemNumber}`, 
                 formData,
                 {
                     headers: { "Content-Type": "multipart/form-data" },
