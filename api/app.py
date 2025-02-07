@@ -38,54 +38,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
- 
-# @app.get("/item_order_instance")
-# async def get_item_instance_details(order_number: str, db: Session = Depends(get_db)):
-#     """
-#     Retrieve details of an item instance based on the Serial Number or Return Order Number.
-#     """
-#     item_instance = db.query(CustomerItemData).filter(
-#         (CustomerItemData.serial_number == order_number) |
-#         (CustomerItemData.return_order_number == order_number)
-#     ).first()
 
-#     if not item_instance:
-#         raise HTTPException(status_code=404, detail="Item Instance not found")
-
-#     return {
-#         "original_sales_order_number": item_instance.original_sales_order_number,
-#         "original_sales_order_line": item_instance.original_sales_order_line,
-#         "ordered_qty": item_instance.ordered_qty,
-#         "return_order_number": item_instance.return_order_number,
-#         "return_order_line": item_instance.return_order_line,
-#         "return_qty": item_instance.return_qty,
-#         "return_destination": item_instance.return_destination,
-#         "return_condition": item_instance.return_condition,
-#         "return_carrier": item_instance.return_carrier,
-#         "return_warehouse": item_instance.return_warehouse,
-#         "item_id": item_instance.item_id,
-#         "serial_number": item_instance.serial_number,
-#         "sscc_number": item_instance.sscc_number,
-#         "tag_number": item_instance.tag_number,
-#         "vendor_item_number": item_instance.vendor_item_number,
-#         "shipped_from_warehouse": item_instance.shipped_from_warehouse,
-#         "shipped_to_person": item_instance.shipped_to_person,
-#         "shipped_to_address": {
-#             "street_number": item_instance.street_number,
-#             "city": item_instance.city,
-#             "state": item_instance.state,
-#             "country": item_instance.country,
-#         },
-#         "dimensions": {
-#             "depth": item_instance.dimensions_depth,
-#             "length": item_instance.dimensions_length,
-#             "breadth": item_instance.dimensions_breadth,
-#             "weight": item_instance.dimensions_weight,
-#             "volume": item_instance.dimensions_volume,
-#             "size": item_instance.dimensions_size,
-#         },
-#         "customer_id": item_instance.id 
-#     }
 
 
 @app.get("/item_order_instance")
@@ -175,7 +128,7 @@ async def upload_customer_images(
 
     existing_customer_data = db.query(CustomerData).filter_by(customer_item_data_id=customer_item_data_id).first()
     
-    UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/customer_image"   
+    UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/customer_image"   
     
 
     # try:
@@ -558,7 +511,7 @@ async def upload_base_images(
     """
     Upload base front and back images and map them to an item based on item_number.
     """
-    UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/base_images"
+    UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/base_images"
 
     # Check if the item exists
     item = db.query(Item).filter(Item.item_number == item_number).first()
