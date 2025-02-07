@@ -112,7 +112,7 @@ const Scan = () => {
             });
     }, [fetchDetails, stopScanning]);
 
-    Navigate to the next page if product data is available
+  //  Navigate to the next page if product data is available
     const handleNext = () => {
         if (productData) {
             router('/return/details');
