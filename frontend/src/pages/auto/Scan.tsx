@@ -70,47 +70,47 @@ const Scan = () => {
     }, [dispatch, scannedItems]);
 
     // Start the camera and barcode scanning
-    const startCameraAndScanning = useCallback(() => {
-        if (scanningActive.current) return; // Prevent duplicate camera start
-        scanningActive.current = true;
+    // const startCameraAndScanning = useCallback(() => {
+    //     if (scanningActive.current) return; // Prevent duplicate camera start
+    //     scanningActive.current = true;
 
-        setErrorMessage('');
+    //     setErrorMessage('');
 
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.play();
+    //     navigator.mediaDevices.getUserMedia({ video: true })
+    //         .then(stream => {
+    //             if (videoRef.current) {
+    //                 videoRef.current.srcObject = stream;
+    //                 videoRef.current.play();
 
-                    // Start barcode scanning
-                    codeReader.current.decodeFromVideoDevice(null, videoRef.current, (result: Result | null, err) => {
-                        if (result) {
-                            console.log('Barcode detected:', result.getText());
-                            fetchDetails(result.getText());
-                            stopScanning(); // Stop scanning after detection
-                        }
-                        if (err) {
-                            if (err instanceof NotFoundException) {
-                                console.log('No barcode detected. Keep trying...');
-                            } else {
-                                console.error('Error:', err);
-                                setErrorMessage('Scanning error. Please adjust the barcode and try again.');
-                                stopScanning();
-                            }
-                        }
-                    }).catch(e => {
-                        console.error('Error starting the scanner:', e);
-                        setErrorMessage('Error starting the scanner. Please check your camera permissions.');
-                        stopScanning();
-                    });
-                }
-            })
-            .catch(err => {
-                console.error('Error accessing camera:', err);
-                setErrorMessage('Error accessing camera. Please check your camera permissions.');
-                stopScanning();
-            });
-    }, [fetchDetails, stopScanning]);
+    //                 // Start barcode scanning
+    //                 codeReader.current.decodeFromVideoDevice(null, videoRef.current, (result: Result | null, err) => {
+    //                     if (result) {
+    //                         console.log('Barcode detected:', result.getText());
+    //                         fetchDetails(result.getText());
+    //                         stopScanning(); // Stop scanning after detection
+    //                     }
+    //                     if (err) {
+    //                         if (err instanceof NotFoundException) {
+    //                             console.log('No barcode detected. Keep trying...');
+    //                         } else {
+    //                             console.error('Error:', err);
+    //                             setErrorMessage('Scanning error. Please adjust the barcode and try again.');
+    //                             stopScanning();
+    //                         }
+    //                     }
+    //                 }).catch(e => {
+    //                     console.error('Error starting the scanner:', e);
+    //                     setErrorMessage('Error starting the scanner. Please check your camera permissions.');
+    //                     stopScanning();
+    //                 });
+    //             }
+    //         })
+    //         .catch(err => {
+    //             console.error('Error accessing camera:', err);
+    //             setErrorMessage('Error accessing camera. Please check your camera permissions.');
+    //             stopScanning();
+    //         });
+    // }, [fetchDetails, stopScanning]);
 
     // Navigate to the next page if product data is available
     const handleNext = () => {
