@@ -69,7 +69,7 @@ const Scan = () => {
             });
     }, [dispatch, scannedItems]);
 
-    Start the camera and barcode scanning
+    //Start the camera and barcode scanning
     const startCameraAndScanning = useCallback(() => {
         if (scanningActive.current) return; // Prevent duplicate camera start
         scanningActive.current = true;
