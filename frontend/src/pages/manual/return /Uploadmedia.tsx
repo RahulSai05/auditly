@@ -48,7 +48,7 @@ export default function UploadMedia() {
 
         try {
             const response = await axios.post(
-                `http://34.207.145.25:8000/upload-customer-images?${queryParams.toString()}`,
+                `http://54.210.159.220:8000/upload-customer-images?${queryParams.toString()}`,
                 formData,
                 {
                     headers: { "Content-Type": "multipart/form-data" },
