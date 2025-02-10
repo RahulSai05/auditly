@@ -559,113 +559,31 @@ async def get_customer_item_data(db: Session = Depends(get_db)):
     customer_item_data = db.query(CustomerItemData).all()
     return customer_item_data
 
-# @app.get("/brands")
-# async def get_brands(db: Session = Depends(get_db)):
-#     """Retrieve all unique brands from the database."""
-#     # Use distinct on the brand_name column
-#     brands = db.query(Brand).all()
-#     print("test")
-#     result = [
-#         {"id": brand.id, "brand_name": brand.brand_name, "description": brand.description}
-#         for brand in brands
-#     ]
-#     return result
-
-# @app.get("/items/by-brand/{brand_name}")
-# async def get_items_by_brand(brand_name: str, db: Session = Depends(get_db)):
-#     """Retrieve all items for a specific brand."""
-#     items = (
-#         db.query(Item)
-#         .join(Brand)
-#         .filter(Brand.brand_name == brand_name)
-#         .all()
-#     )
-#     if not items:
-#         raise HTTPException(status_code=404, detail="No items found for this brand")
-
-#     return [
-#         {"item_number": item.item_number, "item_description": item.item_description}
-#         for item in items
-#     ]
-
-# @app.get("/items/by-number/{item_number}")
-# async def get_item_description_and_brand(item_number: str, db: Session = Depends(get_db)):
-#     """Retrieve item description and brand name based on item number."""
-#     item = db.query(Item).filter(Item.item_number == item_number).first()
-#     if not item:
-#         raise HTTPException(status_code=404, detail="Item not found")
-
-#     brand = db.query(Brand).filter(Brand.id == item.brand_id).first()
-#     if not brand:
-#         raise HTTPException(status_code=404, detail="Brand not found for this item")
-
-#     return {
-#         "item_description": item.item_description,
-#         "brand_name": brand.brand_name
-#     }
-
-# @app.post("/brands")
-# async def create_brand(brand_name: str, description: str = "", db: Session = Depends(get_db)):
-#     """Create a new brand in the database."""
-#     # Check if the brand already exists
-#     existing_brand = db.query(Brand).filter(Brand.brand_name == brand_name).first()
-#     if existing_brand:
-#         raise HTTPException(status_code=400, detail="Brand already exists")
-    
-#     # Create and add the new brand
-#     new_brand = Brand(brand_name=brand_name, description=description)
-#     db.add(new_brand)
-#     db.commit()
-#     db.refresh(new_brand)
-#     return {"id": new_brand.id, "brand_name": new_brand.brand_name, "description": new_brand.description}
 
 
+@app.get("/item-details/{return_order_number}")
+async def get_item_details(return_order_number: str, db: Session = Depends(get_db)):
+    """
+    Fetch item details based on the return order number.
+    """
+    try:
+        result = db.query(Item, CustomerItemData).join(CustomerItemData, Item.id == CustomerItemData.item_id).filter(
+            CustomerItemData.return_order_number == return_order_number
+        ).first()
 
-# @app.post("/items")
-# async def create_item(
-#     item_number: int,
-#     item_description: str,
-#     brand_id: int,
-#     category: str,
-#     configuration: str,
-#     db: Session = Depends(get_db),
-# ):
-#     """
-#     Create a new item in the database.
-#     """
-#     try:
-#         # Check if the item number already exists
-#         existing_item = db.query(Item).filter(Item.item_number == item_number).first()
-#         if existing_item:
-#             raise HTTPException(status_code=400, detail=f"Item with number {item_number} already exists.")
-        
-#         # Check if the brand exists
-#         brand = db.query(Brand).filter(Brand.id == brand_id).first()
-#         if not brand:
-#             raise HTTPException(status_code=404, detail=f"Brand with ID {brand_id} not found.")
-        
-#         # Create and add the new item
-#         new_item = Item(
-#             item_number=item_number,
-#             item_description=item_description,
-#             brand_id=brand_id,
-#             category=category,
-#             configuration=configuration,
-#         )
-#         db.add(new_item)
-#         db.commit()
-#         db.refresh(new_item)
-
-#         # Format the response using column names and values
-#         return {
-#             "id": new_item.id,
-#             "item_number": new_item.item_number,
-#             "item_description": new_item.item_description,
-#             "brand_id": new_item.brand_id,
-#             "category": new_item.category,
-#             "configuration": new_item.configuration,
-#         }
-#     except HTTPException as http_exc:
-#         raise http_exc
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error creating item: {str(e)}")
+        if result:
+            item, customer_item = result
+            return {
+                "item_number": item.item_number,
+                "item_description": item.item_description,
+                "brand_id": item.brand_id,
+                "category": item.category,
+                "configuration": item.configuration,
+                "return_order_number": customer_item.return_order_number,
+                "return_qty": customer_item.return_qty,
+                "return_condition": customer_item.return_condition
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Item not found for the given return order number.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
