@@ -29,6 +29,11 @@ const GetAll: React.FC = () => {
     
                 setProductData(data);
                 setIsFetched(true);
+
+                // Store item_id in local storage
+                localStorage.setItem('lastItemId', data.item_id.toString());
+                localStorage.setItem('lastCustomerId', data.customer_id.toString());
+
     
                 // Dispatch to Redux
                 dispatch(addItem(data));
@@ -42,6 +47,10 @@ const GetAll: React.FC = () => {
     
     const handleNext = () => {
         if (productData) {
+            // Optionally retrieve item_id from local storage if needed here or in the next component
+            const itemId = localStorage.getItem('lastItemId');
+            console.log('Item ID from Local Storage:', itemId); // Debug for seeing the stored item_id
+
             router('/return/details'); // Navigate to the next page
         }
     };
