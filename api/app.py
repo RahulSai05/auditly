@@ -730,7 +730,7 @@ def highlight_differences(image1_path, image2_path, view="front", target_size=(2
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(img2, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    output_dir = "/Users/rahul/Desktop/Auditly Git copy/Auditly1/api/finalImages"
+    output_dir = "/home/ec2-user/auditly/image_outputs"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
