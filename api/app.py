@@ -2,6 +2,7 @@ import os
 import numpy as np
 import csv
 import cv2
+import base64
 import qrcode
 from send_email import send_email
 from pydantic import BaseModel
