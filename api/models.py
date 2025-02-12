@@ -1,6 +1,9 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, Float, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.sql import func
 from database import Base
+from datetime import datetime
+
 
 class Brand(Base):
     __tablename__ = "brand"
