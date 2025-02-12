@@ -24,17 +24,21 @@ class Item(Base):
     brand = relationship("Brand", back_populates="items")
 
 
-class User(Base):
-    __tablename__ = "user"
+class AuditlyUser(Base):
+    __tablename__ = "auditly_user"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    username: Mapped[str] = mapped_column(String(length=255), nullable=False)
-    hash_password: Mapped[str] = mapped_column(String(length=255), nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
-    def __str__(self):
-        return self.username
+    auditly_user_id = Column(Integer, primary_key=True, autoincrement=True)
+    auditly_user_name = Column(String(255), unique=True, nullable=False)
+    first_name = Column(String(255))
+    last_name = Column(String(255))
+    gender = Column(String(255))
+    email = Column(String(255))
+    password = Column(String(255))
+    created_at = Column(DateTime, default=func.current_timestamp())
+    last_login_time = Column(DateTime, nullable=True)
+    last_logout_time = Column(DateTime, nullable=True)
+    reset_otp = Column(String(255), nullable=True )
+    reset_otp_expiration = Column(DateTime,nullable=True)
 
 # class CustomerItemData(Base):
 #     __tablename__ = 'customer_item_data'
