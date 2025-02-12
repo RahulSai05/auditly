@@ -1,54 +1,68 @@
-import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import React from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import { LayoutDashboard, Image, Package, RefreshCcw } from "lucide-react";
 
 const AdminLayout = () => {
-    const activeLinkStyle = {
-        backgroundColor: '#007bff', // Bootstrap primary blue
-        color: 'white'
-    };
+  const activeLinkStyle = "bg-blue-500 text-white";
+  const baseLinkStyle =
+    "flex items-center p-3 rounded-lg transition duration-300 hover:bg-blue-400 hover:text-white";
 
-    return (
-        <div className="flex h-screen bg-gray-100">
-            {/* Sidebar */}
-            <div className="w-64 bg-white shadow-md">
-                <div className="p-3 font-bold text-lg bg-blue-400 text-white">
-                    Admin  {/* Update the branding style */}
-                </div>
-                <ul className="space-y-2 p-5">
-                    <li>
-                        <NavLink to="/admin/dashboard-tables" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-2 hover:bg-blue-500 hover:text-white rounded">
-                            <span className="icon w-6 mr-2">📊</span>
-                            Tables
-                        </NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="/admin/item-image-upload" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-2 hover:bg-blue-500 hover:text-white rounded">
-                            <span className="icon w-6 mr-2">🖼️</span>
-                            Item Image Upload
-                        </NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="/admin/item-upload" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-2 hover:bg-blue-500 hover:text-white rounded">
-                            <span className="icon w-6 mr-2">📦</span>
-                            Customer Item Data Upload
-                        </NavLink>
-                    </li>
-                    <li>
-                        <NavLink to="/admin/item-return" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-2 hover:bg-blue-500 hover:text-white rounded">
-                            <span className="icon w-6 mr-2">🔄</span>
-                            Return Item Upload
-                        </NavLink>
-                    </li>
-                    {/* Additional links with icons */}
-                    {/* Add more links as required */}
-                </ul>
-            </div>
-            {/* Main content */}
-            <div className="flex-1 p-10 overflow-hidden">
-                <Outlet /> {/* Render child routes */}
-            </div>
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-72 bg-white text-gray-800 shadow-md flex flex-col">
+        <div className="p-5 font-bold text-xl text-gray-900 border-b border-gray-300">
+          Admin Panel
         </div>
-    );
+        <ul className="space-y-2 p-5 flex-1">
+          <li>
+            <NavLink
+              to="/admin/dashboard-tables"
+              className={({ isActive }) =>
+                `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
+              }
+            >
+              <LayoutDashboard className="w-6 h-6 mr-3" /> Tables
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/item-image-upload"
+              className={({ isActive }) =>
+                `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
+              }
+            >
+              <Image className="w-6 h-6 mr-3" /> Item Image Upload
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/item-upload"
+              className={({ isActive }) =>
+                `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
+              }
+            >
+              <Package className="w-6 h-6 mr-3" /> Customer Item Data Upload
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/item-return"
+              className={({ isActive }) =>
+                `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
+              }
+            >
+              <RefreshCcw className="w-6 h-6 mr-3" /> Return Item Upload
+            </NavLink>
+          </li>
+        </ul>
+      </div>
+      {/* Main content */}
+      <div className="flex-1  overflow-auto bg-white shadow-md rounded-lg">
+        <Outlet />
+      </div>
+    </div>
+  );
 };
 
 export default AdminLayout;

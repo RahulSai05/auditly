@@ -16,10 +16,14 @@ import ItemImageUpload from "./pages/admin/ItemImageUpload";
 import AdminLayout from "./components/AdminLayout";
 import ItemReturn from "./pages/admin/ItemReturn";
 import { Navbar } from "./components/Navbar";
-import { Footer } from "./components/Footer";
+import Footer from "./components/Footer";
 import { useSelector } from "react-redux";
 import { RootState } from "./store/store";
 import { useEffect } from "react";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import ForgotPassword from "./components/auth/Forgot";
+import ResetPassword from "./components/auth/Reset";
 
 export default function App() {
   const itemData = useSelector((state: RootState) => state.ids);
@@ -43,15 +47,24 @@ export default function App() {
 
         {/* Admin Routes with AdminLayout */}
         <Route element={<AdminLayout />}>
-                    <Route path="/admin/dashboard" element={<Dashboard />} />
-                    <Route path="/admin/item-upload" element={<ItemUpload />} />
-                    <Route path="/admin/item-image-upload" element={<ItemImageUpload />} />
-                    <Route path="/admin/dashboard-tables" element={<DashboardTables />} />
-                    <Route path="/admin/item-return" element={<ItemReturn />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/item-upload" element={<ItemUpload />} />
+          <Route
+            path="/admin/item-image-upload"
+            element={<ItemImageUpload />}
+          />
+          <Route path="/admin/dashboard-tables" element={<DashboardTables />} />
+          <Route path="/admin/item-return" element={<ItemReturn />} />
         </Route>
 
         {/* Auto */}
         <Route path="/auto/scan" element={<Scan />} />
+
+        {/* auth */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
       <Footer />
     </BrowserRouter>
