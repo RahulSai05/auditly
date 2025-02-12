@@ -2,22 +2,21 @@ import os
 import numpy as np
 import csv
 import cv2
+import random
+import datetime
 import base64
-import qrcode
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
-from models import Base, Brand, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import distinct
+from sqlalchemy import distinct, desc, or_
 from fastapi.middleware.cors import CORSMiddleware
-from io import StringIO
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 from tensorflow.keras.models import Model
 from skimage.metrics import structural_similarity as ssim
-
 
 # Initialize the database tables if not already done
 Base.metadata.create_all(bind=engine)
@@ -744,4 +743,196 @@ def highlight_differences(image1_path, image2_path, view="front", target_size=(2
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode('utf-8')
+
+
+
+
+
+class AuditlyUserRequest(BaseModel):
+    user_name : str
+    first_name: str
+    last_name: str
+    gender: str
+    email: str
+    password: str
+
+@app.post("/register")
+async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
+    """
+    API to register new user and return user ID.
+    """ 
+    try:  
+        auditly_user_name = request.user_name
+        first_name = request.first_name
+        last_name = request.last_name
+        gender = request.gender
+        email = request.email
+        password = request.password
+
+        new_user = AuditlyUser(
+        auditly_user_name = auditly_user_name,
+        first_name = first_name,
+        last_name = last_name,
+        gender = gender,
+        email = email,
+        password = password
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+
+        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
+
+        return {
+            "message": "User Created successfully.",
+            "data": {
+                "User ID": user_data.auditly_user_id,
+                "User Name": user_data.auditly_user_name
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+
+class LoginRequest(BaseModel):
+    user_name : str
+    password: str
+
+@app.post("/login")
+async def login(request: LoginRequest, db: Session = Depends(get_db)):   
+    """
+    API for logging in with user id and passoword.
+    """ 
+    try:  
+        auditly_user_name = request.user_name
+        password = request.password
+
+        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).filter(AuditlyUser.password == password).first()
+
+        if user_data:
+            user_data.last_login_time = datetime.datetime.now()
+            db.commit()
+            db.refresh(user_data)
+            return {
+                "message": "Login Successfull",
+                "data": {
+                    "User ID": user_data.auditly_user_id,
+                    "User Name": user_data.auditly_user_name
+                }
+             }
+        else:
+            return {
+                "message": "Invalid Username or Password",
+             }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+class LogoutRequest(BaseModel):
+    user_name : str
+    user_id: str
+
+
+@app.post("/logout")
+async def login(request: LogoutRequest, db: Session = Depends(get_db)):   
+    """
+    API for logging out.
+    """ 
+    try:  
+        auditly_user_name = request.user_name
+        auditly_user_id = request.user_id
+
+        user_data = db.query(AuditlyUser).filter(or_(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.auditly_user_id == auditly_user_id)).first()
+
+        if user_data:
+            user_data.last_logout_time = datetime.datetime.now()
+            db.commit()
+            db.refresh(user_data)
+            return {
+                "message": "Logout Successfull"
+             }
+        else:
+            return {
+                "message": "User does not exist"
+             }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+
+def _gen_otp():
+    otp = random.randint(100000, 999999)
+    return otp
+
+class ForgetPassword(BaseModel):
+    user_name : str
+    user_id: str
+
+@app.post("/forget-password")
+async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)):   
+    """
+    API to send otp to reset password 
+    """ 
+    try:  
+        auditly_user_name = request.user_name
+        auditly_user_id = request.user_id
+
+        user_data = db.query(AuditlyUser).filter(or_(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.auditly_user_id == auditly_user_id)).first()
+
+        if user_data:
+            otp = _gen_otp()
+            user_data.reset_otp = otp
+            user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
+            db.commit()
+            db.refresh(user_data)
+            send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
+            return {
+                "message": "OTP Sent Successfully to registerd email"
+             }
+        else:
+            return {
+                "message": "User does not exist"
+             }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+
+class ResettPassword(BaseModel):
+    user_name : str
+    email : str
+    otp : str
+    password : str
+
+@app.post("/reset-password")
+async def reset_password(request: ResettPassword, db: Session = Depends(get_db)):   
+    """
+    API to send otp to reset password 
+    """ 
+    # try:  
+    auditly_user_name = request.user_name
+    email = request.email
+    reset_opt = request.otp
+    new_password = request.password
+
+    user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.email == email,AuditlyUser.reset_otp == reset_opt).first()
+    if user_data and user_data.reset_otp_expiration > datetime.datetime.now():
+        user_data.password = new_password
+        user_data.reset_otp_expiration = None   
+        user_data.reset_otp = None
+        db.commit()
+        db.refresh(user_data)
+        return {
+            "message": "Password Reset Successfull"
+            }
+    else:
+        return {
+            "message": "User email not found or OTP expired"
+            }
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
 
