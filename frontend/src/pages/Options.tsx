@@ -25,8 +25,12 @@ const Options = () => {
         </div>
 
         {/* Manual Entry Option */}
-        <div className="w-[390px] border p-6 bg-[#F9FAFB] shadow-2xl h-[329px] rounded-lg flex flex-col">
-          <img className="w-[89px]" src={manual} alt="Manual Entry Icon" />
+        <div className="w-[390px] hover:text-blue-600 border p-6 bg-[#F9FAFB] shadow-2xl h-[329px] rounded-lg flex flex-col">
+          <img
+            className="w-[89px] grayscale"
+            src={manual}
+            alt="Manual Entry Icon"
+          />
           <h3 className="text-gray-800 text-xl my-5 font-medium">
             Enter Manually
           </h3>

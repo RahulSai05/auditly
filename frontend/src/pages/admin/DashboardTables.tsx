@@ -43,7 +43,7 @@ const DashboardTables: React.FC = () => {
   return (
     <div className="flex-1 p-10">
       <h1 className="font-bold text-2xl mb-5">Dashboard Tables</h1>
-      <div className="flex gap-10 overflow-hidden">
+      <div className="grid md:flex gap-10 overflow-hidden">
         {/* Table for Items */}
         <div className="flex-1 overflow-hidden">
           <h2 className="font-semibold text-lg mb-3">Items</h2>

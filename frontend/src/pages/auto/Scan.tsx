@@ -181,7 +181,7 @@ const Scan = () => {
           <div className="mt-8 p-6 bg-white shadow-lg rounded-lg max-w-[900px] w-full">
             <div className="grid grid-cols-2 gap-8">
               {/* Card 1: General Information */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
+              <div className="p-6 bg-gray-100 shadow-xl rounded-lg">
                 <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
                   General Information
                 </h3>
@@ -202,7 +202,7 @@ const Scan = () => {
               </div>
 
               {/* Card 2: Return Information */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
+              <div className="p-6 bg-gray-100 shadow-xl  rounded-lg">
                 <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
                   Return Information
                 </h3>
@@ -223,7 +223,7 @@ const Scan = () => {
               </div>
 
               {/* Card 3: Shipping Information */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
+              <div className="p-6 bg-gray-100 shadow-xl  rounded-lg">
                 <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
                   Shipping Information
                 </h3>
@@ -249,7 +249,7 @@ const Scan = () => {
               </div>
 
               {/* Card 4: Dimensions */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
+              <div className="p-6 bg-gray-100 shadow-xl  rounded-lg">
                 <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
                   Dimensions
                 </h3>

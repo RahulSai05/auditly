@@ -197,14 +197,14 @@ export default function UploadMedia() {
 
       <ProductDetails />
 
-      <div className="mt-8 p-6 bg-white shadow-md border border-gray-200 rounded-lg max-w-[800px] w-full mx-auto">
-        <h1 className="text-xl font-medium mb-8 text-center">
+      <div className="mt-8 p-6 bg-white shadow-md border border-gray-200 rounded-lg  w-full mx-auto">
+        <h1 className="text-xl mb-8 font-bold text-center">
           Comparison Results
         </h1>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          <div className="space-y-4">
-            <h2 className="text-gray-900 font-medium text-center">
+          <center className="space-y-4">
+            <h2 className="text-gray-900 font-bold text-center">
               Front Image Differences
             </h2>
             {data.front_diff_image_base64 && (
@@ -214,10 +214,10 @@ export default function UploadMedia() {
                 className="rounded-lg border"
               />
             )}
-          </div>
+          </center>
 
-          <div className="space-y-4">
-            <h2 className="text-gray-900 font-medium text-center">
+          <center className="space-y-4">
+            <h2 className="text-gray-900 font-bold text-center">
               Back Image Differences
             </h2>
             {data.back_diff_image_base64 && (
@@ -227,14 +227,12 @@ export default function UploadMedia() {
                 className="rounded-lg border"
               />
             )}
-          </div>
+          </center>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           <div className="space-y-4 bg-gray-50 border p-4 rounded-md">
-            <h2 className="text-gray-900 font-medium text-center">
-              Front Image
-            </h2>
+            <h2 className="text-gray-900 font-bold text-center">Front Image</h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Cosine Similarity</span>
@@ -252,9 +250,7 @@ export default function UploadMedia() {
           </div>
 
           <div className="space-y-4 bg-gray-50 border p-4 rounded-md">
-            <h2 className="text-gray-900 font-medium text-center">
-              Back Image
-            </h2>
+            <h2 className="text-gray-900 font-bold text-center">Back Image</h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Cosine Similarity</span>
@@ -272,7 +268,7 @@ export default function UploadMedia() {
           </div>
 
           <div className="space-y-4 bg-gray-50 border p-4 rounded-md">
-            <h2 className="text-gray-900 font-medium text-center">Summary</h2>
+            <h2 className="text-gray-900 font-bold text-center">Summary</h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Average SSI</span>

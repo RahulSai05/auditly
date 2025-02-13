@@ -74,7 +74,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[75vh] bg-gray-100">
+    <div className="flex justify-center items-center pt-10 ">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
         <form onSubmit={handleSubmit}>
@@ -183,6 +183,16 @@ const Register = () => {
             {message.text}
           </div>
         )}
+        <div className="mt-5 ">
+          {" "}
+          Had an account ?{" "}
+          <span
+            onClick={() => navigate("/login")}
+            className="text-blue-600 underline"
+          >
+            Login
+          </span>
+        </div>
       </div>
     </div>
   );

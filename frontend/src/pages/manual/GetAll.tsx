@@ -88,11 +88,11 @@ const GetAll: React.FC = () => {
       {/* Data Container */}
       {isFetched && productData ? (
         <>
-          <div className="mt-8 p-6 bg-white shadow-lg rounded-lg max-w-[900px] w-full">
-            <div className="grid grid-cols-2 gap-8">
+          <div className="mt-8 md:p-6 bg-white  rounded-lg max-w-[900px] w-full">
+            <div className="grid md:grid-cols-2 gap-8">
               {/* Card 1: General Information */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
-                <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
+              <div className="p-6 bg-gray-100 hover:shadow-xl rounded-lg">
+                <h3 className="font-semibold text-lg mb-4  text-center">
                   General Information
                 </h3>
                 <div className="grid grid-cols-[200px_1fr] gap-y-2 text-sm">
@@ -112,8 +112,8 @@ const GetAll: React.FC = () => {
               </div>
 
               {/* Card 2: Return Information */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
-                <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
+              <div className="p-6 bg-gray-100 hover:shadow-xl rounded-lg">
+                <h3 className="font-semibold text-lg mb-4  text-center">
                   Return Information
                 </h3>
                 <div className="grid grid-cols-[200px_1fr] gap-y-2 text-sm">
@@ -133,8 +133,8 @@ const GetAll: React.FC = () => {
               </div>
 
               {/* Card 3: Shipping Information */}
-              <div className="p-6 bg-gray-100 shadow rounded-lg">
-                <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
+              <div className="p-6 bg-gray-100 hover:shadow-xl rounded-lg">
+                <h3 className="font-semibold text-lg mb-4  text-center">
                   Shipping Information
                 </h3>
                 <div className="grid grid-cols-[200px_1fr] gap-y-2 text-sm">
@@ -160,7 +160,7 @@ const GetAll: React.FC = () => {
 
               {/* Card 4: Dimensions */}
               <div className="p-6 bg-gray-100 shadow rounded-lg">
-                <h3 className="font-semibold text-lg mb-4 text-gray-700 text-center">
+                <h3 className="font-semibold text-lg mb-4  text-center">
                   Dimensions
                 </h3>
                 <div className="grid grid-cols-[200px_1fr] gap-y-2 text-sm">
@@ -188,8 +188,8 @@ const GetAll: React.FC = () => {
           {/* Navigation Buttons */}
           <div className="flex justify-end mt-6 max-w-[900px] w-full">
             <button
-              onClick={() => router("/")}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg mr-2 hover:bg-gray-400"
+              onClick={() => router("/options")}
+              className="px-4 py-2 bg-gray-300  rounded-lg mr-2 hover:bg-gray-400"
             >
               Back
             </button>

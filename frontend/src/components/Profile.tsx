@@ -36,7 +36,7 @@ export function Profile() {
   if (!userData) {
     return (
       <button
-        className="flex border w-56 px-3 py-2 gap-x-3 rounded-md"
+        className="flex border px-3 py-2 gap-x-3 rounded-md"
         onClick={() => router("/login")}
       >
         <CircleUser />
@@ -76,7 +76,10 @@ export function Profile() {
         >
           Reset Settings
         </div>
-        <div className="cursor-pointer" onClick={handleLogout}>
+        <div
+          className="cursor-pointer text-red-600 font-medium"
+          onClick={handleLogout}
+        >
           Logout
         </div>
         <DropdownMenuSeparator />

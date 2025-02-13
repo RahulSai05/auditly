@@ -42,7 +42,7 @@ const ItemImageUpload: React.FC = () => {
   };
 
   return (
-    <div className="h-[75vh] flex justify-center items-start bg-gray-100 p-6">
+    <div className="h-[75vh] flex justify-center items-start p-6">
       <div className="w-full max-w-2xl space-y-4">
         {/* Title */}
         <h1 className="text-2xl font-bold text-center">Item Image Upload</h1>

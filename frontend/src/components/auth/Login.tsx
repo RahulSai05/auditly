@@ -120,6 +120,16 @@ const Login = () => {
             {message.text}
           </div>
         )}
+        <div className="mt-5 ">
+          {" "}
+          Dont have an account ?{" "}
+          <span
+            onClick={() => navigate("/register")}
+            className="text-blue-600 underline"
+          >
+            Register
+          </span>
+        </div>
       </div>
     </div>
   );
