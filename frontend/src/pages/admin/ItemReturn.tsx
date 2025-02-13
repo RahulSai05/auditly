@@ -70,7 +70,7 @@ const ItemReturn: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex justify-center items-start bg-gray-100 p-6">
+    <div className="h-[75vh] flex justify-center items-start bg-gray-100 p-6">
       <div className="w-full max-w-2xl space-y-4">
         <h1 className="text-2xl font-bold text-center">
           Customer Return Item Data Upload

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 export default function Home() {
   const router = useNavigate();
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-[75vh]">
       <div className="text-center">
         <div className="mt-7">Click 'Start a Return' to begin the process.</div>
         <button

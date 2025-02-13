@@ -47,13 +47,23 @@ export function Profile() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="-mt-2" asChild>
-        <button className="flex border w-56 px-3 py-2 gap-x-3 rounded-md">
-          <CircleUser />
-          {userData["User Name"]}
+      <DropdownMenuTrigger className="-mt-1" asChild>
+        <button className=" rounded-full border bg-black uppercase text-white w-10 h-10 ">
+          {userData["User Name"][0]}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 gap-y-2 pl-3 text-gray-700 pt-5 grid z-50 bg-white">
+      <DropdownMenuContent className="w-56 mr-2 gap-y-4 pl-3 text-gray-700 pt-5 grid z-50 bg-white">
+        <center className="border-b pb-2">
+          <button className=" rounded-full border bg-black uppercase text-white w-10 h-10 ">
+            {userData["User Name"][0]}
+          </button>
+          <div className="text-sm mt-1">
+            Customer ID : {userData["User ID"]}
+          </div>
+        </center>
+        <div className="cursor-pointer">Edit Profile</div>
+        <div className="cursor-pointer">Account Settings</div>
+        <div className="cursor-pointer">Renewal & Billing</div>
         <div
           className="cursor-pointer"
           onClick={() => router("/forgot-password")}

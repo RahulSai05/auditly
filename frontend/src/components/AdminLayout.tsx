@@ -8,7 +8,7 @@ const AdminLayout = () => {
     "flex items-center p-3 rounded-lg transition duration-300 hover:bg-blue-400 hover:text-white";
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-[75vh] bg-gray-100">
       {/* Sidebar */}
       <div className="w-72 bg-white text-gray-800 shadow-md flex flex-col">
         <div className="p-5 font-bold text-xl text-gray-900 border-b border-gray-300">
