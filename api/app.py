@@ -8,7 +8,7 @@ import base64
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct, desc, or_
@@ -474,158 +474,158 @@ async def get_item_details(return_order_number: str, db: Session = Depends(get_d
 
 
 
-@app.post("/compare-images/")
-async def compare_images(request: CompareImagesRequest, db: Session = Depends(get_db)):
-    """
-    Compare base and customer images and return similarity scores with highlighted differences in Base64.
-    """
-    customer_id = request.customer_id
-    item_id = request.item_id
+# @app.post("/compare-images/")
+# async def compare_images(request: CompareImagesRequest, db: Session = Depends(get_db)):
+#     """
+#     Compare base and customer images and return similarity scores with highlighted differences in Base64.
+#     """
+#     customer_id = request.customer_id
+#     item_id = request.item_id
 
-    base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item_id).first()
-    if not base_data:
-        raise HTTPException(status_code=404, detail="Base images not found")
+#     base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item_id).first()
+#     if not base_data:
+#         raise HTTPException(status_code=404, detail="Base images not found")
 
-    customer_data = db.query(CustomerData).filter(CustomerData.customer_item_data_id == customer_id).first()
-    if not customer_data:
-        raise HTTPException(status_code=404, detail="Customer images not found")
+#     customer_data = db.query(CustomerData).filter(CustomerData.customer_item_data_id == customer_id).first()
+#     if not customer_data:
+#         raise HTTPException(status_code=404, detail="Customer images not found")
 
-    front_similarity = calculate_similarity(base_data.base_front_image, customer_data.customer_front_image)
-    back_similarity = calculate_similarity(base_data.base_back_image, customer_data.customer_back_image)
+#     front_similarity = calculate_similarity(base_data.base_front_image, customer_data.customer_front_image)
+#     back_similarity = calculate_similarity(base_data.base_back_image, customer_data.customer_back_image)
 
-    ssi_front = calculate_ssi(base_data.base_front_image, customer_data.customer_front_image)
-    ssi_back = calculate_ssi(base_data.base_back_image, customer_data.customer_back_image)
+#     ssi_front = calculate_ssi(base_data.base_front_image, customer_data.customer_front_image)
+#     ssi_back = calculate_ssi(base_data.base_back_image, customer_data.customer_back_image)
 
-    average_ssi = (ssi_front + ssi_back) / 2
+#     average_ssi = (ssi_front + ssi_back) / 2
 
-    front_diff_image_path = highlight_differences(base_data.base_front_image, customer_data.customer_front_image, "front")
-    back_diff_image_path = highlight_differences(base_data.base_back_image, customer_data.customer_back_image, "back")
+#     front_diff_image_path = highlight_differences(base_data.base_front_image, customer_data.customer_front_image, "front")
+#     back_diff_image_path = highlight_differences(base_data.base_back_image, customer_data.customer_back_image, "back")
 
-    front_diff_image_base64 = encode_image_to_base64(front_diff_image_path)
-    back_diff_image_base64 = encode_image_to_base64(back_diff_image_path)
+#     front_diff_image_base64 = encode_image_to_base64(front_diff_image_path)
+#     back_diff_image_base64 = encode_image_to_base64(back_diff_image_path)
 
-    def classify_condition(front_score, back_score, ssi_score):
-        average_score = (front_score + back_score) / 2
-    # Assess if any of the individual scores suggest the item is damaged.
-        if front_score < 0.40 or back_score < 0.40 or ssi_score < 0.5:
-            return "Damaged"
+#     def classify_condition(front_score, back_score, ssi_score):
+#         average_score = (front_score + back_score) / 2
+#     # Assess if any of the individual scores suggest the item is damaged.
+#         if front_score < 0.40 or back_score < 0.40 or ssi_score < 0.5:
+#             return "Damaged"
 
-    # Evaluate the average score against the specified thresholds.
-        if average_score >= 0.8:
-            return "New"
-        elif average_score >= 0.6:
-             return "Like-New"
-        elif average_score >= 0.4:
-             return "Used"
-        else:
-            return "Damaged"
+#     # Evaluate the average score against the specified thresholds.
+#         if average_score >= 0.8:
+#             return "New"
+#         elif average_score >= 0.6:
+#              return "Like-New"
+#         elif average_score >= 0.4:
+#              return "Used"
+#         else:
+#             return "Damaged"
 
-    overall_condition = classify_condition(front_similarity, back_similarity, average_ssi)
+#     overall_condition = classify_condition(front_similarity, back_similarity, average_ssi)
 
-    save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id)
+#     save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id)
 
-    return {
-        "front_similarity": float(front_similarity),
-        "back_similarity": float(back_similarity),
-        "ssi_front": float(ssi_front),
-        "ssi_back": float(ssi_back),
-        "average_ssi": float(average_ssi),
-        "overall_condition": overall_condition,
-        "front_diff_image_base64": front_diff_image_base64,
-        "back_diff_image_base64": back_diff_image_base64,
-    }
+#     return {
+#         "front_similarity": float(front_similarity),
+#         "back_similarity": float(back_similarity),
+#         "ssi_front": float(ssi_front),
+#         "ssi_back": float(ssi_back),
+#         "average_ssi": float(average_ssi),
+#         "overall_condition": overall_condition,
+#         "front_diff_image_base64": front_diff_image_base64,
+#         "back_diff_image_base64": back_diff_image_base64,
+#     }
 
-def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id):
-    new_item_condition = CustomerItemCondition(
-        front_similarity=front_similarity,
-        back_similarity=back_similarity,
-        ssi_front=ssi_front,
-        ssi_back=ssi_back,
-        average_ssi=average_ssi,
-        overall_condition=overall_condition,
-        customer_item_condition_mapping_id=customer_id
-    )
-    db.add(new_item_condition)
-    db.commit()
-    db.refresh(new_item_condition)
+# def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id):
+#     new_item_condition = CustomerItemCondition(
+#         front_similarity=front_similarity,
+#         back_similarity=back_similarity,
+#         ssi_front=ssi_front,
+#         ssi_back=ssi_back,
+#         average_ssi=average_ssi,
+#         overall_condition=overall_condition,
+#         customer_item_condition_mapping_id=customer_id
+#     )
+#     db.add(new_item_condition)
+#     db.commit()
+#     db.refresh(new_item_condition)
 
-# Pydantic models
-class CompareImagesRequest(BaseModel):
-    customer_id: int
-    item_id: int
+# # Pydantic models
+# class CompareImagesRequest(BaseModel):
+#     customer_id: int
+#     item_id: int
 
-# Initialize feature extractor globally to avoid reloading it multiple times
-feature_extractor = ResNet50(weights="imagenet", include_top=False, pooling="avg")
-model = Model(inputs=feature_extractor.input, outputs=feature_extractor.output)
+# # Initialize feature extractor globally to avoid reloading it multiple times
+# feature_extractor = ResNet50(weights="imagenet", include_top=False, pooling="avg")
+# model = Model(inputs=feature_extractor.input, outputs=feature_extractor.output)
 
-# Preprocessing function t
-def preprocess_image(image_path, target_size=(224, 224)):
-    if not os.path.exists(image_path):
-        raise HTTPException(status_code=404, detail=f"Image not found: {image_path}")
-    image = load_img(image_path, target_size=target_size)
-    image = img_to_array(image)
-    image = np.expand_dims(image, axis=0)
-    return preprocess_input(image)
+# # Preprocessing function t
+# def preprocess_image(image_path, target_size=(224, 224)):
+#     if not os.path.exists(image_path):
+#         raise HTTPException(status_code=404, detail=f"Image not found: {image_path}")
+#     image = load_img(image_path, target_size=target_size)
+#     image = img_to_array(image)
+#     image = np.expand_dims(image, axis=0)
+#     return preprocess_input(image)
 
-# Cosine similarity
-def calculate_similarity(image1_path, image2_path):
-    img1 = preprocess_image(image1_path)
-    img2 = preprocess_image(image2_path)
+# # Cosine similarity
+# def calculate_similarity(image1_path, image2_path):
+#     img1 = preprocess_image(image1_path)
+#     img2 = preprocess_image(image2_path)
 
-    features1 = model.predict(img1).flatten()
-    features2 = model.predict(img2).flatten()
+#     features1 = model.predict(img1).flatten()
+#     features2 = model.predict(img2).flatten()
 
-    features1 = features1 / np.linalg.norm(features1)
-    features2 = features2 / np.linalg.norm(features2)
+#     features1 = features1 / np.linalg.norm(features1)
+#     features2 = features2 / np.linalg.norm(features2)
 
-    return np.dot(features1, features2)
+#     return np.dot(features1, features2)
 
-# Structural similarity
-def calculate_ssi(image1_path, image2_path, target_size=(224, 224)):
-    img1 = load_img(image1_path, target_size=target_size)
-    img2 = load_img(image2_path, target_size=target_size)
+# # Structural similarity
+# def calculate_ssi(image1_path, image2_path, target_size=(224, 224)):
+#     img1 = load_img(image1_path, target_size=target_size)
+#     img2 = load_img(image2_path, target_size=target_size)
 
-    img1 = img_to_array(img1).astype("float32") / 255.0
-    img2 = img_to_array(img2).astype("float32") / 255.0
+#     img1 = img_to_array(img1).astype("float32") / 255.0
+#     img2 = img_to_array(img2).astype("float32") / 255.0
 
-    ssi_r = ssim(img1[..., 0], img2[..., 0], data_range=1.0)
-    ssi_g = ssim(img1[..., 1], img2[..., 1], data_range=1.0)
-    ssi_b = ssim(img1[..., 2], img2[..., 2], data_range=1.0)
+#     ssi_r = ssim(img1[..., 0], img2[..., 0], data_range=1.0)
+#     ssi_g = ssim(img1[..., 1], img2[..., 1], data_range=1.0)
+#     ssi_b = ssim(img1[..., 2], img2[..., 2], data_range=1.0)
 
-    return (ssi_r + ssi_g + ssi_b) / 3
+#     return (ssi_r + ssi_g + ssi_b) / 3
 
-# Function to highlight differences
-def highlight_differences(image1_path, image2_path, view="front", target_size=(224, 224)):
-    img1 = cv2.resize(cv2.imread(image1_path), target_size)
-    img2 = cv2.resize(cv2.imread(image2_path), target_size)
+# # Function to highlight differences
+# def highlight_differences(image1_path, image2_path, view="front", target_size=(224, 224)):
+#     img1 = cv2.resize(cv2.imread(image1_path), target_size)
+#     img2 = cv2.resize(cv2.imread(image2_path), target_size)
 
-    gray_img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    gray_img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+#     gray_img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+#     gray_img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-    score, diff = ssim(gray_img1, gray_img2, full=True)
-    diff = (diff * 255).astype("uint8")
+#     score, diff = ssim(gray_img1, gray_img2, full=True)
+#     diff = (diff * 255).astype("uint8")
 
-    thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+#     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    for contour in contours:
-        if cv2.contourArea(contour) > 40:  # filter small differences
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(img2, (x, y), (x + w, y + h), (0, 0, 255), 2)
+#     for contour in contours:
+#         if cv2.contourArea(contour) > 40:  # filter small differences
+#             x, y, w, h = cv2.boundingRect(contour)
+#             cv2.rectangle(img2, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    output_dir = "/home/ec2-user/auditly/image_outputs"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+#     output_dir = "/home/ec2-user/auditly/image_outputs"
+#     if not os.path.exists(output_dir):
+#         os.makedirs(output_dir)
 
-    output_path = os.path.join(output_dir, f"{view}_differences.png")
-    cv2.imwrite(output_path, img2)
+#     output_path = os.path.join(output_dir, f"{view}_differences.png")
+#     cv2.imwrite(output_path, img2)
 
-    return output_path
+#     return output_path
 
-# Function to encode image to Base64
-def encode_image_to_base64(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode('utf-8')
+# # Function to encode image to Base64
+# def encode_image_to_base64(image_path):
+#     with open(image_path, "rb") as img_file:
+#         return base64.b64encode(img_file.read()).decode('utf-8')
 
 
 
@@ -816,6 +816,235 @@ async def reset_password(request: ResettPassword, db: Session = Depends(get_db))
             }
     # except Exception as e:
     #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+
+@app.post("/compare-images/")
+async def compare_images(request: CompareImagesRequest, db: Session = Depends(get_db)):
+    """
+    Compare base and customer images and return similarity scores with highlighted differences in Base64.
+    """
+    customer_id = request.customer_id
+    item_id = request.item_id
+
+    base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item_id).first()
+    if not base_data:
+        raise HTTPException(status_code=404, detail="Base images not found")
+
+    customer_data = db.query(CustomerData).filter(CustomerData.customer_item_data_id == customer_id).first()
+    if not customer_data:
+        raise HTTPException(status_code=404, detail="Customer images not found")
+
+    front_similarity = calculate_similarity(base_data.base_front_image, customer_data.customer_front_image)
+    back_similarity = calculate_similarity(base_data.base_back_image, customer_data.customer_back_image)
+
+    ssi_front = calculate_ssi(base_data.base_front_image, customer_data.customer_front_image)
+    ssi_back = calculate_ssi(base_data.base_back_image, customer_data.customer_back_image)
+
+    average_ssi = (ssi_front + ssi_back) / 2
+
+    front_diff_image_path = highlight_differences(base_data.base_front_image, customer_data.customer_front_image, "front", str(customer_id)+str(item_id))
+    back_diff_image_path = highlight_differences(base_data.base_back_image, customer_data.customer_back_image, "back", str(customer_id)+str(item_id))
+
+    front_diff_image_base64 = encode_image_to_base64(front_diff_image_path)
+    back_diff_image_base64 = encode_image_to_base64(back_diff_image_path)
+
+    receipt_number = random.randint(100000000, 999999999)
+
+    data = db.query(
+        CustomerItemCondition,
+        CustomerItemData,
+        Item,
+        Brand
+    ).join(
+        CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+    ).join(
+        Item, CustomerItemData.item_id == Item.id
+    ).join(
+        Brand, Item.brand_id == Brand.id
+    ).filter(
+        CustomerData.customer_item_data_id == customer_id
+    ).first()
+
+    condition, item_data, item, brand = data
+
+    sales_order_number = item_data.original_sales_order_number
+    account_number = item_data.account_number
+    account_name = item_data.shipped_to_person
+    serial_number = item_data.serial_number
+    return_order_number = item_data.return_order_number
+    customer_email = item_data.customer_email
+    factory_seal = customer_data.factory_seal
+    new_conditiono = customer_data.new_conditiono
+    user_front_image = customer_data.customer_front_image
+    user_back_image = customer_data.customer_back_image
+    
+
+    if factory_seal and new_conditiono:
+        condition = "in good condition, making it resalable."
+        print("Sent Email")
+        #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", "geereddyrahul@gmail.com", "Test", "Test Message")
+
+    else:
+        condition = "NOT in good condition, hence cannot be resold."
+        print("Sent Email")
+        #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", "geereddyrahul@gmail.com", "Test", "Test Message")
+
+    subject = """
+     Customer Account - """+str(account_number)+"""; Serial Number - """+str(serial_number)+"""; Inspection Id - """+str(receipt_number)+"""
+"""
+    body = """
+Hello,
+
+The serial """+str(serial_number)+ """returned by the customer """+str(account_name)+""" – """+str(account_number)+""" was inspected for returns and found to be """+condition+""" 
+
+Below are the reference details:
+
+Customer_Name –  """+account_name+"""
+Customer_Account – """+str(account_number)+"""
+Serial_Number – """+str(serial_number)+"""
+Sales Order number- """+str(sales_order_number)+"""
+Return Order Number- """+str(return_order_number)+"""
+Inspection Number - """+str(receipt_number)+"""
+
+Returned Images are atached.
+
+Thanks,
+Audit team
+"""
+
+    send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
+
+
+    def classify_condition(front_score, back_score, ssi_score):
+        average_score = (front_score + back_score) / 2
+    # Assess if any of the individual scores suggest the item is damaged.
+        if front_score < 0.40 or back_score < 0.40 or ssi_score < 0.5:
+            return "Damaged"
+
+    # Evaluate the average score against the specified thresholds.
+        if average_score >= 0.8:
+            return "New"
+        elif average_score >= 0.6:
+             return "Like-New"
+        elif average_score >= 0.4:
+             return "Used"
+        else:
+            return "Damaged"
+
+    overall_condition = classify_condition(front_similarity, back_similarity, average_ssi)
+
+    save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path)
+
+    return {
+        "front_similarity": float(front_similarity),
+        "back_similarity": float(back_similarity),
+        "ssi_front": float(ssi_front),
+        "ssi_back": float(ssi_back),
+        "average_ssi": float(average_ssi),
+        "overall_condition": overall_condition,
+        "front_diff_image_base64": front_diff_image_base64,
+        "back_diff_image_base64": back_diff_image_base64,
+        "receipt_number": receipt_number
+
+    }
+
+
+def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path):
+    new_item_condition = CustomerItemCondition(
+        front_similarity=front_similarity,
+        back_similarity=back_similarity,
+        ssi_front=ssi_front,
+        ssi_back=ssi_back,
+        average_ssi=average_ssi,
+        overall_condition=overall_condition,
+        customer_item_condition_mapping_id=customer_id,
+        ack_number=receipt_number,
+        difference_front_image=front_diff_image_path,
+        difference_back_image=back_diff_image_path
+    )
+    db.add(new_item_condition)
+    db.commit()
+    db.refresh(new_item_condition)
+
+# Pydantic models
+class CompareImagesRequest(BaseModel):
+    customer_id: int
+    item_id: int
+
+# Initialize feature extractor globally to avoid reloading it multiple times
+feature_extractor = ResNet50(weights="imagenet", include_top=False, pooling="avg")
+model = Model(inputs=feature_extractor.input, outputs=feature_extractor.output)
+
+# Preprocessing function
+def preprocess_image(image_path, target_size=(224, 224)):
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail=f"Image not found: {image_path}")
+    image = load_img(image_path, target_size=target_size)
+    image = img_to_array(image)
+    image = np.expand_dims(image, axis=0)
+    return preprocess_input(image)
+
+# Cosine similarity
+def calculate_similarity(image1_path, image2_path):
+    img1 = preprocess_image(image1_path)
+    img2 = preprocess_image(image2_path)
+
+    features1 = model.predict(img1).flatten()
+    features2 = model.predict(img2).flatten()
+
+    features1 = features1 / np.linalg.norm(features1)
+    features2 = features2 / np.linalg.norm(features2)
+
+    return np.dot(features1, features2)
+
+# Structural similarity
+def calculate_ssi(image1_path, image2_path, target_size=(224, 224)):
+    img1 = load_img(image1_path, target_size=target_size)
+    img2 = load_img(image2_path, target_size=target_size)
+
+    img1 = img_to_array(img1).astype("float32") / 255.0
+    img2 = img_to_array(img2).astype("float32") / 255.0
+
+    ssi_r = ssim(img1[..., 0], img2[..., 0], data_range=1.0)
+    ssi_g = ssim(img1[..., 1], img2[..., 1], data_range=1.0)
+    ssi_b = ssim(img1[..., 2], img2[..., 2], data_range=1.0)
+
+    return (ssi_r + ssi_g + ssi_b) / 3
+
+# Function to highlight differences
+def highlight_differences(image1_path, image2_path, view, path, target_size=(224, 224)):
+    img1 = cv2.resize(cv2.imread(image1_path), target_size)
+    img2 = cv2.resize(cv2.imread(image2_path), target_size)
+
+    gray_img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    gray_img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+    score, diff = ssim(gray_img1, gray_img2, full=True)
+    diff = (diff * 255).astype("uint8")
+
+    thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in contours:
+        if cv2.contourArea(contour) > 40:  # filter small differences
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(img2, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+    output_dir = "/Users/rahul/Desktop/Auditly Git copy/Auditly1/api/finalImages/"+path
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = os.path.join(output_dir, f"{view}_differences.png")
+    cv2.imwrite(output_path, img2)
+
+    return output_path
+
+# Function to encode image to Base64
+def encode_image_to_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode('utf-8')
+
 
 
 
