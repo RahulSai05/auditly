@@ -1,4 +1,7 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "./store/store";
+import { useEffect } from "react";
 import Home from "./pages/Home";
 import Options from "./pages/Options";
 import GetAll from "./pages/manual/GetAll";
@@ -17,9 +20,6 @@ import AdminLayout from "./components/AdminLayout";
 import ItemReturn from "./pages/admin/ItemReturn";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
-import { useSelector } from "react-redux";
-import { RootState } from "./store/store";
-import { useEffect } from "react";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
@@ -27,12 +27,21 @@ import ResetPassword from "./components/auth/Reset";
 
 export default function App() {
   const itemData = useSelector((state: RootState) => state.ids);
+  const isLoggedIn = localStorage.getItem("token");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
+
   useEffect(() => {
     console.log(itemData);
   }, [itemData]);
 
   return (
-    <BrowserRouter>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -60,13 +69,13 @@ export default function App() {
         {/* Auto */}
         <Route path="/auto/scan" element={<Scan />} />
 
-        {/* auth */}
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
       <Footer />
-    </BrowserRouter>
+    </>
   );
 }
