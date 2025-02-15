@@ -4,7 +4,6 @@ from sqlalchemy.sql import func
 from database import Base
 from datetime import datetime
 
-
 class Brand(Base):
     __tablename__ = "brand"
 
@@ -43,39 +42,6 @@ class AuditlyUser(Base):
     reset_otp = Column(String(255), nullable=True )
     reset_otp_expiration = Column(DateTime,nullable=True)
 
-# class CustomerItemData(Base):
-#     __tablename__ = 'customer_item_data'
-
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     original_sales_order_number = Column(String(255))
-#     original_sales_order_line = Column(Integer)
-#     ordered_qty = Column(Integer)
-#     return_order_number = Column(String(255))
-#     return_order_line = Column(Integer)
-#     return_qty = Column(Integer)
-#     return_destination = Column(String(255))
-#     return_condition = Column(String(255))
-#     return_carrier = Column(String(255))
-#     return_warehouse = Column(String(255))
-#     item_id = Column(Integer, ForeignKey('item.id'))  # Foreign key referencing the item table
-#     serial_number = Column(String(255))
-#     sscc_number = Column(String(255))
-#     tag_number = Column(String(255))
-#     vendor_item_number = Column(String(255))
-#     shipped_from_warehouse = Column(String(255))
-#     shipped_to_person = Column(String(255))
-#     shipped_to_address = Column(String(255))
-#     street_number = Column(String(255))
-#     city = Column(String(255))
-#     state = Column(String(255))
-#     country = Column(String(255))
-#     dimensions_depth = Column(Float)  # Depth in inches
-#     dimensions_length = Column(Float)  # Length in inches
-#     dimensions_breadth = Column(Float)  # Breadth in inches
-#     dimensions_weight = Column(Float)  # Weight in lbs
-#     dimensions_volume = Column(Float)  # Volume (Depth * Length * Breadth)
-#     dimensions_size = Column(String(255))
-
 class CustomerItemData(Base):
     __tablename__ = 'customer_item_data'
     
@@ -108,8 +74,9 @@ class CustomerItemData(Base):
     dimensions_weight = Column(Float)
     dimensions_volume = Column(Float)
     dimensions_size = Column(String(255))
-    barcode = Column(String(255), unique=True)  # New column for storing QR code data
-
+    barcode = Column(String(255), unique=True)
+    customer_email = Column(String(255))
+    account_number = Column(String(255))
     
 
 class CustomerData(Base):
@@ -160,5 +127,9 @@ class CustomerItemCondition(Base):
     ssi_back = Column(String(100))
     average_ssi = Column(String(100))
     overall_condition = Column(String(100))
+    ack_number = Column(String(100))
+    difference_front_image = Column(String(5555))
+    difference_back_image = Column(String(5555))
     customer_item_condition_mapping_id = Column(Integer, ForeignKey("customer_item_data.id"), nullable=True)
+
 
