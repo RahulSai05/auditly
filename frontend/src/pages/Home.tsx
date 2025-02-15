@@ -85,7 +85,7 @@ const CustomerData = () => {
       item.acknowledgmentId.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    return filtered;
+    return filtered.length > 0 ? filtered : dummyData;
   };
 
   const handleSearch = (e: any) => {

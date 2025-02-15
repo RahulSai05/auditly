@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import manual from "../assets/manual.svg";
-import scan from "../assets/scan.svg";
-
+import { NotebookPen, ScanQrCode } from "lucide-react";
 const Options = () => {
   const router = useNavigate();
 
@@ -10,8 +8,8 @@ const Options = () => {
       <h2 className="text-3xl mb-6">Choose the best Option for your needs</h2>
       <div className="grid md:flex gap-6">
         {/* Quick Scan Option */}
-        <div className="w-[390px] border p-6 bg-[#F9FAFB] shadow-2xl h-[329px] rounded-lg flex flex-col">
-          <img className="w-[89px]" src={scan} alt="Quick Scan Icon" />
+        <div className="w-[390px] border p-6 hover:text-blue-600 bg-[#F9FAFB] shadow-2xl h-[329px] rounded-lg flex flex-col">
+          <ScanQrCode size={90} />
           <h3 className="text-gray-800 text-xl my-5 font-medium">Quick Scan</h3>
           <p className="text-gray-800 text-md mb-4">
             Quickly scan your system with an automated scan
@@ -26,11 +24,7 @@ const Options = () => {
 
         {/* Manual Entry Option */}
         <div className="w-[390px] hover:text-blue-600 border p-6 bg-[#F9FAFB] shadow-2xl h-[329px] rounded-lg flex flex-col">
-          <img
-            className="w-[89px] grayscale"
-            src={manual}
-            alt="Manual Entry Icon"
-          />
+          <NotebookPen size={90} />
           <h3 className="text-gray-800 text-xl my-5 font-medium">
             Enter Manually
           </h3>
