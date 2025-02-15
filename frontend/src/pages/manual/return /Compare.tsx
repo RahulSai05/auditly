@@ -1,4 +1,4 @@
-  import { Stepper } from "../../../components/Stepper";
+import { Stepper } from "../../../components/Stepper";
 import { useNavigate } from "react-router-dom";
 import ProductDetails from "../../../components/ProductDetails";
 import axios from "axios";
@@ -30,7 +30,7 @@ export default function UploadMedia() {
           "http://54.210.159.220:8000/compare-images/",
           {
             customer_id: parseInt(customerId),
-            item_id: parseInt(itemId), 
+            item_id: parseInt(itemId),
           },
           {
             headers: { "Content-Type": "application/json" },
@@ -70,7 +70,31 @@ export default function UploadMedia() {
           Comparison Results
         </h1>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid md:flex md:justify-between gap-8 mb-12">
+          <center className="space-y-4">
+            <h2 className="text-gray-900 font-bold text-center">
+              Base Front Image
+            </h2>
+            {data.front_diff_image_base64 && (
+              <img
+                src={`data:image/png;base64,${data.front_diff_image_base64}`}
+                alt="Front Differences"
+                className="rounded-lg border"
+              />
+            )}
+          </center>
+          <center className="space-y-4">
+            <h2 className="text-gray-900 font-bold text-center">
+              Base Back Image
+            </h2>
+            {data.front_diff_image_base64 && (
+              <img
+                src={`data:image/png;base64,${data.front_diff_image_base64}`}
+                alt="Front Differences"
+                className="rounded-lg border"
+              />
+            )}
+          </center>
           <center className="space-y-4">
             <h2 className="text-gray-900 font-bold text-center">
               Front Image Differences

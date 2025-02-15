@@ -23,6 +23,7 @@ export default function Home() {
 const CustomerData = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
+  console.log(searchQuery);
   const dummyData = [
     {
       acknowledgmentId: "RO54321",
@@ -113,13 +114,11 @@ const CustomerData = () => {
           </div>
         </div>
 
-        {filteredData.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No records found</div>
+        {searchQuery == "" || filteredData.length === 0 ? (
+          <></>
         ) : (
           <div className="mt-6 rounded-lg w-full">
-            <h3 className="font-medium mb-2 ml-4">
-              {searchQuery ? "Search Results" : ""}
-            </h3>
+            <h3 className="font-medium mb-2 ml-4">{searchQuery ? "" : ""}</h3>
 
             <table className="w-full shadow-md rounded-md border-collapse">
               <thead className="bg-gray-200 rounded-md">

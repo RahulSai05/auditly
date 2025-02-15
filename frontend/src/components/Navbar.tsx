@@ -64,7 +64,7 @@ export function Navbar() {
             </li>
             <li>
               <Link
-                to="admin/dashboard-tables"
+                to="/admin/reports/items"
                 className="hover:text-blue-400 flex items-center gap-x-3 text-sm md:text-base transition"
                 onClick={() => setIsOpen(false)}
               >

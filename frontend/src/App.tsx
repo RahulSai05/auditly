@@ -24,6 +24,9 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
+import CustomerSerials from "./pages/admin/CustomerSerials";
+import ReturnDetails from "./components/ReturnDetails";
+import AuditlyInspection from "./pages/admin/AuditlyInspection";
 
 export default function App() {
   const itemData = useSelector((state: RootState) => state.ids);
@@ -57,13 +60,29 @@ export default function App() {
         {/* Admin Routes with AdminLayout */}
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/item-upload" element={<ItemUpload />} />
           <Route
-            path="/admin/item-image-upload"
+            path="/admin/settings/Item master upload"
+            element={<ItemUpload />}
+          />
+          <Route
+            path="/admin/settings/Item Image Upload"
             element={<ItemImageUpload />}
           />
-          <Route path="/admin/dashboard-tables" element={<DashboardTables />} />
-          <Route path="/admin/item-return" element={<ItemReturn />} />
+          <Route path="/admin/reports/items" element={<DashboardTables />} />
+          <Route
+            path="/admin/reports/customer-serials"
+            element={<CustomerSerials />}
+          />
+          <Route path="/admin/reports/returns" element={<ReturnDetails />} />
+
+          <Route
+            path="/admin/settings/Return Upload"
+            element={<ItemReturn />}
+          />
+          <Route
+            path="/admin/reports/audity-inspections"
+            element={<AuditlyInspection />}
+          />
         </Route>
 
         {/* Auto */}
