@@ -133,7 +133,7 @@ export default function Details() {
       </motion.div>
 
       {/* Navigation Buttons */}
-{/*       <motion.div 
+      <motion.div 
         variants={itemVariants}
         className="flex justify-end gap-4"
       >
@@ -154,31 +154,7 @@ export default function Details() {
           Next
         </motion.button>
       </motion.div>
-    </motion.div> */}
-          <motion.div 
-      variants={cardVariants}
-      className="flex justify-end gap-4"
-  >
-      <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => router('/')}
-          className="group flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
-      >
-          <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-          Back
-      </motion.button>
-      <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleNext}
-          className="group flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md"
-      >
-          Next
-          <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-      </motion.button>
-  </motion.div>
-</motion.div>
+    </motion.div> 
   );
 }
 
