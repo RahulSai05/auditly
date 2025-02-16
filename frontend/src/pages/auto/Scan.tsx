@@ -379,7 +379,7 @@ const Scan = () => {
 
         setIsScanning(false);
         axios
-            .get(`http://localhost:8000/item_order_instance`, { params: { identifier: decodedText } })
+            .get(`http://54.210.159.220:8000/item_order_instance`, { params: { identifier: decodedText } })
             .then(response => {
                 if (response.status === 200) {
                     setProductData(response.data);
