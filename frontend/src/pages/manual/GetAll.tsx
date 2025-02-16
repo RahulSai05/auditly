@@ -395,12 +395,13 @@ const GetAll: React.FC = () => {
     };
 
     return (
-        <motion.div
+        <motion.div 
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen"
+            className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-8"
         >
+            {/* Search Bar */}
             <motion.div variants={itemVariants} className="mb-8">
                 <div className="text-center mb-12">
                     <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -414,7 +415,7 @@ const GetAll: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 max-w-2xl mx-auto">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
@@ -457,7 +458,7 @@ const GetAll: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 mt-3 text-red-600"
+                        className="flex items-center gap-2 mt-3 text-red-600 max-w-2xl mx-auto"
                     >
                         <AlertCircle className="w-4 h-4" />
                         <span>{error}</span>
@@ -474,21 +475,94 @@ const GetAll: React.FC = () => {
                         exit="hidden"
                         variants={containerVariants}
                     >
-                        <motion.div
+                        {/* Information Grid */}
+                        <motion.div 
                             variants={containerVariants}
                             className="grid md:grid-cols-2 gap-8 mb-8"
                         >
-                            {/* Placeholder for dynamic content - use ProductData or similar structure */}
+                            {/* General Information */}
+                            <motion.div 
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                <div className="flex items-center justify-center mb-4">
+                                    <Package2 className="w-8 h-8 text-blue-600 mr-2" />
+                                    <h3 className="font-bold text-xl text-gray-800">General Information</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <InfoRow label="Original Sales Order" value={productData.original_sales_order_number} />
+                                    <InfoRow label="Order Line" value={productData.original_sales_order_line} />
+                                    <InfoRow label="Ordered Quantity" value={productData.ordered_qty} />
+                                </div>
+                            </motion.div>
+
+                            {/* Return Information */}
+                            <motion.div 
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                <div className="flex items-center justify-center mb-4">
+                                    <FileText className="w-8 h-8 text-green-600 mr-2" />
+                                    <h3 className="font-bold text-xl text-gray-800">Return Information</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <InfoRow label="Return Order Number" value={`#${productData.return_order_number}`} />
+                                    <InfoRow label="Order Line" value={productData.return_order_line} />
+                                    <InfoRow label="Return Quantity" value={productData.return_qty} />
+                                </div>
+                            </motion.div>
+
+                            {/* Shipping Information */}
+                            <motion.div 
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                <div className="flex items-center justify-center mb-4">
+                                    <Truck className="w-8 h-8 text-purple-600 mr-2" />
+                                    <h3 className="font-bold text-xl text-gray-800">Shipping Information</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <InfoRow label="Serial Number" value={productData.serial_number} />
+                                    <InfoRow label="Vendor Item Number" value={productData.vendor_item_number} />
+                                    <InfoRow label="Shipped To" value={productData.shipped_to_person} />
+                                    <InfoRow 
+                                        label="Address" 
+                                        value={`${productData.shipped_to_address.street_number}, ${productData.shipped_to_address.city}, ${productData.shipped_to_address.state}, ${productData.shipped_to_address.country}`} 
+                                    />
+                                </div>
+                            </motion.div>
+
+                            {/* Dimensions */}
+                            <motion.div 
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                            >
+                                <div className="flex items-center justify-center mb-4">
+                                    <Ruler className="w-8 h-8 text-orange-600 mr-2" />
+                                    <h3 className="font-bold text-xl text-gray-800">Dimensions</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <InfoRow label="Depth" value={productData.dimensions.depth} />
+                                    <InfoRow label="Length" value={productData.dimensions.length} />
+                                    <InfoRow label="Breadth" value={productData.dimensions.breadth} />
+                                    <InfoRow label="Weight" value={productData.dimensions.weight} />
+                                </div>
+                            </motion.div>
                         </motion.div>
 
-                        <motion.div
+                        {/* Navigation Buttons */}
+                        <motion.div 
                             variants={itemVariants}
                             className="flex justify-end gap-4"
                         >
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => router("/")}
+                                onClick={() => router('/')}
                                 className="group flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
                             >
                                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
@@ -496,7 +570,7 @@ const GetAll: React.FC = () => {
                             </motion.button>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale 0.98 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={handleNext}
                                 className="group flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md"
                             >
@@ -509,7 +583,7 @@ const GetAll: React.FC = () => {
                     <motion.div
                         key="no-results"
                         initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity 1, y: 0 }}
+                        animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-2xl mx-auto border border-gray-100"
                     >
