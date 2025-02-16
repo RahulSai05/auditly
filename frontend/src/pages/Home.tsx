@@ -11,7 +11,7 @@ export default function Home() {
     const handleSearch = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('http://54.210.159.220::8000/get-receipt-data', {
+            const response = await axios.post('http://54.210.159.220:8000/get-receipt-data', {
                 receipt_number: receiptNumber
             });
             setData(response.data);
