@@ -223,7 +223,6 @@
 
 // export default GetAll;
 
-
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addItem } from "../../store/slices/itemSlice";
@@ -487,4 +486,3 @@ const InfoRow: React.FC<{ label: string; value: string | number }> = ({ label, v
 );
 
 export default GetAll;
-
