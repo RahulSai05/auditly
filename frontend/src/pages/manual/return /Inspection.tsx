@@ -412,6 +412,7 @@ export default function Inspection() {
     ];
 
     const issues = [
+        { label: "No_stains", icon: <Droplets className="w-5 h-5" /> },
         { id: "bio_stains", label: "bio_stains", icon: <Droplets className="w-5 h-5" /> },
         { id: "package_stains", label: "package_stains", icon: <Droplets className="w-5 h-5" /> },
     ];
