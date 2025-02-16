@@ -726,12 +726,12 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
 
     if factory_seal and new_conditiono:
         condition = "in good condition, making it resalable."
-        print("Sent Email")
+        print("Sent Not Email")
         #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", "geereddyrahul@gmail.com", "Test", "Test Message")
 
     else:
         condition = "NOT in good condition, hence cannot be resold."
-        print("Sent Email")
+        print("Sent Not Email")
         #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", "geereddyrahul@gmail.com", "Test", "Test Message")
 
     subject = """
