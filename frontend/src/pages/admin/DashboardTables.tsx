@@ -1,5 +1,4 @@
-
-// import React, { useState, useEffect } from "react";
+// import React, { useState, useEffect, useMemo } from "react";
 // import axios from "axios";
 // import { useNavigate } from "react-router-dom";
 // import { motion, AnimatePresence } from "framer-motion";
@@ -36,9 +35,9 @@
 //     visible: {
 //       opacity: 1,
 //       transition: {
-//         staggerChildren: 0.1
-//       }
-//     }
+//         staggerChildren: 0.1,
+//       },
+//     },
 //   };
 
 //   const itemVariants = {
@@ -49,9 +48,9 @@
 //       transition: {
 //         type: "spring",
 //         stiffness: 100,
-//         damping: 15
-//       }
-//     }
+//         damping: 15,
+//       },
+//     },
 //   };
 
 //   useEffect(() => {
@@ -59,7 +58,7 @@
 //       try {
 //         const [itemsResponse, customerDataResponse] = await Promise.all([
 //           axios.get<Item[]>("http://54.210.159.220:8000/items"),
-//           axios.get<CustomerData[]>("http://54.210.159.220:8000/customer-item-data")
+//           axios.get<CustomerData[]>("http://54.210.159.220:8000/customer-item-data"),
 //         ]);
 
 //         setItems(itemsResponse.data);
@@ -74,29 +73,35 @@
 //     fetchData();
 //   }, []);
 
-//   const filteredItems = items
-//     .filter(
-//       (item) =>
-//         (searchItem === "" ||
-//           String(item.item_number)
-//             .toLowerCase()
-//             .includes(searchItem.toLowerCase())) &&
-//         (categoryFilter === "" || item.category === categoryFilter)
-//     )
-//     .slice(0, 5); // Limit to 5 items
+//   // Memoize filtered items and customer data
+//   const filteredItems = useMemo(() => {
+//     return items
+//       .filter(
+//         (item) =>
+//           (searchItem === "" ||
+//             String(item.item_number)
+//               .toLowerCase()
+//               .includes(searchItem.toLowerCase())) &&
+//           (categoryFilter === "" || item.category === categoryFilter)
+//       )
+//       .slice(0, 5); // Limit to 5 items
+//   }, [items, searchItem, categoryFilter]);
 
-//   const filteredCustomerData = customerData
-//     .filter(
-//       (data) =>
-//         (searchCustomer === "" ||
-//           String(data.return_order_number)
-//             .toLowerCase()
-//             .includes(searchCustomer.toLowerCase())) &&
-//         (conditionFilter === "" || data.return_condition === conditionFilter)
-//     )
-//     .slice(0, 5); // Limit to 5 items
+//   const filteredCustomerData = useMemo(() => {
+//     return customerData
+//       .filter(
+//         (data) =>
+//           (searchCustomer === "" ||
+//             String(data.return_order_number)
+//               .toLowerCase()
+//               .includes(searchCustomer.toLowerCase())) &&
+//           (conditionFilter === "" || data.return_condition === conditionFilter)
+//       )
+//       .slice(0, 5); // Limit to 5 items
+//   }, [customerData, searchCustomer, conditionFilter]);
 
-//   const SearchBar = ({ 
+//   // Memoize SearchBar to prevent unnecessary re-renders
+//   const SearchBar = React.memo(({ 
 //     value, 
 //     onChange, 
 //     placeholder, 
@@ -104,14 +109,6 @@
 //     onFilterChange, 
 //     filterOptions, 
 //     filterPlaceholder 
-//   }: { 
-//     value: string;
-//     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-//     placeholder: string;
-//     filter: string;
-//     onFilterChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-//     filterOptions: string[];
-//     filterPlaceholder: string;
 //   }) => (
 //     <div className="flex gap-4 mb-4">
 //       <div className="relative flex-1">
@@ -140,7 +137,7 @@
 //         </select>
 //       </div>
 //     </div>
-//   );
+//   ));
 
 //   const TableHeader = ({ children }: { children: React.ReactNode }) => (
 //     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
