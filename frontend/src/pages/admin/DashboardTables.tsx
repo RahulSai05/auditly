@@ -35,7 +35,7 @@ const DashboardTables: React.FC = () => {
         setItems(itemsResponse.data.slice(0, 20));
 
         const customerDataResponse = await axios.get<CustomerData[]>(
-          "http://54.210.159.220:8000/customer-item-data"
+          "http://54.210.159.22:8000/customer-item-data"
         );
         setCustomerData(customerDataResponse.data.slice(0, 10));
       } catch (error) {
