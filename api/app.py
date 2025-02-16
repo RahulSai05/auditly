@@ -1046,5 +1046,43 @@ def encode_image_to_base64(image_path):
         return base64.b64encode(img_file.read()).decode('utf-8')
 
 
+@app.post("/get-receipt-data/")
+async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
+    # Assuming CustomerItemCondition links to CustomerItemData which links to Item and so on
+    data = db.query(
+        CustomerItemCondition,
+        CustomerItemData,
+        Item,
+        Brand
+    ).join(
+        CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+    ).join(
+        Item, CustomerItemData.item_id == Item.id
+    ).join(
+        Brand, Item.brand_id == Brand.id
+    ).filter(
+        CustomerItemCondition.ack_number == request.receipt_number
+    ).first()
 
+    if not data:
+        raise HTTPException(status_code=404, detail="Data not found based on receipt number")
 
+    # Unpack the data from the joined query result
+    condition, item_data, item, brand = data
+
+    return {
+        "receipt_number": request.receipt_number,
+        "overall_condition": condition.overall_condition,
+        "item_description": item.item_description,
+        "brand_name": brand.brand_name,
+        "original_sales_order_number": item_data.original_sales_order_number,
+        "return_order_number": item_data.return_order_number,
+        "return_qty": item_data.return_qty,
+        "shipping_info": {
+            "shipped_to_person": item_data.shipped_to_person,
+            "address": item_data.shipped_to_address,
+            "city": item_data.city,
+            "state": item_data.state,
+            "country": item_data.country
+        }
+    }
