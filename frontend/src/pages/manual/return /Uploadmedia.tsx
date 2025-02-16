@@ -8,7 +8,7 @@ import axios from "axios";
 
 export default function UploadMedia() {
     const customerId = useSelector((state: RootState) => state.ids.customerID);
-    const itemId = useSelector((state: RootState) => state.ids.item_id);
+    const itemId = useSelector((state: RootState) => state.ids.item_id); // Retrieve itemId from Redux store
     const inspectionData = useSelector((state: RootState) => state.ids.inspectionData);
     const router = useNavigate();
 
@@ -53,7 +53,7 @@ export default function UploadMedia() {
 
         try {
             const response = await axios.post(
-                `http://http://54.210.159.220/:8000/upload-customer-images?${queryParams.toString()}`,
+                `http://54.210.159.220:8000/upload-customer-images?${queryParams.toString()}`,
                 formData,
                 {
                     headers: { "Content-Type": "multipart/form-data" },
@@ -62,7 +62,7 @@ export default function UploadMedia() {
 
             if (response.status === 200) {
                 alert("Images uploaded successfully!");
-                router(`/return/compare/`); 
+                router(`/return/compare/`); // Use itemId from Redux store
             } else {
                 alert("Failed to upload images. Please try again.");
             }
