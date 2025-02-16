@@ -369,7 +369,6 @@
 
 // export default ItemImageUpload;
 
-
 import React, { useState, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -514,15 +513,15 @@ const ItemImageUpload: React.FC = () => {
             <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
             <span className="text-sm text-gray-500">{title}</span>
             <span className="text-xs text-gray-400 mt-1">Click to upload</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onChange}
+              className="hidden"
+              disabled={isLoading}
+            />
           </label>
         )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={onChange}
-          className="hidden"
-          disabled={isLoading}
-        />
       </div>
     </motion.div>
   );
