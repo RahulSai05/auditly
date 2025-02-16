@@ -726,13 +726,11 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
 
     if factory_seal and new_conditiono:
         condition = "in good condition, making it resalable."
-        print("Sent Not Email")
-        #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", "geereddyrahul@gmail.com", "Test", "Test Message")
+        print("Sent Email")
 
     else:
         condition = "NOT in good condition, hence cannot be resold."
-        print("Sent Not Email")
-        #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", "geereddyrahul@gmail.com", "Test", "Test Message")
+        print("Sent Email")
 
     subject = """
      Customer Account - """+str(account_number)+"""; Serial Number - """+str(serial_number)+"""; Inspection Id - """+str(receipt_number)+"""
@@ -756,7 +754,7 @@ Returned Images are atached.
 Thanks,
 Audit team
 """
-
+    print("test")
     send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
 
 
