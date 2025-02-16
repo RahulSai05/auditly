@@ -1088,3 +1088,29 @@ async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(
             "country": item_data.country
         }
     }
+
+
+
+
+@app.get("/base-images/mapping/{base_to_item_mapping}")
+async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = Depends(get_db)):
+    base_data_records = db.query(BaseData).filter(BaseData.base_to_item_mapping == base_to_item_mapping).all()
+
+    if not base_data_records:
+        raise HTTPException(status_code=404, detail="Base images not found for the given mapping")
+
+    def encode_image(image_path):
+        try:
+            with open(image_path, "rb") as image_file:
+                return base64.b64encode(image_file.read()).decode("utf-8")
+        except FileNotFoundError:
+            return None  # Return None if the file doesn't exist
+
+    return [
+        {
+            "front_image_base64": encode_image(base_data.base_front_image),
+            "back_image_base64": encode_image(base_data.base_back_image),
+        }
+        for base_data in base_data_records
+    ]
+
