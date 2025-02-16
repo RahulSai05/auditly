@@ -234,7 +234,7 @@ export default function ProductDetails() {
         if (returnOrderNumber) {
             setLoading(true);
             setError(null);
-            axios.get(`http://localhost:8000/item-details/${returnOrderNumber}`)
+            axios.get(`http://54.210.159.220:8000/item-details/${returnOrderNumber}`)
                 .then(response => {
                     setItemDetails(response.data);
                 })
