@@ -35,7 +35,7 @@ export default function UploadMedia() {
             try {
                 // Fetch Comparison Data
                 const response = await axios.post(
-                    "http://http://54.210.159.220:8000/compare-images/",
+                    "http://54.210.159.220:8000/compare-images/",
                     {
                         customer_id: parseInt(customerId),
                         item_id: parseInt(itemId),
