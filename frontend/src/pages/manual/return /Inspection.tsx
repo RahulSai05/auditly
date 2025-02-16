@@ -24,7 +24,7 @@ export default function Inspection() {
     ];
 
     const productConditions = [
-        { id: "new_conditiono", label: "new_conditiono" },
+        { id: "new_conditiono", label: "new_condition" },
         { id: "not_new_condition", label: "not_new_condition" },
     ];
 
