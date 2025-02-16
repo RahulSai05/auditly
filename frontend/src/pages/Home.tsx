@@ -187,7 +187,7 @@ const CustomerData = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post("http://your-api-url/get-receipt-data/", { receipt_number: searchQuery });
+      const response = await axios.post("http://54.210.159.220:8000/get-receipt-data/", { receipt_number: searchQuery });
       setCustomerData([response.data]); // Adjust according to actual response structure
     } catch (error) {
       console.error("Error fetching customer data:", error);
