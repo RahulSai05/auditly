@@ -210,11 +210,12 @@
 //         </div>
 //     );
 // }
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { Package, Loader2 } from 'lucide-react';
+import { Package, Loader2, Tag, Barcode, Settings } from 'lucide-react';
 
 interface ItemDetails {
   item_description: string;
@@ -251,26 +252,26 @@ export default function ProductDetails() {
 
     if (!returnOrderNumber) {
         return (
-            <div className="p-4 text-center bg-gray-50 rounded-lg">
-                <Package className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600 text-sm">No product selected</p>
+            <div className="bg-white border rounded-lg p-6 text-center">
+                <Package className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">No product selected</p>
             </div>
         );
     }
 
     if (loading) {
         return (
-            <div className="p-4 text-center">
-                <Loader2 className="w-6 h-6 text-blue-600 animate-spin mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Loading details...</p>
+            <div className="bg-white border rounded-lg p-6 text-center">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+                <p className="text-gray-600">Loading product details...</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="p-4 text-center text-red-600 text-sm">
-                {error}
+            <div className="bg-red-50 border border-red-100 rounded-lg p-6 text-center">
+                <p className="text-red-600">{error}</p>
             </div>
         );
     }
@@ -278,32 +279,52 @@ export default function ProductDetails() {
     if (!itemDetails) return null;
 
     return (
-        <div className="bg-white rounded-lg shadow-sm">
-            <div className="border-b bg-gray-50 px-4 py-3">
-                <h2 className="text-sm font-medium text-gray-900">
-                    Return Order #{itemDetails.return_order_number}
-                </h2>
+        <div className="bg-white border rounded-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-blue-50 border-b px-6 py-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Package className="w-5 h-5 text-blue-600" />
+                        <h2 className="font-medium text-gray-900">
+                            Product Details
+                        </h2>
+                    </div>
+                    <span className="text-sm text-blue-600 font-medium">
+                        #{itemDetails.return_order_number}
+                    </span>
+                </div>
             </div>
 
-            <div className="p-4 space-y-4">
+            {/* Content */}
+            <div className="p-6 space-y-6">
                 {/* Product Info */}
-                <div>
-                    <p className="font-medium text-gray-900">
-                        {itemDetails.item_description}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                        Item: {itemDetails.item_number}
-                    </p>
+                <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            {itemDetails.item_description}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-600">
+                            <Barcode className="w-4 h-4" />
+                            <span className="text-sm">Item: {itemDetails.item_number}</span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <p className="text-gray-500 mb-1">Category</p>
+                {/* Details */}
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Tag className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-700">Category</span>
+                        </div>
                         <p className="text-gray-900">{itemDetails.category}</p>
                     </div>
-                    <div>
-                        <p className="text-gray-500 mb-1">Configuration</p>
+
+                    <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Settings className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-700">Configuration</span>
+                        </div>
                         <p className="text-gray-900">{itemDetails.configuration}</p>
                     </div>
                 </div>
@@ -311,4 +332,3 @@ export default function ProductDetails() {
         </div>
     );
 }
-
