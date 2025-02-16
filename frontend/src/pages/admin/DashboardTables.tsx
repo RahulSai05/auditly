@@ -218,7 +218,6 @@
 
 // export default DashboardTables;
 
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -282,8 +281,8 @@ const DashboardTables: React.FC = () => {
           axios.get<CustomerData[]>("http://54.210.159.220:8000/customer-item-data")
         ]);
 
-        setItems(itemsResponse.data.slice(0, 8));
-        setCustomerData(customerDataResponse.data.slice(0, 8));
+        setItems(itemsResponse.data);
+        setCustomerData(customerDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -294,23 +293,27 @@ const DashboardTables: React.FC = () => {
     fetchData();
   }, []);
 
-  const filteredItems = items.filter(
-    (item) =>
-      (searchItem === "" ||
-        String(item.item_number)
-          .toLowerCase()
-          .includes(searchItem.toLowerCase())) &&
-      (categoryFilter === "" || item.category === categoryFilter)
-  );
+  const filteredItems = items
+    .filter(
+      (item) =>
+        (searchItem === "" ||
+          String(item.item_number)
+            .toLowerCase()
+            .includes(searchItem.toLowerCase())) &&
+        (categoryFilter === "" || item.category === categoryFilter)
+    )
+    .slice(0, 5); // Limit to 5 items
 
-  const filteredCustomerData = customerData.filter(
-    (data) =>
-      (searchCustomer === "" ||
-        String(data.return_order_number)
-          .toLowerCase()
-          .includes(searchCustomer.toLowerCase())) &&
-      (conditionFilter === "" || data.return_condition === conditionFilter)
-  );
+  const filteredCustomerData = customerData
+    .filter(
+      (data) =>
+        (searchCustomer === "" ||
+          String(data.return_order_number)
+            .toLowerCase()
+            .includes(searchCustomer.toLowerCase())) &&
+        (conditionFilter === "" || data.return_condition === conditionFilter)
+    )
+    .slice(0, 5); // Limit to 5 items
 
   const SearchBar = ({ 
     value, 
