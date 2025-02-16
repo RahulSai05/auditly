@@ -309,7 +309,6 @@
 
 // export default GetAll;
 
-
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addItem } from "../../store/slices/itemSlice";
@@ -546,4 +545,3 @@ const InfoRow = ({ label, value }: { label: string; value: string | number }) =>
 );
 
 export default GetAll;
-
