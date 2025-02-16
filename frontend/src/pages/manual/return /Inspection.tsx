@@ -303,7 +303,7 @@ export default function Inspection() {
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => router("http://54.210.159.220:5173/return/details")}
+                    onClick={() => router("/return/details")}
                     className="group flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
                 >
                     <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
