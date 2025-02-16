@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Register from './Register'
 import axios from "axios";
 import { Mail, Lock, UserPlus } from "lucide-react";
 
