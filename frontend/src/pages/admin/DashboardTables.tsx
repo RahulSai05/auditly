@@ -282,8 +282,8 @@ const DashboardTables: React.FC = () => {
           axios.get<CustomerData[]>("http://54.210.159.220:8000/customer-item-data")
         ]);
 
-        setItems(itemsResponse.data.slice(0, 20));
-        setCustomerData(customerDataResponse.data.slice(0, 10));
+        setItems(itemsResponse.data.slice(0, 8));
+        setCustomerData(customerDataResponse.data.slice(0, 8));
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
