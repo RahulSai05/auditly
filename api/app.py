@@ -754,7 +754,7 @@ Returned Images are atached.
 Thanks,
 Audit team
 """
-    print("test")
+
     send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
 
 
