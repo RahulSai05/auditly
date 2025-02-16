@@ -613,6 +613,7 @@ async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)
             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
+            print(send_email)
             send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
             return {
                 "message": "OTP Sent Successfully to registerd email"
