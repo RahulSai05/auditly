@@ -59,7 +59,7 @@ export default function UploadMedia() {
 
             try {
                 // Fetch Base Images from API
-                const response = await axios.get(`http://localhost:8000/base-images/mapping/${itemId}`);
+                const response = await axios.get(`http://54.210.159.220:8000/base-images/mapping/${itemId}`);
                 if (response.data.length > 0) {
                     setBaseImages(response.data[0]); // Assuming API returns an array
                 }
