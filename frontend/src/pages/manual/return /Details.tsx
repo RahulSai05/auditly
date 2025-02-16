@@ -143,7 +143,6 @@ export default function Details() {
           onClick={() => router("/option/manual")}
           className="px-6 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium shadow-sm hover:bg-gray-50 transition-colors duration-200"
         >
-          <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
           Back
         </motion.button>
         <motion.button
@@ -153,7 +152,6 @@ export default function Details() {
           className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-md hover:bg-blue-700 transition-colors duration-200"
         >
           Next
-          <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
         </motion.button>
       </motion.div>
     </motion.div>
