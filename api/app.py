@@ -851,21 +851,6 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
 
     receipt_number = random.randint(100000000, 999999999)
 
-    # data = db.query(
-    #     CustomerItemCondition,
-    #     CustomerItemData,
-    #     Item,
-    #     Brand
-    # ).join(
-    #     CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-    # ).join(
-    #     Item, CustomerItemData.item_id == Item.id
-    # ).join(
-    #     Brand, Item.brand_id == Brand.id
-    # ).filter(
-    #     CustomerData.customer_item_data_id == customer_id
-    # ).first()
-
     data = db.query(
         CustomerItemCondition,
         CustomerItemData,
@@ -877,8 +862,6 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
         Item, CustomerItemData.item_id == Item.id
     ).join(
         Brand, Item.brand_id == Brand.id
-    ).join(
-        CustomerData, CustomerData.customer_item_data_id == CustomerItemData.id  # This line was potentially missing
     ).filter(
         CustomerData.customer_item_data_id == customer_id
     ).first()
