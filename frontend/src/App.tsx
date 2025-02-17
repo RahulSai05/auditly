@@ -232,6 +232,7 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
+import EditProfile from "./components/auth/EditProfile";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -287,6 +288,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/update-password" element={<EditProfile />} />
       </Routes>
       <Footer />
     </>
