@@ -495,7 +495,7 @@ function InfoCard({ title, items }) {
                             <dd className="mt-1 text-sm text-gray-900">{item.value}</dd>
                         </div>
                     ))}
-                </dl> <!-- Corrected closing tag here -->
+                </dl> {/* Corrected closing tag here */}
             </div>
         </motion.div>
     );
