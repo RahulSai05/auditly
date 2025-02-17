@@ -20,9 +20,10 @@ export default function Home() {
         setError('');
         setLoading(true);
         try {
-            const response = await axios.post('http://54.210.159.220:8000/get-receipt-data', {
+            const response = await axios.post('http://54.210.159.220:8000/get-receipt-data/', {
                 receipt_number: receiptNumber,
             });
+
             setData(response.data);
         } catch (error) {
             console.error('Error fetching details:', error);
