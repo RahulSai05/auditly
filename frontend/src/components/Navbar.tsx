@@ -196,8 +196,7 @@ export function Navbar() {
                 </motion.li>
                 <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
-                   // to="/admin/reports/items"
-                    to="/admin"
+                    to="/admin/reports/items"
                     className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition" 
                     onClick={() => setIsOpen(false)}
                   >
