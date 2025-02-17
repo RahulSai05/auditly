@@ -382,8 +382,8 @@ export default function Home() {
                             )}
                         </motion.button>
                         <motion.button
-                            whileHover={{ scale 1.02 }}
-                            whileTap={{ scale 0.98 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={handleClear}
                             className="group flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
                         >
