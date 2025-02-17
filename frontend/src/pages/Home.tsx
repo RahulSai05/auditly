@@ -249,7 +249,6 @@
 //     );
 // }
 
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -275,8 +274,9 @@ export default function Home() {
             const response = await axios.post('http://54.210.159.220:8000/get-receipt-data/', {
                 receipt_number: receiptNumber,
             });
+
+            console.log('API Response:', response.data); // Debugging
             setData(response.data);
-            console.log('API Data:', response.data); // Logging the API data
         } catch (error) {
             console.error('Error fetching details:', error);
             setError('Failed to fetch details. Please try again.');
@@ -362,13 +362,13 @@ export default function Home() {
                     </AnimatePresence>
 
                     <motion.div variants={itemVariants} className="flex gap-4 mt-6">
-                         <motion.button
+                        <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleSearch}
                             disabled={loading}
                             className="group flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        > 
+                        >
                             {loading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -395,7 +395,7 @@ export default function Home() {
 
                 {/* Results Section */}
                 <AnimatePresence>
-                    {data && (
+                    {data ? (
                         <motion.div
                             initial="hidden"
                             animate="visible"
@@ -411,19 +411,19 @@ export default function Home() {
                                     <InfoCard
                                         title="Return Information"
                                         items={[
-                                            { label: 'Inspection Number', value: data.receipt_number },
-                                            { label: 'Overall Condition', value: data.overall_condition },
-                                            { label: 'Return Order Number', value: data.return_order_number },
-                                            { label: 'Return Quantity', value: data.return_qty },
+                                            { label: 'Inspection Number', value: data?.receipt_number || 'N/A' },
+                                            { label: 'Overall Condition', value: data?.overall_condition || 'N/A' },
+                                            { label: 'Return Order Number', value: data?.return_order_number || 'N/A' },
+                                            { label: 'Return Quantity', value: data?.return_qty || 'N/A' },
                                         ]}
                                     />
 
                                     <InfoCard
                                         title="Product Details"
                                         items={[
-                                            { label: 'Item Description', value: data.item_description },
-                                            { label: 'Brand Name', value: data.brand_name },
-                                            { label: 'Original Sales Order', value: data.original_sales_order_number },
+                                            { label: 'Item Description', value: data?.item_description || 'N/A' },
+                                            { label: 'Brand Name', value: data?.brand_name || 'N/A' },
+                                            { label: 'Original Sales Order', value: data?.original_sales_order_number || 'N/A' },
                                         ]}
                                     />
                                 </div>
@@ -437,16 +437,25 @@ export default function Home() {
                                         <div>
                                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Shipping Information</h3>
                                             <p className="text-gray-700">
-                                                <span className="font-medium">{data.shipping_info.shipped_to_person}</span>
+                                                <span className="font-medium">{data?.shipping_info?.shipped_to_person || 'N/A'}</span>
                                                 <br />
-                                                {data.shipping_info.address},<br />
-                                                {data.shipping_info.city}, {data.shipping_info.state},<br />
-                                                {data.shipping_info.country}
+                                                {data?.shipping_info?.address || 'N/A'},<br />
+                                                {data?.shipping_info?.city || 'N/A'}, {data?.shipping_info?.state || 'N/A'},<br />
+                                                {data?.shipping_info?.country || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
                                 </motion.div>
                             </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="mt-4 p-3 bg-yellow-50 text-yellow-700 rounded-lg flex items-center"
+                        >
+                            No data found for the provided inspection number.
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -495,7 +504,7 @@ function InfoCard({ title, items }) {
                             <dd className="mt-1 text-sm text-gray-900">{item.value}</dd>
                         </div>
                     ))}
-                </dl> {/* Corrected closing tag here */}
+                </dl>
             </div>
         </motion.div>
     );
