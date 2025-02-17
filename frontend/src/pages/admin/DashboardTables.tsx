@@ -58,7 +58,7 @@ const DashboardTables: React.FC = () => {
       try {
         const [itemsResponse, customerDataResponse] = await Promise.all([
           axios.get<Item[]>("http://54.210.159.220:8000/items"),
-         // axios.get<CustomerData[]>("http://54.210.159.220:8000/customer-item-data"),
+          axios.get<CustomerData[]>("http://54.210.159.220:8000/customer-item-data"),
         ]);
 
         setItems(itemsResponse.data);
