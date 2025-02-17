@@ -102,7 +102,6 @@ import Scan from "./pages/auto/Scan";
 import Dashboard from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
-import ItemImageUpload from "./pages/admin/ItemImageUpload";
 import AdminLayout from "./components/AdminLayout";
 import ItemReturn from "./pages/admin/ItemReturn";
 import CustomerSerials from "./pages/admin/CustomerSerials";
