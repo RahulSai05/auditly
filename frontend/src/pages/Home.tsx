@@ -287,31 +287,59 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // const handleSearch = async () => {
+    //     if (!receiptNumber.trim()) {
+    //         setError('Please enter an inspection number');
+    //         return;
+    //     }
+
+    //     setError('');
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.post('http://54.210.159.220:8000/get-receipt-data', {
+    //             receipt_number: receiptNumber,
+    //         });
+
+    //         if (response.data) {
+    //             setData(response.data);
+    //         } else {
+    //             setError('No data found for the given inspection number.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching details:', error);
+    //         setError('Failed to fetch details. Please try again.');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const handleSearch = async () => {
-        if (!receiptNumber.trim()) {
-            setError('Please enter an inspection number');
-            return;
-        }
+    if (!receiptNumber.trim()) {
+        setError('Please enter an inspection number');
+        return;
+    }
 
-        setError('');
-        setLoading(true);
-        try {
-            const response = await axios.post('http://54.210.159.220:8000/get-receipt-data', {
-                receipt_number: receiptNumber,
-            });
+    setError('');
+    setLoading(true);
+    try {
+        const response = await axios.post('http://54.210.159.220:8000/get-receipt-data', {
+            receipt_number: receiptNumber,
+        });
 
-            if (response.data) {
-                setData(response.data);
-            } else {
-                setError('No data found for the given inspection number.');
-            }
-        } catch (error) {
-            console.error('Error fetching details:', error);
-            setError('Failed to fetch details. Please try again.');
-        } finally {
-            setLoading(false);
+        if (response.data) {
+            console.log("API Data:", response.data); // Debug log
+            setData(response.data);
+        } else {
+            setError('No data found for the given inspection number.');
+            console.log("No data received."); // Debug log
         }
-    };
+    } catch (error) {
+        console.error('Error fetching details:', error);
+        setError('Failed to fetch details. Please try again.');
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     const handleClear = () => {
         setReceiptNumber('');
