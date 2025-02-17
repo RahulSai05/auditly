@@ -362,22 +362,13 @@ export default function Home() {
                     </AnimatePresence>
 
                     <motion.div variants={itemVariants} className="flex gap-4 mt-6">
-{/*                         <motion.button
+                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleSearch}
                             disabled={loading}
                             className="group flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        > */}
-                            <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleClear}
-                            className="group flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
-                            >
-                            <X className="w-5 h-5" />
-                            Clear
-                            </motion.button>
+                        > 
                             {loading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
