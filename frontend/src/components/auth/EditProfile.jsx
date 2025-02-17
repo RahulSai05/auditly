@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { User, Save, ArrowLeft } from "lucide-react";
@@ -8,7 +8,6 @@ const EditProfile = () => {
   const userDataString = localStorage.getItem("token");
   const userData = userDataString ? JSON.parse(userDataString) : null;
 
-  // State to hold form data
   const [formData, setFormData] = useState({
     user_name: userData?.["User Name"] || "",
     first_name: userData?.["First Name"] || "",
@@ -17,16 +16,15 @@ const EditProfile = () => {
     email: userData?.["Email"] || "",
   });
 
-const [loading, setLoading] = useState<boolean>(false);
-const [message, setMessage] = useState<{
-  text: string;
-  type: "success" | "error" | "";
-}>({
-  text: "",
-  type: "",
-});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error" | "";
+  }>({
+    text: "",
+    type: "",
+  });
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -35,7 +33,6 @@ const [message, setMessage] = useState<{
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,7 +45,6 @@ const [message, setMessage] = useState<{
         return;
       }
 
-      // Send updated data to the backend
       const response = await axios.post("http://54.210.159.220:8000/update-profile", {
         user_id: userData["User ID"],
         ...formData,
@@ -56,7 +52,6 @@ const [message, setMessage] = useState<{
 
       if (response.status === 200) {
         setMessage({ text: "Profile updated successfully!", type: "success" });
-        // Update localStorage with new data
         localStorage.setItem(
           "token",
           JSON.stringify({
@@ -64,7 +59,6 @@ const [message, setMessage] = useState<{
             ...formData,
           })
         );
-        // Redirect to profile page after 2 seconds
         setTimeout(() => {
           navigate("/profile");
         }, 2000);
@@ -98,7 +92,6 @@ const [message, setMessage] = useState<{
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* User Name */}
             <div>
               <label htmlFor="user_name" className="block text-sm font-medium text-gray-700 mb-2">
                 Username
@@ -114,7 +107,6 @@ const [message, setMessage] = useState<{
               />
             </div>
 
-            {/* First Name */}
             <div>
               <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-2">
                 First Name
@@ -129,7 +121,6 @@ const [message, setMessage] = useState<{
               />
             </div>
 
-            {/* Last Name */}
             <div>
               <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-2">
                 Last Name
@@ -144,7 +135,6 @@ const [message, setMessage] = useState<{
               />
             </div>
 
-            {/* Gender */}
             <div>
               <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
                 Gender
@@ -163,7 +153,6 @@ const [message, setMessage] = useState<{
               </select>
             </div>
 
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email
