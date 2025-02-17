@@ -17,14 +17,14 @@ const EditProfile = () => {
     email: userData?.["Email"] || "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{
-    text: string;
-    type: "success" | "error" | "";
-  }>({
-    text: "",
-    type: "",
-  });
+const [loading, setLoading] = useState<boolean>(false);
+const [message, setMessage] = useState<{
+  text: string;
+  type: "success" | "error" | "";
+}>({
+  text: "",
+  type: "",
+});
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
