@@ -8,6 +8,7 @@ const UserMaintenance: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Fetch users from the API
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
@@ -31,6 +32,7 @@ const UserMaintenance: React.FC = () => {
   const filteredUsers = users.filter((user) =>
     Object.values(user).some((value) =>
       String(value).toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   // Handle search input change
