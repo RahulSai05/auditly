@@ -8,7 +8,7 @@ import base64
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, SalesData
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct, desc, or_
@@ -1008,3 +1008,34 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
+
+
+
+@app.get("/sales-data")
+async def get_sales_data(db: Session = Depends(get_db)):
+    try:
+        sales_data = db.query(SalesData).all()
+        return {
+            "message": "Data retrieved successfully.",
+            "data": [
+                {
+                    "SalesOrder": data.SalesOrder,
+                    "CustomerAccount": data.CustomerAccount,
+                    "Name": data.Name,
+                    "ReturnReasonCode": data.ReturnReasonCode,
+                    "ReturnStatus": data.ReturnStatus,
+                    "RMANumber": data.RMANumber,
+                    "InvoiceAccount": data.InvoiceAccount,
+                    "OrderType": data.OrderType,
+                    "CustomerRequisition": data.CustomerRequisition,
+                    "Status": data.Status,
+                    "ProjectID": data.ProjectID,
+                    "DoNotProcess": data.DoNotProcess,
+                    "Legacy": data.Legacy,
+                    "Segment": data.Segment,
+                    "Subsegment": data.Subsegment
+                } for data in sales_data
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {str(e)}")
