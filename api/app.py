@@ -6,7 +6,6 @@ import random
 import io
 import datetime
 import base64
-import pandas as pd
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
