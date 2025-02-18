@@ -8,7 +8,6 @@ const UserMaintenance: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch users from the API
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
