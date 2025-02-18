@@ -459,7 +459,7 @@ const AdminLayout = () => {
                     <div className="ml-5">
                       <li>
                         <NavLink
-                          to="/admin/inbound"
+                          to="/admin/settings/connectors/inbound"
                           className={({ isActive }) =>
                             `${nestedLinkStyle} ${
                               isActive ? activeLinkStyle : ""
@@ -473,7 +473,7 @@ const AdminLayout = () => {
                       </li>
                       <li>
                         <NavLink
-                          to="/admin/outbound"
+                          to="/admin/settings/connectors/outbound"
                           className={({ isActive }) =>
                             `${nestedLinkStyle} ${
                               isActive ? activeLinkStyle : ""
