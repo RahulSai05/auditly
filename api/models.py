@@ -131,5 +131,25 @@ class CustomerItemCondition(Base):
     difference_front_image = Column(String(5555))
     difference_back_image = Column(String(5555))
     customer_item_condition_mapping_id = Column(Integer, ForeignKey("customer_item_data.id"), nullable=True)
+    
+class SalesData(Base):
+    __tablename__ = 'sales_data'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    SalesOrder = Column(String(255))
+    CustomerAccount = Column(String(255))
+    Name = Column(String(255))
+    ReturnReasonCode = Column(String(255))
+    ReturnStatus = Column(String(255))
+    RMANumber = Column(String(255))
+    InvoiceAccount = Column(String(255))
+    OrderType = Column(String(255))
+    CustomerRequisition = Column(String(255))
+    Status = Column(String(255))
+    ProjectID = Column(String(255))
+    DoNotProcess = Column(String(255))
+    Legacy = Column(String(255))
+    Segment = Column(String(255))
+    Subsegment = Column(String(255))
 
 
