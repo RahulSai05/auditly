@@ -3,8 +3,10 @@ import numpy as np
 import csv
 import cv2
 import random
+import io
 import datetime
 import base64
+import pandas as pd
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
@@ -1039,3 +1041,46 @@ async def get_sales_data(db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {str(e)}")
+
+
+
+
+@app.post("/customer-serial-upload/")
+async def upload_customer_data(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """
+    Upload a CSV file to add or update customer data in the database.
+    """
+    try:
+        content = await file.read()
+        decoded_content = content.decode("utf-8").splitlines()
+        csv_reader = csv.DictReader(io.StringIO('\n'.join(decoded_content)))
+
+        for row in csv_reader:
+            customer = db.query(SalesData).filter(SalesData.SalesOrder == row["SalesOrder"]).first()
+
+            if customer:
+                # Update existing customer record
+                customer.CustomerAccount = row["CustomerAccount"]
+                customer.Name = row["Name"]
+                customer.ReturnReasonCode = row["ReturnReasonCode"]
+                customer.ReturnStatus = row["ReturnStatus"]
+                customer.RMANumber = row["RMANumber"]
+                customer.InvoiceAccount = row["InvoiceAccount"]
+                customer.OrderType = row["OrderType"]
+                customer.CustomerRequisition = row["CustomerRequisition"]
+                customer.Status = row["Status"]
+                customer.ProjectID = row["ProjectID"]
+                customer.DoNotProcess = row["DoNotProcess"]
+                customer.Legacy = row["Legacy"]
+                customer.Segment = row["Segment"]
+                customer.Subsegment = row["Subsegment"]
+            else:
+                # Create a new customer record
+                new_customer = SalesData(**row)
+                db.add(new_customer)
+
+        db.commit()
+        return {"message": "CSV uploaded successfully and customer data added/updated."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
