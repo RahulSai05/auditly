@@ -79,7 +79,7 @@ export default function App() {
           <Route path="/admin/settings/users-maintenance" element={<UserMaintenance />} />   
           <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />   
           <Route path="/admin/settings/connectors/outbound" element={<Outbound />} />   
-          <Route path="/admin/settings/connectors/email-configurations" element={<EmailConfigurations />} />   
+          <Route path="/admin/settings/email-configurations" element={<EmailConfigurations />} />   
           
         </Route> 
 
