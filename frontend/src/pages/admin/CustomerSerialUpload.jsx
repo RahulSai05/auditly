@@ -16,11 +16,6 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Search, FileText, X, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
-// Define TypeScript interfaces for state management
-interface Notification {
-    type: 'success' | 'error' | '';
-    message: string;
-}
 
 const CustomerSerialUpload: React.FC = () => {
     const [csvFile, setCsvFile] = useState<File | null>(null);
