@@ -70,7 +70,7 @@ export default function App() {
           <Route path="/admin/reports/returns" element={<ReturnDetails />} />
           <Route path="/admin/settings/Return Upload" element={<ItemReturn />} />
           <Route path="/admin/reports/audity-inspections" element={<AuditlyInspection />} />
-          <Route path="/admin/settings/customer serial Upload" element={<ItemUpload />} />
+          <Route path="/admin/settings/customer serial Upload" element={<CustomerSerialUpload />} />
         </Route>
 
         {/* Auto */}
