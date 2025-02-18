@@ -1,8 +1,347 @@
+// import React, { useState, useEffect, useMemo } from "react";
+// import { useSearchParams } from "react-router-dom";
+// import axios from "axios";
+// import { motion, AnimatePresence } from "framer-motion";
+// import { Search, Filter, Loader2, ClipboardList, ChevronDown, Users2 } from "lucide-react";
+
+// interface SalesData {
+//   SalesOrder: string;
+//   CustomerAccount: string;
+//   Name: string;
+//   ReturnStatus: string;
+//   RMANumber: string;
+//   OrderType: string;
+//   Status: string;
+//   Segment: string;
+//   Subsegment: string;
+// }
+
+// const CustomerSerials: React.FC = () => {
+//   const [searchParams] = useSearchParams();
+//   const orderNumber = searchParams.get("OrderNumber");
+//   const [customerData, setCustomerData] = useState<SalesData[]>([]);
+//   const [searchSalesOrder, setSearchSalesOrder] = useState(orderNumber || "");
+//   const [statusFilter, setStatusFilter] = useState("");
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const containerVariants = {
+//     hidden: { opacity: 0 },
+//     visible: {
+//       opacity: 1,
+//       transition: {
+//         staggerChildren: 0.1,
+//       },
+//     },
+//   };
+
+//   const itemVariants = {
+//     hidden: { opacity: 0, y: 20 },
+//     visible: {
+//       opacity: 1,
+//       y: 0,
+//       transition: {
+//         type: "spring",
+//         stiffness: 100,
+//         damping: 15,
+//       },
+//     },
+//   };
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         setIsLoading(true);
+//         setError(null);
+//         const response = await axios.get<{ message: string; data: SalesData[] }>(
+//           "http://54.210.159.220:8000/sales-data",
+//           {
+//             headers: {
+//               'Accept': 'application/json',
+//               'Content-Type': 'application/json',
+//             },
+//           }
+//         );
+        
+//         console.log("API Response:", response.data); // Debugging
+//         if (response.data && Array.isArray(response.data.data)) {
+//           setCustomerData(response.data.data);
+//         } else {
+//           throw new Error('Invalid data format received from server');
+//         }
+//       } catch (error) {
+//         console.error("Error fetching sales data:", error);
+//         setError(error instanceof Error ? error.message : 'An error occurred while fetching data');
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   const filteredSalesData = useMemo(() => {
+//     const filtered = customerData.filter(
+//       (data) =>
+//         (searchSalesOrder === "" ||
+//           data.SalesOrder.toLowerCase().includes(searchSalesOrder.toLowerCase())) &&
+//         (statusFilter === "" || data.Status === statusFilter)
+//     );
+//     console.log("Filtered Data:", filtered); // Debugging
+//     return filtered;
+//   }, [customerData, searchSalesOrder, statusFilter]);
+
+//   const SearchBar = React.memo(({ 
+//     value, 
+//     onChange, 
+//     placeholder, 
+//     filter, 
+//     onFilterChange, 
+//     filterOptions, 
+//     filterPlaceholder 
+//   }: {
+//     value: string;
+//     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+//     placeholder: string;
+//     filter: string;
+//     onFilterChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+//     filterOptions: string[];
+//     filterPlaceholder: string;
+//   }) => (
+//     <div className="flex flex-col md:flex-row gap-4 mb-6">
+//       <div className="relative flex-1">
+//         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+//           <Search className="w-5 h-5" />
+//         </div>
+//         <input
+//           type="text"
+//           placeholder={placeholder}
+//           className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+//           value={value}
+//           onChange={onChange}
+//         />
+//       </div>
+//       <div className="relative min-w-[200px]">
+//         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+//           <Filter className="w-4 h-4" />
+//         </div>
+//         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 pointer-events-none">
+//           <ChevronDown className="w-4 h-4" />
+//         </div>
+//         <select
+//           className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl appearance-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+//           value={filter}
+//           onChange={onFilterChange}
+//         >
+//           <option value="">{filterPlaceholder}</option>
+//           {filterOptions.map((option) => (
+//             <option key={option} value={option}>
+//               {option}
+//             </option>
+//           ))}
+//         </select>
+//       </div>
+//     </div>
+//   ));
+
+//   const TableHeader = ({ children }: { children: React.ReactNode }) => (
+//     <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
+//       {children}
+//     </th>
+//   );
+
+//   if (error) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
+//         <div className="bg-white p-8 rounded-xl shadow-lg">
+//           <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+//           <p className="text-gray-700">{error}</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+//       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+//         {/* Header Section */}
+//         <motion.div
+//           initial={{ opacity: 0, y: 20 }}
+//           animate={{ opacity: 1, y: 0 }}
+//           className="text-center mb-12"
+//         >
+//           <motion.div
+//             initial={{ scale: 0.8, rotate: -180 }}
+//             animate={{ scale: 1, rotate: 0 }}
+//             transition={{
+//               type: "spring",
+//               stiffness: 200,
+//               damping: 20,
+//             }}
+//             className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
+//           >
+//             <Users2 className="w-10 h-10 text-blue-600" />
+//           </motion.div>
+//           <motion.h1
+//             initial={{ opacity: 0, y: 20 }}
+//             animate={{ opacity: 1, y: 0 }}
+//             transition={{ delay: 0.2 }}
+//             className="text-4xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
+//           >
+//             Customer Sales Data
+//           </motion.h1>
+//           <motion.p
+//             initial={{ opacity: 0, y: 20 }}
+//             animate={{ opacity: 1, y: 0 }}
+//             transition={{ delay: 0.3 }}
+//             className="text-xl text-gray-600 max-w-2xl mx-auto"
+//           >
+//             View and manage customer sales information
+//           </motion.p>
+//         </motion.div>
+
+//         <AnimatePresence mode="wait">
+//           {isLoading ? (
+//             <motion.div
+//               initial={{ opacity: 0 }}
+//               animate={{ opacity: 1 }}
+//               exit={{ opacity: 0 }}
+//               className="flex items-center justify-center py-12"
+//             >
+//               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+//             </motion.div>
+//           ) : (
+//             <motion.div
+//               variants={containerVariants}
+//               initial="hidden"
+//               animate="visible"
+//               className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 overflow-hidden"
+//             >
+//               <div className="p-6">
+//                 <div className="flex items-center gap-3 mb-6">
+//                   <motion.div
+//                     whileHover={{ scale: 1.1, rotate: 10 }}
+//                     className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-colors duration-300"
+//                   >
+//                     <ClipboardList className="w-6 h-6 text-blue-600" />
+//                   </motion.div>
+//                   <h2 className="text-xl font-bold text-gray-800">Sales Records</h2>
+//                 </div>
+
+//                 <SearchBar
+//                   value={searchSalesOrder}
+//                   onChange={(e) => setSearchSalesOrder(e.target.value)}
+//                   placeholder="Search by Sales Order..."
+//                   filter={statusFilter}
+//                   onFilterChange={(e) => setStatusFilter(e.target.value)}
+//                   filterOptions={Array.from(new Set(customerData.map((data) => data.Status)))}
+//                   filterPlaceholder="All Statuses"
+//                 />
+
+//                 <div className="overflow-hidden rounded-xl border border-blue-100">
+//                   <div className="overflow-x-auto">
+//                     <table className="min-w-full divide-y divide-blue-100">
+//                       <thead>
+//                         <tr>
+//                           <TableHeader>Sales Order</TableHeader>
+//                           <TableHeader>Customer Account</TableHeader>
+//                           <TableHeader>Name</TableHeader>
+//                           <TableHeader>Return Status</TableHeader>
+//                           <TableHeader>RMA Number</TableHeader>
+//                           <TableHeader>Order Type</TableHeader>
+//                           <TableHeader>Status</TableHeader>
+//                           <TableHeader>Segment</TableHeader>
+//                           <TableHeader>Subsegment</TableHeader>
+//                         </tr>
+//                       </thead>
+//                       <tbody className="divide-y divide-blue-50">
+//                         <AnimatePresence>
+//                           {filteredSalesData.map((data, index) => (
+//                             <motion.tr
+//                               key={data.SalesOrder}
+//                               variants={itemVariants}
+//                               custom={index}
+//                               className="hover:bg-blue-50/50 transition-colors duration-200"
+//                               whileHover={{ scale: 1.002 }}
+//                             >
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+//                                 {data.SalesOrder}
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 {data.CustomerAccount}
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 {data.Name}
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap">
+//                                 <span
+//                                   className={`
+//                                     inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+//                                     ${
+//                                       data.ReturnStatus === "New"
+//                                         ? "bg-green-100 text-green-800"
+//                                         : "bg-yellow-100 text-yellow-800"
+//                                     }
+//                                   `}
+//                                 >
+//                                   {data.ReturnStatus}
+//                                 </span>
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 {data.RMANumber}
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 {data.OrderType}
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+//                                   {data.Status}
+//                                 </span>
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 {data.Segment}
+//                               </td>
+//                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                                 {data.Subsegment}
+//                               </td>
+//                             </motion.tr>
+//                           ))}
+//                         </AnimatePresence>
+//                         {filteredSalesData.length === 0 && (
+//                           <motion.tr
+//                             initial={{ opacity: 0 }}
+//                             animate={{ opacity: 1 }}
+//                             exit={{ opacity: 0 }}
+//                           >
+//                             <td
+//                               colSpan={9}
+//                               className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
+//                             >
+//                               No sales records found matching your criteria.
+//                             </td>
+//                           </motion.tr>
+//                         )}
+//                       </tbody>
+//                     </table>
+//                   </div>
+//                 </div>
+//               </div>
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default CustomerSerials;
+
+
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Loader2, ClipboardList, ChevronDown, Users2 } from "lucide-react";
+import { Search, Filter, Loader2, ClipboardList } from "lucide-react";
 
 interface SalesData {
   SalesOrder: string;
@@ -20,10 +359,9 @@ const CustomerSerials: React.FC = () => {
   const [searchParams] = useSearchParams();
   const orderNumber = searchParams.get("OrderNumber");
   const [customerData, setCustomerData] = useState<SalesData[]>([]);
-  const [searchSalesOrder, setSearchSalesOrder] = useState(orderNumber || "");
+  const [searchSalesOrder, setSearchSalesOrder] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -51,27 +389,12 @@ const CustomerSerials: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
         const response = await axios.get<{ message: string; data: SalesData[] }>(
-          "http://54.210.159.220:8000/sales-data",
-          {
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-          }
+          "http://54.210.159.220:8000/sales-data"
         );
-        
-        console.log("API Response:", response.data); // Debugging
-        if (response.data && Array.isArray(response.data.data)) {
-          setCustomerData(response.data.data);
-        } else {
-          throw new Error('Invalid data format received from server');
-        }
+        setCustomerData(response.data.data);
       } catch (error) {
         console.error("Error fetching sales data:", error);
-        setError(error instanceof Error ? error.message : 'An error occurred while fetching data');
       } finally {
         setIsLoading(false);
       }
@@ -81,14 +404,14 @@ const CustomerSerials: React.FC = () => {
   }, []);
 
   const filteredSalesData = useMemo(() => {
-    const filtered = customerData.filter(
-      (data) =>
-        (searchSalesOrder === "" ||
-          data.SalesOrder.toLowerCase().includes(searchSalesOrder.toLowerCase())) &&
-        (statusFilter === "" || data.Status === statusFilter)
-    );
-    console.log("Filtered Data:", filtered); // Debugging
-    return filtered;
+    return customerData
+      .filter(
+        (data) =>
+          (searchSalesOrder === "" ||
+            data.SalesOrder.toLowerCase().includes(searchSalesOrder.toLowerCase())) &&
+          (statusFilter === "" || data.Status === statusFilter)
+      )
+      .slice(0, 5); // Limit to 5 items
   }, [customerData, searchSalesOrder, statusFilter]);
 
   const SearchBar = React.memo(({ 
@@ -99,37 +422,22 @@ const CustomerSerials: React.FC = () => {
     onFilterChange, 
     filterOptions, 
     filterPlaceholder 
-  }: {
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    placeholder: string;
-    filter: string;
-    onFilterChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    filterOptions: string[];
-    filterPlaceholder: string;
   }) => (
-    <div className="flex flex-col md:flex-row gap-4 mb-6">
+    <div className="flex gap-4 mb-4">
       <div className="relative flex-1">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-          <Search className="w-5 h-5" />
-        </div>
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
           type="text"
           placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+          className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200"
           value={value}
           onChange={onChange}
         />
       </div>
-      <div className="relative min-w-[200px]">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-          <Filter className="w-4 h-4" />
-        </div>
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 pointer-events-none">
-          <ChevronDown className="w-4 h-4" />
-        </div>
+      <div className="relative">
+        <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <select
-          className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl appearance-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+          className="pl-10 pr-8 py-2 border rounded-lg appearance-none bg-white focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200"
           value={filter}
           onChange={onFilterChange}
         >
@@ -145,87 +453,39 @@ const CustomerSerials: React.FC = () => {
   ));
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
-    <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
+    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
       {children}
     </th>
   );
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-700">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="flex-1 p-8 bg-gray-50"
+    >
+      <AnimatePresence mode="wait">
+        {isLoading ? (
           <motion.div
-            initial={{ scale: 0.8, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 20,
-            }}
-            className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center justify-center h-full"
           >
-            <Users2 className="w-10 h-10 text-blue-600" />
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
           </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-4xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
-          >
-            Customer Sales Data
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-xl text-gray-600 max-w-2xl mx-auto"
-          >
-            View and manage customer sales information
-          </motion.p>
-        </motion.div>
-
-        <AnimatePresence mode="wait">
-          {isLoading ? (
+        ) : (
+          <motion.div variants={containerVariants} className="grid gap-8">
+            {/* Customer Data Table */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center py-12"
-            >
-              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 overflow-hidden"
+              variants={itemVariants}
+              className="bg-white rounded-xl shadow-lg overflow-hidden"
             >
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 10 }}
-                    className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-colors duration-300"
-                  >
-                    <ClipboardList className="w-6 h-6 text-blue-600" />
-                  </motion.div>
-                  <h2 className="text-xl font-bold text-gray-800">Sales Records</h2>
+                  <ClipboardList className="w-6 h-6 text-blue-600" />
+                  <h2 className="text-xl font-bold text-gray-800">Sales Data</h2>
                 </div>
 
                 <SearchBar
@@ -238,10 +498,10 @@ const CustomerSerials: React.FC = () => {
                   filterPlaceholder="All Statuses"
                 />
 
-                <div className="overflow-hidden rounded-xl border border-blue-100">
+                <div className="overflow-hidden rounded-lg border border-gray-200">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-blue-100">
-                      <thead>
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
                         <tr>
                           <TableHeader>Sales Order</TableHeader>
                           <TableHeader>Customer Account</TableHeader>
@@ -254,83 +514,59 @@ const CustomerSerials: React.FC = () => {
                           <TableHeader>Subsegment</TableHeader>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-blue-50">
-                        <AnimatePresence>
-                          {filteredSalesData.map((data, index) => (
-                            <motion.tr
-                              key={data.SalesOrder}
-                              variants={itemVariants}
-                              custom={index}
-                              className="hover:bg-blue-50/50 transition-colors duration-200"
-                              whileHover={{ scale: 1.002 }}
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                {data.SalesOrder}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.CustomerAccount}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.Name}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`
-                                    inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    ${
-                                      data.ReturnStatus === "New"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-yellow-100 text-yellow-800"
-                                    }
-                                  `}
-                                >
-                                  {data.ReturnStatus}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.RMANumber}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.OrderType}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {data.Status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.Segment}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.Subsegment}
-                              </td>
-                            </motion.tr>
-                          ))}
-                        </AnimatePresence>
-                        {filteredSalesData.length === 0 && (
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredSalesData.map((data) => (
                           <motion.tr
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                            key={data.SalesOrder}
+                            className="hover:bg-blue-50 transition-colors duration-150"
+                            whileHover={{ scale: 1.002 }}
                           >
-                            <td
-                              colSpan={9}
-                              className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
-                            >
-                              No sales records found matching your criteria.
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                              {data.SalesOrder}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.CustomerAccount}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.Name}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`
+                                px-3 py-1 rounded-full text-xs font-medium
+                                ${data.ReturnStatus === 'New' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-yellow-100 text-yellow-800'}
+                              `}>
+                                {data.ReturnStatus}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.RMANumber}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.OrderType}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.Status}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.Segment}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {data.Subsegment}
                             </td>
                           </motion.tr>
-                        )}
+                        ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
