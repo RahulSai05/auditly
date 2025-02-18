@@ -23,6 +23,7 @@ import AuditlyInspection from "./pages/admin/AuditlyInspection";
 import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
 import UserMaintenance from "./pages/admin/UserMaintenance";
 import Inbound from "./pages/admin/Inbound";
+import Outbound from "./pages/admin/Outbound";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
@@ -75,6 +76,8 @@ export default function App() {
           <Route path="/admin/settings/customer serial Upload" element={<CustomerSerialUpload />} />
           <Route path="/admin/settings/users-maintenance" element={<UserMaintenance />} />   
           <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />   
+          <Route path="/admin/settings/connectors/outbound" element={<Outbound />} />   
+
         </Route> 
 
         {/* Auto */}
