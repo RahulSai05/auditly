@@ -62,7 +62,7 @@ const teamEmails: TeamEmail[] = [
   }
 ];
 
-function App() {
+function EmailConfigurations() {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -207,4 +207,4 @@ function App() {
   );
 }
 
-export default App;
+export default EmailConfigurations;
