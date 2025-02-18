@@ -177,7 +177,7 @@ const AdminLayout = () => {
               {[
                 "api configurations",
                 "email configurations",
-                "users maintance",
+                "users maintenance",
               ].map((item) => (
                 <li key={item}>
                   <NavLink
@@ -193,7 +193,7 @@ const AdminLayout = () => {
                     {item === "email configurations" && (
                       <Mail className="w-5 h-5 mr-2" />
                     )}
-                    {item === "users maintance" && (
+                    {item === "users maintenance" && (
                       <Users className="w-5 h-5 mr-2" />
                     )}
                     {item.charAt(0).toUpperCase() + item.slice(1)}
