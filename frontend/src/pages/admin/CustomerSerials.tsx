@@ -256,10 +256,9 @@ const CustomerSerials: React.FC = () => {
   const [searchParams] = useSearchParams();
   const orderNumber = searchParams.get("OrderNumber");
   const [customerData, setCustomerData] = useState<SalesData[]>([]);
-  const [searchSalesOrder, setSearchSalesOrder] = useState(orderNumber || "");
+  const [searchSalesOrder, setSearchSalesOrder] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -287,20 +286,12 @@ const CustomerSerials: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
         const response = await axios.get<{ message: string; data: SalesData[] }>(
           "http://54.210.159.220:8000/sales-data"
         );
-        console.log("API Response:", response.data); // Debugging
-        if (response.data && Array.isArray(response.data.data)) {
-          setCustomerData(response.data.data);
-        } else {
-          throw new Error('Invalid data format received from server');
-        }
+        setCustomerData(response.data.data);
       } catch (error) {
         console.error("Error fetching sales data:", error);
-        setError(error instanceof Error ? error.message : 'An error occurred while fetching data');
       } finally {
         setIsLoading(false);
       }
@@ -310,12 +301,14 @@ const CustomerSerials: React.FC = () => {
   }, []);
 
   const filteredSalesData = useMemo(() => {
-    return customerData.filter(
-      (data) =>
-        (searchSalesOrder === "" ||
-          data.SalesOrder.toLowerCase().includes(searchSalesOrder.toLowerCase())) &&
-        (statusFilter === "" || data.Status === statusFilter)
-    );
+    return customerData
+      .filter(
+        (data) =>
+          (searchSalesOrder === "" ||
+            data.SalesOrder.toLowerCase().includes(searchSalesOrder.toLowerCase())) &&
+          (statusFilter === "" || data.Status === statusFilter)
+      )
+      .slice(0, 5);
   }, [customerData, searchSalesOrder, statusFilter]);
 
   const SearchBar = React.memo(({ 
@@ -376,17 +369,6 @@ const CustomerSerials: React.FC = () => {
       {children}
     </th>
   );
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-700">{error}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
