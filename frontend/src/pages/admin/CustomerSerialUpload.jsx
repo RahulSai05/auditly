@@ -3,12 +3,12 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Search, FileText, X, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
-const CustomerSerialUpload: React.FC = () => {
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+const CustomerSerialUpload = () => {
+  const [csvFile, setCsvFile] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
+  const [notification, setNotification] = useState({ type: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState([]);
   const [fileName, setFileName] = useState("");
 
   const containerVariants = {
@@ -36,7 +36,7 @@ const CustomerSerialUpload: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.FormEvent) => {
+  const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!csvFile) {
       setNotification({ type: 'error', message: "Please select a CSV file to upload." });
@@ -93,7 +93,7 @@ const CustomerSerialUpload: React.FC = () => {
     setNotification({ type: '', message: '' });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setCsvFile(file);
@@ -101,7 +101,7 @@ const CustomerSerialUpload: React.FC = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() && !isLoading) {
       handleSearch();
     }
