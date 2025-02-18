@@ -1,247 +1,192 @@
-import React, { useState } from 'react';
-import styled, { keyframes } from 'styled-components';
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const pulse = keyframes`
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-`;
+import React from 'react';
+import styled from 'styled-components';
 
 const PageContainer = styled.div`
+  padding: 20px 40px;
+  background: #f8f9fa;
   min-height: 100vh;
-  padding: 40px 20px;
+`;
+
+const Header = styled.div`
+  margin-bottom: 40px;
+`;
+
+const BackLink = styled.a`
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 30px;
-  background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
+  align-items: center;
+  gap: 8px;
+  color: #1a237e;
+  text-decoration: none;
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const Title = styled.h1`
+  color: #1a237e;
+  font-size: 2rem;
+  margin: 0;
+`;
+
+const CardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
 `;
 
 const DataSourceCard = styled.div`
-  width: 280px;
-  padding: 25px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.05),
-    0 8px 32px rgba(31, 38, 135, 0.1);
-  backdrop-filter: blur(4px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  position: relative;
+  background: white;
+  border-radius: 8px;
   overflow: hidden;
-  animation: ${fadeIn} 0.6s ease-out forwards;
-  animation-delay: ${props => props.$index * 0.1}s;
-  opacity: 0;
-
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 
-      0 8px 30px rgba(0, 0, 0, 0.1),
-      0 12px 40px rgba(31, 38, 135, 0.15);
-
-    &::after {
-      transform: translateY(-50%) scale(1.2);
-      opacity: 1;
-    }
-
-    ${props => props.$isHovered && `
-      animation: ${pulse} 2s infinite ease-in-out;
-    `}
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 120%;
-    height: 120%;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.8) 0%,
-      rgba(255, 255, 255, 0) 70%
-    );
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-    transition: all 0.6s ease-out;
-    z-index: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 `;
 
-const IconContainer = styled.div`
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%);
-  border-radius: 50%;
+const ColorBar = styled.div`
+  height: 4px;
+  background: ${props => props.$color};
+`;
+
+const CardContent = styled.div`
+  padding: 20px;
+  display: grid;
+  grid-template-columns: auto 24px;
+  gap: 16px;
+`;
+
+const IconTitle = styled.div`
   display: flex;
+  gap: 16px;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-  position: relative;
-  z-index: 1;
-  transition: all 0.3s ease;
-
-  &::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    background: linear-gradient(135deg, #6e8efb, #4776e6) border-box;
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) padding-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: all 0.3s ease;
-  }
-
-  ${DataSourceCard}:hover & {
-    transform: scale(1.1);
-    
-    &::after {
-      opacity: 1;
-    }
-  }
 `;
 
 const Icon = styled.img`
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+`;
+
+const TextContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const DataSourceTitle = styled.h3`
-  margin: 15px 0 10px;
-  color: #2d3748;
-  font-size: 1.25rem;
-  font-weight: 600;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-
-  &::after {
-    content: '';
-    display: block;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #6e8efb, #4776e6);
-    transition: width 0.3s ease;
-    margin: 5px auto 0;
-  }
-
-  ${DataSourceCard}:hover &::after {
-    width: 50%;
-  }
+  margin: 0;
+  color: #1a237e;
+  font-size: 1.1rem;
+  font-weight: 500;
 `;
 
 const DataSourceDescription = styled.p`
-  text-align: center;
-  color: #718096;
-  font-size: 0.95rem;
-  line-height: 1.5;
   margin: 0;
-  position: relative;
-  z-index: 1;
+  color: #666;
+  font-size: 0.9rem;
 `;
 
-const Badge = styled.span`
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 4px 8px;
-  background: linear-gradient(135deg, #6e8efb20, #4776e620);
-  color: #4776e6;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
-
-  ${DataSourceCard}:hover & {
-    opacity: 1;
-    transform: translateY(0);
-  }
+const Arrow = styled.span`
+  color: ${props => props.$color};
+  font-size: 1.5rem;
+  align-self: center;
 `;
 
-// Updated data with status and more realistic icon paths
 const dataSources = [
   {
     id: 1,
     title: 'Alfresco',
-    description: 'Enterprise content management and document sharing platform integration.',
-    icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg',
-    status: 'Popular'
+    description: 'Crawl data from Alfresco.',
+    icon: '/alfresco-icon.svg',
+    color: '#4CAF50'
   },
   {
     id: 2,
     title: 'Amazon S3',
-    description: 'Secure cloud storage with unlimited scalability and high availability.',
-    icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original.svg',
-    status: 'Enterprise'
+    description: 'Crawl data from your Amazon S3.',
+    icon: '/s3-icon.svg',
+    color: '#4CAF50'
   },
   {
     id: 3,
     title: 'Azure Blob',
-    description: 'Microsoft\'s scalable object storage for unstructured data.',
-    icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg',
-    status: 'Cloud'
+    description: 'Crawl data from Azure Blob Storage.',
+    icon: '/azure-blob-icon.svg',
+    color: '#03A9F4'
   },
   {
     id: 4,
-    title: 'CSV Import',
-    description: 'Simple and efficient data import from structured CSV files.',
-    icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csv/csv-original.svg',
-    status: 'Basic'
+    title: 'Azure Files',
+    description: 'Crawl data from Azure Files storage.',
+    icon: '/azure-files-icon.svg',
+    color: '#009688'
+  },
+  {
+    id: 5,
+    title: 'Box',
+    description: 'Crawl data from Box.',
+    icon: '/box-icon.svg',
+    color: '#2196F3'
+  },
+  {
+    id: 6,
+    title: 'CSV',
+    description: 'Crawl data from links in CSV File.',
+    icon: '/csv-icon.svg',
+    color: '#424242'
+  },
+  {
+    id: 7,
+    title: 'Confluence',
+    description: 'Crawl data from Confluence.',
+    icon: '/confluence-icon.svg',
+    color: '#2196F3'
+  },
+  {
+    id: 8,
+    title: 'Drupal',
+    description: 'Crawl data from Drupal site.',
+    icon: '/drupal-icon.svg',
+    color: '#2196F3'
   }
 ];
 
 const Inbound: React.FC = () => {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-
   return (
     <PageContainer>
-      {dataSources.map((source, index) => (
-        <DataSourceCard 
-          key={source.id}
-          $index={index}
-          $isHovered={hoveredCard === source.id}
-          onMouseEnter={() => setHoveredCard(source.id)}
-          onMouseLeave={() => setHoveredCard(null)}
-        >
-          <Badge>{source.status}</Badge>
-          <IconContainer>
-            <Icon src={source.icon} alt={`${source.title} icon`} />
-          </IconContainer>
-          <DataSourceTitle>{source.title}</DataSourceTitle>
-          <DataSourceDescription>{source.description}</DataSourceDescription>
-        </DataSourceCard>
-      ))}
+      <Header>
+        <BackLink href="#">
+          ← Create a new data source
+        </BackLink>
+        <Title>Data Sources</Title>
+      </Header>
+      <CardsGrid>
+        {dataSources.map(source => (
+          <DataSourceCard key={source.id}>
+            <ColorBar $color={source.color} />
+            <CardContent>
+              <IconTitle>
+                <Icon src={source.icon} alt={`${source.title} icon`} />
+                <TextContent>
+                  <DataSourceTitle>{source.title}</DataSourceTitle>
+                  <DataSourceDescription>{source.description}</DataSourceDescription>
+                </TextContent>
+              </IconTitle>
+              <Arrow $color={source.color}>→</Arrow>
+            </CardContent>
+          </DataSourceCard>
+        ))}
+      </CardsGrid>
     </PageContainer>
   );
 };
