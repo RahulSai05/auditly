@@ -1,4 +1,3 @@
-
 // import { useState, useEffect } from "react";
 // import { NavLink, Outlet } from "react-router-dom";
 // import {
@@ -92,18 +91,6 @@
 //         </div>
 
 //         <ul className="space-y-2 p-5 flex-1">
-//           {/* <li>
-//             <NavLink
-//               to="/admin/dashboard-tables"
-//               className={({ isActive }) =>
-//                 `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
-//               }
-//               onClick={handleLinkClick}
-//             >
-//               <LayoutDashboard className="w-6 h-6 mr-3" />
-//               Tables
-//             </NavLink>
-//           </li> */}
 
 //           {/* Settings Dropdown */}
 //           <li>
@@ -202,20 +189,6 @@
 //               ))}
 //             </ul>
 //           </li>
-
-//           {/* Regular Items */}
-//           {/* <li>
-//             <NavLink
-//               to="/admin/item-image-upload"
-//               className={({ isActive }) =>
-//                 `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
-//               }
-//               onClick={handleLinkClick}
-//             >
-//               <Image className="w-6 h-6 mr-3" />
-//               Item Image Upload
-//             </NavLink>
-//           </li> */}
 
 //           {/* Reports Dropdown */}
 //           <li>
@@ -343,31 +316,6 @@
 //           >
 //             Logout
 //           </li>
-
-//           {/* <li>
-//             <NavLink
-//               to="/admin/item-upload"
-//               className={({ isActive }) =>
-//                 `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
-//               }
-//               onClick={handleLinkClick}
-//             >
-//               <RefreshCcw className="w-6 h-6 mr-3" />
-//               Customer Item Data upload
-//             </NavLink>
-//           </li> */}
-//           {/* <li>
-//             <NavLink
-//               to="/admin/item-return"
-//               className={({ isActive }) =>
-//                 `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
-//               }
-//               onClick={handleLinkClick}
-//             >
-//               <RefreshCcw className="w-6 h-6 mr-3" />
-//               Return Item Upload
-//             </NavLink>
-//           </li> */}
 //         </ul>
 //       </div>
 
@@ -412,7 +360,6 @@ const AdminLayout = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connectorsOpen, setConnectorsOpen] = useState(false);
   const [MaintenanceOpen, setMaintenanceOpen] = useState(false);
-
   const [reportsOpen, setReportsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -455,7 +402,7 @@ const AdminLayout = () => {
 
       {/* Hamburger Menu Button */}
       <button
-        className="md:hidden fixed top-20 left-4 z-30 p-2  rounded-lg bg-white shadow-lg"
+        className="md:hidden fixed top-20 left-4 z-30 p-2 rounded-lg bg-white shadow-lg"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
         {isSidebarOpen ? (
@@ -468,7 +415,7 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <div
         className={`fixed md:static w-72 bg-white h-screen overflow-y-auto text-gray-800 shadow-md flex flex-col z-30 transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0  " : "-translate-x-full"
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
         <div className="p-5 font-bold text-xl text-gray-900 border-b border-gray-300 flex justify-between items-center">
@@ -476,7 +423,6 @@ const AdminLayout = () => {
         </div>
 
         <ul className="space-y-2 p-5 flex-1">
-
           {/* Settings Dropdown */}
           <li>
             <button
@@ -510,11 +456,11 @@ const AdminLayout = () => {
                   />
                 </div>
                 <div>
-                  {connectorsOpen ? (
+                  {connectorsOpen && (
                     <div className="ml-5">
                       <li>
                         <NavLink
-                          to="/admin/reports/customer-serials"
+                          to="/admin/settings/connectors/inbound"
                           className={({ isActive }) =>
                             `${nestedLinkStyle} ${
                               isActive ? activeLinkStyle : ""
@@ -528,7 +474,7 @@ const AdminLayout = () => {
                       </li>
                       <li>
                         <NavLink
-                          to="/admin/reports/customer-serials"
+                          to="/admin/settings/connectors/outbound"
                           className={({ isActive }) =>
                             `${nestedLinkStyle} ${
                               isActive ? activeLinkStyle : ""
@@ -541,15 +487,13 @@ const AdminLayout = () => {
                         </NavLink>
                       </li>
                     </div>
-                  ) : (
-                    ""
                   )}
                 </div>
               </li>
               {[
                 "api configurations",
                 "email configurations",
-                "users maintance",
+                "users maintenance",
               ].map((item) => (
                 <li key={item}>
                   <NavLink
@@ -565,7 +509,7 @@ const AdminLayout = () => {
                     {item === "email configurations" && (
                       <Mail className="w-5 h-5 mr-2" />
                     )}
-                    {item === "users maintance" && (
+                    {item === "users maintenance" && (
                       <Users className="w-5 h-5 mr-2" />
                     )}
                     {item.charAt(0).toUpperCase() + item.slice(1)}
@@ -645,6 +589,8 @@ const AdminLayout = () => {
               </li>
             </ul>
           </li>
+
+          {/* Maintenance Dropdown */}
           <li>
             <button
               onClick={() => setMaintenanceOpen(!MaintenanceOpen)}
@@ -696,8 +642,10 @@ const AdminLayout = () => {
               ))}
             </ul>
           </li>
+
+          {/* Logout */}
           <li
-            className={`mt-2 space-y-1 text-red-600  cursor-pointer  overflow-hidden transition-all duration-300`}
+            className={`mt-2 space-y-1 text-red-600 cursor-pointer overflow-hidden transition-all duration-300`}
           >
             Logout
           </li>
@@ -713,4 +661,3 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
-
