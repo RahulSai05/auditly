@@ -492,7 +492,7 @@ const AdminLayout = () => {
               {[
                 { name: "api-configurations", icon: <Database className="w-5 h-5 mr-2" /> },
                 { name: "email-configurations", icon: <Mail className="w-5 h-5 mr-2" /> },
-                { name: "user-maintenance", icon: <Users className="w-5 h-5 mr-2" /> },
+                { name: "users-maintenance", icon: <Users className="w-5 h-5 mr-2" /> },
               ].map((item) => (
                 <li key={item.name}>
                   <NavLink
