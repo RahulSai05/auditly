@@ -233,7 +233,6 @@
 
 // export default CustomerSerials;
 
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
