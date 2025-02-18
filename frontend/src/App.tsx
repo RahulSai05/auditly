@@ -22,6 +22,7 @@ import ReturnDetails from "./components/ReturnDetails";
 import AuditlyInspection from "./pages/admin/AuditlyInspection";
 import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
 import UserMaintenance from "./pages/admin/UserMaintenance";
+import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import Login from "./components/auth/Login";
@@ -30,6 +31,7 @@ import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
+
 
 export default function App() {
   const itemData = useSelector((state: RootState) => state.ids);
@@ -77,7 +79,8 @@ export default function App() {
           <Route path="/admin/settings/users-maintenance" element={<UserMaintenance />} />   
           <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />   
           <Route path="/admin/settings/connectors/outbound" element={<Outbound />} />   
-
+          <Route path="/admin/settings/connectors/email-configurations" element={<EmailConfigurations />} />   
+          
         </Route> 
 
         {/* Auto */}
