@@ -90,7 +90,6 @@ const DataSourceCard = styled.div`
   box-shadow: 
     0 4px 20px rgba(0, 0, 0, 0.05),
     0 8px 32px rgba(31, 38, 135, 0.1);
-  backdrop-filter: blur(4px);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
@@ -104,10 +103,6 @@ const DataSourceCard = styled.div`
     box-shadow: 
       0 8px 30px rgba(0, 0, 0, 0.1),
       0 12px 40px rgba(31, 38, 135, 0.15);
-
-    ${props => props.$isHovered && `
-      animation: ${pulse} 2s infinite ease-in-out;
-    `}
   }
 `;
 
