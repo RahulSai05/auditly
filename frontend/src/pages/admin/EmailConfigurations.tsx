@@ -38,9 +38,9 @@ const teamEmails: TeamEmail[] = [
   },
   {
     id: '4',
-    team: 'HR Department',
-    email: 'hr@company.com',
-    description: 'Human resources and employee relations',
+    team: 'OMR Department',
+    email: 'omr@company.com',
+    description: 'Order Management Resources',
     icon: Users,
     members: 5
   },
