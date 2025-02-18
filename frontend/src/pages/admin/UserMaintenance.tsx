@@ -261,7 +261,6 @@
 
 // export default UserMaintenance;
 
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, X, Users, Loader2 } from "lucide-react";
@@ -305,6 +304,7 @@ const UserMaintenance: React.FC = () => {
   const filteredUsers = users.filter((user) =>
     Object.values(user).some((value) =>
       String(value).toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
