@@ -1,15 +1,34 @@
+// import React, { useState } from "react";
+// import axios from "axios";
+// import { motion, AnimatePresence } from "framer-motion";
+// import { Upload, Search, FileText, X, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+
+// const CustomerSerialUpload: React.FC = () => {
+//   const [csvFile, setCsvFile] = useState<File | null>(null);
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [notification, setNotification] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [searchResults, setSearchResults] = useState<any[]>([]);
+//   const [fileName, setFileName] = useState("");
+
 import React, { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Search, FileText, X, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
+// Define TypeScript interfaces for state management
+interface Notification {
+    type: 'success' | 'error' | '';
+    message: string;
+}
+
 const CustomerSerialUpload: React.FC = () => {
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [fileName, setFileName] = useState("");
+    const [csvFile, setCsvFile] = useState<File | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [notification, setNotification] = useState<Notification>({ type: '', message: '' });
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [fileName, setFileName] = useState("");
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
