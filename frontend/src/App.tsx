@@ -25,6 +25,7 @@ import UserMaintenance from "./pages/admin/UserMaintenance";
 import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
+import ApiConfigurations from "./pages/admin/ApiConfigurations";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
@@ -80,7 +81,8 @@ export default function App() {
           <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />   
           <Route path="/admin/settings/connectors/outbound" element={<Outbound />} />   
           <Route path="/admin/settings/email-configurations" element={<EmailConfigurations />} />   
-          
+          <Route path="/admin/settings/api-configurations" element={<ApiConfigurations />} />   
+     
         </Route> 
 
         {/* Auto */}
