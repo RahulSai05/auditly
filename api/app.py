@@ -1107,3 +1107,19 @@ async def search_customers(query: str = "", db: Session = Depends(get_db)):
 
 
 
+@app.get("/users")
+async def get_users(db: Session = Depends(get_db)):
+    try:
+        users = db.query(AuditlyUser).all()
+        return {
+            "message": "Users retrieved successfully.",
+            "data": [{
+                "user_name": user.auditly_user_name,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "gender": user.gender,
+                "email": user.email
+            } for user in users]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
