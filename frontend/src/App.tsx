@@ -22,6 +22,7 @@ import ReturnDetails from "./components/ReturnDetails";
 import AuditlyInspection from "./pages/admin/AuditlyInspection";
 import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
 import UserMaintenance from "./pages/admin/UserMaintenance";
+import Inbound from "./pages/admin/Inbound";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
@@ -72,7 +73,8 @@ export default function App() {
           <Route path="/admin/settings/Return Upload" element={<ItemReturn />} />
           <Route path="/admin/reports/audity-inspections" element={<AuditlyInspection />} />
           <Route path="/admin/settings/customer serial Upload" element={<CustomerSerialUpload />} />
-          <Route path="/admin/settings/users maintance" element={<UserMaintenance />} />          
+          <Route path="/admin/settings/users maintance" element={<UserMaintenance />} />   
+          <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />   
         </Route> 
 
         {/* Auto */}
