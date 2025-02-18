@@ -1083,3 +1083,27 @@ async def upload_customer_data(file: UploadFile = File(...), db: Session = Depen
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
+
+
+
+@app.get("/search-customer-serials")
+async def search_customers(query: str = "", db: Session = Depends(get_db)):
+    """
+    Search for customer data in the database by various fields like SalesOrder, CustomerAccount, Name, etc.
+    """
+    try:
+        results = db.query(SalesData).filter(
+            (SalesData.SalesOrder.like(f"%{query}%")) |
+            (SalesData.CustomerAccount.like(f"%{query}%")) |
+            (SalesData.Name.like(f"%{query}%")) |
+            (SalesData.RMANumber.like(f"%{query}%")) |
+            (SalesData.OrderType.like(f"%{query}%"))
+        ).all()
+
+        # Returning the records as dictionaries for easy JSON serialization
+        return [result.__dict__ for result in results]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error searching customer data: {str(e)}")
+
+
+
