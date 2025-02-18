@@ -27,7 +27,6 @@
 //   const [settingsOpen, setSettingsOpen] = useState(false);
 //   const [connectorsOpen, setConnectorsOpen] = useState(false);
 //   const [MaintenanceOpen, setMaintenanceOpen] = useState(false);
-
 //   const [reportsOpen, setReportsOpen] = useState(false);
 //   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 //   const [isMobile, setIsMobile] = useState(false);
@@ -70,7 +69,7 @@
 
 //       {/* Hamburger Menu Button */}
 //       <button
-//         className="md:hidden fixed top-20 left-4 z-30 p-2  rounded-lg bg-white shadow-lg"
+//         className="md:hidden fixed top-20 left-4 z-30 p-2 rounded-lg bg-white shadow-lg"
 //         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
 //       >
 //         {isSidebarOpen ? (
@@ -83,7 +82,7 @@
 //       {/* Sidebar */}
 //       <div
 //         className={`fixed md:static w-72 bg-white h-screen overflow-y-auto text-gray-800 shadow-md flex flex-col z-30 transition-transform duration-300 ease-in-out ${
-//           isSidebarOpen ? "translate-x-0  " : "-translate-x-full"
+//           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
 //         } md:translate-x-0`}
 //       >
 //         <div className="p-5 font-bold text-xl text-gray-900 border-b border-gray-300 flex justify-between items-center">
@@ -91,7 +90,6 @@
 //         </div>
 
 //         <ul className="space-y-2 p-5 flex-1">
-
 //           {/* Settings Dropdown */}
 //           <li>
 //             <button
@@ -125,11 +123,11 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   {connectorsOpen ? (
+//                   {connectorsOpen && (
 //                     <div className="ml-5">
 //                       <li>
 //                         <NavLink
-//                           to="/admin/reports/customer-serials"
+//                           to="/admin/settings/connectors/inbound"
 //                           className={({ isActive }) =>
 //                             `${nestedLinkStyle} ${
 //                               isActive ? activeLinkStyle : ""
@@ -143,7 +141,7 @@
 //                       </li>
 //                       <li>
 //                         <NavLink
-//                           to="/admin/reports/customer-serials"
+//                           to="/admin/settings/connectors/outbound"
 //                           className={({ isActive }) =>
 //                             `${nestedLinkStyle} ${
 //                               isActive ? activeLinkStyle : ""
@@ -156,15 +154,13 @@
 //                         </NavLink>
 //                       </li>
 //                     </div>
-//                   ) : (
-//                     ""
 //                   )}
 //                 </div>
 //               </li>
 //               {[
 //                 "api configurations",
 //                 "email configurations",
-//                 "users maintance",
+//                 "users maintenance",
 //               ].map((item) => (
 //                 <li key={item}>
 //                   <NavLink
@@ -180,7 +176,7 @@
 //                     {item === "email configurations" && (
 //                       <Mail className="w-5 h-5 mr-2" />
 //                     )}
-//                     {item === "users maintance" && (
+//                     {item === "users maintenance" && (
 //                       <Users className="w-5 h-5 mr-2" />
 //                     )}
 //                     {item.charAt(0).toUpperCase() + item.slice(1)}
@@ -260,6 +256,8 @@
 //               </li>
 //             </ul>
 //           </li>
+
+//           {/* Maintenance Dropdown */}
 //           <li>
 //             <button
 //               onClick={() => setMaintenanceOpen(!MaintenanceOpen)}
@@ -311,8 +309,10 @@
 //               ))}
 //             </ul>
 //           </li>
+
+//           {/* Logout */}
 //           <li
-//             className={`mt-2 space-y-1 text-red-600  cursor-pointer  overflow-hidden transition-all duration-300`}
+//             className={`mt-2 space-y-1 text-red-600 cursor-pointer overflow-hidden transition-all duration-300`}
 //           >
 //             Logout
 //           </li>
@@ -328,7 +328,6 @@
 // };
 
 // export default AdminLayout;
-
 
 
 import { useState, useEffect } from "react";
@@ -460,7 +459,7 @@ const AdminLayout = () => {
                     <div className="ml-5">
                       <li>
                         <NavLink
-                          to="/admin/settings/connectors/inbound"
+                          to="/admin/inbound"
                           className={({ isActive }) =>
                             `${nestedLinkStyle} ${
                               isActive ? activeLinkStyle : ""
@@ -474,7 +473,7 @@ const AdminLayout = () => {
                       </li>
                       <li>
                         <NavLink
-                          to="/admin/settings/connectors/outbound"
+                          to="/admin/outbound"
                           className={({ isActive }) =>
                             `${nestedLinkStyle} ${
                               isActive ? activeLinkStyle : ""
@@ -491,28 +490,23 @@ const AdminLayout = () => {
                 </div>
               </li>
               {[
-                "api configurations",
-                "email configurations",
-                "users maintenance",
+                { name: "api-configurations", icon: <Database className="w-5 h-5 mr-2" /> },
+                { name: "email-configurations", icon: <Mail className="w-5 h-5 mr-2" /> },
+                { name: "user-maintenance", icon: <Users className="w-5 h-5 mr-2" /> },
               ].map((item) => (
-                <li key={item}>
+                <li key={item.name}>
                   <NavLink
-                    to={`/admin/settings/${item}`}
+                    to={`/admin/settings/${item.name}`}
                     className={({ isActive }) =>
                       `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                     }
                     onClick={handleLinkClick}
                   >
-                    {item === "api configurations" && (
-                      <Database className="w-5 h-5 mr-2" />
-                    )}
-                    {item === "email configurations" && (
-                      <Mail className="w-5 h-5 mr-2" />
-                    )}
-                    {item === "users maintenance" && (
-                      <Users className="w-5 h-5 mr-2" />
-                    )}
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
+                    {item.icon}
+                    {item.name
+                      .split("-")
+                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(" ")}
                   </NavLink>
                 </li>
               ))}
@@ -611,32 +605,24 @@ const AdminLayout = () => {
               }`}
             >
               {[
-                "Item master upload",
-                "Customer Serial Upload",
-                "Item Image Upload",
-                "Return Upload",
+                { name: "item-master-upload", icon: <Asterisk className="w-5 h-5 mr-2" /> },
+                { name: "customer-serial-upload", icon: <Usb className="w-5 h-5 mr-2" /> },
+                { name: "item-image-upload", icon: <Image className="w-5 h-5 mr-2" /> },
+                { name: "return-upload", icon: <Undo2 className="w-5 h-5 mr-2" /> },
               ].map((item) => (
-                <li key={item}>
+                <li key={item.name}>
                   <NavLink
-                    to={`/admin/settings/${item}`}
+                    to={`/admin/settings/${item.name}`}
                     className={({ isActive }) =>
                       `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                     }
                     onClick={handleLinkClick}
                   >
-                    {item === "Item master upload" && (
-                      <Asterisk className="w-5 h-5 mr-2" />
-                    )}
-                    {item === "Customer Serial Upload" && (
-                      <Usb className="w-5 h-5 mr-2" />
-                    )}
-                    {item === "Item Image Upload" && (
-                      <Image className="w-5 h-5 mr-2" />
-                    )}
-                    {item === "Return Upload" && (
-                      <Undo2 className="w-5 h-5 mr-2" />
-                    )}
-                    {item.charAt(0).toUpperCase() + item.slice(1)}
+                    {item.icon}
+                    {item.name
+                      .split("-")
+                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(" ")}
                   </NavLink>
                 </li>
               ))}
