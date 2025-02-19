@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -32,35 +31,20 @@ export function Navbar() {
     <header className="border-b py-4 px-6 shadow-md relative bg-white/90 backdrop-blur-lg">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
-        <motion.div className="flex items-center">
-            <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
-              style={{ 
-                fontFamily: "'Architects Daughter', sans-serif", 
-                fontSize: '1.5rem',
-                fontWeight: 600,
-                letterSpacing: '0.05em'
-              }}>
-              Auditly
-            </span>
-            <span className="text-black"
-              style={{ 
-                fontFamily: "'Chiller', cursive", 
-                fontSize: '1.5rem',
-                fontWeight: 700
-              }}>
-              .
-            </span>
-            <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
-              style={{ 
-                fontFamily: "'Caveat', cursive", 
-                fontSize: '1.5rem',
-                fontWeight: 600,
-                letterSpacing: '0.05em'
-              }}>
-              ai
-            </span>
+        <motion.div
+          onClick={() => router("/")}
+          className="text-2xl cursor-pointer font-bold flex items-center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Dancing Script, cursive' }}>
+            Auditly
+          </div>
+          <span className="text-black" style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}>.</span>
+          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}>
+            ai
+          </span>
         </motion.div>
-
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
         <motion.button
@@ -81,7 +65,7 @@ export function Navbar() {
               animate="visible"
               exit="exit"
               variants={menuVariants}
-              className={
+              className={`
                 lg:block
                 ${isOpen ? "block" : "hidden"}
                 lg:relative absolute top-full left-0 right-0
@@ -91,7 +75,7 @@ export function Navbar() {
                 lg:mt-0 mt-2
                 z-50
                 transition-all duration-300 ease-in-out
-              }
+              `}
             >
               <ul
                 className="
