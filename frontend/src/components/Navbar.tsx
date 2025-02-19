@@ -1,3 +1,4 @@
+
 // import { useState } from "react";
 // import { Link, useNavigate } from "react-router-dom";
 // import { Profile } from "./Profile";
@@ -37,9 +38,13 @@
 //           whileHover={{ scale: 1.05 }}
 //           whileTap={{ scale: 0.95 }}
 //         >
-//           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+//           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Chiller, cursive' }}>
 //             Auditly
 //           </div>
+//           <span className="text-black" style={{ fontFamily: 'Chiller, cursive', fontSize: '1.3em' }}>.</span>
+//           <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Chiller, cursive', fontSize: '1.3em' }}>
+//             ai
+//           </span>
 //         </motion.div>
 
 //         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
@@ -134,6 +139,8 @@
 //     </header>
 //   );
 // }
+
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -163,6 +170,38 @@ export function Navbar() {
     exit: { opacity: 0, y: -20 },
   };
 
+  // Logo animation variants
+  const logoVariants = {
+    initial: { y: -20, opacity: 0 },
+    animate: { 
+      y: 0, 
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    },
+    hover: {
+      scale: 1.05,
+      transition: {
+        duration: 0.2,
+        ease: "easeInOut"
+      }
+    }
+  };
+
+  // Text animation variants for each letter
+  const letterVariants = {
+    hover: {
+      y: [-2, 2],
+      transition: {
+        duration: 0.3,
+        yoyo: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
+
   return (
     <header className="border-b py-4 px-6 shadow-md relative bg-white/90 backdrop-blur-lg">
       <div className="container mx-auto flex justify-between items-center">
@@ -170,19 +209,55 @@ export function Navbar() {
         <motion.div
           onClick={() => router("/")}
           className="text-2xl cursor-pointer font-bold flex items-center"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          variants={logoVariants}
+          initial="initial"
+          animate="animate"
+          whileHover="hover"
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Chiller, cursive' }}>
-            Auditly
-          </div>
-          <span className="text-black" style={{ fontFamily: 'Chiller, cursive', fontSize: '1.3em' }}>.</span>
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Chiller, cursive', fontSize: '1.3em' }}>
-            ai
-          </span>
+          <motion.div 
+            className="flex items-baseline"
+            whileHover={{ scale: 1.02 }}
+          >
+            <motion.span
+              className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+              style={{ fontFamily: 'Chiller', fontSize: '2.5rem', lineHeight: '1' }}
+            >
+              {"Auditly".split('').map((letter, index) => (
+                <motion.span
+                  key={index}
+                  variants={letterVariants}
+                  style={{ display: 'inline-block' }}
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </motion.span>
+            <motion.span
+              className="text-black mx-0.5"
+              style={{ fontFamily: 'Chiller', fontSize: '2.5rem', lineHeight: '1' }}
+              whileHover={{ scale: 1.2, rotate: 360 }}
+              transition={{ duration: 0.3 }}
+            >
+              .
+            </motion.span>
+            <motion.span
+              className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+              style={{ fontFamily: 'Chiller', fontSize: '2.5rem', lineHeight: '1' }}
+            >
+              {"ai".split('').map((letter, index) => (
+                <motion.span
+                  key={index}
+                  variants={letterVariants}
+                  style={{ display: 'inline-block' }}
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </motion.span>
+          </motion.div>
         </motion.div>
 
-        {/* Hamburger Menu Button - Only visible on mobile/tablet */}
+        {/* Rest of the navbar code remains the same */}
         <motion.button
           onClick={toggleMenu}
           className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors"
@@ -193,7 +268,6 @@ export function Navbar() {
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </motion.button>
 
-        {/* Navigation */}
         <AnimatePresence>
           {(isOpen || window.innerWidth >= 1024) && (
             <motion.nav
@@ -213,13 +287,7 @@ export function Navbar() {
                 transition-all duration-300 ease-in-out
               `}
             >
-              <ul
-                className="
-                  lg:flex lg:space-x-6
-                  lg:space-y-0 space-y-4
-                  lg:items-center
-                "
-              >
+              <ul className="lg:flex lg:space-x-6 lg:space-y-0 space-y-4 lg:items-center">
                 <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/"
@@ -259,7 +327,6 @@ export function Navbar() {
         </AnimatePresence>
       </div>
 
-      {/* Overlay for mobile menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
