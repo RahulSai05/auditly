@@ -39,11 +39,11 @@ export function Navbar() {
           whileTap={{ scale: 0.95 }}
         >
 
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive' }}>
+          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive', fontSize: '1.5em'}}>
             Auditly
           </span>
           <span className="text-black" style={{ fontFamily: 'Chiller, cursive' }}>.</span>
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive' }}>
+          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive', fontSize: '1.5em'}}>
             ai
           </span>
         </motion.div>
