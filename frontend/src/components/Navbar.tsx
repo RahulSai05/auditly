@@ -38,29 +38,35 @@ export function Navbar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <span
-            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
-            style={{ fontFamily: 'Caveat, cursive', fontSize: '1.4em', lineHeight: '1.2', display: 'inline-block' }}
-          >
+          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
+            style={{ 
+              fontFamily: "'Caveat', cursive", 
+              fontSize: '1.3em',
+              fontWeight: 500,
+              letterSpacing: '0.03em',
+              transform: 'rotate(1deg)' // Optional for a handwritten effect
+            }}>
             auditly
           </span>
-        
-          {/* Dot */}
-          <span
-            className="text-black"
-            style={{ fontFamily: 'Caveat, cursive', fontSize: '1.4em', lineHeight: '1.2', display: 'inline-block' }}
-          >
+          <span className="text-black" 
+            style={{ 
+              fontFamily: "'Chiller', cursive", 
+              fontSize: '1.3em',
+              fontWeight: 600,
+              transform: 'rotate(-2deg)' // Optional for slight randomness
+            }}>
             .
           </span>
-        
-          {/* ai */}
-          <span
-            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
-            style={{ fontFamily: 'Caveat, cursive', fontSize: '1.4em', lineHeight: '1.2', display: 'inline-block' }}
-          >
+          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
+            style={{ 
+              fontFamily: "'Caveat', cursive", 
+              fontSize: '1.3em',
+              fontWeight: 500,
+              letterSpacing: '0.03em',
+              transform: 'rotate(-1deg)' // Optional for a handwritten feel
+            }}>
             ai
           </span>
-
         </motion.div>
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
