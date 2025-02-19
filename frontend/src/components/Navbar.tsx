@@ -38,7 +38,7 @@ export function Navbar() {
           whileTap={{ scale: 0.95 }}
         >
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Dancing Script, cursive' }}>
-            Auditly
+            auditly
           </div>
           <span className="text-black" style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}>.</span>
           <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Dancing Script, cursive'}}>
