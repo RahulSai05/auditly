@@ -41,7 +41,7 @@ export function Navbar() {
 
           <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive' }}>
             Auditly
-          </div>
+          </span>
           <span className="text-black" style={{ fontFamily: 'Chiller, cursive' }}>.</span>
           <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive' }}>
             ai
