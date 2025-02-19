@@ -139,7 +139,6 @@
 //     </header>
 //   );
 // }
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -169,6 +168,29 @@ export function Navbar() {
     exit: { opacity: 0, y: -20 },
   };
 
+  // Logo text animation variants
+  const logoTextVariants = {
+    hover: {
+      scale: 1.05,
+      transition: {
+        duration: 0.2,
+        yoyo: Infinity,
+      },
+    },
+  };
+
+  // Dot animation variants
+  const dotVariants = {
+    animate: {
+      scale: [1, 1.2, 1],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    },
+  };
+
   return (
     <header className="border-b py-4 px-6 shadow-md relative bg-white/90 backdrop-blur-lg">
       <div className="container mx-auto flex justify-between items-center">
@@ -176,16 +198,30 @@ export function Navbar() {
         <motion.div
           onClick={() => router("/")}
           className="text-2xl cursor-pointer font-bold flex items-center"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover="hover"
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Dancing Script, cursive' }}>
+          <motion.div
+            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+            style={{ fontFamily: 'Dancing Script, cursive' }}
+            variants={logoTextVariants}
+          >
             Auditly
-          </div>
-          <span className="text-black" style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}>.</span>
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}>
+          </motion.div>
+          <motion.span
+            className="text-black mx-[-2px]"
+            style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}
+            variants={dotVariants}
+            animate="animate"
+          >
+            .
+          </motion.span>
+          <motion.span
+            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+            style={{ fontFamily: 'Dancing Script, cursive', fontSize: '1.3em' }}
+            variants={logoTextVariants}
+          >
             ai
-          </span>
+          </motion.span>
         </motion.div>
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
