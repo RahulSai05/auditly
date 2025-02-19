@@ -32,42 +32,35 @@ export function Navbar() {
     <header className="border-b py-4 px-6 shadow-md relative bg-white/90 backdrop-blur-lg">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
-        <motion.div
-          onClick={() => router("/")}
-          className="text-2xl cursor-pointer font-bold flex items-center"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
-            style={{ 
-              fontFamily: "'Caveat', cursive", 
-              fontSize: '1.3em',
-              fontWeight: 500,
-              letterSpacing: '0.03em',
-              transform: 'rotate(1deg)' // Optional for a handwritten effect
-            }}>
-            auditly
-          </span>
-          <span className="text-black" 
-            style={{ 
-              fontFamily: "'Chiller', cursive", 
-              fontSize: '1.3em',
-              fontWeight: 600,
-              transform: 'rotate(-2deg)' // Optional for slight randomness
-            }}>
-            .
-          </span>
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
-            style={{ 
-              fontFamily: "'Caveat', cursive", 
-              fontSize: '1.3em',
-              fontWeight: 500,
-              letterSpacing: '0.03em',
-              transform: 'rotate(-1deg)' // Optional for a handwritten feel
-            }}>
-            ai
-          </span>
+        <motion.div className="flex items-center">
+            <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
+              style={{ 
+                fontFamily: "'Chiller', cursive", 
+                fontSize: '3rem',
+                fontWeight: 600,
+                letterSpacing: '0.05em'
+              }}>
+              Auditly
+            </span>
+            <span className="text-black"
+              style={{ 
+                fontFamily: "'Chiller', cursive", 
+                fontSize: '3rem',
+                fontWeight: 700
+              }}>
+              .
+            </span>
+            <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
+              style={{ 
+                fontFamily: "'Chiller', cursive", 
+                fontSize: '3rem',
+                fontWeight: 600,
+                letterSpacing: '0.05em'
+              }}>
+              ai
+            </span>
         </motion.div>
+
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
         <motion.button
