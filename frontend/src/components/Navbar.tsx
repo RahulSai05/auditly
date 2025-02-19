@@ -135,7 +135,6 @@
 //   );
 // }
 
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -178,7 +177,8 @@ export function Navbar() {
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Chiller, cursive' }}>
             Auditly
           </div>
-          <span className="text-black">.ai</span>
+          <span className="text-black">.</span>
+          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">ai</span>
         </motion.div>
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
