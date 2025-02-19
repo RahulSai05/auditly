@@ -192,7 +192,7 @@ export function Navbar() {
         <motion.div className="flex items-center">
           <Link to="/">
             <img
-              src="/assets/logo.png"  // Update this path based on where you store the image
+              src="/home/ec2-user/logo.png"  // Update this path based on where you store the image
               alt="Auditly.ai"
               className="h-10 w-auto" // Adjust size as needed
             />
