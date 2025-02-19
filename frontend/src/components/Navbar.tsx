@@ -38,17 +38,29 @@ export function Navbar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive', fontSize: '1.5em' }}>
+          <span
+            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+            style={{ fontFamily: 'Caveat, cursive', fontSize: '1.4em', lineHeight: '1.2', display: 'inline-block' }}
+          >
             auditly
           </span>
         
           {/* Dot */}
-          <span className="text-black" style={{ fontFamily: 'Caveat, cursive', fontSize: '1.5em' }}>.</span>
+          <span
+            className="text-black"
+            style={{ fontFamily: 'Caveat, cursive', fontSize: '1.4em', lineHeight: '1.2', display: 'inline-block' }}
+          >
+            .
+          </span>
         
           {/* ai */}
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Caveat, cursive', fontSize: '1.5em' }}>
+          <span
+            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+            style={{ fontFamily: 'Caveat, cursive', fontSize: '1.4em', lineHeight: '1.2', display: 'inline-block' }}
+          >
             ai
           </span>
+
         </motion.div>
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
