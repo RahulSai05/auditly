@@ -35,7 +35,7 @@ export function Navbar() {
         <motion.div className="flex items-center">
             <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
               style={{ 
-                fontFamily: "'Chiller', cursive", 
+                fontFamily: "'Caveat', cursive", 
                 fontSize: '1.5rem',
                 fontWeight: 600,
                 letterSpacing: '0.05em'
@@ -52,7 +52,7 @@ export function Navbar() {
             </span>
             <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
               style={{ 
-                fontFamily: "'Chiller', cursive", 
+                fontFamily: "'Caveat', cursive", 
                 fontSize: '1.5rem',
                 fontWeight: 600,
                 letterSpacing: '0.05em'
