@@ -36,7 +36,7 @@ export function Navbar() {
             <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
               style={{ 
                 fontFamily: "'Chiller', cursive", 
-                fontSize: '2rem',
+                fontSize: '1.5rem',
                 fontWeight: 600,
                 letterSpacing: '0.05em'
               }}>
@@ -45,7 +45,7 @@ export function Navbar() {
             <span className="text-black"
               style={{ 
                 fontFamily: "'Chiller', cursive", 
-                fontSize: '2rem',
+                fontSize: '1.5rem',
                 fontWeight: 700
               }}>
               .
@@ -53,7 +53,7 @@ export function Navbar() {
             <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
               style={{ 
                 fontFamily: "'Chiller', cursive", 
-                fontSize: '2rem',
+                fontSize: '1.5rem',
                 fontWeight: 600,
                 letterSpacing: '0.05em'
               }}>
