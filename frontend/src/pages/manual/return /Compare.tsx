@@ -211,7 +211,7 @@ export default function UploadMedia() {
                                     Overall Condition: {data.overall_condition}
                                 </h2>
                                 <p className="text-gray-600">
-                                    Receipt #{data.receipt_number}
+                                    Inspection #{data.receipt_number}
                                 </p>
                             </div>
                         </div>
