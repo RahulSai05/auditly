@@ -43,7 +43,7 @@ export default function Done() {
                 <div className="bg-white border rounded-lg p-6 mb-8 inline-block min-w-[300px]">
                     <div className="flex items-center justify-center gap-2 text-blue-600 mb-3">
                         <Package className="w-5 h-5" />
-                        <span className="font-medium">Receipt Details</span>
+                        <span className="font-medium">Inspection Details</span>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 mb-1">
                         #{receiptNumber}
