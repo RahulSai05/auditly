@@ -37,7 +37,7 @@ export function Navbar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-{/*           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
 
             <span style={{ fontSize: '1.7em' }}>a</span>uditly
           </div>
@@ -45,21 +45,8 @@ export function Navbar() {
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
             <span style={{ fontSize: '1.2em' }}>a</span>i
           </div>
-        </motion.div> */}
-          <motion.div
-            onClick={() => router("/")}
-            className="text-2xl cursor-pointer font-bold flex items-baseline space-x-1"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent flex items-baseline" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
-              <span style={{ fontSize: '1.7em', lineHeight: '1' }}>a</span>uditly
-            </div>
-            <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1.1em', opacity: 0.8, lineHeight: '1' }}>.</span>
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent flex items-baseline" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
-              <span style={{ fontSize: '1.2em', lineHeight: '1' }}>a</span>i
-            </div>
-          </motion.div>
+        </motion.div>
+         
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
         <motion.button
