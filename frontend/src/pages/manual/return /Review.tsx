@@ -110,7 +110,7 @@ export default function Review() {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm text-gray-600">Receipt Number</p>
+                                <p className="text-sm text-gray-600">Inspection Number</p>
                                 <p className="text-lg font-medium text-gray-900">#{receiptNumber}</p>
                             </div>
                         </div>
