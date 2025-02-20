@@ -37,13 +37,15 @@ export function Navbar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif' }}>
-            auditly
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
+            {/* Make "a" in "auditly" bigger */}
+            <span style={{ fontSize: '1.2em' }}>a</span>uditly
           </div>
-          <span className="text-black" style={{ fontFamily: 'Dancing Script' }}>.</span>
-          <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif'}}>
-            ai
-          </span>
+          <span className="text-black" style={{ fontFamily: 'Dancing Script', fontSize: '1.2em', opacity: 0.8 }}>.</span>
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
+            {/* Make "a" in "ai" bigger */}
+            <span style={{ fontSize: '1.2em' }}>a</span>i
+          </div>
         </motion.div>
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
