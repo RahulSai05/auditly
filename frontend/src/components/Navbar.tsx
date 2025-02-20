@@ -39,7 +39,7 @@ export function Navbar() {
         >
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
             {/* Make "a" in "auditly" bigger */}
-            <span style={{ fontSize: '1.4em' }}>a</span>uditly
+            <span style={{ fontSize: '1.6em' }}>a</span>uditly
           </div>
           <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1.1em', opacity: 0.8 }}>.</span>
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
