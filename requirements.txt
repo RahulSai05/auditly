@@ -80,7 +80,6 @@ tensorboard-data-server==0.7.2
 tensorflow==2.18.0
 tensorflow-io-gcs-filesystem==0.37.1
 termcolor==2.5.0
-tifffile==2025.1.10
 time-machine==2.16.0
 tortoise-orm==0.23.0
 typer==0.15.1
