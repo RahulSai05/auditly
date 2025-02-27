@@ -284,7 +284,6 @@
 // };
 
 // export default DashboardTables;
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -311,7 +310,7 @@ const DashboardTables: React.FC = () => {
   const [searchItem, setSearchItem] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [visibleRows, setVisibleRows] = useState(5); // State for "Load More" feature
+  const [visibleRows, setVisibleRows] = useState(10); // State for "Load More" feature
 
   // Debounced search handler
   const handleSearchChange = useCallback(
@@ -519,7 +518,7 @@ const DashboardTables: React.FC = () => {
                           <TableHeader>Category</TableHeader>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-blue-50">
+                      <tbody className="divide-y divide-blue-50 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
                         <AnimatePresence>
                           {filteredItems.map((item, index) => (
                             <motion.tr
@@ -564,7 +563,7 @@ const DashboardTables: React.FC = () => {
                 </div>
 
                 {/* Load More Button */}
-                {filteredItems.length >= visibleRows && (
+                {visibleRows < items.length && (
                   <div className="flex justify-center mt-6">
                     <button
                       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
@@ -572,10 +571,10 @@ const DashboardTables: React.FC = () => {
                     >
                       Load More
                     </button>
-                    {visibleRows > 5 && (
+                    {visibleRows > 10 && (
                       <button
                         className="px-6 py-2 ml-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300"
-                        onClick={() => setVisibleRows(5)}
+                        onClick={() => setVisibleRows(10)}
                       >
                         Show Less
                       </button>
@@ -592,4 +591,3 @@ const DashboardTables: React.FC = () => {
 };
 
 export default DashboardTables;
-
