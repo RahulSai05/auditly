@@ -284,6 +284,8 @@
 // };
 
 // export default DashboardTables;
+
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -310,7 +312,7 @@ const DashboardTables: React.FC = () => {
   const [searchItem, setSearchItem] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [visibleRows, setVisibleRows] = useState(10); // State for "Load More" feature
+  const [visibleRows, setVisibleRows] = useState(5); // State for "Load More" feature
 
   // Debounced search handler
   const handleSearchChange = useCallback(
@@ -562,25 +564,25 @@ const DashboardTables: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Load More Button */}
-                {visibleRows < items.length && (
-                  <div className="flex justify-center mt-6">
+                {/* Load More and Show Less Buttons */}
+                <div className="flex justify-center mt-6">
+                  {visibleRows < items.length && (
                     <button
                       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
-                      onClick={() => setVisibleRows((prev) => prev + 5)}
+                      onClick={() => setVisibleRows(visibleRows + 5)}
                     >
                       Load More
                     </button>
-                    {visibleRows > 10 && (
-                      <button
-                        className="px-6 py-2 ml-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300"
-                        onClick={() => setVisibleRows(10)}
-                      >
-                        Show Less
-                      </button>
-                    )}
-                  </div>
-                )}
+                  )}
+                  {visibleRows > 5 && (
+                    <button
+                      className="px-6 py-2 ml-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300"
+                      onClick={() => setVisibleRows(5)}
+                    >
+                      Show Less
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
