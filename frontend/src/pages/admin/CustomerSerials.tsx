@@ -333,7 +333,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Loader2, ClipboardList, ChevronDown, Users2 } from "lucide-react";
+import { Search, Filter, Loader2, ClipboardList, ChevronDown, Users2, ChevronUp, ChevronDown as ChevronDownIcon } from "lucide-react";
 
 // Debounce function
 const debounce = (func: Function, delay: number) => {
@@ -364,6 +364,7 @@ const CustomerSerials: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [visibleRows, setVisibleRows] = useState(5); // State for "Load More" feature
+  const [isCollapsed, setIsCollapsed] = useState(false); // State for collapse feature
 
   // Debounced search handler
   const handleSearchChange = useCallback(
@@ -560,98 +561,117 @@ const CustomerSerials: React.FC = () => {
                   filterPlaceholder="All Statuses"
                 />
 
-                <div className="overflow-hidden rounded-xl border border-blue-100">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-blue-100">
-                      <thead>
-                        <tr>
-                          <TableHeader>Sales Order</TableHeader>
-                          <TableHeader>Customer Account</TableHeader>
-                          <TableHeader>Name</TableHeader>
-                          <TableHeader>Return Status</TableHeader>
-                          <TableHeader>RMA Number</TableHeader>
-                          <TableHeader>Order Type</TableHeader>
-                          <TableHeader>Status</TableHeader>
-                          <TableHeader>Segment</TableHeader>
-                          <TableHeader>Subsegment</TableHeader>
-                        </tr>
-                      </thead>
-                      {/* Scrollable Table Body */}
-                      <tbody
-                        className="divide-y divide-blue-50 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
-                      >
-                        <AnimatePresence>
-                          {filteredSalesData.map((data, index) => (
+                <div className="flex justify-end mb-4">
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center"
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                  >
+                    {isCollapsed ? (
+                      <>
+                        Show Table <ChevronDownIcon className="ml-2 w-4 h-4" />
+                      </>
+                    ) : (
+                      <>
+                        Hide Table <ChevronUp className="ml-2 w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {!isCollapsed && (
+                  <div className="overflow-hidden rounded-xl border border-blue-100">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-blue-100">
+                        <thead>
+                          <tr>
+                            <TableHeader>Sales Order</TableHeader>
+                            <TableHeader>Customer Account</TableHeader>
+                            <TableHeader>Name</TableHeader>
+                            <TableHeader>Return Status</TableHeader>
+                            <TableHeader>RMA Number</TableHeader>
+                            <TableHeader>Order Type</TableHeader>
+                            <TableHeader>Status</TableHeader>
+                            <TableHeader>Segment</TableHeader>
+                            <TableHeader>Subsegment</TableHeader>
+                          </tr>
+                        </thead>
+                        {/* Scrollable Table Body */}
+                        <tbody
+                          className="divide-y divide-blue-50 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
+                        >
+                          <AnimatePresence>
+                            {filteredSalesData.map((data, index) => (
+                              <motion.tr
+                                key={data.SalesOrder}
+                                variants={itemVariants}
+                                custom={index}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                className="hover:bg-blue-50/50 transition-colors duration-200"
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                                  {data.SalesOrder}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.CustomerAccount}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.Name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span
+                                    className={`
+                                      inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                      ${
+                                        data.ReturnStatus === "New"
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-yellow-100 text-yellow-800"
+                                      }
+                                    `}
+                                  >
+                                    {data.ReturnStatus}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.RMANumber}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.OrderType}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {data.Status}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.Segment}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.Subsegment}
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </AnimatePresence>
+                          {filteredSalesData.length === 0 && (
                             <motion.tr
-                              key={data.SalesOrder}
-                              variants={itemVariants}
-                              custom={index}
-                              initial="hidden"
-                              animate="visible"
-                              exit="hidden"
-                              className="hover:bg-blue-50/50 transition-colors duration-200"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
                             >
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                {data.SalesOrder}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.CustomerAccount}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.Name}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`
-                                    inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    ${
-                                      data.ReturnStatus === "New"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-yellow-100 text-yellow-800"
-                                    }
-                                  `}
-                                >
-                                  {data.ReturnStatus}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.RMANumber}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.OrderType}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {data.Status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.Segment}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.Subsegment}
+                              <td
+                                colSpan={9}
+                                className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
+                              >
+                                No sales records found matching your criteria.
                               </td>
                             </motion.tr>
-                          ))}
-                        </AnimatePresence>
-                        {filteredSalesData.length === 0 && (
-                          <motion.tr
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <td
-                              colSpan={9}
-                              className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
-                            >
-                              No sales records found matching your criteria.
-                            </td>
-                          </motion.tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Load More Button */}
                 {filteredSalesData.length >= visibleRows && (
