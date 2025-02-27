@@ -285,7 +285,6 @@
 
 // export default DashboardTables;
 
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -433,8 +432,8 @@ const DashboardTables: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 box-border overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 overflow-hidden">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -572,4 +571,3 @@ const DashboardTables: React.FC = () => {
 };
 
 export default DashboardTables;
-
