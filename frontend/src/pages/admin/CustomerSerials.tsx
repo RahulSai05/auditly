@@ -329,7 +329,6 @@
 
 // export default CustomerSerials;
 
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
@@ -579,8 +578,7 @@ const CustomerSerials: React.FC = () => {
                       </thead>
                       {/* Scrollable Table Body */}
                       <tbody
-                        className="divide-y divide-blue-50 block max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
-                        style={{ display: "block" }}
+                        className="divide-y divide-blue-50 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
                       >
                         <AnimatePresence>
                           {filteredSalesData.map((data, index) => (
@@ -592,8 +590,6 @@ const CustomerSerials: React.FC = () => {
                               animate="visible"
                               exit="hidden"
                               className="hover:bg-blue-50/50 transition-colors duration-200"
-                              whileHover={{ scale: 1.002 }}
-                              style={{ display: "table", width: "100%", tableLayout: "fixed" }}
                             >
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                 {data.SalesOrder}
@@ -643,7 +639,6 @@ const CustomerSerials: React.FC = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            style={{ display: "table", width: "100%", tableLayout: "fixed" }}
                           >
                             <td
                               colSpan={9}
