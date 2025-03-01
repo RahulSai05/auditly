@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Search, FileText, X, AlertCircle, CheckCircle2, Loader2, Table } from "lucide-react";
+import {
+  Upload,
+  Search,
+  FileText,
+  X,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
 
 interface SearchResult {
   return_order_number: string;
@@ -13,7 +21,10 @@ interface SearchResult {
 const ItemReturn: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "";
+    message: string;
+  }>({ type: "", message: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [fileName, setFileName] = useState("");
@@ -25,9 +36,9 @@ const ItemReturn: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.5,
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -38,15 +49,18 @@ const ItemReturn: React.FC = () => {
       transition: {
         type: "spring",
         stiffness: 100,
-        damping: 15
-      }
-    }
+        damping: 15,
+      },
+    },
   };
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!csvFile) {
-      setNotification({ type: 'error', message: "Please select a CSV file to upload." });
+      setNotification({
+        type: "error",
+        message: "Please select a CSV file to upload.",
+      });
       return;
     }
 
@@ -62,12 +76,15 @@ const ItemReturn: React.FC = () => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      setNotification({ type: 'success', message: response.data.message });
+      setNotification({ type: "success", message: response.data.message });
       setCsvFile(null);
       setFileName("");
     } catch (error) {
       console.error("Error uploading CSV:", error);
-      setNotification({ type: 'error', message: "An error occurred while uploading the CSV." });
+      setNotification({
+        type: "error",
+        message: "An error occurred while uploading the CSV.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +92,10 @@ const ItemReturn: React.FC = () => {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      setNotification({ type: 'error', message: "Please enter a search query." });
+      setNotification({
+        type: "error",
+        message: "Please enter a search query.",
+      });
       return;
     }
     setIsLoading(true);
@@ -88,11 +108,14 @@ const ItemReturn: React.FC = () => {
       );
       setSearchResults(response.data);
       if (response.data.length === 0) {
-        setNotification({ type: 'error', message: "No results found." });
+        setNotification({ type: "error", message: "No results found." });
       }
     } catch (error) {
       console.error("Error searching items:", error);
-      setNotification({ type: 'error', message: "An error occurred while searching for items." });
+      setNotification({
+        type: "error",
+        message: "An error occurred while searching for items.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +124,7 @@ const ItemReturn: React.FC = () => {
   const handleClearSearch = () => {
     setSearchQuery("");
     setSearchResults([]);
-    setNotification({ type: '', message: '' });
+    setNotification({ type: "", message: "" });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,25 +136,24 @@ const ItemReturn: React.FC = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && searchQuery.trim() && !isLoading) {
+    if (e.key === "Enter" && searchQuery.trim() && !isLoading) {
       handleSearch();
     }
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
       className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
     >
-      <motion.div 
-        variants={itemVariants}
-        className="max-w-4xl mx-auto"
-      >
+      <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <FileText className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Customer Return Item Data</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Customer Return Item Data
+          </h1>
           <p className="text-gray-600">
             Upload a CSV file or search the database for return item data
           </p>
@@ -139,21 +161,29 @@ const ItemReturn: React.FC = () => {
 
         <div className="grid gap-6 md:grid-cols-2 mb-8">
           {/* CSV Upload Section */}
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             className="bg-white rounded-xl shadow-lg p-6"
           >
             <div className="flex items-center gap-2 mb-4">
               <Upload className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-800">CSV Upload</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                CSV Upload
+              </h2>
             </div>
-            
+
             <form onSubmit={handleFileUpload} className="space-y-4">
               <div className="relative">
-                <div className={`
+                <div
+                  className={`
                   border-2 border-dashed rounded-lg p-4 transition-all duration-200
-                  ${fileName ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}
-                `}>
+                  ${
+                    fileName
+                      ? "border-blue-400 bg-blue-50"
+                      : "border-gray-300 hover:border-blue-400"
+                  }
+                `}
+                >
                   {fileName ? (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-blue-600">{fileName}</span>
@@ -171,8 +201,12 @@ const ItemReturn: React.FC = () => {
                   ) : (
                     <label className="flex flex-col items-center justify-center h-24 cursor-pointer">
                       <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-500">Click to upload CSV file</span>
-                      <span className="text-xs text-gray-400 mt-1">or drag and drop</span>
+                      <span className="text-sm text-gray-500">
+                        Click to upload CSV file
+                      </span>
+                      <span className="text-xs text-gray-400 mt-1">
+                        or drag and drop
+                      </span>
                     </label>
                   )}
                   <input
@@ -192,9 +226,11 @@ const ItemReturn: React.FC = () => {
                 className={`
                   w-full px-4 py-2 rounded-lg font-medium
                   transition-all duration-200 flex items-center justify-center gap-2
-                  ${isLoading || !csvFile
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'}
+                  ${
+                    isLoading || !csvFile
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }
                 `}
                 disabled={isLoading || !csvFile}
               >
@@ -214,13 +250,15 @@ const ItemReturn: React.FC = () => {
           </motion.div>
 
           {/* Search Section */}
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             className="bg-white rounded-xl shadow-lg p-6"
           >
             <div className="flex items-center gap-2 mb-4">
               <Search className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-800">Search Database</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Search Database
+              </h2>
             </div>
 
             <div className="space-y-4">
@@ -251,9 +289,11 @@ const ItemReturn: React.FC = () => {
                   className={`
                     px-4 py-2 rounded-lg font-medium flex items-center gap-2
                     transition-all duration-200
-                    ${isLoading || !searchQuery
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'}
+                    ${
+                      isLoading || !searchQuery
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }
                   `}
                   disabled={isLoading || !searchQuery}
                 >
@@ -270,7 +310,7 @@ const ItemReturn: React.FC = () => {
                 {searchResults.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
@@ -279,10 +319,18 @@ const ItemReturn: React.FC = () => {
                         <table className="w-full">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Order Number</th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Serial Number</th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Destination</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Order Number
+                              </th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Serial Number
+                              </th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Condition
+                              </th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                Destination
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200">
@@ -293,10 +341,18 @@ const ItemReturn: React.FC = () => {
                                 animate={{ opacity: 1 }}
                                 className="hover:bg-gray-50"
                               >
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.return_order_number}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.serial_number}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.return_condition}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.return_destination}</td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  {item.return_order_number}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  {item.serial_number}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  {item.return_condition}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  {item.return_destination}
+                                </td>
                               </motion.tr>
                             ))}
                           </tbody>
@@ -319,12 +375,14 @@ const ItemReturn: React.FC = () => {
               exit={{ opacity: 0, y: 10 }}
               className={`
                 rounded-lg p-4 flex items-center gap-3
-                ${notification.type === 'success' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'}
+                ${
+                  notification.type === "success"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }
               `}
             >
-              {notification.type === 'success' ? (
+              {notification.type === "success" ? (
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               ) : (
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />

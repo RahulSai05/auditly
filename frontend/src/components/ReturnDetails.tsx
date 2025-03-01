@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Loader2, ClipboardList, Users2 } from "lucide-react";
+import * as XLSX from "xlsx";
+import Papa from "papaparse";
+import { saveAs } from "file-saver";
 
 // Debounce function
 const debounce = (func: Function, delay: number) => {
@@ -23,8 +24,6 @@ interface CustomerData {
 }
 
 const ReturnDetails: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  //const orderNumber = searchParams.get("OrderNumber");
   const [customerData, setCustomerData] = useState<CustomerData[]>([]);
   const [searchOrderNumber, setSearchOrderNumber] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -90,30 +89,49 @@ const ReturnDetails: React.FC = () => {
       .slice(0, 5); // Limit to 5 items
   }, [customerData, searchOrderNumber]);
 
-  const SearchBar = React.memo(({ 
-    value, 
-    onChange, 
-    placeholder 
-  }: {
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    placeholder: string;
-  }) => (
-    <div className="flex flex-col md:flex-row gap-4 mb-6">
-      <div className="relative flex-1">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-          <Search className="w-5 h-5" />
+  // Export to CSV
+  const exportToCSV = (data: CustomerData[]) => {
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "return_records.csv");
+  };
+
+  // Export to Excel
+  const exportToExcel = (data: CustomerData[]) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Return Records");
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, "return_records.xlsx");
+  };
+
+  const SearchBar = React.memo(
+    ({
+      value,
+      onChange,
+      placeholder,
+    }: {
+      value: string;
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+      placeholder: string;
+    }) => (
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+            <Search className="w-5 h-5" />
+          </div>
+          <input
+            type="text"
+            placeholder={placeholder}
+            className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+            defaultValue={value} // Use defaultValue instead of value
+            onChange={onChange} // Pass the event to the debounced handler
+          />
         </div>
-        <input
-          type="text"
-          placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-          defaultValue={value} // Use defaultValue instead of value
-          onChange={onChange} // Pass the event to the debounced handler
-        />
       </div>
-    </div>
-  ));
+    )
+  );
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
     <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
@@ -178,14 +196,26 @@ const ReturnDetails: React.FC = () => {
               className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 overflow-hidden"
             >
               <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 10 }}
-                    className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-colors duration-300"
-                  >
-                    <ClipboardList className="w-6 h-6 text-blue-600" />
-                  </motion.div>
-                  <h2 className="text-xl font-bold text-gray-800">Return Records</h2>
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-3 mb-6">
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: 10 }}
+                      className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-colors duration-300"
+                    >
+                      <ClipboardList className="w-6 h-6 text-blue-600" />
+                    </motion.div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                      Return Records
+                    </h2>
+                  </div>
+                  <div className="flex h-10">
+                    <button
+                      onClick={() => exportToExcel(filteredCustomerData)} // or exportToExcel(filteredCustomerData)
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+                    >
+                      Export to xlsv
+                    </button>
+                  </div>
                 </div>
 
                 <SearchBar
@@ -194,61 +224,65 @@ const ReturnDetails: React.FC = () => {
                   placeholder="Search by Order Number..."
                 />
 
+                {/* Export Data Button */}
+
                 <div className="overflow-hidden rounded-xl border border-blue-100">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-blue-100">
-                      <thead>
-                        <tr>
-                          <TableHeader>Return Order Number</TableHeader>
-                          <TableHeader>Return Carrier</TableHeader>
-                          <TableHeader>Shipped To Address</TableHeader>
-                          <TableHeader>SSCC Number</TableHeader>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-blue-50">
-                        <AnimatePresence>
-                          {filteredCustomerData.map((data, index) => (
+                    <div className="overflow-y-auto max-h-[300px]">
+                      <table className="min-w-full divide-y divide-blue-100">
+                        <thead className="sticky top-0 bg-white z-10">
+                          <tr>
+                            <TableHeader>Return Order Number</TableHeader>
+                            <TableHeader>Return Carrier</TableHeader>
+                            <TableHeader>Shipped To Address</TableHeader>
+                            <TableHeader>SSCC Number</TableHeader>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-blue-50">
+                          <AnimatePresence>
+                            {filteredCustomerData.map((data, index) => (
+                              <motion.tr
+                                key={data.id}
+                                variants={itemVariants}
+                                custom={index}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                className="hover:bg-blue-50/50 transition-colors duration-200"
+                                whileHover={{ scale: 1.002 }}
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                                  {data.return_order_number}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.return_carrier}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.shipped_to_address}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.sscc_number}
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </AnimatePresence>
+                          {filteredCustomerData.length === 0 && (
                             <motion.tr
-                              key={data.id}
-                              variants={itemVariants}
-                              custom={index}
-                              initial="hidden"
-                              animate="visible"
-                              exit="hidden"
-                              className="hover:bg-blue-50/50 transition-colors duration-200"
-                              whileHover={{ scale: 1.002 }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
                             >
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                {data.return_order_number}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.return_carrier}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.shipped_to_address}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {data.sscc_number}
+                              <td
+                                colSpan={4}
+                                className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
+                              >
+                                No return records found matching your criteria.
                               </td>
                             </motion.tr>
-                          ))}
-                        </AnimatePresence>
-                        {filteredCustomerData.length === 0 && (
-                          <motion.tr
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <td
-                              colSpan={4}
-                              className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
-                            >
-                              No return records found matching your criteria.
-                            </td>
-                          </motion.tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>

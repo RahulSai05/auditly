@@ -1,56 +1,70 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Database, Globe, Cloud, Server, Network, Share2 } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Database,
+  Globe,
+  Cloud,
+  Server,
+  Network,
+  Share2,
+} from "lucide-react";
 
 const destinations = [
   {
     id: 1,
-    title: 'Elasticsearch',
-    description: 'High-performance search and analytics engine for modern applications.',
+    title: "Elasticsearch",
+    description:
+      "High-performance search and analytics engine for modern applications.",
     icon: Database,
-    color: '#43A047',
-    status: 'Enterprise'
+    color: "#43A047",
+    status: "Enterprise",
   },
   {
     id: 2,
-    title: 'OpenSearch',
-    description: 'Distributed search and analytics suite with visualization capabilities.',
+    title: "OpenSearch",
+    description:
+      "Distributed search and analytics suite with visualization capabilities.",
     icon: Globe,
-    color: '#00796B',
-    status: 'Popular'
+    color: "#00796B",
+    status: "Popular",
   },
   {
     id: 3,
-    title: 'Algolia',
-    description: 'Hosted search API that delivers instant and relevant results.',
+    title: "Algolia",
+    description:
+      "Hosted search API that delivers instant and relevant results.",
     icon: Cloud,
-    color: '#5C6BC0',
-    status: 'Cloud'
+    color: "#5C6BC0",
+    status: "Cloud",
   },
   {
     id: 4,
-    title: 'Solr',
-    description: 'Fast, open-source enterprise search platform built on Apache Lucene.',
+    title: "Solr",
+    description:
+      "Fast, open-source enterprise search platform built on Apache Lucene.",
     icon: Server,
-    color: '#E65100',
-    status: 'Advanced'
+    color: "#E65100",
+    status: "Advanced",
   },
   {
     id: 5,
-    title: 'Meilisearch',
-    description: 'Lightning-fast search engine with intuitive developer experience.',
+    title: "Meilisearch",
+    description:
+      "Lightning-fast search engine with intuitive developer experience.",
     icon: Network,
-    color: '#FF4081',
-    status: 'Fast'
+    color: "#FF4081",
+    status: "Fast",
   },
   {
     id: 6,
-    title: 'Typesense',
-    description: 'Fast, typo-tolerant search engine for building delightful search experiences.',
+    title: "Typesense",
+    description:
+      "Fast, typo-tolerant search engine for building delightful search experiences.",
     icon: Share2,
-    color: '#7B1FA2',
-    status: 'Modern'
-  }
+    color: "#7B1FA2",
+    status: "Modern",
+  },
 ];
 
 const containerVariants = {
@@ -59,9 +73,9 @@ const containerVariants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
-      delayChildren: 0.3
-    }
-  }
+      delayChildren: 0.3,
+    },
+  },
 };
 
 const itemVariants = {
@@ -72,9 +86,9 @@ const itemVariants = {
     transition: {
       type: "spring",
       stiffness: 100,
-      damping: 10
-    }
-  }
+      damping: 10,
+    },
+  },
 };
 
 const Outbound: React.FC = () => {
@@ -82,7 +96,7 @@ const Outbound: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-16"
@@ -97,8 +111,8 @@ const Outbound: React.FC = () => {
             <ArrowLeft className="w-5 h-5 group-hover:transform group-hover:-translate-x-1 transition-transform" />
             <span className="text-lg">Configure data destination</span>
           </motion.a>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -106,7 +120,7 @@ const Outbound: React.FC = () => {
           >
             Search Destinations
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -128,13 +142,19 @@ const Outbound: React.FC = () => {
             <motion.div
               key={destination.id}
               variants={itemVariants}
-              whileHover={{ y: -8, transition: { type: "spring", stiffness: 300 } }}
+              whileHover={{
+                y: -8,
+                transition: { type: "spring", stiffness: 300 },
+              }}
               className="bg-white/80 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50 group"
             >
-              <div className="h-2 bg-gradient-to-r" style={{ 
-                background: `linear-gradient(to right, ${destination.color}40, ${destination.color}60)` 
-              }} />
-              
+              <div
+                className="h-2 bg-gradient-to-r"
+                style={{
+                  background: `linear-gradient(to right, ${destination.color}40, ${destination.color}60)`,
+                }}
+              />
+
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <motion.div
@@ -143,27 +163,29 @@ const Outbound: React.FC = () => {
                   >
                     <destination.icon className="w-6 h-6 text-blue-600" />
                   </motion.div>
-                  
+
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg">{destination.title}</h3>
+                    <h3 className="font-semibold text-gray-900 text-lg">
+                      {destination.title}
+                    </h3>
                     <motion.span
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r"
-                      style={{ 
+                      style={{
                         background: `linear-gradient(to right, ${destination.color}20, ${destination.color}40)`,
-                        color: destination.color
+                        color: destination.color,
                       }}
                     >
                       {destination.status}
                     </motion.span>
                   </div>
                 </div>
-                
+
                 <p className="text-gray-600 text-sm mb-4">
                   {destination.description}
                 </p>
-                
+
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -173,10 +195,10 @@ const Outbound: React.FC = () => {
                   <span className="text-sm font-medium">Configure</span>
                   <motion.span
                     animate={{ x: [0, 5, 0] }}
-                    transition={{ 
-                      repeat: Infinity, 
+                    transition={{
+                      repeat: Infinity,
                       duration: 1.5,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
                     }}
                   >
                     →
@@ -195,7 +217,8 @@ const Outbound: React.FC = () => {
           className="mt-16 text-center"
         >
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Each destination offers unique features and capabilities. Choose the one that best fits your search requirements and performance needs.
+            Each destination offers unique features and capabilities. Choose the
+            one that best fits your search requirements and performance needs.
           </p>
         </motion.div>
       </div>

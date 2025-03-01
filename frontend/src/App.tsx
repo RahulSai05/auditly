@@ -20,6 +20,7 @@ import ItemReturn from "./pages/admin/ItemReturn";
 import CustomerSerials from "./pages/admin/CustomerSerials";
 import ReturnDetails from "./components/ReturnDetails";
 import AuditlyInspection from "./pages/admin/AuditlyInspection";
+//@ts-ignore
 import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
 import UserMaintenance from "./pages/admin/UserMaintenance";
 import EmailConfigurations from "./pages/admin/EmailConfigurations";
@@ -32,7 +33,7 @@ import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
-
+import { RootState } from "./store/store";
 
 export default function App() {
   const itemData = useSelector((state: RootState) => state.ids);
@@ -43,7 +44,12 @@ export default function App() {
     const currentPath = window.location.pathname;
 
     // Redirect to login only if not on auth-related routes
-    if (!isLoggedIn && !["/register", "/login", "/forgot-password", "/reset-password"].includes(currentPath)) {
+    if (
+      !isLoggedIn &&
+      !["/register", "/login", "/forgot-password", "/reset-password"].includes(
+        currentPath
+      )
+    ) {
       navigate("/login");
     }
   }, [navigate]);
@@ -69,21 +75,53 @@ export default function App() {
         {/* Admin Routes with AdminLayout */}
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/settings/Item-master-upload" element={<ItemUpload />} />
-          <Route path="/admin/settings/Item-Image-Upload" element={<ItemImageUpload />} />
+          <Route
+            path="/admin/settings/Item-master-upload"
+            element={<ItemUpload />}
+          />
+          <Route
+            path="/admin/settings/Item-Image-Upload"
+            element={<ItemImageUpload />}
+          />
           <Route path="/admin/reports/items" element={<DashboardTables />} />
-          <Route path="/admin/reports/customer-serials" element={<CustomerSerials />} />
+          <Route
+            path="/admin/reports/customer-serials"
+            element={<CustomerSerials />}
+          />
           <Route path="/admin/reports/returns" element={<ReturnDetails />} />
-          <Route path="/admin/settings/Return-Upload" element={<ItemReturn />} />
-          <Route path="/admin/reports/audity-inspections" element={<AuditlyInspection />} />
-          <Route path="/admin/settings/customer-serial-Upload" element={<CustomerSerialUpload />} />
-          <Route path="/admin/settings/users-maintenance" element={<UserMaintenance />} />   
-          <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />   
-          <Route path="/admin/settings/connectors/outbound" element={<Outbound />} />   
-          <Route path="/admin/settings/email-configurations" element={<EmailConfigurations />} />   
-          <Route path="/admin/settings/api-configurations" element={<ApiConfigurations />} />   
-     
-        </Route> 
+          <Route
+            path="/admin/settings/Return-Upload"
+            element={<ItemReturn />}
+          />
+          <Route
+            path="/admin/reports/audity-inspections"
+            element={<AuditlyInspection />}
+          />
+          <Route
+            path="/admin/settings/customer-serial-Upload"
+            element={<CustomerSerialUpload />}
+          />
+          <Route
+            path="/admin/settings/users-maintenance"
+            element={<UserMaintenance />}
+          />
+          <Route
+            path="/admin/settings/connectors/inbound"
+            element={<Inbound />}
+          />
+          <Route
+            path="/admin/settings/connectors/outbound"
+            element={<Outbound />}
+          />
+          <Route
+            path="/admin/settings/email-configurations"
+            element={<EmailConfigurations />}
+          />
+          <Route
+            path="/admin/settings/api-configurations"
+            element={<ApiConfigurations />}
+          />
+        </Route>
 
         {/* Auto */}
         <Route path="/auto/scan" element={<Scan />} />

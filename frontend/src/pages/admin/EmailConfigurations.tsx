@@ -1,6 +1,17 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Users, ChevronRight, Settings, Bell, Shield, Headphones, Building, Code, Briefcase } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Users,
+  ChevronRight,
+  Settings,
+  Bell,
+  Shield,
+  Headphones,
+  Building,
+  Code,
+  Briefcase,
+} from "lucide-react";
 
 interface TeamEmail {
   id: string;
@@ -13,53 +24,53 @@ interface TeamEmail {
 
 const teamEmails: TeamEmail[] = [
   {
-    id: '1',
-    team: 'Customer Support',
-    email: 'support@company.com',
-    description: 'Handle customer inquiries and technical support requests',
+    id: "1",
+    team: "Customer Support",
+    email: "support@company.com",
+    description: "Handle customer inquiries and technical support requests",
     icon: Headphones,
-    members: 12
+    members: 12,
   },
   {
-    id: '2',
-    team: 'Development Team',
-    email: 'dev@company.com',
-    description: 'Technical development and system maintenance',
+    id: "2",
+    team: "Development Team",
+    email: "dev@company.com",
+    description: "Technical development and system maintenance",
     icon: Code,
-    members: 8
+    members: 8,
   },
   {
-    id: '3',
-    team: 'Sales Department',
-    email: 'sales@company.com',
-    description: 'Sales inquiries and business development',
+    id: "3",
+    team: "Sales Department",
+    email: "sales@company.com",
+    description: "Sales inquiries and business development",
     icon: Briefcase,
-    members: 15
+    members: 15,
   },
   {
-    id: '4',
-    team: 'OMR Department',
-    email: 'omr@company.com',
-    description: 'Order Management Resources',
+    id: "4",
+    team: "OMR Department",
+    email: "omr@company.com",
+    description: "Order Management Resources",
     icon: Users,
-    members: 5
+    members: 5,
   },
   {
-    id: '5',
-    team: 'Security Team',
-    email: 'security@company.com',
-    description: 'Security incidents and compliance matters',
+    id: "5",
+    team: "Security Team",
+    email: "security@company.com",
+    description: "Security incidents and compliance matters",
     icon: Shield,
-    members: 6
+    members: 6,
   },
   {
-    id: '6',
-    team: 'Operations',
-    email: 'ops@company.com',
-    description: 'Day-to-day operations and logistics',
+    id: "6",
+    team: "Operations",
+    email: "ops@company.com",
+    description: "Day-to-day operations and logistics",
     icon: Building,
-    members: 10
-  }
+    members: 10,
+  },
 ];
 
 function EmailConfigurations() {
@@ -68,9 +79,9 @@ function EmailConfigurations() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -81,16 +92,16 @@ function EmailConfigurations() {
       transition: {
         type: "spring",
         stiffness: 100,
-        damping: 10
-      }
-    }
+        damping: 10,
+      },
+    },
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
@@ -98,32 +109,32 @@ function EmailConfigurations() {
           <motion.div
             initial={{ scale: 0.8, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ 
+            transition={{
               type: "spring",
               stiffness: 200,
-              damping: 20
+              damping: 20,
             }}
             className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
           >
             <Mail className="w-10 h-10 text-blue-600" />
           </motion.div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-        //    className="text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
+            //    className="text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
             className="text-[2.5rem] font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
-
           >
             Team Email Configuration
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="text-xl text-gray-600 max-w-2xl mx-auto"
           >
-            Manage and configure email addresses for different teams and departments
+            Manage and configure email addresses for different teams and
+            departments
           </motion.p>
         </motion.div>
 
@@ -152,8 +163,12 @@ function EmailConfigurations() {
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{team.team}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{team.description}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {team.team}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {team.description}
+                        </p>
                       </div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {team.members} members
@@ -181,7 +196,7 @@ function EmailConfigurations() {
         </motion.div>
 
         {/* Quick Actions */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
