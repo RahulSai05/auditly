@@ -714,7 +714,7 @@ export function Navbar() {
                   >
                     <Link
                       to="/"
-                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-lg md:text-xl"
                     >
                       <motion.div
                         className="p-1 rounded-full bg-blue-50"
@@ -739,7 +739,7 @@ export function Navbar() {
                   >
                     <Link
                       to="/admin/reports/items"
-                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-lg md:text-xl"
                     >
                       <motion.div
                         className="p-1 rounded-full bg-blue-50"
@@ -764,7 +764,7 @@ export function Navbar() {
                   >
                     <Link
                       to="/help"
-                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-lg md:text-xl"
                     >
                       <motion.div
                         className="p-1 rounded-full bg-blue-50"
