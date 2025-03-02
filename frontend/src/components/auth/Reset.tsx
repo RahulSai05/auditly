@@ -143,6 +143,7 @@
 
 // export default ResetPassword;
 
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -198,8 +199,8 @@ const ResetPassword = () => {
 
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 3) {
-      newErrors.password = "Password must be at least 3 characters";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
 
     setErrors(newErrors);
@@ -227,12 +228,21 @@ const ResetPassword = () => {
         }
       );
 
-      setMessage({
-        text: response.data.message || "Password reset successful! Redirecting...",
-        type: "success",
-      });
+      // Check if the response indicates success
+      if (response.data.message === "Password Reset Successfull") {
+        setMessage({
+          text: "Password reset successful! Redirecting...",
+          type: "success",
+        });
 
-      setTimeout(() => navigate("/login"), 2000); // Redirect to login page after reset
+        setTimeout(() => navigate("/login"), 2000); // Redirect to login page after reset
+      } else {
+        // Handle cases where the backend returns an error message with a 200 status code
+        setMessage({
+          text: response.data.message || "Reset failed!",
+          type: "error",
+        });
+      }
     } catch (error: any) {
       setMessage({
         text: error.response?.data?.message || "Reset failed!",
