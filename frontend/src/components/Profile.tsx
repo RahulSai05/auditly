@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +10,7 @@ import { CircleUser, LogOut, User, Settings, CreditCard, Lock, RefreshCw } from 
 import { motion } from "framer-motion";
 
 export function Profile() {
-  // Mock navigate function since we don't have react-router-dom
-  const navigate = (path: string) => {
-    console.log(`Navigating to: ${path}`);
-    window.location.href = path;
-  };
+  const navigate = useNavigate(); // Use the useNavigate hook
 
   // Mock user data for demonstration
   const [userData, setUserData] = useState(() => {
@@ -28,7 +25,7 @@ export function Profile() {
       console.log("Logging out user:", userData["User Name"]);
       localStorage.removeItem("token");
       setUserData(null);
-      navigate("/login");
+      navigate("/login"); // Use navigate for redirection
     } catch (error) {
       console.error("Error during logout:", error);
     }
@@ -41,7 +38,7 @@ export function Profile() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         className="flex items-center gap-x-3 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:translate-y-[-2px] text-base"
-        onClick={() => navigate("/login")}
+        onClick={() => navigate("/login")} // Use navigate for redirection
       >
         <CircleUser className="w-5 h-5" />
         Login
@@ -90,9 +87,9 @@ export function Profile() {
           <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
+            onClick={() => navigate("/edit-profile")} // Redirect to /edit-profile
           >
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
-                onClick={() => navigate("/edit-profile")} // Add this line
               <User className="w-5 h-5 text-blue-600" />
             </span>
             <span>Edit Profile</span>
@@ -118,7 +115,7 @@ export function Profile() {
           <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
-            onClick={() => navigate("/forgot-password")}
+            onClick={() => navigate("/forgot-password")} // Use navigate for redirection
           >
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
               <Lock className="w-5 h-5 text-blue-600" />
@@ -128,7 +125,7 @@ export function Profile() {
           <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
-            onClick={() => navigate("/reset-password")}
+            onClick={() => navigate("/reset-password")} // Use navigate for redirection
           >
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
               <RefreshCw className="w-5 h-5 text-blue-600" />
