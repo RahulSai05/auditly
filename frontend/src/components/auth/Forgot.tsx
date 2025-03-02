@@ -102,6 +102,7 @@
 
 // export default ForgotPassword;
 
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -141,7 +142,7 @@ const ForgotPassword = () => {
       );
 
       // Check if the OTP was sent successfully
-      if (data.message === "OTP sent successfully") {
+      if (data.message.includes("OTP Sent Successfully")) {
         setMessage({ text: data.message, type: "success" });
 
         // Redirect to /reset-password only if OTP is sent successfully
