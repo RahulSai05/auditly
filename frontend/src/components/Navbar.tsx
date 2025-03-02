@@ -141,7 +141,6 @@
 //   );
 // }
 
-
 import { useState, useEffect } from "react";
 import { Home, Lock, MessageCircleQuestion, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -151,7 +150,7 @@ const Profile = () => (
   <motion.button
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
-    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm"
+    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium"
   >
     Profile
   </motion.button>
@@ -165,6 +164,7 @@ export function Navbar() {
   const navigate = (path: string) => {
     console.log(`Navigating to: ${path}`);
     // This would use router.push(path) if react-router-dom was set up
+    window.location.href = path; // This will actually navigate to the path
   };
 
   // Track scroll position for navbar styling
@@ -236,7 +236,7 @@ export function Navbar() {
 
   return (
     <header 
-      className={`sticky top-0 z-50 py-3 px-4 shadow-sm transition-all duration-300 ${
+      className={`sticky top-0 z-50 py-4 px-5 shadow-sm transition-all duration-300 ${
         scrolled 
           ? "bg-white/95 backdrop-blur-lg shadow-md" 
           : "bg-white/90 backdrop-blur-sm"
@@ -246,7 +246,7 @@ export function Navbar() {
         {/* Logo with enhanced animations */}
         <motion.div
           onClick={() => navigate("/")}
-          className="text-xl cursor-pointer font-bold flex items-center"
+          className="text-2xl cursor-pointer font-bold flex items-center"
           variants={logoVariants}
           whileHover="hover"
           whileTap="tap"
@@ -259,11 +259,11 @@ export function Navbar() {
           }}
         >
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" style={{ fontFamily: 'system-ui, sans-serif', fontWeight: 600 }}>
-            <span style={{ fontSize: '1.5em' }}>a</span>uditly
+            <span style={{ fontSize: '1.6em' }}>a</span>uditly
           </div>
-          <span className="text-black" style={{ fontFamily: 'system-ui, sans-serif', fontSize: '1em', opacity: 0.8 }}>.</span>
+          <span className="text-black" style={{ fontFamily: 'system-ui, sans-serif', fontSize: '1.2em', opacity: 0.8 }}>.</span>
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" style={{ fontFamily: 'system-ui, sans-serif', fontWeight: 600 }}>
-            <span style={{ fontSize: '1.1em' }}>a</span>i
+            <span style={{ fontSize: '1.2em' }}>a</span>i
           </div>
         </motion.div>
          
@@ -286,7 +286,7 @@ export function Navbar() {
                 exit={{ rotate: 90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <X className="w-5 h-5 text-gray-700" />
+                <X className="w-6 h-6 text-gray-700" />
               </motion.div>
             ) : (
               <motion.div
@@ -296,7 +296,7 @@ export function Navbar() {
                 exit={{ rotate: -90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Menu className="w-5 h-5 text-gray-700" />
+                <Menu className="w-6 h-6 text-gray-700" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -316,7 +316,7 @@ export function Navbar() {
                 lg:relative absolute top-full left-0 right-0
                 lg:bg-transparent bg-white/95 backdrop-blur-lg
                 lg:shadow-none shadow-lg
-                lg:p-0 p-4
+                lg:p-0 p-5
                 lg:mt-0 mt-1
                 z-50
                 transition-all duration-300 ease-in-out
@@ -325,15 +325,15 @@ export function Navbar() {
             >
               <ul
                 className="
-                  lg:flex lg:space-x-6
-                  lg:space-y-0 space-y-4
+                  lg:flex lg:space-x-8
+                  lg:space-y-0 space-y-5
                   lg:items-center
                 "
               >
                 <motion.li variants={itemVariants}>
                   <motion.a
                     href="/"
-                    className="flex items-center gap-x-2 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                    className="flex items-center gap-x-3 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group text-base md:text-lg"
                     onClick={(e) => {
                       e.preventDefault();
                       navigate("/");
@@ -342,8 +342,8 @@ export function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
-                      <Home className="w-4 h-4 text-blue-600" />
+                    <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                      <Home className="w-5 h-5 text-blue-600" />
                     </span>
                     <span>Home</span>
                   </motion.a>
@@ -351,8 +351,8 @@ export function Navbar() {
                 
                 <motion.li variants={itemVariants}>
                   <motion.a
-                    href="/admin"
-                    className="flex items-center gap-x-2 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                    href="/admin/reports/items"
+                    className="flex items-center gap-x-3 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group text-base md:text-lg"
                     onClick={(e) => {
                       e.preventDefault();
                       navigate("/admin/reports/items");
@@ -361,8 +361,8 @@ export function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
-                      <Lock className="w-4 h-4 text-blue-600" />
+                    <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                      <Lock className="w-5 h-5 text-blue-600" />
                     </span>
                     <span>Admin</span>
                   </motion.a>
@@ -371,7 +371,7 @@ export function Navbar() {
                 <motion.li variants={itemVariants}>
                   <motion.a
                     href="/help"
-                    className="flex items-center gap-x-2 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                    className="flex items-center gap-x-3 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group text-base md:text-lg"
                     onClick={(e) => {
                       e.preventDefault();
                       navigate("/help");
@@ -380,8 +380,8 @@ export function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
-                      <MessageCircleQuestion className="w-4 h-4 text-blue-600" />
+                    <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                      <MessageCircleQuestion className="w-5 h-5 text-blue-600" />
                     </span>
                     <span>Help Center</span>
                   </motion.a>
