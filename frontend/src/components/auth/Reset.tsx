@@ -198,8 +198,8 @@ const ResetPassword = () => {
 
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 3) {
+      newErrors.password = "Password must be at least 3 characters";
     }
 
     setErrors(newErrors);
