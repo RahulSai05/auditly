@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, MessageCircle, Phone, ChevronDown, ChevronUp } from "lucide-react";
