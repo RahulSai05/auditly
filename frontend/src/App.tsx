@@ -172,6 +172,7 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
+import EditProfile from "./components/auth/EditProfile";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import { RootState } from "./store/store";
@@ -182,7 +183,7 @@ export default function App() {
   const location = useLocation();
 
   // List of routes where Navbar and Footer should be hidden
-  const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
+  const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
   useEffect(() => {
@@ -277,6 +278,8 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
+
       </Routes>
 
       {/* Conditionally render Footer */}
