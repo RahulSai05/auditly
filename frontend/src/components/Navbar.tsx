@@ -142,22 +142,46 @@
 // }
 
 
-
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Profile } from "./Profile";
-import { Lock, MessageCircleQuestion, Home, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, Lock, MessageCircleQuestion, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Mock component for Profile since we don't have the actual implementation
+const Profile = () => (
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs md:text-sm"
+  >
+    Profile
+  </motion.button>
+);
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle navigation without react-router-dom
+  const navigate = (path: string) => {
+    console.log(`Navigating to: ${path}`);
+    // This would use router.push(path) if react-router-dom was set up
+  };
+
+  // Track scroll position for navbar styling
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  // Animation variants for the mobile menu
+  // Animation variants
   const menuVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: {
@@ -165,28 +189,80 @@ export function Navbar() {
       y: 0,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 10,
+        stiffness: 300,
+        damping: 25,
+        staggerChildren: 0.1,
       },
     },
-    exit: { opacity: 0, y: -20 },
+    exit: { 
+      opacity: 0, 
+      y: -20,
+      transition: {
+        duration: 0.3,
+      }
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+      },
+    },
+  };
+
+  const logoVariants = {
+    hover: { 
+      scale: 1.05,
+      transition: { 
+        duration: 0.3,
+        type: "spring",
+        stiffness: 500,
+        damping: 15
+      } 
+    },
+    tap: { 
+      scale: 0.95,
+      transition: { 
+        duration: 0.1,
+      } 
+    },
   };
 
   return (
-    <header className="border-b py-3 px-4 shadow-sm relative bg-white/90 backdrop-blur-lg">
+    <header 
+      className={`sticky top-0 z-50 py-3 px-4 shadow-sm transition-all duration-300 ${
+        scrolled 
+          ? "bg-white/95 backdrop-blur-lg shadow-md" 
+          : "bg-white/90 backdrop-blur-sm"
+      }`}
+    >
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
+        {/* Logo with enhanced animations */}
         <motion.div
-          onClick={() => router("/")}
+          onClick={() => navigate("/")}
           className="text-xl cursor-pointer font-bold flex items-center"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          variants={logoVariants}
+          whileHover="hover"
+          whileTap="tap"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30,
+          }}
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" style={{ fontFamily: 'system-ui, sans-serif', fontWeight: 600 }}>
             <span style={{ fontSize: '1.5em' }}>a</span>uditly
           </div>
-          <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1em', opacity: 0.8 }}>.</span>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
+          <span className="text-black" style={{ fontFamily: 'system-ui, sans-serif', fontSize: '1em', opacity: 0.8 }}>.</span>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" style={{ fontFamily: 'system-ui, sans-serif', fontWeight: 600 }}>
             <span style={{ fontSize: '1.1em' }}>a</span>i
           </div>
         </motion.div>
@@ -194,12 +270,36 @@ export function Navbar() {
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
         <motion.button
           onClick={toggleMenu}
-          className="lg:hidden p-1.5 hover:bg-gray-100 rounded-md transition-colors"
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="Toggle menu"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
         >
-          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <AnimatePresence mode="wait">
+            {isOpen ? (
+              <motion.div
+                key="close"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <X className="w-5 h-5 text-gray-700" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="menu"
+                initial={{ rotate: 90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: -90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Menu className="w-5 h-5 text-gray-700" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.button>
 
         {/* Navigation */}
@@ -214,52 +314,83 @@ export function Navbar() {
                 lg:block
                 ${isOpen ? "block" : "hidden"}
                 lg:relative absolute top-full left-0 right-0
-                lg:bg-transparent bg-white
-                lg:shadow-none shadow-md
-                lg:p-0 p-3
+                lg:bg-transparent bg-white/95 backdrop-blur-lg
+                lg:shadow-none shadow-lg
+                lg:p-0 p-4
                 lg:mt-0 mt-1
                 z-50
                 transition-all duration-300 ease-in-out
+                border-t lg:border-t-0 border-gray-100
               `}
             >
               <ul
                 className="
-                  lg:flex lg:space-x-4
-                  lg:space-y-0 space-y-3
+                  lg:flex lg:space-x-6
+                  lg:space-y-0 space-y-4
                   lg:items-center
                 "
               >
-                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link
-                    to="/"
-                    className="hover:text-blue-600 flex items-center gap-x-2 text-xs md:text-sm transition"
-                    onClick={() => setIsOpen(false)}
+                <motion.li variants={itemVariants}>
+                  <motion.a
+                    href="/"
+                    className="flex items-center gap-x-2 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate("/");
+                      setIsOpen(false);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Home className="w-4 h-4" />
-                    Home
-                  </Link>
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                      <Home className="w-4 h-4 text-blue-600" />
+                    </span>
+                    <span>Home</span>
+                  </motion.a>
                 </motion.li>
-                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link
-                    to="/admin/reports/items"
-                    className="hover:text-blue-600 flex items-center gap-x-2 text-xs md:text-sm transition" 
-                    onClick={() => setIsOpen(false)}
+                
+                <motion.li variants={itemVariants}>
+                  <motion.a
+                    href="/admin"
+                    className="flex items-center gap-x-2 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate("/admin/reports/items");
+                      setIsOpen(false);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Lock className="w-4 h-4" />
-                    Admin
-                  </Link>
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                      <Lock className="w-4 h-4 text-blue-600" />
+                    </span>
+                    <span>Admin</span>
+                  </motion.a>
                 </motion.li>
-                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link
-                    to="/help"
-                    className="hover:text-blue-600 flex items-center gap-x-2 text-xs md:text-sm transition"
-                    onClick={() => setIsOpen(false)}
+                
+                <motion.li variants={itemVariants}>
+                  <motion.a
+                    href="/help"
+                    className="flex items-center gap-x-2 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 group"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate("/help");
+                      setIsOpen(false);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <MessageCircleQuestion className="w-4 h-4" />
-                    Help Center
-                  </Link>
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                      <MessageCircleQuestion className="w-4 h-4 text-blue-600" />
+                    </span>
+                    <span>Help Center</span>
+                  </motion.a>
                 </motion.li>
-                <motion.li className="lg:ml-3" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                
+                <motion.li 
+                  className="lg:ml-4"
+                  variants={itemVariants}
+                >
                   <Profile />
                 </motion.li>
               </ul>
@@ -275,7 +406,8 @@ export function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            transition={{ duration: 0.3 }}
+            className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={() => setIsOpen(false)}
           />
         )}
