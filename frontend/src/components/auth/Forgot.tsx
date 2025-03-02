@@ -102,7 +102,6 @@
 
 // export default ForgotPassword;
 
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -141,12 +140,18 @@ const ForgotPassword = () => {
         }
       );
 
-      setMessage({ text: data.message, type: "success" });
+      // Check if the OTP was sent successfully
+      if (data.message === "OTP sent successfully") {
+        setMessage({ text: data.message, type: "success" });
 
-      // Redirect to /reset-password after 2 seconds
-      setTimeout(() => {
-        navigate("/reset-password");
-      }, 2000);
+        // Redirect to /reset-password only if OTP is sent successfully
+        setTimeout(() => {
+          navigate("/reset-password");
+        }, 2000);
+      } else {
+        // Handle cases where the user doesn't exist or the request fails
+        setMessage({ text: data.message || "User not found", type: "error" });
+      }
     } catch (error: any) {
       setMessage({
         text: error.response?.data?.detail || "Failed to send OTP!",
