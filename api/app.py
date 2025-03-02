@@ -1028,51 +1028,8 @@ class UpdateProfileRequest(BaseModel):
     last_name: str = None
     gender: str = None
     email: str = None
-    password: str = None
+
     
-# @app.put("/update-profile")
-# async def update_profile(request: UpdateProfileRequest, db: Session = Depends(get_db)):
-#     """
-#     API to update user profile details.
-#     """
-#     try:
-#         auditly_user_name = request.user_name
-
-#         user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
-
-#         if not user_data:
-#             raise HTTPException(status_code=404, detail="User not found")
-
-#         # Update the fields if they are provided in the request
-#         if request.first_name is not None:
-#             user_data.first_name = request.first_name
-#         if request.last_name is not None:
-#             user_data.last_name = request.last_name
-#         if request.gender is not None:
-#             user_data.gender = request.gender
-#         if request.email is not None:
-#             user_data.email = request.email
-#         if request.password is not None:
-#             user_data.password = request.password
-
-#         db.commit()
-#         db.refresh(user_data)
-
-#         return {
-#             "message": "Profile updated successfully",
-#             "data": {
-#                 "User ID": user_data.auditly_user_id,
-#                 "User Name": user_data.auditly_user_name,
-#                 "First Name": user_data.first_name,
-#                 "Last Name": user_data.last_name,
-#                 "Gender": user_data.gender,
-#                 "Email": user_data.email
-#             }
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
-
-
 @app.put("/update-profile")
 async def update_profile(request: UpdateProfileRequest, db: Session = Depends(get_db)):
     """
@@ -1096,6 +1053,7 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
         if request.email is not None:
             user_data.email = request.email
 
+
         db.commit()
         db.refresh(user_data)
 
@@ -1112,6 +1070,7 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
+
 
 @app.get("/sales-data")
 async def get_sales_data(db: Session = Depends(get_db)):
