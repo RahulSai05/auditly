@@ -143,6 +143,7 @@ import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import Home from "./pages/Home";
+import HelpCenter from "./pages/HelpCenter";
 import Options from "./pages/Options";
 import GetAll from "./pages/manual/GetAll";
 import Details from "./pages/manual/return /Details";
@@ -211,6 +212,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/options" element={<Options />} />
+        <Route path="/help-center" element={<HelpCenter />} />
         <Route path="/option/manual" element={<GetAll />} />
         <Route path="/return/details" element={<Details />} />
         <Route path="/return/inspection" element={<Inspection />} />
