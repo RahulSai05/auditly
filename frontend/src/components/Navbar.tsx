@@ -421,7 +421,8 @@
 import { useState, useEffect } from "react";
 import { Home, Lock, MessageCircleQuestion, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ProfileDropdown from "./ProfileDropdown"; // Import the new ProfileDropdown component
+import { Profile } from "./Profile";
+
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
