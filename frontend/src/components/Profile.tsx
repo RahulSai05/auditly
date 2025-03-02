@@ -228,7 +228,6 @@ export function Profile() {
             </motion.button>
             <div className="text-base mt-3 text-gray-600">
               <p className="font-medium">{userData["User Name"] || "User Name"}</p>
-              <p className="text-sm text-gray-500">{userData["Email"] || "user@example.com"}</p>
             </div>
           </center>
         </motion.div>
