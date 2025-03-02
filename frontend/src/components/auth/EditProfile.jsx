@@ -4,25 +4,12 @@ import axios from "axios";
 import { User, Save, ArrowLeft, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface FormData {
-  user_name: string;
-  first_name: string;
-  last_name: string;
-  gender: string;
-  email: string;
-}
-
-interface Message {
-  text: string;
-  type: "success" | "error" | "";
-}
-
 const EditProfile = () => {
   const navigate = useNavigate();
   const userDataString = localStorage.getItem("token");
   const userData = userDataString ? JSON.parse(userDataString) : null;
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
     user_name: userData?.["User Name"] || "",
     first_name: userData?.["First Name"] || "",
     last_name: userData?.["Last Name"] || "",
@@ -30,14 +17,14 @@ const EditProfile = () => {
     email: userData?.["Email"] || "",
   });
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [message, setMessage] = useState<Message>({
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({
     text: "",
     type: "",
   });
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -45,7 +32,7 @@ const EditProfile = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: "", type: "" });
@@ -80,7 +67,7 @@ const EditProfile = () => {
       } else {
         setMessage({ text: "Failed to update profile", type: "error" });
       }
-    } catch (error: any) {
+    } catch (error) {
       setMessage({
         text: error.response?.data?.detail || "An error occurred",
         type: "error",
@@ -170,7 +157,7 @@ const EditProfile = () => {
         duration: 20,
         ease: "linear",
         repeat: Infinity,
-        repeatType: "reverse" as const,
+        repeatType: "reverse",
       },
     },
   };
