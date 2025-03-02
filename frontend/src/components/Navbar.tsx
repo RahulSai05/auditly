@@ -141,7 +141,6 @@
 //   );
 // }
 
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -289,14 +288,14 @@ export function Navbar() {
             className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
             style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}
           >
-            <span style={{ fontSize: '1.7em' }}>a</span>uditly
+            <span style={{ fontSize: '1.8em' }}>a</span>uditly
           </motion.div>
-          <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1.1em', opacity: 0.8 }}>.</span>
+          <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1.2em', opacity: 0.8 }}>.</span>
           <motion.div 
             className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
             style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}
           >
-            <span style={{ fontSize: '1.2em' }}>a</span>i
+            <span style={{ fontSize: '1.3em' }}>a</span>i
           </motion.div>
         </motion.div>
          
@@ -375,7 +374,7 @@ export function Navbar() {
                   >
                     <Link
                       to="/"
-                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-base md:text-lg"
                     >
                       <motion.div
                         className="p-1.5 rounded-full bg-blue-50"
@@ -400,7 +399,7 @@ export function Navbar() {
                   >
                     <Link
                       to="/admin/reports/items"
-                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-base md:text-lg"
                     >
                       <motion.div
                         className="p-1.5 rounded-full bg-blue-50"
@@ -425,7 +424,7 @@ export function Navbar() {
                   >
                     <Link
                       to="/help"
-                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-base md:text-lg"
                     >
                       <motion.div
                         className="p-1.5 rounded-full bg-blue-50"
@@ -470,11 +469,11 @@ export function Navbar() {
         )}
       </AnimatePresence>
       
-      {/* Animated gradient line */}
+      {/* Subtle shadow effect instead of the line */}
       <motion.div 
-        className="h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
-        initial={{ scaleX: 0, originX: 0 }}
-        animate={{ scaleX: 1 }}
+        className="absolute bottom-0 left-0 right-0 h-[6px] bg-gradient-to-b from-transparent to-black/5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.8 }}
       />
     </motion.header>
