@@ -143,7 +143,6 @@
 
 // export default ResetPassword;
 
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -199,7 +198,7 @@ const ResetPassword = () => {
 
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 3) {
+    } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
 
@@ -220,7 +219,12 @@ const ResetPassword = () => {
     try {
       const response = await axios.post(
         "http://54.210.159.220:8000/reset-password",
-        formData
+        {
+          user_name: formData.user_name,
+          email: formData.email,
+          otp: formData.otp,
+          password: formData.password,
+        }
       );
 
       setMessage({
@@ -231,7 +235,7 @@ const ResetPassword = () => {
       setTimeout(() => navigate("/login"), 2000); // Redirect to login page after reset
     } catch (error: any) {
       setMessage({
-        text: error.response?.data?.detail || "Reset failed!",
+        text: error.response?.data?.message || "Reset failed!",
         type: "error",
       });
 
