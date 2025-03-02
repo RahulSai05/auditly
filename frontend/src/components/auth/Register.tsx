@@ -306,7 +306,6 @@
 
 // export default Register;
 
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -514,7 +513,7 @@ const Register = () => {
         />
       </div>
 
-      <div className="w-full max-w-xl relative z-10">
+      <div className="w-full max-w-md relative z-10">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -530,13 +529,13 @@ const Register = () => {
             transition={{ delay: 0.2, duration: 0.8 }}
           />
           
-          <div className="p-8 sm:p-10">
+          <div className="p-6">
             <motion.div
-              className="text-center mb-8"
+              className="text-center mb-6"
               variants={itemVariants}
             >
               <motion.div
-                className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center"
+                className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{
@@ -551,18 +550,18 @@ const Register = () => {
                   transition: { duration: 0.3 }
                 }}
               >
-                <UserPlus className="h-10 w-10 text-blue-600" />
+                <UserPlus className="h-8 w-8 text-blue-600" />
               </motion.div>
               
               <motion.h2
-                className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mb-2"
+                className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mb-1"
                 variants={itemVariants}
               >
                 Create Account
               </motion.h2>
               
               <motion.p
-                className="text-gray-600"
+                className="text-gray-600 text-sm"
                 variants={itemVariants}
               >
                 Join us today and get started
@@ -571,11 +570,11 @@ const Register = () => {
 
             <motion.form 
               onSubmit={handleSubmit} 
-              className="space-y-6"
+              className="space-y-4"
               variants={itemVariants}
             >
               <motion.div variants={itemVariants}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Username
                 </label>
                 <motion.div 
@@ -584,7 +583,7 @@ const Register = () => {
                   animate={focusedField === "user_name" ? "focus" : "blur"}
                 >
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-blue-500" />
+                    <User className="h-4 w-4 text-blue-500" />
                   </div>
                   <input
                     type="text"
@@ -593,16 +592,16 @@ const Register = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedField("user_name")}
                     onBlur={() => setFocusedField(null)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     required
                     placeholder="Choose a username"
                   />
                 </motion.div>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
                   </label>
                   <motion.div 
@@ -616,7 +615,7 @@ const Register = () => {
                       onChange={handleChange}
                       onFocus={() => setFocusedField("first_name")}
                       onBlur={() => setFocusedField(null)}
-                      className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       required
                       placeholder="Enter first name"
                     />
@@ -624,7 +623,7 @@ const Register = () => {
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Last Name
                   </label>
                   <motion.div 
@@ -638,7 +637,7 @@ const Register = () => {
                       onChange={handleChange}
                       onFocus={() => setFocusedField("last_name")}
                       onBlur={() => setFocusedField(null)}
-                      className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       required
                       placeholder="Enter last name"
                     />
@@ -647,7 +646,7 @@ const Register = () => {
               </div>
 
               <motion.div variants={itemVariants}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Gender
                 </label>
                 <motion.div 
@@ -661,7 +660,7 @@ const Register = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedField("gender")}
                     onBlur={() => setFocusedField(null)}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 appearance-none"
+                    className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 appearance-none"
                     required
                   >
                     <option value="Male">Male</option>
@@ -669,13 +668,13 @@ const Register = () => {
                     <option value="Other">Other</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
                   </div>
                 </motion.div>
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
                 <motion.div 
@@ -684,7 +683,7 @@ const Register = () => {
                   animate={focusedField === "email" ? "focus" : "blur"}
                 >
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-blue-500" />
+                    <Mail className="h-4 w-4 text-blue-500" />
                   </div>
                   <input
                     type="email"
@@ -693,7 +692,7 @@ const Register = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField(null)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     required
                     placeholder="Enter your email"
                   />
@@ -701,7 +700,7 @@ const Register = () => {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <motion.div 
@@ -710,7 +709,7 @@ const Register = () => {
                   animate={focusedField === "password" ? "focus" : "blur"}
                 >
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-blue-500" />
+                    <Lock className="h-4 w-4 text-blue-500" />
                   </div>
                   <input
                     type="password"
@@ -719,7 +718,7 @@ const Register = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     required
                     placeholder="Choose a password"
                   />
@@ -729,7 +728,7 @@ const Register = () => {
               <motion.button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-md mt-2"
                 variants={buttonVariants}
                 whileHover={loading ? "disabled" : "hover"}
                 whileTap={loading ? "disabled" : "tap"}
@@ -742,7 +741,7 @@ const Register = () => {
                     animate={{ opacity: [0.6, 1, 0.6] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Creating account...
                   </motion.span>
                 ) : (
@@ -752,7 +751,7 @@ const Register = () => {
                       animate={{ x: [0, 5, 0] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     >
-                      <ArrowRight className="w-5 h-5" />
+                      <ArrowRight className="w-4 h-4" />
                     </motion.div>
                   </span>
                 )}
@@ -766,7 +765,7 @@ const Register = () => {
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: 10, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className={`mt-6 p-4 rounded-lg flex items-center gap-3 ${
+                  className={`mt-4 p-3 rounded-lg flex items-center gap-2 text-sm ${
                     message.type === "success"
                       ? "bg-green-50 text-green-800 border border-green-200"
                       : "bg-red-50 text-red-800 border border-red-200"
@@ -778,9 +777,9 @@ const Register = () => {
                     transition={{ type: "spring", stiffness: 500, damping: 15 }}
                   >
                     {message.type === "success" ? (
-                      <ShieldCheck className="w-5 h-5 text-green-500" />
+                      <ShieldCheck className="w-4 h-4 text-green-500" />
                     ) : (
-                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      <AlertCircle className="w-4 h-4 text-red-500" />
                     )}
                   </motion.div>
                   <p>{message.text}</p>
@@ -789,7 +788,7 @@ const Register = () => {
             </AnimatePresence>
 
             <motion.div 
-              className="mt-8 text-center text-gray-600"
+              className="mt-4 text-center text-gray-600 text-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
