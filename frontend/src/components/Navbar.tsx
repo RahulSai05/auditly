@@ -141,6 +141,7 @@
 //   );
 // }
 
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -264,15 +265,15 @@ export function Navbar() {
       }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? "py-2 bg-white/90 backdrop-blur-lg shadow-lg" 
-          : "py-4 bg-white/80 backdrop-blur-md shadow-md"
+          ? "py-1 bg-white/90 backdrop-blur-lg shadow-md" 
+          : "py-2 bg-white/80 backdrop-blur-md shadow-sm"
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 flex justify-between items-center">
         {/* Logo */}
         <motion.div
           onClick={() => navigate("/")}
-          className="text-2xl cursor-pointer font-bold flex items-center"
+          className="text-xl cursor-pointer font-bold flex items-center"
           variants={logoVariants}
           whileHover="hover"
           whileTap="tap"
@@ -288,21 +289,21 @@ export function Navbar() {
             className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
             style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}
           >
-            <span style={{ fontSize: '1.6em' }}>a</span>uditly
+            <span style={{ fontSize: '1.4em' }}>a</span>uditly
           </motion.div>
-          <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1.05em', opacity: 0.8 }}>.</span>
+          <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '0.95em', opacity: 0.8 }}>.</span>
           <motion.div 
             className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" 
             style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}
           >
-            <span style={{ fontSize: '1.15em' }}>a</span>i
+            <span style={{ fontSize: '1em' }}>a</span>i
           </motion.div>
         </motion.div>
          
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
         <motion.button
           onClick={toggleMenu}
-          className="lg:hidden p-2 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 shadow-sm"
+          className="lg:hidden p-1.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 shadow-sm"
           aria-label="Toggle menu"
           variants={logoVariants}
           whileHover="hover"
@@ -320,7 +321,7 @@ export function Navbar() {
                 exit={{ rotate: 90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <X className="w-6 h-6 text-blue-600" />
+                <X className="w-5 h-5 text-blue-600" />
               </motion.div>
             ) : (
               <motion.div
@@ -330,7 +331,7 @@ export function Navbar() {
                 exit={{ rotate: -90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Menu className="w-6 h-6 text-blue-600" />
+                <Menu className="w-5 h-5 text-blue-600" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -350,7 +351,7 @@ export function Navbar() {
                 lg:relative absolute top-full left-0 right-0
                 lg:bg-transparent bg-white/95 backdrop-blur-lg
                 lg:shadow-none shadow-lg
-                lg:p-0 p-6
+                lg:p-0 p-4
                 lg:mt-0 mt-0
                 z-50
                 transition-all duration-300 ease-in-out
@@ -359,8 +360,8 @@ export function Navbar() {
             >
               <motion.ul
                 className="
-                  lg:flex lg:space-x-8
-                  lg:space-y-0 space-y-6
+                  lg:flex lg:space-x-6
+                  lg:space-y-0 space-y-4
                   lg:items-center
                 "
                 variants={menuVariants}
@@ -374,16 +375,16 @@ export function Navbar() {
                   >
                     <Link
                       to="/"
-                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-xs md:text-sm"
                     >
                       <motion.div
-                        className="p-1.5 rounded-full bg-blue-50"
+                        className="p-1 rounded-full bg-blue-50"
                         whileHover={{ 
                           backgroundColor: "#dbeafe", // blue-100
                           transition: { duration: 0.2 }
                         }}
                       >
-                        <Home className="w-5 h-5 text-blue-600" />
+                        <Home className="w-4 h-4 text-blue-600" />
                       </motion.div>
                       <span>Home</span>
                     </Link>
@@ -399,16 +400,16 @@ export function Navbar() {
                   >
                     <Link
                       to="/admin/reports/items"
-                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-xs md:text-sm"
                     >
                       <motion.div
-                        className="p-1.5 rounded-full bg-blue-50"
+                        className="p-1 rounded-full bg-blue-50"
                         whileHover={{ 
                           backgroundColor: "#dbeafe", // blue-100
                           transition: { duration: 0.2 }
                         }}
                       >
-                        <Lock className="w-5 h-5 text-blue-600" />
+                        <Lock className="w-4 h-4 text-blue-600" />
                       </motion.div>
                       <span>Admin</span>
                     </Link>
@@ -424,16 +425,16 @@ export function Navbar() {
                   >
                     <Link
                       to="/help"
-                      className="flex items-center gap-x-3 text-gray-600 font-medium transition-all duration-200 text-sm md:text-base"
+                      className="flex items-center gap-x-2 text-gray-600 font-medium transition-all duration-200 text-xs md:text-sm"
                     >
                       <motion.div
-                        className="p-1.5 rounded-full bg-blue-50"
+                        className="p-1 rounded-full bg-blue-50"
                         whileHover={{ 
                           backgroundColor: "#dbeafe", // blue-100
                           transition: { duration: 0.2 }
                         }}
                       >
-                        <MessageCircleQuestion className="w-5 h-5 text-blue-600" />
+                        <MessageCircleQuestion className="w-4 h-4 text-blue-600" />
                       </motion.div>
                       <span>Help Center</span>
                     </Link>
@@ -471,7 +472,7 @@ export function Navbar() {
       
       {/* Subtle shadow effect instead of the line */}
       <motion.div 
-        className="absolute bottom-0 left-0 right-0 h-[4px] bg-gradient-to-b from-transparent to-black/5"
+        className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-b from-transparent to-black/5"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.8 }}
