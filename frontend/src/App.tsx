@@ -243,10 +243,7 @@ export default function App() {
         {/* Admin Routes - Protected with WithRole HOC */}
         <Route
           element={
-            <WithRole
-              allowedRoles={["admin", "super_user"]}
-              fallbackPath="/unauthorized"
-            >
+            <WithRole allowedRoles={["admin", "super_user"]} fallbackPath="/unauthorized">
               <AdminLayout />
             </WithRole>
           }
