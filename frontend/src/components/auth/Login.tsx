@@ -490,6 +490,7 @@
 
 // export default Login;
 
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -541,15 +542,12 @@ const Login = () => {
         password: formData.password,
       });
   
-      if (data.message === "Login Successful") {
-        // Save user_type to localStorage
-        localStorage.setItem("user_type", data.user_type);
-  
+      if (data.message.includes("OTP Sent Successfully")) {
+        setOtpSent(true);
         setMessage({
-          text: "Login successful! Redirecting...",
+          text: "OTP sent to your email. Please enter it to proceed.",
           type: "success",
         });
-        setTimeout(() => navigate("/"), 1500);
       } else {
         setMessage({ text: "Invalid username or password", type: "error" });
       }
@@ -562,6 +560,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+  
 
   // Enhanced animation variants
   const containerVariants = {
