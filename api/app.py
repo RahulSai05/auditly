@@ -483,6 +483,44 @@ class AuditlyUserRequest(BaseModel):
     email: str
     password: str
 
+# @app.post("/register")
+# async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
+#     """
+#     API to register new user and return user ID.
+#     """ 
+#     try:  
+#         auditly_user_name = request.user_name
+#         first_name = request.first_name
+#         last_name = request.last_name
+#         gender = request.gender
+#         email = request.email
+#         password = request.password
+
+#         new_user = AuditlyUser(
+#         auditly_user_name = auditly_user_name,
+#         first_name = first_name,
+#         last_name = last_name,
+#         gender = gender,
+#         email = email,
+#         password = password
+#         )
+#         db.add(new_user)
+#         db.commit()
+#         db.refresh(new_user)
+
+
+#         user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
+
+#         return {
+#             "message": "User Created successfully.",
+#             "data": {
+#                 "User ID": user_data.auditly_user_id,
+#                 "User Name": user_data.auditly_user_name
+#             }
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
 @app.post("/register")
 async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
     """
@@ -496,31 +534,34 @@ async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):
         email = request.email
         password = request.password
 
+        # Check if the username already exists
+        existing_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists. Please choose a different username.")
+
         new_user = AuditlyUser(
-        auditly_user_name = auditly_user_name,
-        first_name = first_name,
-        last_name = last_name,
-        gender = gender,
-        email = email,
-        password = password
+            auditly_user_name = auditly_user_name,
+            first_name = first_name,
+            last_name = last_name,
+            gender = gender,
+            email = email,
+            password = password
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
-
-        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
-
         return {
             "message": "User Created successfully.",
             "data": {
-                "User ID": user_data.auditly_user_id,
-                "User Name": user_data.auditly_user_name
+                "User ID": new_user.auditly_user_id,
+                "User Name": new_user.auditly_user_name
             }
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 
 class LoginRequest(BaseModel):
