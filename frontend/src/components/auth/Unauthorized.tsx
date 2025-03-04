@@ -150,8 +150,7 @@ function Unauthorized() {
                 variants={itemVariants}
                 className="text-gray-600 mb-8"
               >
-If you believe you should have access, reach out to the system administrator or IT support team. Provide them with details about the error and your account information.
-
+If you believe you should have access, reach out to the system administrator or IT support team.
               </motion.p>
 
               <motion.div className="flex flex-col gap-4 w-full">
