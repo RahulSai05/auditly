@@ -58,6 +58,20 @@ function Unauthorized() {
     }
   };
 
+  const handleLogoutAndRedirect = async () => {
+    try {
+      // Make a request to the logout endpoint
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include', // Ensure cookies are included if using session-based auth
+      });
+      // Redirect to login page after logout
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <motion.div
       initial="initial"
@@ -150,7 +164,7 @@ function Unauthorized() {
                 variants={itemVariants}
                 className="text-gray-600 mb-8"
               >
-If you believe you should have access, reach out to the system administrator or IT support team.
+                If you believe you should have access, reach out to the system administrator or IT support team.
               </motion.p>
 
               <motion.div className="flex flex-col gap-4 w-full">
@@ -169,7 +183,7 @@ If you believe you should have access, reach out to the system administrator or 
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  onClick={() => navigate('/login')}
+                  onClick={handleLogoutAndRedirect}
                   className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
                   <LogIn className="w-5 h-5" />
@@ -189,7 +203,7 @@ If you believe you should have access, reach out to the system administrator or 
                   className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
                 >
                   <Mail className="w-4 h-4" />
-                  Contact Support
+                  <span>Contact Support</span>
                 </a>
               </p>
             </motion.div>
