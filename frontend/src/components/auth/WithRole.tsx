@@ -1,29 +1,21 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const WithRole = ({
-  children,
-  allowedRoles,
-  fallbackPath = "/unauthorized",
-}: {
-  children: React.ReactNode;
-  allowedRoles: string[];
-  fallbackPath?: string;
-}) => {
+const WithRole = ({ allowedRoles, children }: { allowedRoles: string[], children: JSX.Element }) => {
   const navigate = useNavigate();
-  const user_type = localStorage.getItem("user_type");
+  const userType = localStorage.getItem("userType");
 
   useEffect(() => {
-    if (!user_type || !allowedRoles.includes(user_type)) {
-      navigate(fallbackPath);
+    if (!userType || !allowedRoles.includes(userType)) {
+      navigate("/unauthorized");
     }
-  }, [user_type, allowedRoles, navigate, fallbackPath]);
+  }, [userType, allowedRoles, navigate]);
 
-  if (!user_type || !allowedRoles.includes(user_type)) {
-    return null; // Or a loading spinner
+  if (!userType || !allowedRoles.includes(userType)) {
+    return null;
   }
 
-  return <>{children}</>;
+  return children;
 };
 
 export default WithRole;
