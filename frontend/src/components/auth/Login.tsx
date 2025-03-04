@@ -490,6 +490,7 @@
 
 // export default Login;
 
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -521,7 +522,7 @@ const Login = () => {
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
-    if (localStorage.getItem("token")) {
+    if (localStorage.getItem("user_type")) {
       navigate("/");
     }
   }, [navigate]);
@@ -534,26 +535,50 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: "", type: "" });
-  
+
     try {
-      const { data } = await axios.post("http://54.210.159.220:8000/login", {
-        user_name: formData.user_name,
-        password: formData.password,
-      });
-  
-      if (data.message === "Login Successful") {
-        // Save user_type to localStorage
-        localStorage.setItem("user_type", data.user_type);
-  
-        setMessage({
-          text: "Login successful! Redirecting...",
-          type: "success",
+      if (!otpSent) {
+        // Step 1: Send username and password to get OTP
+        const { data } = await axios.post("http://54.210.159.220:8000/login", {
+          user_name: formData.user_name,
+          password: formData.password,
         });
-        setTimeout(() => navigate("/"), 1500);
+
+        console.log("Backend Response:", data); // Log the response
+
+        if (data.message === "OTP Sent Successfully") {
+          setOtpSent(true);
+          setMessage({
+            text: "OTP sent successfully! Check your email.",
+            type: "success",
+          });
+        } else {
+          setMessage({ text: "Invalid username or password", type: "error" });
+        }
       } else {
-        setMessage({ text: "Invalid username or password", type: "error" });
+        // Step 2: Verify OTP
+        const { data } = await axios.post("http://54.210.159.220:8000/verify-login-otp", {
+          user_name: formData.user_name,
+          login_otp: formData.otp,
+        });
+
+        console.log("OTP Verification Response:", data); // Log the response
+
+        if (data.message === "Login Successful") {
+          // Save user_type to localStorage
+          localStorage.setItem("user_type", data.user_type);
+
+          setMessage({
+            text: "Login successful! Redirecting...",
+            type: "success",
+          });
+          setTimeout(() => navigate("/"), 1500);
+        } else {
+          setMessage({ text: "Invalid OTP", type: "error" });
+        }
       }
     } catch (error: any) {
+      console.error("Login Error:", error); // Log the error
       setMessage({
         text: error.response?.data?.message || "Login failed!",
         type: "error",
