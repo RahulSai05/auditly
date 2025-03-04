@@ -12,7 +12,7 @@ const WithRole = ({ allowedRoles, children }: { allowedRoles: string[], children
   }, [userType, allowedRoles, navigate]);
 
   if (!userType || !allowedRoles.includes(userType)) {
-    return null;
+    return null; // Return null or a loading spinner while checking
   }
 
   return children;
