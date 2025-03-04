@@ -162,7 +162,6 @@ import ItemReturn from "./pages/admin/ItemReturn";
 import CustomerSerials from "./pages/admin/CustomerSerials";
 import ReturnDetails from "./components/ReturnDetails";
 import AuditlyInspection from "./pages/admin/AuditlyInspection";
-//@ts-ignore
 import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
 import UserMaintenance from "./pages/admin/UserMaintenance";
 import EmailConfigurations from "./pages/admin/EmailConfigurations";
@@ -170,6 +169,8 @@ import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
 import Login from "./components/auth/Login";
+import Unauthorized from "./components/auth/Unauthorized";
+import WithRole from "./components/auth/WithRole";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
@@ -278,9 +279,11 @@ export default function App() {
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
       </Routes>
 
