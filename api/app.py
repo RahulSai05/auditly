@@ -568,6 +568,7 @@ class LoginRequest(BaseModel):
     user_name : str
     password: str
 
+
 # @app.post("/login")
 # async def login(request: LoginRequest, db: Session = Depends(get_db)):   
 #     """
@@ -580,15 +581,14 @@ class LoginRequest(BaseModel):
 #         user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).filter(AuditlyUser.password == password).first()
 
 #         if user_data:
-#             user_data.last_login_time = datetime.datetime.now()
+#             otp_login = _gen_otp()
+#             user_data.reset_otp = otp_login
+#             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
 #             db.commit()
 #             db.refresh(user_data)
+#             send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
 #             return {
-#                 "message": "Login Successfull",
-#                 "data": {
-#                     "User ID": user_data.auditly_user_id,
-#                     "User Name": user_data.auditly_user_name
-#                 }
+#                 "message": "OTP Sent Successfully to registerd email"
 #              }
 #         else:
 #             return {
@@ -617,7 +617,9 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             db.refresh(user_data)
             send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
             return {
-                "message": "OTP Sent Successfully to registerd email"
+                "message": "OTP Sent Successfully to registerd email",
+                "auditly_user_name": user_data.auditly_user_name,
+                "user_type": user_data.user_type
              }
         else:
             return {
@@ -625,7 +627,8 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
              }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-    
+
+
 class VerifyLogin(BaseModel):
     user_name : str
     login_otp: str
