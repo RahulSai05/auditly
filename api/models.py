@@ -41,6 +41,8 @@ class AuditlyUser(Base):
     last_logout_time = Column(DateTime, nullable=True)
     reset_otp = Column(String(255), nullable=True )
     reset_otp_expiration = Column(DateTime,nullable=True)
+    user_type = Column(String(255), default="common_user")
+
 
 class CustomerItemData(Base):
     __tablename__ = 'customer_item_data'
