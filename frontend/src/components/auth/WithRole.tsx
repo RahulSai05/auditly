@@ -1,31 +1,29 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Define the HOC
-const withRole = (Component: React.ComponentType, allowedRoles: string[]) => {
-  // Return a new component
-  return (props: any) => {
-    const navigate = useNavigate();
+const WithRole = ({
+  children,
+  allowedRoles,
+  fallbackPath = "/unauthorized",
+}: {
+  children: React.ReactNode;
+  allowedRoles: string[];
+  fallbackPath?: string;
+}) => {
+  const navigate = useNavigate();
+  const user_type = localStorage.getItem("user_type");
 
-    // Get the user_type from localStorage
-    const user_type = localStorage.getItem("user_type");
-
-    // Check if the user is authorized
-    useEffect(() => {
-      if (!user_type || !allowedRoles.includes(user_type)) {
-        // Redirect to unauthorized page or login page
-        navigate("/unauthorized"); // You can change this to "/login" if needed
-      }
-    }, [user_type, navigate]);
-
-    // If the user is not authorized, don't render the component
+  useEffect(() => {
     if (!user_type || !allowedRoles.includes(user_type)) {
-      return null; // You can also return a loading spinner or a message
+      navigate(fallbackPath);
     }
+  }, [user_type, allowedRoles, navigate, fallbackPath]);
 
-    // If the user is authorized, render the component
-    return <Component {...props} />;
-  };
+  if (!user_type || !allowedRoles.includes(user_type)) {
+    return null; // Or a loading spinner
+  }
+
+  return <>{children}</>;
 };
 
-export default withRole;
+export default WithRole;
