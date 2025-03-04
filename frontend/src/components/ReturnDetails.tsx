@@ -296,7 +296,6 @@
 
 // export default ReturnDetails;
 
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -424,16 +423,16 @@ const ReturnDetails: React.FC = () => {
             type="text"
             placeholder={placeholder}
             className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-            defaultValue={value} // Use defaultValue instead of value
-            onChange={onChange} // Pass the event to the debounced handler
+            defaultValue={value}
+            onChange={onChange}
           />
         </div>
       </div>
     )
   );
 
-  const TableHeader = ({ children }: { children: React.ReactNode }) => (
-    <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
+  const TableHeader = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <th className={`px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50 ${className}`}>
       {children}
     </th>
   );
@@ -527,13 +526,13 @@ const ReturnDetails: React.FC = () => {
                 <div className="overflow-hidden rounded-xl border border-blue-100">
                   <div className="overflow-x-hidden"> {/* Disable horizontal scrollbar */}
                     <div className="overflow-y-auto max-h-[300px]">
-                      <table className="min-w-full divide-y divide-blue-100">
+                      <table className="min-w-full divide-y divide-blue-100 table-fixed"> {/* Add table-fixed to constrain table width */}
                         <thead className="sticky top-0 bg-white z-10">
                           <tr>
-                            <TableHeader>Return Order Number</TableHeader>
-                            <TableHeader>Return Carrier</TableHeader>
-                            <TableHeader>Shipped To Address</TableHeader>
-                            <TableHeader>SSCC Number</TableHeader>
+                            <TableHeader className="w-1/4">Return Order Number</TableHeader> {/* Set column width */}
+                            <TableHeader className="w-1/4">Return Carrier</TableHeader>
+                            <TableHeader className="w-1/4">Shipped To Address</TableHeader>
+                            <TableHeader className="w-1/4">SSCC Number</TableHeader>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-blue-50">
@@ -549,16 +548,16 @@ const ReturnDetails: React.FC = () => {
                                 className="hover:bg-blue-50/50 transition-colors duration-200"
                                 whileHover={{ scale: 1.002 }}
                               >
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 truncate"> {/* Add truncate for long text */}
                                   {data.return_order_number}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate">
                                   {data.return_carrier}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate">
                                   {data.shipped_to_address}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate">
                                   {data.sscc_number}
                                 </td>
                               </motion.tr>
