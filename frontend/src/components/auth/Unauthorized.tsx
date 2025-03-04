@@ -1,70 +1,203 @@
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldOff, ArrowLeft, LogIn, Mail } from 'lucide-react';
 
-const Unauthorized = () => {
+function Unauthorized() {
   const navigate = useNavigate();
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.6, 0.05, 0.01, 0.99]
+      }
+    }
+  };
+
+  const buttonVariants = {
+    hover: { 
+      scale: 1.03,
+      transition: { 
+        duration: 0.3,
+        type: "spring",
+        stiffness: 500,
+        damping: 15
+      } 
+    },
+    tap: { scale: 0.97 }
+  };
+
+  const backgroundVariants = {
+    initial: {
+      backgroundPosition: "0% 0%",
+    },
+    animate: {
+      backgroundPosition: "100% 100%",
+      transition: {
+        duration: 20,
+        ease: "linear",
+        repeat: Infinity,
+        repeatType: "reverse"
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      {/* Main Content */}
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-        {/* Icon */}
-        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-red-600 mb-4">
-          Unauthorized Access
-        </h1>
-
-        {/* Message */}
-        <p className="text-gray-700 mb-6">
-          You do not have permission to view this page. Please contact the
-          administrator if you believe this is an error.
-        </p>
-
-        {/* Button to Go Back */}
-        <button
-          onClick={() => navigate(-1)} // Go back to the previous page
-          className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-200 mb-4"
-        >
-          Go Back
-        </button>
-
-        {/* Button to Go to Login */}
-        <button
-          onClick={() => navigate("/login")} // Redirect to the login page
-          className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200"
-        >
-          Go to Login
-        </button>
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={backgroundVariants}
+      className="flex min-h-screen bg-gradient-to-br from-red-50 via-gray-50 to-blue-50 p-6"
+      style={{
+        backgroundSize: "400% 400%"
+      }}
+    >
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0.1, x: -100, y: -100 }}
+          animate={{ 
+            opacity: [0.1, 0.2, 0.1],
+            x: [-100, -80, -100],
+            y: [-100, -120, -100],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute top-0 left-0 w-96 h-96 rounded-full bg-red-200 filter blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0.1, x: 100, y: 100 }}
+          animate={{ 
+            opacity: [0.1, 0.2, 0.1],
+            x: [100, 120, 100],
+            y: [100, 80, 100],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-blue-200 filter blur-3xl"
+        />
       </div>
 
-      {/* Footer */}
-      <p className="text-gray-500 text-sm mt-8">
-        Need help?{" "}
-        <a
-          href="mailto:support@example.com"
-          className="text-blue-600 hover:underline"
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center justify-center"
+      >
+        <motion.div
+          className="w-full bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
         >
-          Contact Support
-        </a>
-      </p>
-    </div>
+          <motion.div 
+            className="h-2 bg-gradient-to-r from-red-500 to-red-600"
+            initial={{ scaleX: 0, originX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+          />
+
+          <div className="p-8">
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col items-center text-center mb-8"
+            >
+              <motion.div
+                className="w-20 h-20 mb-6 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 20,
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  rotate: 5,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                <ShieldOff className="w-10 h-10 text-red-600" />
+              </motion.div>
+
+              <motion.h1 
+                variants={itemVariants}
+                className="text-2xl font-bold text-red-600 mb-4"
+              >
+                Unauthorized Access
+              </motion.h1>
+
+              <motion.p 
+                variants={itemVariants}
+                className="text-gray-600 mb-8"
+              >
+                You do not have permission to view this page. Please contact the administrator if you believe this is an error.
+              </motion.p>
+
+              <motion.div className="flex flex-col gap-4 w-full">
+                <motion.button
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  onClick={() => navigate(-1)}
+                  className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Go Back
+                </motion.button>
+
+                <motion.button
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  onClick={() => navigate('/login')}
+                  className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                  <LogIn className="w-5 h-5" />
+                  Go to Login
+                </motion.button>
+              </motion.div>
+            </motion.div>
+
+            <motion.div
+              variants={itemVariants}
+              className="mt-8 pt-6 border-t border-gray-200 text-center"
+            >
+              <p className="text-gray-600 text-sm">
+                Need help? {' '}
+                <a 
+                  href="mailto:questions@auditlyai.com" 
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  <Mail className="w-4 h-4" />
+                  Contact Support
+                </a>
+              </p>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
-};
+}
 
 export default Unauthorized;
