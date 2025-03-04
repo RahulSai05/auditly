@@ -46,31 +46,55 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ text: "", type: "" });
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setMessage({ text: "", type: "" });
 
-    try {
-      const { data } = await axios.post(
-        "http://54.210.159.220:8000/register",
-        formData
-      );
-      setMessage({
-        text: "Registration successful! Redirecting...",
-        type: "success",
-      });
-      localStorage.setItem("token", JSON.stringify(data.data));
-      setTimeout(() => navigate("/"), 1500);
-    } catch (error: any) {
-      setMessage({
-        text: error.response?.data?.detail || "Registration failed!",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const { data } = await axios.post(
+  //       "http://54.210.159.220:8000/register",
+  //       formData
+  //     );
+  //     setMessage({
+  //       text: "Registration successful! Redirecting...",
+  //       type: "success",
+  //     });
+  //     localStorage.setItem("token", JSON.stringify(data.data));
+  //     setTimeout(() => navigate("/"), 1500);
+  //   } catch (error: any) {
+  //     setMessage({
+  //       text: error.response?.data?.detail || "Registration failed!",
+  //       type: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage({ text: "", type: "" });
+
+  try {
+    const { data } = await axios.post(
+      "http://54.210.159.220:8000/register",
+      formData
+    );
+    setMessage({
+      text: "Registration successful! Redirecting to login...",
+      type: "success",
+    });
+    setTimeout(() => navigate("/login"), 1500); // Redirect to login page
+  } catch (error: any) {
+    setMessage({
+      text: error.response?.data?.detail || "Registration failed!",
+      type: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Enhanced animation variants
   const containerVariants = {
