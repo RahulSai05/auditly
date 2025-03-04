@@ -151,7 +151,6 @@
 //     </>
 //   );
 // }
-
 import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
@@ -208,11 +207,11 @@ export default function App() {
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("token");
+    const user_type = localStorage.getItem("user_type");
     const currentPath = window.location.pathname;
 
-    // Redirect to login only if not on auth-related routes
-    if (!isLoggedIn && !authRoutes.includes(currentPath)) {
+    // Redirect to login only if not on auth-related routes and user_type is not set
+    if (!user_type && !authRoutes.includes(currentPath)) {
       navigate("/login");
     }
   }, [navigate]);
