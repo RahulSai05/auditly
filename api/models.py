@@ -85,6 +85,8 @@ class CustomerItemData(Base):
     date_shipped = Column(DateTime)
     date_delivered = Column(DateTime)
     return_created_date = Column(DateTime)
+    item = relationship("Item", back_populates="customer_item_data", lazy="joined")
+
     
 
 class CustomerData(Base):
