@@ -1102,52 +1102,122 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode('utf-8')
 
+# class ReceiptSearchRequest(BaseModel):
+#     receipt_number: str
+
+# @app.post("/get-receipt-data/")
+# async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
+#     # Assuming CustomerItemCondition links to CustomerItemData which links to Item and so on
+#     data = db.query(
+#         CustomerItemCondition,
+#         CustomerItemData,
+#         Item,
+#         Brand
+#     ).join(
+#         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#     ).join(
+#         Item, CustomerItemData.item_id == Item.id
+#     ).join(
+#         Brand, Item.brand_id == Brand.id
+#     ).filter(
+#         CustomerItemCondition.ack_number == request.receipt_number
+#     ).first()
+
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+
+#     # Unpack the data from the joined query result
+#     condition, item_data, item, brand = data
+
+#     return {
+#         "receipt_number": request.receipt_number,
+#         "overall_condition": condition.overall_condition,
+#         "item_description": item.item_description,
+#         "brand_name": brand.brand_name,
+#         "original_sales_order_number": item_data.original_sales_order_number,
+#         "return_order_number": item_data.return_order_number,
+#         "return_qty": item_data.return_qty,
+#         "shipping_info": {
+#             "shipped_to_person": item_data.shipped_to_person,
+#             "address": item_data.shipped_to_address,
+#             "city": item_data.city,
+#             "state": item_data.state,
+#             "country": item_data.country
+#         }
+#     }
+
+
+
 class ReceiptSearchRequest(BaseModel):
-    receipt_number: str
+    search_user_id: str
+    receipt_number: Optional[str] = None
+    token: Optional[str] = None
 
 @app.post("/get-receipt-data/")
 async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
-    # Assuming CustomerItemCondition links to CustomerItemData which links to Item and so on
-    data = db.query(
-        CustomerItemCondition,
-        CustomerItemData,
-        Item,
-        Brand
-    ).join(
-        CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-    ).join(
-        Item, CustomerItemData.item_id == Item.id
-    ).join(
-        Brand, Item.brand_id == Brand.id
-    ).filter(
-        CustomerItemCondition.ack_number == request.receipt_number
-    ).first()
+    request_user_id = request.search_user_id
+    token = request.token
+    user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
+    print(user_data)
+    customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == request_user_id).filter(OnboardUser.token == request.token).first()
+    if not ((user_data and not token) or (token and customer_data)): 
+          return {
+            "message": "Invalid User",
+    }
+
+    if request.receipt_number is None:
+        data = db.query(
+            CustomerItemCondition,
+            CustomerItemData,
+            Item,
+            Brand
+        ).join(
+            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+        ).join(
+            Item, CustomerItemData.item_id == Item.id
+        ).join(
+            Brand, Item.brand_id == Brand.id
+        ).all()
+    else:
+        data = db.query(
+            CustomerItemCondition,
+            CustomerItemData,
+            Item,
+            Brand
+        ).join(
+            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+        ).join(
+            Item, CustomerItemData.item_id == Item.id
+        ).join(
+            Brand, Item.brand_id == Brand.id
+        ).filter(
+            CustomerItemCondition.ack_number == request.receipt_number
+        ).first()
+         
+        data = [data]
 
     if not data:
         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
 
-    # Unpack the data from the joined query result
-    condition, item_data, item, brand = data
-
-    return {
-        "receipt_number": request.receipt_number,
-        "overall_condition": condition.overall_condition,
-        "item_description": item.item_description,
-        "brand_name": brand.brand_name,
-        "original_sales_order_number": item_data.original_sales_order_number,
-        "return_order_number": item_data.return_order_number,
-        "return_qty": item_data.return_qty,
-        "shipping_info": {
-            "shipped_to_person": item_data.shipped_to_person,
-            "address": item_data.shipped_to_address,
-            "city": item_data.city,
-            "state": item_data.state,
-            "country": item_data.country
-        }
-    }
-
-
-
+    receipt_data_list = []
+    for condition, item_data, item, brand in data:
+        receipt_data_list.append({
+            "receipt_number": condition.ack_number,
+            "overall_condition": condition.overall_condition,
+            "item_description": item.item_description,
+            "brand_name": brand.brand_name,
+            "original_sales_order_number": item_data.original_sales_order_number,
+            "return_order_number": item_data.return_order_number,
+            "return_qty": item_data.return_qty,
+            "shipping_info": {
+                "shipped_to_person": item_data.shipped_to_person,
+                "address": item_data.shipped_to_address,
+                "city": item_data.city,
+                "state": item_data.state,
+                "country": item_data.country
+            }
+        })
+    return receipt_data_list
 
 @app.get("/base-images/mapping/{base_to_item_mapping}")
 async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = Depends(get_db)):
