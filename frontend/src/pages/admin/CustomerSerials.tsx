@@ -290,7 +290,7 @@ const CustomerSerials: React.FC = () => {
                             <TableHeader>Customer Account #</TableHeader>
                             <TableHeader>Customer Name</TableHeader>
                             <TableHeader>Item Description</TableHeader>
-                            <TableHeader>Configuration</TableHeader>
+                            <TableHeader>Item Configuration</TableHeader>
                             <TableHeader>Serial Number</TableHeader>
                             <TableHeader>Date Purchased</TableHeader>
                             <TableHeader>Date Shipped</TableHeader>
