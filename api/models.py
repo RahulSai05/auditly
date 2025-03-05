@@ -27,6 +27,16 @@ class Item(Base):
     customer_item_data = relationship("CustomerItemData", back_populates="item")
 
 
+class OnboardUser(Base):
+    __tablename__ = "onboard_user"
+
+    onboard_user_id = Column(Integer, primary_key=True, autoincrement=True)
+    onboard_name = Column(String(255))
+    onboard_email = Column(String(255))
+    token = Column(String(255))
+    created_at = Column(DateTime, default=func.current_timestamp())
+    customer_user_id = Column(String(255))
+
 
 class AuditlyUser(Base):
     __tablename__ = "auditly_user"
