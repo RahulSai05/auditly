@@ -79,6 +79,10 @@ class CustomerItemData(Base):
     barcode = Column(String(255), unique=True)
     customer_email = Column(String(255))
     account_number = Column(String(255))
+    date_purchased = Column(DateTime)
+    date_shipped = Column(DateTime)
+    date_delivered = Column(DateTime)
+    return_created_date = Column(DateTime)
     
 
 class CustomerData(Base):
