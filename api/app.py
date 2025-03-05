@@ -1408,6 +1408,46 @@ async def get_users(db: Session = Depends(get_db)):
 
 
 
+class Onboard(BaseModel):
+    onboard_name: str
+    onboard_email: str
+
+@app.post("/onboard")
+async def onboard(request: Onboard, db: Session = Depends(get_db)):   
+    """
+    API to onboard an third party to use api
+    """ 
+    try:  
+        onboard_name = request.onboard_name
+        onboard_email = request.onboard_email
+        
+        customer_user_id = f'CUST{_gen_otp()}'
+
+        new_user = OnboardUser(
+        onboard_name = onboard_name,
+        onboard_email = onboard_email,
+        token = f'{_gen_otp()}{_gen_otp()}{customer_user_id}{_gen_otp()}',
+        customer_user_id = customer_user_id,
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+
+        customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_user_id).first()
+
+        return {
+            "message": "Onboarded Successfully.",
+            "data": {
+                "Customer User Id": customer_data.customer_user_id,
+                "Customer Token": customer_data.token
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+
 # @app.post("/login")
 # async def login(request: LoginRequest, db: Session = Depends(get_db)):   
 #     """
