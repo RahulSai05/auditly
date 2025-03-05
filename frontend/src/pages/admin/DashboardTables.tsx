@@ -158,7 +158,7 @@ const DashboardTables: React.FC = () => {
   );
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
-    <th className="px-4 py-2 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
+    <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
       {children}
     </th>
   );
@@ -290,19 +290,19 @@ const DashboardTables: React.FC = () => {
                                 className="hover:bg-blue-50/50 transition-colors duration-200"
                                 whileHover={{ scale: 1.002 }}
                               >
-                                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-blue-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                   {item.item_number}
                                 </td>
-                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {item.item_description}
                                 </td>
-                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {item.category}
                                 </td>
-                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {item.configuration}
                                 </td>
-                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {item.brand.brand_name}
                                 </td>
                               </motion.tr>
