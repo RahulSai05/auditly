@@ -338,7 +338,6 @@
 
 // export default DashboardTables;
 
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -506,12 +505,12 @@ const DashboardTables: React.FC = () => {
 
   // XLSX Export function
   const exportToXLSX = (data: Item[]) => {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Item Records");
-    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelFile], { type: "application/octet-stream" });
-    saveAs(blob, "item_records.xlsx");
+    const ws = XLSX.utils.json_to_sheet(data); // Convert data to Excel sheet
+    const wb = XLSX.utils.book_new(); // Create a new Excel workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Item Records"); // Append sheet to workbook
+    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" }); // Convert workbook to binary array
+    const blob = new Blob([excelFile], { type: "application/octet-stream" }); // Create a Blob from binary data
+    saveAs(blob, "item_records.xlsx"); // Trigger the download as .xlsx
   };
 
   return (
@@ -585,7 +584,7 @@ const DashboardTables: React.FC = () => {
                   </div>
                   <div className="flex justify-between mb-4">
                     <button
-                      onClick={() => exportToXLSX(filteredItems)}
+                      onClick={() => exportToXLSX(filteredItems)} // Trigger export on click
                       className="px-4 h-10 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
                     >
                       Export to XLSX
@@ -606,64 +605,66 @@ const DashboardTables: React.FC = () => {
                 />
 
                 <div className="overflow-hidden rounded-xl border border-blue-100">
-                  <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
-                    <table className="w-full">
-                      <thead className="sticky top-0 bg-white z-10">
-                        <tr>
-                          <TableHeader>Item Number</TableHeader>
-                          <TableHeader>Description</TableHeader>
-                          <TableHeader>Category</TableHeader>
-                          <TableHeader>Configuration</TableHeader>
-                          <TableHeader>Brand</TableHeader>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-blue-50">
-                        <AnimatePresence>
-                          {filteredItems.map((item, index) => (
+                  <div className="overflow-x-hidden">
+                    <div className="overflow-y-auto max-h-[300px]">
+                      <table className="min-w-full divide-y divide-blue-100">
+                        <thead className="sticky top-0 bg-white z-10">
+                          <tr>
+                            <TableHeader>Item Number</TableHeader>
+                            <TableHeader>Description</TableHeader>
+                            <TableHeader>Category</TableHeader>
+                            <TableHeader>Configuration</TableHeader>
+                            <TableHeader>Brand</TableHeader>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-blue-50">
+                          <AnimatePresence>
+                            {filteredItems.map((item, index) => (
+                              <motion.tr
+                                key={item.id}
+                                variants={itemVariants}
+                                custom={index}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                className="hover:bg-blue-50/50 transition-colors duration-200"
+                                whileHover={{ scale: 1.002 }}
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                                  {item.item_number}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {item.item_description}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {item.category}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {item.configuration}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {item.brand.brand_name}
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </AnimatePresence>
+                          {filteredItems.length === 0 && (
                             <motion.tr
-                              key={item.id}
-                              variants={itemVariants}
-                              custom={index}
-                              initial="hidden"
-                              animate="visible"
-                              exit="hidden"
-                              className="hover:bg-blue-50/50 transition-colors duration-200"
-                              whileHover={{ backgroundColor: "rgba(239, 246, 255, 0.5)" }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
                             >
-                              <td className="px-6 py-4 text-sm font-medium text-blue-600">
-                                {item.item_number}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
-                                {item.item_description}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
-                                {item.category}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
-                                {item.configuration}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
-                                {item.brand.brand_name}
+                              <td
+                                colSpan={5}
+                                className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
+                              >
+                                No items found matching your criteria.
                               </td>
                             </motion.tr>
-                          ))}
-                        </AnimatePresence>
-                        {filteredItems.length === 0 && (
-                          <motion.tr
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <td
-                              colSpan={5}
-                              className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
-                            >
-                              No items found matching your criteria.
-                            </td>
-                          </motion.tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
