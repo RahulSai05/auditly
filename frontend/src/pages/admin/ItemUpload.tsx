@@ -278,7 +278,7 @@ const ItemUpload: React.FC = () => {
                         <table className="w-full">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item Details</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item Description</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item #</th>
                             </tr>
                           </thead>
