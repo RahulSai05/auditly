@@ -439,11 +439,69 @@ async def get_items(db: Session = Depends(get_db)):
     return items
 
 
+# @app.get("/customer-item-data")
+# async def get_customer_item_data(db: Session = Depends(get_db)):
+#     customer_item_data = db.query(CustomerItemData).all()
+#     return customer_item_data
+
+
 @app.get("/customer-item-data")
 async def get_customer_item_data(db: Session = Depends(get_db)):
-    customer_item_data = db.query(CustomerItemData).all()
-    return customer_item_data
+    customer_item_data = db.query(CustomerItemData).join(Item).all()
+    
+    response = []
+    for data in customer_item_data:
+        response.append({
+            "id": data.id,
+            "original_sales_order_number": data.original_sales_order_number,
+            "original_sales_order_line": data.original_sales_order_line,
+            "ordered_qty": data.ordered_qty,
+            "return_order_number": data.return_order_number,
+            "return_order_line": data.return_order_line,
+            "return_qty": data.return_qty,
+            "return_destination": data.return_destination,
+            "return_condition": data.return_condition,
+            "return_carrier": data.return_carrier,
+            "return_warehouse": data.return_warehouse,
+            "item_id": data.item_id,
+            "serial_number": data.serial_number,
+            "sscc_number": data.sscc_number,
+            "tag_number": data.tag_number,
+            "vendor_item_number": data.vendor_item_number,
+            "shipped_from_warehouse": data.shipped_from_warehouse,
+            "shipped_to_person": data.shipped_to_person,
+            "shipped_to_address": data.shipped_to_address,
+            "street_number": data.street_number,
+            "city": data.city,
+            "state": data.state,
+            "country": data.country,
+            "dimensions_depth": float(data.dimensions_depth) if data.dimensions_depth else None,
+            "dimensions_length": float(data.dimensions_length) if data.dimensions_length else None,
+            "dimensions_breadth": float(data.dimensions_breadth) if data.dimensions_breadth else None,
+            "dimensions_weight": float(data.dimensions_weight) if data.dimensions_weight else None,
+            "dimensions_volume": float(data.dimensions_volume) if data.dimensions_volume else None,
+            "dimensions_size": data.dimensions_size,
+            "barcode": data.barcode,
+            "customer_email": data.customer_email,
+            "account_number": data.account_number,
+            "date_purchased": data.date_purchased.isoformat() if data.date_purchased else None,
+            "date_shipped": data.date_shipped.isoformat() if data.date_shipped else None,
+            "date_delivered": data.date_delivered.isoformat() if data.date_delivered else None,
+            "return_created_date": data.return_created_date.isoformat() if data.return_created_date else None,
+            "item_details": {
+                "item_id": data.item.id,
+                "item_number": data.item.item_number,
+                "item_description": data.item.item_description,
+                "brand_id": data.item.brand_id,
+                "category": data.item.category,
+                "configuration": data.item.configuration,
+            }
+        })
+    
+    return response
 
+    
+    
 
 
 @app.get("/item-details/{return_order_number}")
