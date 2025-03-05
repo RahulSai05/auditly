@@ -24,6 +24,8 @@ class Item(Base):
     configuration = Column(String(255), default="USA", nullable=True)
 
     brand = relationship("Brand", back_populates="items")
+    customer_item_data = relationship("CustomerItemData", back_populates="item")
+
 
 
 class AuditlyUser(Base):
