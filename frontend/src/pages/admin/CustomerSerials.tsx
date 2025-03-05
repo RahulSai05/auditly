@@ -451,7 +451,7 @@ const CustomerSerials: React.FC = () => {
         const response = await axios.get<{
           message: string;
           data: SalesData[];
-        }>("http://54.210.159.220:8000/sales-data");
+        }>("http://54.210.159.220:8000/customer-item-data");
         setCustomerData(response.data.data);
       } catch (error) {
         console.error("Error fetching sales data:", error);
