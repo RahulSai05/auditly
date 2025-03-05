@@ -345,13 +345,13 @@ const ItemReturn: React.FC = () => {
                           <thead className="bg-gray-50">
                             <tr>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                Shipped To Person
+                                Customer Name
                               </th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                                 Return Order Number
                               </th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                Original Sales Order Number
+                                Sales Order Number
                               </th>
                             </tr>
                           </thead>
