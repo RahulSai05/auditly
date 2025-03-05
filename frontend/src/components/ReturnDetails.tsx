@@ -260,7 +260,7 @@ const ReturnDetails: React.FC = () => {
                             <TableHeader>RMA Number</TableHeader>
                             <TableHeader>Customer Account #</TableHeader>
                             <TableHeader>Customer Name</TableHeader>
-                            <TableHeader>Item Name</TableHeader>
+                            <TableHeader>Item Description</TableHeader>
                             <TableHeader>Item Configuration</TableHeader>
                             <TableHeader>Original Sales </TableHeader>
                             <TableHeader>Sales Line</TableHeader>
