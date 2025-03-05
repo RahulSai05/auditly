@@ -366,7 +366,6 @@
 // };
 
 // export default CustomerSerials;
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
@@ -396,9 +395,8 @@ interface SalesData {
   original_sales_order_line: number;
   account_number: string;
   shipped_to_person: string;
-  Item_name: string;
-  item_configuration: string;
   item_description: string;
+  configuration: string;
   serial_number: string;
   date_purchased: string;
   date_shipped: string;
@@ -447,24 +445,22 @@ const CustomerSerials: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<{
-          message: string;
-          data: any[];
-        }>("http://54.210.159.220:8000/customer-item-data");
+        const response = await axios.get<SalesData[]>(
+          "http://54.210.159.220:8000/customer-item-data"
+        );
 
-        // Map the backend data to the required fields
-        const mappedData = response.data.data.map((item) => ({
-          original_sales_order_number: item.SalesOrder || "N/A",
-          original_sales_order_line: 0, // Default value (not provided in the API)
-          account_number: item.CustomerAccount || "N/A",
-          shipped_to_person: item.Name || "N/A",
-          Item_name: item.OrderType || "N/A", // Placeholder (not provided in the API)
-          item_configuration: item.Segment || "N/A", // Placeholder (not provided in the API)
-          item_description: item.OrderType || "N/A", // Placeholder (not provided in the API)
-          serial_number: item.RMANumber || "N/A", // Placeholder (not provided in the API)
-          date_purchased: "", // Placeholder (not provided in the API)
-          date_shipped: "", // Placeholder (not provided in the API)
-          date_delivered: "", // Placeholder (not provided in the API)
+        // Map the API response to the required fields
+        const mappedData = response.data.map((item) => ({
+          original_sales_order_number: item.original_sales_order_number || "N/A",
+          original_sales_order_line: item.original_sales_order_line || 0,
+          account_number: item.account_number || "N/A",
+          shipped_to_person: item.shipped_to_person || "N/A",
+          item_description: item.item_details?.item_description || "N/A",
+          configuration: item.item_details?.configuration || "N/A",
+          serial_number: item.serial_number || "N/A",
+          date_purchased: item.date_purchased || "N/A",
+          date_shipped: item.date_shipped || "N/A",
+          date_delivered: item.date_delivered || "N/A",
         }));
 
         setCustomerData(mappedData);
@@ -661,9 +657,8 @@ const CustomerSerials: React.FC = () => {
                             <TableHeader>Sales Order Line</TableHeader>
                             <TableHeader>Account Number</TableHeader>
                             <TableHeader>Shipped To Person</TableHeader>
-                            <TableHeader>Item Name</TableHeader>
-                            <TableHeader>Item Configuration</TableHeader>
                             <TableHeader>Item Description</TableHeader>
+                            <TableHeader>Configuration</TableHeader>
                             <TableHeader>Serial Number</TableHeader>
                             <TableHeader>Date Purchased</TableHeader>
                             <TableHeader>Date Shipped</TableHeader>
@@ -696,13 +691,10 @@ const CustomerSerials: React.FC = () => {
                                   {data.shipped_to_person}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.Item_name}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.item_configuration}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {data.item_description}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                  {data.configuration}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {data.serial_number}
@@ -726,7 +718,7 @@ const CustomerSerials: React.FC = () => {
                               exit={{ opacity: 0 }}
                             >
                               <td
-                                colSpan={11}
+                                colSpan={10}
                                 className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
                               >
                                 No sales records found matching your criteria.
