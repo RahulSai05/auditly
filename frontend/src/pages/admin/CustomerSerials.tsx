@@ -368,7 +368,6 @@
 // export default CustomerSerials;
 
 
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
@@ -394,16 +393,15 @@ const debounce = (func: Function, delay: number) => {
 };
 
 interface SalesData {
-  original_sales_order_number: string;
-  original_sales_order_line: number;
-  account_number: string;
-  shipped_to_person: string;
-  item_description: string;
-  configuration: string;
-  serial_number: string;
-  date_purchased: string;
-  date_shipped: string;
-  date_delivered: string;
+  SalesOrder: string;
+  CustomerAccount: string;
+  Name: string;
+  ReturnStatus: string;
+  RMANumber: string;
+  OrderType: string;
+  Status: string;
+  Segment: string;
+  Subsegment: string;
 }
 
 const CustomerSerials: React.FC = () => {
@@ -452,7 +450,21 @@ const CustomerSerials: React.FC = () => {
           message: string;
           data: SalesData[];
         }>("http://54.210.159.220:8000/customer-item-data");
-        setCustomerData(response.data.data);
+
+        // Map the backend data to the frontend structure
+        const mappedData = response.data.data.map((item) => ({
+          SalesOrder: item.SalesOrder,
+          CustomerAccount: item.CustomerAccount,
+          Name: item.Name,
+          ReturnStatus: item.ReturnStatus,
+          RMANumber: item.RMANumber,
+          OrderType: item.OrderType,
+          Status: item.Status,
+          Segment: item.Segment,
+          Subsegment: item.Subsegment,
+        }));
+
+        setCustomerData(mappedData);
       } catch (error) {
         console.error("Error fetching sales data:", error);
       } finally {
@@ -467,10 +479,10 @@ const CustomerSerials: React.FC = () => {
     return customerData.filter(
       (data) =>
         (searchSalesOrder === "" ||
-          data.original_sales_order_number.toLowerCase().includes(
+          data.SalesOrder.toLowerCase().includes(
             searchSalesOrder.toLowerCase()
           )) &&
-        (statusFilter === "" || data.status === statusFilter)
+        (statusFilter === "" || data.Status === statusFilter)
     );
   }, [customerData, searchSalesOrder, statusFilter]);
 
@@ -631,7 +643,7 @@ const CustomerSerials: React.FC = () => {
                   filter={statusFilter}
                   onFilterChange={(e) => setStatusFilter(e.target.value)}
                   filterOptions={Array.from(
-                    new Set(customerData.map((data) => data.status))
+                    new Set(customerData.map((data) => data.Status))
                   )}
                   filterPlaceholder="All Statuses"
                 />
@@ -643,22 +655,21 @@ const CustomerSerials: React.FC = () => {
                         <thead className="sticky top-0 bg-white z-10">
                           <tr>
                             <TableHeader>Sales Order</TableHeader>
-                            <TableHeader>Sales Order Line</TableHeader>
-                            <TableHeader>Account Number</TableHeader>
-                            <TableHeader>Shipped To Person</TableHeader>
-                            <TableHeader>Item Description</TableHeader>
-                            <TableHeader>Configuration</TableHeader>
-                            <TableHeader>Serial Number</TableHeader>
-                            <TableHeader>Date Purchased</TableHeader>
-                            <TableHeader>Date Shipped</TableHeader>
-                            <TableHeader>Date Delivered</TableHeader>
+                            <TableHeader>Customer Account</TableHeader>
+                            <TableHeader>Name</TableHeader>
+                            <TableHeader>Return Status</TableHeader>
+                            <TableHeader>RMA Number</TableHeader>
+                            <TableHeader>Order Type</TableHeader>
+                            <TableHeader>Status</TableHeader>
+                            <TableHeader>Segment</TableHeader>
+                            <TableHeader>Subsegment</TableHeader>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-blue-50">
                           <AnimatePresence>
                             {filteredSalesData.map((data, index) => (
                               <motion.tr
-                                key={data.original_sales_order_number}
+                                key={data.SalesOrder}
                                 variants={itemVariants}
                                 custom={index}
                                 initial="hidden"
@@ -668,34 +679,31 @@ const CustomerSerials: React.FC = () => {
                                 whileHover={{ scale: 1.002 }}
                               >
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                  {data.original_sales_order_number}
+                                  {data.SalesOrder}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.original_sales_order_line}
+                                  {data.CustomerAccount}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.account_number}
+                                  {data.Name}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.shipped_to_person}
+                                  {data.ReturnStatus}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.item_description}
+                                  {data.RMANumber}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.configuration}
+                                  {data.OrderType}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.serial_number}
+                                  {data.Status}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.date_purchased}
+                                  {data.Segment}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.date_shipped}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {data.date_delivered}
+                                  {data.Subsegment}
                                 </td>
                               </motion.tr>
                             ))}
@@ -707,7 +715,7 @@ const CustomerSerials: React.FC = () => {
                               exit={{ opacity: 0 }}
                             >
                               <td
-                                colSpan={10}
+                                colSpan={9}
                                 className="px-6 py-8 text-center text-gray-500 bg-gray-50/50"
                               >
                                 No sales records found matching your criteria.
@@ -729,3 +737,4 @@ const CustomerSerials: React.FC = () => {
 };
 
 export default CustomerSerials;
+
