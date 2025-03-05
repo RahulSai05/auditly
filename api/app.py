@@ -433,12 +433,30 @@ async def upload_base_images(
         }
     }
 
+# @app.get("/items")
+# async def get_items(db: Session = Depends(get_db)):
+#     items = db.query(Item).all()
+#     return items
+
 @app.get("/items")
-async def get_items(db: Session = Depends(get_db)):
+def get_all_items(db: Session = Depends(get_db)):
     items = db.query(Item).all()
-    return items
 
-
+    return [
+        {
+            "id": item.id,
+            "item_number": item.item_number,
+            "item_description": item.item_description,
+            "category": item.category,
+            "configuration": item.configuration,
+            "brand": {
+                "id": item.brand.id,
+                "brand_name": item.brand.brand_name,
+                "description": item.brand.description
+            }
+        }
+        for item in items
+    ]
 # @app.get("/customer-item-data")
 # async def get_customer_item_data(db: Session = Depends(get_db)):
 #     customer_item_data = db.query(CustomerItemData).all()
