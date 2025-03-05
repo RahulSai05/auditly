@@ -9,7 +9,7 @@ import base64
 from send_email import send_email
 from pydantic import BaseModel
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, SalesData
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct, desc, or_
