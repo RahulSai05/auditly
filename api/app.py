@@ -12,6 +12,7 @@ from database import engine, SessionLocal
 from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 from sqlalchemy import distinct, desc, or_
 from fastapi.middleware.cors import CORSMiddleware
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
