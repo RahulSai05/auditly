@@ -14,7 +14,7 @@ import Done from "./pages/manual/return /Done";
 import Scan from "./pages/auto/Scan";
 import Onboard from "./pages/inspection/Onboard";
 import Onboard from "./pages/inspection/InspectionData";
-import Dashboard from "./pages/admin/Dashboard";
+import InspectionData from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
 import ItemImageUpload from "./pages/admin/ItemImageUpload";
