@@ -1154,71 +1154,130 @@ class ReceiptSearch(BaseModel):
     receipt_number: Optional[str] = None
     token: Optional[str] = None
 
-@app.post("/get-inspection-data")
-async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+# @app.post("/get-inspection-data")
+# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+#     request_user_id = request.search_user_id
+#     token = request.token
+#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
+#     print(user_data)
+#     customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == request_user_id).filter(OnboardUser.token == request.token).first()
+#     if not ((user_data and not token) or (token and customer_data)): 
+#           return {
+#             "message": "Invalid User",
+#     }
+
+#     if request.receipt_number is None:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).all()
+#     else:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).filter(
+#             CustomerItemCondition.ack_number == request.receipt_number
+#         ).first()
+         
+#         data = [data]
+
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+
+#     receipt_data_list = []
+#     for condition, item_data, item, brand in data:
+#         receipt_data_list.append({
+#             "receipt_number": condition.ack_number,
+#             "overall_condition": condition.overall_condition,
+#             "item_description": item.item_description,
+#             "brand_name": brand.brand_name,
+#             "original_sales_order_number": item_data.original_sales_order_number,
+#             "return_order_number": item_data.return_order_number,
+#             "return_qty": item_data.return_qty,
+#             "shipping_info": {
+#                 "shipped_to_person": item_data.shipped_to_person,
+#                 "address": item_data.shipped_to_address,
+#                 "city": item_data.city,
+#                 "state": item_data.state,
+#                 "country": item_data.country
+#             }
+#         })
+#     return receipt_data_list
+
+
+@app.post("/get-inspection-data/")
+async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
     request_user_id = request.search_user_id
     token = request.token
+    
     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
-    print(user_data)
-    customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == request_user_id).filter(OnboardUser.token == request.token).first()
-    if not ((user_data and not token) or (token and customer_data)): 
-          return {
-            "message": "Invalid User",
-    }
-
-    if request.receipt_number is None:
-        data = db.query(
-            CustomerItemCondition,
-            CustomerItemData,
-            Item,
-            Brand
-        ).join(
-            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-        ).join(
-            Item, CustomerItemData.item_id == Item.id
-        ).join(
-            Brand, Item.brand_id == Brand.id
-        ).all()
+    customer_data = db.query(OnboardUser).filter(
+        OnboardUser.customer_user_id == request_user_id, OnboardUser.token == request.token
+    ).first()
+    
+    if not ((user_data and not token) or (token and customer_data)):
+        return {"message": "Invalid User"}
+    
+    query = db.query(
+        CustomerItemCondition,
+        CustomerItemData,
+        Item,
+        Brand
+    ).join(
+        CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+    ).join(
+        Item, CustomerItemData.item_id == Item.id
+    ).join(
+        Brand, Item.brand_id == Brand.id
+    )
+    
+    if request.receipt_number:
+        query = query.filter(CustomerItemCondition.ack_number == request.receipt_number)
+        data = query.first()
+        data = [data] if data else []
     else:
-        data = db.query(
-            CustomerItemCondition,
-            CustomerItemData,
-            Item,
-            Brand
-        ).join(
-            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-        ).join(
-            Item, CustomerItemData.item_id == Item.id
-        ).join(
-            Brand, Item.brand_id == Brand.id
-        ).filter(
-            CustomerItemCondition.ack_number == request.receipt_number
-        ).first()
-         
-        data = [data]
-
+        data = query.all()
+    
     if not data:
         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
-
+    
     receipt_data_list = []
     for condition, item_data, item, brand in data:
         receipt_data_list.append({
-            "receipt_number": condition.ack_number,
-            "overall_condition": condition.overall_condition,
-            "item_description": item.item_description,
-            "brand_name": brand.brand_name,
+            "shipped_to_person": item_data.shipped_to_person,
             "original_sales_order_number": item_data.original_sales_order_number,
+            "item_number": item.item_number,
+            "item_description": item.item_description,
+            "original_sales_order_line": item_data.original_sales_order_line,
+            "serial_number": item_data.serial_number,
             "return_order_number": item_data.return_order_number,
-            "return_qty": item_data.return_qty,
-            "shipping_info": {
-                "shipped_to_person": item_data.shipped_to_person,
-                "address": item_data.shipped_to_address,
-                "city": item_data.city,
-                "state": item_data.state,
-                "country": item_data.country
-            }
+            "date_purchased": item_data.date_purchased,
+            "date_shipped": item_data.date_shipped,
+            "date_delivered": item_data.date_delivered,
+            "return_created_date": item_data.return_created_date,
+            "ack_number": condition.ack_number,
+            "difference_front_image": condition.difference_front_image,
+            "difference_back_image": condition.difference_back_image
         })
+    
     return receipt_data_list
+
 
 @app.get("/base-images/mapping/{base_to_item_mapping}")
 async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = Depends(get_db)):
