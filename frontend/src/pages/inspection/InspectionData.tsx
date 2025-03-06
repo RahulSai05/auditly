@@ -18,7 +18,7 @@ const ReceiptDataPage: React.FC = () => {
 
     try {
       const response = await axios.post(
-        "http://54.210.159.220:8000/get-receipt-data",
+        "http://54.210.159.220:8000/get-inspection-data",
         {
           search_user_id: searchUserId,
           token: token,
