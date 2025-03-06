@@ -13,6 +13,7 @@ import Review from "./pages/manual/return /Review";
 import Done from "./pages/manual/return /Done";
 import Scan from "./pages/auto/Scan";
 import Onboard from "./pages/inspection/Onboard";
+import Onboard from "./pages/inspection/InspectionData";
 import Dashboard from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
@@ -287,6 +288,7 @@ export default function App() {
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/onboard" element={<Onboard />} />
+        <Route path="/inspection-data" element={<InspectionData />} />
 
         
       </Routes>
