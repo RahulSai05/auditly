@@ -288,7 +288,7 @@ export default function App() {
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/onboard" element={<Onboard />} />
-        <Route path="/inspection-data" element={<InspectionData />} />
+{/*         <Route path="/inspection-data" element={<InspectionData />} /> */}
 
         
       </Routes>
