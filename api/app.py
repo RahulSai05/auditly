@@ -560,43 +560,6 @@ class AuditlyUserRequest(BaseModel):
     email: str
     password: str
 
-# @app.post("/register")
-# async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
-#     """
-#     API to register new user and return user ID.
-#     """ 
-#     try:  
-#         auditly_user_name = request.user_name
-#         first_name = request.first_name
-#         last_name = request.last_name
-#         gender = request.gender
-#         email = request.email
-#         password = request.password
-
-#         new_user = AuditlyUser(
-#         auditly_user_name = auditly_user_name,
-#         first_name = first_name,
-#         last_name = last_name,
-#         gender = gender,
-#         email = email,
-#         password = password
-#         )
-#         db.add(new_user)
-#         db.commit()
-#         db.refresh(new_user)
-
-
-#         user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
-
-#         return {
-#             "message": "User Created successfully.",
-#             "data": {
-#                 "User ID": user_data.auditly_user_id,
-#                 "User Name": user_data.auditly_user_name
-#             }
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 @app.post("/register")
 async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
@@ -645,36 +608,6 @@ class LoginRequest(BaseModel):
     user_name : str
     password: str
 
-
-# @app.post("/login")
-# async def login(request: LoginRequest, db: Session = Depends(get_db)):   
-#     """
-#     API for logging in with user id and passoword.
-#     """ 
-#     try:  
-#         auditly_user_name = request.user_name
-#         password = request.password
-
-#         user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).filter(AuditlyUser.password == password).first()
-
-#         if user_data:
-#             otp_login = _gen_otp()
-#             user_data.reset_otp = otp_login
-#             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
-#             db.commit()
-#             db.refresh(user_data)
-#             send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
-#             return {
-#                 "message": "OTP Sent Successfully to registerd email"
-#              }
-#         else:
-#             return {
-#                 "message": "Invalid Username or Password",
-#              }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-
-
 @app.post("/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):   
     """
@@ -709,37 +642,6 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
 class VerifyLogin(BaseModel):
     user_name : str
     login_otp: str
-
-# @app.post("/verify-login-otp")
-# async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
-#     """
-#     API for verifying otp to login
-#     """ 
-#    # try:  
-#     auditly_user_name = request.user_name
-#     login_otp = request.login_otp
-
-#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.reset_otp == login_otp).first()
-
-
-#     if user_data:
-#         user_data.last_login_time = datetime.datetime.now()
-#         db.commit()
-#         db.refresh(user_data)
-#         return {
-#             "message": "Login Successfull",
-#             "data": {
-#                 "User ID": user_data.auditly_user_id,
-#                 "User Name": user_data.auditly_user_name
-#             }
-#             }
-#     else:
-#         return {
-#             "message": "Invalid User Name or otp",
-#             }
-#     # except Exception as e:
-#     #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-
 
 @app.post("/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
@@ -1220,12 +1122,10 @@ class ReceiptSearch(BaseModel):
 #         })
 #     return receipt_data_list
 
-
-@app.post("/get-inspection-data/")
-async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
+@app.post("/get-inspection-data")
+async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
     request_user_id = request.search_user_id
     token = request.token
-    
     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
     customer_data = db.query(OnboardUser).filter(
         OnboardUser.customer_user_id == request_user_id, OnboardUser.token == request.token
@@ -1234,7 +1134,7 @@ async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(
     if not ((user_data and not token) or (token and customer_data)):
         return {"message": "Invalid User"}
     
-    query = db.query(
+    data = db.query(
         CustomerItemCondition,
         CustomerItemData,
         Item,
@@ -1245,17 +1145,10 @@ async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(
         Item, CustomerItemData.item_id == Item.id
     ).join(
         Brand, Item.brand_id == Brand.id
-    )
-    
-    if request.receipt_number:
-        query = query.filter(CustomerItemCondition.ack_number == request.receipt_number)
-        data = query.first()
-        data = [data] if data else []
-    else:
-        data = query.all()
+    ).all()
     
     if not data:
-        raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+        raise HTTPException(status_code=404, detail="Data not found")
     
     receipt_data_list = []
     for condition, item_data, item, brand in data:
@@ -1277,7 +1170,6 @@ async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(
         })
     
     return receipt_data_list
-
 
 @app.get("/base-images/mapping/{base_to_item_mapping}")
 async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = Depends(get_db)):
