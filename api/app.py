@@ -1422,11 +1422,12 @@ async def onboard(request: Onboard, db: Session = Depends(get_db)):
         onboard_email = request.onboard_email
         
         customer_user_id = f'CUST{_gen_otp()}'
+        token = f'{_gen_otp()}{_gen_otp()}{customer_user_id}{_gen_otp()}'
 
         new_user = OnboardUser(
         onboard_name = onboard_name,
         onboard_email = onboard_email,
-        token = f'{_gen_otp()}{_gen_otp()}{customer_user_id}{_gen_otp()}',
+        token = token,
         customer_user_id = customer_user_id,
         )
         db.add(new_user)
@@ -1465,31 +1466,3 @@ Audit team
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
-
-# @app.post("/login")
-# async def login(request: LoginRequest, db: Session = Depends(get_db)):   
-#     """
-#     API for logging in with user id and passoword.
-#     """ 
-#     try:  
-#         auditly_user_name = request.user_name
-#         password = request.password
-
-#         user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).filter(AuditlyUser.password == password).first()
-
-#         if user_data:
-#             otp_login = _gen_otp()
-#             user_data.reset_otp = otp_login
-#             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
-#             db.commit()
-#             db.refresh(user_data)
-#             send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
-#             return {
-#                 "message": "OTP Sent Successfully to registerd email"
-#              }
-#         else:
-#             return {
-#                 "message": "Invalid Username or Password",
-#              }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
