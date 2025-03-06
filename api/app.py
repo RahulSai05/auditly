@@ -1436,6 +1436,24 @@ async def onboard(request: Onboard, db: Session = Depends(get_db)):
 
         customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_user_id).first()
 
+        subject = """Onboarding Details: Auditly"""
+        
+        body = """
+Hello """+onboard_name+""",
+
+You are now Onboarded!
+
+Below are the details:
+
+Customer User ID -  """+customer_data.customer_user_id+"""
+Authorization Token – """+token+"""
+
+Thanks,
+Audit team
+"""
+        send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+
+
         return {
             "message": "Onboarded Successfully.",
             "data": {
