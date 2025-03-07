@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 
-const InspectionData: React.FC = () => {
+const ReceiptDataPage: React.FC = () => {
   const [searchUserId, setSearchUserId] = useState("");
   const [token, setToken] = useState("");
   const [receiptNumber, setReceiptNumber] = useState("");
@@ -41,7 +41,7 @@ const InspectionData: React.FC = () => {
       }
 
       const response = await axios.post(
-        "http://54.210.159.220:8000/get-inspection-data",
+        "http://54.210.159.220:8000/get-receipt-data",
         payload
       );
 
@@ -241,12 +241,12 @@ const InspectionData: React.FC = () => {
                     </p>
                     <div className="flex space-x-4">
                       <img
-                        src={receipt.difference_front_image}
+                        src={`http://54.210.159.220:8000${receipt.difference_front_image}`}
                         alt="Front Difference"
                         className="w-1/2 h-auto rounded-lg"
                       />
                       <img
-                        src={receipt.difference_back_image}
+                        src={`http://54.210.159.220:8000${receipt.difference_back_image}`}
                         alt="Back Difference"
                         className="w-1/2 h-auto rounded-lg"
                       />
@@ -274,4 +274,4 @@ const InspectionData: React.FC = () => {
   );
 };
 
-export default InspectionData;
+export default ReceiptDataPage;
