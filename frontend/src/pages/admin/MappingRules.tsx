@@ -11,19 +11,28 @@ const MappingRules: React.FC = () => {
 
         {/* Source 1 */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium">Source 1 (D365)</h3>
-          <p>Source table name = &lt;&lt;&lt; &gt;&gt;&gt;</p>
+          <h3 className="text-lg font-medium">Source 1 - CSV Upload</h3>
+          <p>Source table name: <strong>Items</strong></p>
           <ul className="list-disc pl-6">
-            <li>Column 1 ⟷ Item Number</li>
-            <li>Column 2 ⟷ Description</li>
-            <li>Column 3 ⟷ Category</li>
+            <li>Column 1 ⟷ item_number</li>
+            <li>Column 2 ⟷ Item_description</li>
+            <li>Column 3 ⟷ brand_id</li>
+            <li>Column 4 ⟷ category</li>
+            <li>Column 5 ⟷ configuration</li>
           </ul>
         </div>
 
         {/* Source 2 */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium">Source 2 (S3/Azure Blob)</h3>
-          <p>Source file name format – ITEM*.csv (Where * is a substitution character)</p>
+          <h3 className="text-lg font-medium">Source 2 - Power BI to S3/Azure Blob</h3>
+          <p>Source table name: <strong>Items</strong></p>
+          <ul className="list-disc pl-6">
+            <li>Column 1 ⟷ item_number</li>
+            <li>Column 2 ⟷ Item_description</li>
+            <li>Column 3 ⟷ brand_id</li>
+            <li>Column 4 ⟷ category</li>
+            <li>Column 5 ⟷ configuration</li>
+          </ul>
         </div>
       </div>
 
@@ -33,14 +42,32 @@ const MappingRules: React.FC = () => {
 
         {/* Source 1 */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium">Source 1</h3>
-          <p>Serial numbers stored in the customer database under column "Serial_ID".</p>
+          <h3 className="text-lg font-medium">Source 1 - CSV Upload</h3>
+          <p>Source table name: <strong>customer_item_data</strong></p>
+          <ul className="list-disc pl-6">
+            <li>Column 1 ⟷ original_sales_order_number</li>
+            <li>Column 2 ⟷ original_sales_order_line</li>
+            <li>Column 3 ⟷ account_number</li>
+            <li>Column 4 ⟷ date_purchased</li>
+            <li>Column 5 ⟷ date_delivered</li>
+            <li>Column 6 ⟷ serial_number</li>
+            <li>Column 7 ⟷ shipped_to_address</li>
+          </ul>
         </div>
 
         {/* Source 2 */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium">Source 2</h3>
-          <p>Extracted from warehouse logs, stored in "SERIALS.csv" file format.</p>
+          <h3 className="text-lg font-medium">Source 2 - Power BI to S3/Azure Blob</h3>
+          <p>Source table name: <strong>customer_item_data</strong></p>
+          <ul className="list-disc pl-6">
+            <li>Column 1 ⟷ original_sales_order_number</li>
+            <li>Column 2 ⟷ original_sales_order_line</li>
+            <li>Column 3 ⟷ account_number</li>
+            <li>Column 4 ⟷ date_purchased</li>
+            <li>Column 5 ⟷ date_delivered</li>
+            <li>Column 6 ⟷ serial_number</li>
+            <li>Column 7 ⟷ shipped_to_address</li>
+          </ul>
         </div>
       </div>
 
@@ -50,14 +77,32 @@ const MappingRules: React.FC = () => {
 
         {/* Source 1 */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium">Source 1</h3>
-          <p>RMA records from ERP system, stored in "RMA_Records" table.</p>
+          <h3 className="text-lg font-medium">Source 1 - CSV Upload</h3>
+          <ul className="list-disc pl-6">
+            <li>Column 1 ⟷ original_sales_order_number</li>
+            <li>Column 2 ⟷ original_sales_order_line</li>
+            <li>Column 3 ⟷ account_number</li>
+            <li>Column 4 ⟷ date_purchased</li>
+            <li>Column 5 ⟷ date_delivered</li>
+            <li>Column 6 ⟷ serial_number</li>
+            <li>Column 7 ⟷ shipped_to_address</li>
+            <li>Column 8 ⟷ Status</li>
+          </ul>
         </div>
 
         {/* Source 2 */}
         <div className="mb-4">
-          <h3 className="text-lg font-medium">Source 2</h3>
-          <p>Returns data extracted from CSV reports named "RETURNS_*.csv".</p>
+          <h3 className="text-lg font-medium">Source 2 - Power BI to S3/Azure Blob</h3>
+          <ul className="list-disc pl-6">
+            <li>Column 1 ⟷ SalesOrder</li>
+            <li>Column 2 ⟷ ReturnReasonCode</li>
+            <li>Column 3 ⟷ ReturnStatus</li>
+            <li>Column 4 ⟷ RMANumber</li>
+            <li>Column 5 ⟷ InvoiceAccount</li>
+            <li>Column 6 ⟷ OrderType</li>
+            <li>Column 7 ⟷ CustomerRequisition</li>
+            <li>Column 8 ⟷ Status</li>
+          </ul>
         </div>
       </div>
     </div>
