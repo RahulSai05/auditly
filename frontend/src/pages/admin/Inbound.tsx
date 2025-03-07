@@ -13,15 +13,6 @@ import {
 const dataSources = [
   {
     id: 1,
-    title: "Alfresco",
-    description:
-      "Enterprise content management and document sharing platform integration.",
-    icon: Box,
-    color: "#4CAF50",
-    status: "Popular",
-  },
-  {
-    id: 2,
     title: "Amazon S3",
     description:
       "Secure cloud storage with unlimited scalability and high availability.",
@@ -38,30 +29,12 @@ const dataSources = [
     status: "Cloud",
   },
   {
-    id: 4,
-    title: "Box",
-    description:
-      "Enterprise-grade content management and file sharing platform.",
-    icon: Server,
-    color: "#0061D5",
-    status: "Enterprise",
-  },
-  {
-    id: 5,
+    id: 3,
     title: "CSV Import",
     description: "Simple and efficient data import from structured CSV files.",
     icon: FileText,
     color: "#424242",
     status: "Basic",
-  },
-  {
-    id: 6,
-    title: "Confluence",
-    description:
-      "Team collaboration and knowledge sharing platform integration.",
-    icon: FolderGit2,
-    color: "#0052CC",
-    status: "Team",
   },
 ];
 
