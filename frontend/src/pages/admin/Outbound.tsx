@@ -31,9 +31,9 @@ const destinations = [
   },
   {
     id: 3,
-    title: "Algolia",
+    title: "Power Automate",
     description:
-      "Hosted search API that delivers instant and relevant results.",
+      "Hosted automation that delivers instant and relevant results.",
     icon: Cloud,
     color: "#5C6BC0",
     status: "Cloud",
