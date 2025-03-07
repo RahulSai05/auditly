@@ -23,7 +23,7 @@ const InspectionData: React.FC = () => {
       return;
     }
 
-    // Ensure only one of the options is provided
+    // Ensure only one of token or receipt_number is provided, not both
     if (token && receiptNumber) {
       setError("Please provide either Token or Receipt Number, not both.");
       setIsLoading(false);
