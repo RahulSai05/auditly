@@ -18,6 +18,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
 import ItemImageUpload from "./pages/admin/ItemImageUpload";
+import MappingRules from "./pages/admin/MappingRules";
 import AdminLayout from "./components/AdminLayout";
 import ItemReturn from "./pages/admin/ItemReturn";
 import CustomerSerials from "./pages/admin/CustomerSerials";
@@ -275,6 +276,15 @@ export default function App() {
             element={
               <WithRole allowedRoles={["admin", "super_user"]}>
                 <ApiConfigurations />
+              </WithRole>
+            }
+          />
+        </Route>
+        <Route
+            path="/admin/settings/mapping-rules"
+            element={
+              <WithRole allowedRoles={["admin", "super_user"]}>
+                <MappingRules />
               </WithRole>
             }
           />
