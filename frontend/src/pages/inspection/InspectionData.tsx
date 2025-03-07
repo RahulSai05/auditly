@@ -191,69 +191,71 @@ const ReceiptDataPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ delay: 0.3 }}
-                className="mt-8 space-y-4"
+                className="mt-8"
               >
                 <h3 className="text-xl font-semibold text-gray-900 mb-6">Receipt Information</h3>
-                {receiptData.map((receipt, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Shipped To:</span>{" "}
-                          {receipt.shipped_to_person}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Order Number:</span>{" "}
-                          {receipt.original_sales_order_number}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Item Number:</span>{" "}
-                          {receipt.item_number}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Description:</span>{" "}
-                          {receipt.item_description}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Serial Number:</span>{" "}
-                          {receipt.serial_number}
-                        </p>
+                <div className="max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
+                  {receiptData.map((receipt, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 mb-4 last:mb-0"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Shipped To:</span>{" "}
+                            {receipt.shipped_to_person}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Order Number:</span>{" "}
+                            {receipt.original_sales_order_number}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Item Number:</span>{" "}
+                            {receipt.item_number}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Description:</span>{" "}
+                            {receipt.item_description}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Serial Number:</span>{" "}
+                            {receipt.serial_number}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Return Order:</span>{" "}
+                            {receipt.return_order_number}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Purchased:</span>{" "}
+                            {receipt.date_purchased}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Shipped:</span>{" "}
+                            {receipt.date_shipped}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Delivered:</span>{" "}
+                            {receipt.date_delivered}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">Return Created:</span>{" "}
+                            {receipt.return_created_date}
+                          </p>
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium text-gray-900">ACK Number:</span>{" "}
+                            {receipt.ack_number}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Return Order:</span>{" "}
-                          {receipt.return_order_number}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Purchased:</span>{" "}
-                          {receipt.date_purchased}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Shipped:</span>{" "}
-                          {receipt.date_shipped}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Delivered:</span>{" "}
-                          {receipt.date_delivered}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">Return Created:</span>{" "}
-                          {receipt.return_created_date}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium text-gray-900">ACK Number:</span>{" "}
-                          {receipt.ack_number}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
