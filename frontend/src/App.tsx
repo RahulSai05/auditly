@@ -279,8 +279,7 @@ export default function App() {
               </WithRole>
             }
           />
-        </Route>
-        <Route
+          <Route
             path="/admin/settings/mapping-rules"
             element={
               <WithRole allowedRoles={["admin", "super_user"]}>
@@ -289,6 +288,7 @@ export default function App() {
             }
           />
         </Route>
+
 
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
