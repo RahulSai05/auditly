@@ -13,16 +13,16 @@ import {
 const destinations = [
   {
     id: 1,
-    title: "Elasticsearch",
+    title: "Power BI",
     description:
-      "High-performance search and analytics engine for modern applications.",
+      "High-performance search and analytics for modern applications.",
     icon: Database,
     color: "#43A047",
     status: "Enterprise",
   },
   {
     id: 2,
-    title: "OpenSearch",
+    title: "D365",
     description:
       "Distributed search and analytics suite with visualization capabilities.",
     icon: Globe,
@@ -37,33 +37,6 @@ const destinations = [
     icon: Cloud,
     color: "#5C6BC0",
     status: "Cloud",
-  },
-  {
-    id: 4,
-    title: "Solr",
-    description:
-      "Fast, open-source enterprise search platform built on Apache Lucene.",
-    icon: Server,
-    color: "#E65100",
-    status: "Advanced",
-  },
-  {
-    id: 5,
-    title: "Meilisearch",
-    description:
-      "Lightning-fast search engine with intuitive developer experience.",
-    icon: Network,
-    color: "#FF4081",
-    status: "Fast",
-  },
-  {
-    id: 6,
-    title: "Typesense",
-    description:
-      "Fast, typo-tolerant search engine for building delightful search experiences.",
-    icon: Share2,
-    color: "#7B1FA2",
-    status: "Modern",
   },
 ];
 
