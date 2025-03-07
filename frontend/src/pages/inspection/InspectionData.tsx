@@ -41,7 +41,7 @@ const ReceiptDataPage: React.FC = () => {
       }
 
       const response = await axios.post(
-        "http://54.210.159.220:8000/get-receipt-data",
+        "http://54.210.159.220:8000/get-inspection-data",
         payload
       );
 
