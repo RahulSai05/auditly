@@ -235,14 +235,23 @@ const InspectionData: React.FC = () => {
                     <span className="font-medium">ACK Number:</span>{" "}
                     {receipt.ack_number}
                   </p>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Difference Front Image:</span>{" "}
-                    {receipt.difference_front_image}
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Difference Back Image:</span>{" "}
-                    {receipt.difference_back_image}
-                  </p>
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-700">
+                      Difference Images:
+                    </p>
+                    <div className="flex space-x-4">
+                      <img
+                        src={receipt.difference_front_image}
+                        alt="Front Difference"
+                        className="w-1/2 h-auto rounded-lg"
+                      />
+                      <img
+                        src={receipt.difference_back_image}
+                        alt="Back Difference"
+                        className="w-1/2 h-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </motion.div>
