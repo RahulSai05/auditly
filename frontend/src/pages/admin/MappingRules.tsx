@@ -12,7 +12,7 @@ const MappingRules: React.FC = () => {
         {/* Source 1 */}
         <div className="mb-4">
           <h3 className="text-lg font-medium">Source 1 (D365)</h3>
-          <p>Source table name = &lt;&lt;&lt; >>>></p>
+          <p>Source table name = &lt;&lt;&lt; &gt;&gt;&gt;</p>
           <ul className="list-disc pl-6">
             <li>Column 1 ⟷ Item Number</li>
             <li>Column 2 ⟷ Description</li>
