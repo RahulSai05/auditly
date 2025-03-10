@@ -1473,6 +1473,41 @@ async def register(request: AuditlyUserRequest1, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
+class LoginRequestv1(BaseModel):
+    user_name : str
+    password: str
+
+@app.post("/login_v1")
+async def login(request: LoginRequestv1, db: Session = Depends(get_db)):   
+    """
+    API for logging in with user id and passoword.
+    """ 
+    try:  
+        auditly_user_name = request.user_name
+        password = request.password
+
+        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).filter(AuditlyUser.password == password).first()
+
+        if user_data:
+            otp_login = _gen_otp()
+            user_data.reset_otp = otp_login
+            user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
+            db.commit()
+            db.refresh(user_data)
+            send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+            return {
+                "message": "OTP Sent Successfully to registerd email",
+                "auditly_user_name": user_data.auditly_user_name,
+                "user_type": user_data.user_type
+             }
+        else:
+            return {
+                "message": "Invalid Username or Password",
+             }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
 
 
 @app.post("/verify-login-otp_v1")
