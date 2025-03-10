@@ -291,7 +291,7 @@ const UserMaintenance: React.FC = () => {
       }
 
       const response = await axios.post("http://54.210.159.220:8000/update-user-type-v1", {
-        modifier_user_id: 1, // Replace with actual admin ID
+        modifier_user_id: 7, // Replace with actual admin ID
         target_user_id: userId,
         is_super_user: userToUpdate.is_super_user,
         is_admin: userToUpdate.is_admin,
