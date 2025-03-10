@@ -1589,7 +1589,7 @@ class UpdateUserTypeRequest1(BaseModel):
     is_common_user: int
 
 @app.post("/update-user-type-v1")
-async def update_user_type-v1(request: UpdateUserTypeRequest1, db: Session = Depends(get_db)):
+async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Depends(get_db)):
     """
     API to allow an admin to change roles for other users.
     Only a user with is_admin=1 can modify user roles.
