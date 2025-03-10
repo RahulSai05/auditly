@@ -238,6 +238,22 @@
 // export default UserMaintenance;
 
 
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Search, X, Users, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface User {
+  user_id: number;
+  user_name: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  email: string;
+  is_super_user: boolean;
+  is_admin: boolean;
+  is_common_user: boolean;
+}
 
 const UserMaintenance: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -245,7 +261,11 @@ const UserMaintenance: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
-  const [editedRoles, setEditedRoles] = useState<{ is_super_user: boolean; is_admin: boolean; is_common_user: boolean }>({
+  const [editedRoles, setEditedRoles] = useState<{
+    is_super_user: boolean;
+    is_admin: boolean;
+    is_common_user: boolean;
+  }>({
     is_super_user: false,
     is_admin: false,
     is_common_user: false,
@@ -280,7 +300,7 @@ const UserMaintenance: React.FC = () => {
         ...editedRoles,
       });
       if (response.data) {
-        setUsers(users.map(user => user.user_id === userId ? { ...user, ...editedRoles } : user));
+        setUsers(users.map((user) => (user.user_id === userId ? { ...user, ...editedRoles } : user)));
         setEditingUserId(null);
       }
     } catch (error) {
@@ -293,6 +313,7 @@ const UserMaintenance: React.FC = () => {
   const filteredUsers = users.filter((user) =>
     Object.values(user).some((value) =>
       String(value).toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
