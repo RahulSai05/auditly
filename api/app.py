@@ -1418,6 +1418,39 @@ Audit team
 
 
 
+@app.post("/verify-login-otp_v1")
+async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
+    """
+    API for verifying otp to login
+    """ 
+   # try:  
+    auditly_user_name = request.user_name
+    login_otp = request.login_otp
+
+    user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.reset_otp == login_otp).first()
+
+
+    if user_data:
+        user_data.last_login_time = datetime.datetime.now()
+        db.commit()
+        db.refresh(user_data)
+        return {
+            "message": "Login Successfull",
+            "data": {
+                "User ID": user_data.auditly_user_id,
+                "User Name": user_data.auditly_user_name,
+                "User Type": [_key for _key, _value in {"common_user": user_data.is_common_user, "admin": user_data.is_admin, "super_user": user_data.is_super_user}.items() if _value == 1]                
+            }
+            }
+    else:
+        return {
+            "message": "Invalid User Name or otp",
+            }
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+    
+
+
 
 
 class UpdateUser(BaseModel):
