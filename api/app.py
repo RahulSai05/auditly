@@ -1417,3 +1417,41 @@ Audit team
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
+
+
+
+class UpdateUser(BaseModel):
+    user_id: str
+    is_super_user: int
+    is_admin: int
+    is_common_user: int
+
+@app.post("/update-user-type")
+async def update_user_type(request: UpdateUser, db: Session = Depends(get_db)):   
+    """
+    API which will allow admin to changes roles for different users
+    """ 
+
+    user_id = request.user_id
+    is_super_user = request.is_super_user
+    is_admin = request.is_admin
+    is_common_user = request.is_common_user
+    user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == user_id).first()
+    if user_data:
+        user_data.is_super_user = is_super_user
+        user_data.is_common_user = is_common_user
+        user_data.is_admin = is_admin
+
+        db.commit()
+        db.refresh(user_data)
+        return {
+            "message": "User type Updated!!",
+            "data": {
+                "User ID": user_data.auditly_user_id,
+            }
+            }
+    else:
+        return {
+            "message": "Invalid Username or Password",
+            }
+
