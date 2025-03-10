@@ -1648,9 +1648,9 @@ async def update_user_type(request: UpdateUser, db: Session = Depends(get_db)):
 class UpdateUserTypeRequest1(BaseModel):
     modifier_user_id: int  # Admin ID making the request
     target_user_id: int  # ID of the user whose type is being modified
-    is_super_user: bool
-    is_admin: bool
-    is_common_user: bool
+    is_super_user: int
+    is_admin: int
+    is_common_user: int
 
 @app.post("/update-user-type-v1")
 async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Depends(get_db)):
