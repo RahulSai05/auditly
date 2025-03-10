@@ -7,6 +7,7 @@ import io
 import datetime
 import base64
 from send_email import send_email
+from settings import ENV
 from pydantic import BaseModel
 from database import engine, SessionLocal
 from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
@@ -131,8 +132,8 @@ async def upload_customer_images(
 
     existing_customer_data = db.query(CustomerData).filter_by(customer_item_data_id=customer_item_data_id).first()
     
-    UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/customer_image"   
-    
+    if ENV == "TEST":UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/customer_image"   
+    elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/customer_image"   
 
     # try:
     # Save front image
@@ -397,7 +398,8 @@ async def upload_base_images(
     """
     Upload base front and back images and map them to an item based on item_number.
     """
-    UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/base_images"
+    if ENV == "TEST":UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/base_images"   
+    elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/base_images"   
 
     # Check if the item exists
     item = db.query(Item).filter(Item.item_number == item_number).first()
@@ -991,7 +993,9 @@ def highlight_differences(image1_path, image2_path, view, path, target_size=(224
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(img2, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-    output_dir = "/home/ec2-user/auditly/image_outputs/"+path
+    if ENV == "TEST":output_dir = "/home/ec2-user/auditly/image_outputs/"+path  
+    elif ENV == "DEV":output_dir = "/Users/rahul/Desktop/Auditly Git copy/Auditly1/api/finalImages/"+path
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
