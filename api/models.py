@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, Float, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, Float, DateTime, SmallInteger
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from database import Base
@@ -54,6 +54,11 @@ class AuditlyUser(Base):
     reset_otp = Column(String(255), nullable=True )
     reset_otp_expiration = Column(DateTime,nullable=True)
     user_type = Column(String(255), default="common_user")
+    is_common_user = Column(SmallInteger, default=1)
+    is_super_user = Column(SmallInteger, default=1)
+    is_admin = Column(SmallInteger, default=1)
+    user_company = Column(String(255), nullable=True)
+
 
 
 class CustomerItemData(Base):
