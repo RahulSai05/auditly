@@ -1657,12 +1657,17 @@ async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Dep
     """
     API to allow an admin to change roles for other users.
     Only a user with is_admin=1 can modify user roles.
+    A user cannot modify their own roles.
     """
 
     # Fetch the admin making the change
     modifier_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.modifier_user_id).first()
     if not modifier_user or modifier_user.is_admin != 1:
         raise HTTPException(status_code=403, detail="Permission Denied. Only admins can update user roles.")
+
+    # Check if the admin is trying to modify their own roles
+    if request.modifier_user_id == request.target_user_id:
+        raise HTTPException(status_code=403, detail="Permission Denied. You cannot modify your own roles.")
 
     # Fetch the target user
     target_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.target_user_id).first()
