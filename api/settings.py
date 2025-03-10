@@ -1,0 +1,1 @@
+ENV = "TEST"  #(TEST for cloud and DEV for local)
