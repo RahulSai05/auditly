@@ -261,15 +261,6 @@ const UserMaintenance: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
-  const [editedRoles, setEditedRoles] = useState<{
-    is_super_user: boolean;
-    is_admin: boolean;
-    is_common_user: boolean;
-  }>({
-    is_super_user: false,
-    is_admin: false,
-    is_common_user: false,
-  });
 
   // Fetch users from the API
   useEffect(() => {
@@ -294,19 +285,35 @@ const UserMaintenance: React.FC = () => {
   // Handle role update
   const handleRoleUpdate = async (userId: number) => {
     try {
+      const userToUpdate = users.find((user) => user.user_id === userId);
+      if (!userToUpdate) {
+        throw new Error("User not found.");
+      }
+
       const response = await axios.post("http://54.210.159.220:8000/update-user-type-v1", {
         modifier_user_id: 1, // Replace with actual admin ID
         target_user_id: userId,
-        ...editedRoles,
+        is_super_user: userToUpdate.is_super_user,
+        is_admin: userToUpdate.is_admin,
+        is_common_user: userToUpdate.is_common_user,
       });
+
       if (response.data) {
-        setUsers(users.map((user) => (user.user_id === userId ? { ...user, ...editedRoles } : user)));
-        setEditingUserId(null);
+        setEditingUserId(null); // Exit editing mode
       }
     } catch (error) {
       console.error("Error updating user roles:", error);
       setError("Failed to update user roles. Please try again.");
     }
+  };
+
+  // Update user roles locally
+  const handleCheckboxChange = (userId: number, field: keyof User, value: boolean) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.user_id === userId ? { ...user, [field]: value } : user
+      )
+    );
   };
 
   // Filter users based on search query
@@ -491,41 +498,36 @@ const UserMaintenance: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={user.is_super_user}
-                            onChange={(e) => {
-                              setEditedRoles({ ...editedRoles, is_super_user: e.target.checked });
-                              setEditingUserId(user.user_id);
-                            }}
+                            onChange={(e) =>
+                              handleCheckboxChange(user.user_id, "is_super_user", e.target.checked)
+                            }
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <input
                             type="checkbox"
                             checked={user.is_admin}
-                            onChange={(e) => {
-                              setEditedRoles({ ...editedRoles, is_admin: e.target.checked });
-                              setEditingUserId(user.user_id);
-                            }}
+                            onChange={(e) =>
+                              handleCheckboxChange(user.user_id, "is_admin", e.target.checked)
+                            }
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <input
                             type="checkbox"
                             checked={user.is_common_user}
-                            onChange={(e) => {
-                              setEditedRoles({ ...editedRoles, is_common_user: e.target.checked });
-                              setEditingUserId(user.user_id);
-                            }}
+                            onChange={(e) =>
+                              handleCheckboxChange(user.user_id, "is_common_user", e.target.checked)
+                            }
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {editingUserId === user.user_id && (
-                            <button
-                              onClick={() => handleRoleUpdate(user.user_id)}
-                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                              Save
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleRoleUpdate(user.user_id)}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            Save
+                          </button>
                         </td>
                       </motion.tr>
                     ))
