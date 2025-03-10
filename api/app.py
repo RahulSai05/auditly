@@ -1417,8 +1417,18 @@ Audit team
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
+class AuditlyUserRequest1(BaseModel):
+    user_name : str
+    first_name: str
+    last_name: str
+    gender: str
+    email: str
+    password: str
+    user_company: str
+
+
 @app.post("/register_v1")
-async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
+async def register(request: AuditlyUserRequest1, db: Session = Depends(get_db)):   
     """
     API to register new user and return user ID.
     """ 
