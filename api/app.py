@@ -1417,6 +1417,49 @@ Audit team
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
+@app.post("/register_v1")
+async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
+    """
+    API to register new user and return user ID.
+    """ 
+    try:  
+        auditly_user_name = request.user_name
+        first_name = request.first_name
+        last_name = request.last_name
+        gender = request.gender
+        email = request.email
+        password = request.password
+        user_company = request.user_company
+        
+        # if user_type not in ["common-user", "super-user", "admin"]: raise Exception ("Invalid User Type")
+        new_user = AuditlyUser(
+        auditly_user_name = auditly_user_name,
+        first_name = first_name,
+        last_name = last_name,
+        gender = gender,
+        email = email,
+        password = password,
+        user_company = user_company
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+
+        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
+
+        return {
+            "message": "User Created successfully.",
+            "data": {
+                "User ID": user_data.auditly_user_id,
+                "User Name": user_data.auditly_user_name
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
+
 
 @app.post("/verify-login-otp_v1")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
