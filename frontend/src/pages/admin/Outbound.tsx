@@ -13,30 +13,21 @@ import {
 const destinations = [
   {
     id: 1,
-    title: "Power BI",
+    title: "Azure",
     description:
-      "High-performance search and analytics for modern applications.",
+      "Microsoft's scalable object storage solution for unstructured data.",
     icon: Database,
     color: "#43A047",
     status: "Enterprise",
   },
   {
     id: 2,
-    title: "D365",
+    title: "Amazon S3",
     description:
-      "Distributed search and analytics suite with visualization capabilities.",
+      "Secure cloud storage with unlimited scalability and high availability.",
     icon: Globe,
     color: "#00796B",
     status: "Popular",
-  },
-  {
-    id: 3,
-    title: "Power Automate",
-    description:
-      "Hosted automation that delivers instant and relevant results.",
-    icon: Cloud,
-    color: "#5C6BC0",
-    status: "Cloud",
   },
 ];
 

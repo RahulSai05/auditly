@@ -13,27 +13,19 @@ import {
 const dataSources = [
   {
     id: 1,
-    title: "Amazon S3",
-    description: "Secure cloud storage with unlimited scalability and high availability.",
-    icon: Cloud,
-    color: "#FF9900",
-    status: "Enterprise",
-  },
-  {
-    id: 3,
-    title: "Azure Blob",
-    description: "Microsoft's scalable object storage solution for unstructured data.",
-    icon: Database,
-    color: "#0089D6",
-    status: "Cloud",
-  },
-  {
-    id: 3,
     title: "CSV Import",
     description: "Efficient and straightforward data import from structured CSV files.",
     icon: FileText,
     color: "#424242",
     status: "Basic",
+  },
+  {
+    id: 3,
+    title: "Power Automate",
+    description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
+    icon: Cloud,
+    color: "#FF9900",
+    status: "Enterprise",
   },
   {
     id: 4,
