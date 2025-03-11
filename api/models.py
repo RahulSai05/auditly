@@ -176,5 +176,3 @@ class SalesData(Base):
     Legacy = Column(String(255))
     Segment = Column(String(255))
     Subsegment = Column(String(255))
-
-
