@@ -655,7 +655,6 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             return {
                 "message": "OTP Sent Successfully to registerd email",
                 "auditly_user_name": user_data.auditly_user_name,
-                "user_type": user_data.user_type
              }
        
     except Exception as e:
