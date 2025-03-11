@@ -16,7 +16,7 @@ const dataSources = [
     title: "CSV Import",
     description: "Efficient and straightforward data import from structured CSV files.",
     icon: FileText,
-    color: "#4CAF50", // Green
+    color: "#424242",
     status: "Basic",
   },
   {
@@ -24,25 +24,25 @@ const dataSources = [
     title: "Power BI",
     description: "Business analytics tool for visualizing data and sharing insights across your organization.",
     icon: Cloud,
-    color: "#FF5722", // Deep Orange
+    color: "#FF9900",
     status: "Enterprise",
   },
   {
     id: 3,
     title: "D365",
     description: "Microsoft's suite of enterprise resource planning (ERP) and customer relationship management (CRM) applications.",
-    icon: Database,
-    color: "#9C27B0", // Purple
+    icon: Cloud,
+    color: "#FF9900",
     status: "Enterprise",
   },
   {
     id: 4,
     title: "Power Automate",
     description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
-    icon: Settings,
-    color: "#2196F3", // Blue
+    icon: Cloud,
+    color: "#FF9900",
     status: "Enterprise",
-  },
+  }
 ];
 
 const containerVariants = {
