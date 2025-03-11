@@ -655,39 +655,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
-class VerifyLogin(BaseModel):
-    user_name : str
-    login_otp: str
 
-@app.post("/verify-login-otp")
-async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
-    """
-    API for verifying otp to login
-    """
-    auditly_user_name = request.user_name
-    login_otp = request.login_otp
-
-    user_data = db.query(AuditlyUser).filter(
-        AuditlyUser.auditly_user_name == auditly_user_name,
-        AuditlyUser.reset_otp == login_otp
-    ).first()
-
-    if user_data:
-        user_data.last_login_time = datetime.datetime.now()
-        db.commit()
-        db.refresh(user_data)
-        return {
-            "message": "Login Successfull",
-            "data": {
-                "User ID": user_data.auditly_user_id,
-                "User Name": user_data.auditly_user_name,
-                "user_type": user_data.user_type  # Include user_type in the response
-            }
-        }
-    else:
-        return {
-            "message": "Invalid User Name or otp",
-        }
     
 class LogoutRequest(BaseModel):
     user_name : str
@@ -1389,9 +1357,9 @@ async def get_users(db: Session = Depends(get_db)):
                 "last_name": user.last_name,
                 "gender": user.gender,
                 "email": user.email,
-                "is_super_user": user.is_super_user,
+                "is_reports_user": user.is_reports_user,
                 "is_admin": user.is_admin,
-                "is_common_user": user.is_common_user
+                "is_inpection_user": user.is_inspection_user
             } for user in users]
         }
     except Exception as e:
@@ -1543,9 +1511,11 @@ async def login(request: LoginRequestv1, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
+class VerifyLogin(BaseModel):
+    user_name : str
+    login_otp: str
 
-
-@app.post("/verify-login-otp_v1")
+@app.post("/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
     """
     API for verifying otp to login
@@ -1566,7 +1536,7 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
             "data": {
                 "User ID": user_data.auditly_user_id,
                 "User Name": user_data.auditly_user_name,
-                "User Type": [_key for _key, _value in {"common_user": user_data.is_common_user, "admin": user_data.is_admin, "super_user": user_data.is_super_user}.items() if _value == 1]                
+                "User Type": [_key for _key, _value in {"reports_user": user_data.is_reports_user, "admin": user_data.is_admin, "inpection_user": user_data.is_inspection_user}.items() if _value == 1]                
             }
             }
     else:
@@ -1578,67 +1548,33 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
     
 
 
-
-
-# class UpdateUser(BaseModel):
-#     user_id: str
-#     is_super_user: int
-#     is_admin: int
-#     is_common_user: int
-
-# @app.post("/update-user-type")
-# async def update_user_type(request: UpdateUser, db: Session = Depends(get_db)):   
-#     """
-#     API which will allow admin to changes roles for different users
-#     """ 
-
-#     user_id = request.user_id
-#     is_super_user = request.is_super_user
-#     is_admin = request.is_admin
-#     is_common_user = request.is_common_user
-#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == user_id).first()
-#     if user_data:
-#         user_data.is_super_user = is_super_user
-#         user_data.is_common_user = is_common_user
-#         user_data.is_admin = is_admin
-
-#         db.commit()
-#         db.refresh(user_data)
-#         return {
-#             "message": "User type Updated!!",
-#             "data": {
-#                 "User ID": user_data.auditly_user_id,
-#             }
-#             }
-#     else:
-#         return {
-#             "message": "Invalid Username or Password",
-#             }
-
-
-class UpdateUserTypeRequest1(BaseModel):
+class UpdateUserTypeRequest(BaseModel):
     modifier_user_id: int  # Admin ID making the request
     target_user_id: int  # ID of the user whose type is being modified
-    is_super_user: bool
+    is_inspection_user: bool
     is_admin: bool
-    is_common_user: bool
-
-@app.post("/update-user-type-v1")
-async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Depends(get_db)):
+    is_reports_user: bool
+   
+@app.post("/update-user-type")
+async def update_user_type(request: UpdateUserTypeRequest, db: Session = Depends(get_db)):
     """
     API to allow an admin to change roles for other users.
     Only a user with is_admin=True can modify user roles.
     A user cannot modify their own roles.
     """
 
-    # Fetch the admin making the change
+    # Fetch the user making the change
     modifier_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.modifier_user_id).first()
-    if not modifier_user or not modifier_user.is_admin:
-        raise HTTPException(status_code=403, detail="Permission Denied. Only admins can update user roles.")
+    if not modifier_user:
+        raise HTTPException(status_code=404, detail="Modifier user not found.")
 
-    # Check if the admin is trying to modify their own roles
+    # Check if the user is trying to modify their own roles
     if request.modifier_user_id == request.target_user_id:
         raise HTTPException(status_code=403, detail="Permission Denied. You cannot modify your own roles.")
+
+    # Ensure only admins can modify roles
+    if not modifier_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permission Denied. Only admins can update user roles.")
 
     # Fetch the target user
     target_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.target_user_id).first()
@@ -1646,9 +1582,9 @@ async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Dep
         raise HTTPException(status_code=404, detail="Target user not found.")
 
     # Update user roles
-    target_user.is_super_user = request.is_super_user
+    target_user.is_reports_user = request.is_reports_user
     target_user.is_admin = request.is_admin
-    target_user.is_common_user = request.is_common_user
+    target_user.is_inspection_user = request.is_inspection_user
 
     db.commit()
     db.refresh(target_user)
@@ -1657,8 +1593,8 @@ async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Dep
         "message": "User type updated successfully!",
         "updated_user": {
             "User ID": target_user.auditly_user_id,
-            "is_super_user": target_user.is_super_user,
+            "is_inspection_user": target_user.is_inspection_user,
             "is_admin": target_user.is_admin,
-            "is_common_user": target_user.is_common_user
+            "is_reports_user": target_user.is_reports_user
         }
     }

@@ -54,8 +54,8 @@ class AuditlyUser(Base):
     reset_otp = Column(String(255), nullable=True )
     reset_otp_expiration = Column(DateTime,nullable=True)
     user_type = Column(String(255), default="common_user")
-    is_common_user = Column(Boolean, default=True)
-    is_super_user = Column(Boolean, default=True)
+    is_reports_user = Column(Boolean, default=True)
+    is_inspection_user = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=True)
     user_company = Column(String(255), nullable=True)
 
