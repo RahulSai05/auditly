@@ -320,7 +320,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FileText, Database, Upload, ChevronRight, Save } from "lucide-react";
+import { FileText, Database, Upload, ChevronRight, Save, Edit } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 const MappingRules: React.FC = () => {
@@ -380,6 +380,8 @@ const MappingRules: React.FC = () => {
   const [sourceColumns, setSourceColumns] = useState<{ [key: string]: string }>({});
   const [sourceType, setSourceType] = useState<{ [key: string]: string }>({});
   const [showSuccess, setShowSuccess] = useState<{ [key: string]: boolean }>({});
+  const [editMode, setEditMode] = useState<{ [key: string]: boolean }>({});
+  const [error, setError] = useState<string>("");
 
   // Drag-and-drop state for rows
   const [rows, setRows] = useState([
@@ -396,14 +398,25 @@ const MappingRules: React.FC = () => {
 
   const handleSourceTypeChange = (tableName: string, value: string) => {
     setSourceType((prev) => ({ ...prev, [tableName]: value }));
+    setError(""); // Clear error when a source type is selected
   };
 
   const handleSaveMapping = (tableName: string) => {
     console.log(`Saved mapping for ${tableName}:`, sourceColumns);
     setShowSuccess((prev) => ({ ...prev, [tableName]: true }));
+    setEditMode((prev) => ({ ...prev, [tableName]: false })); // Disable edit mode after saving
     setTimeout(() => {
       setShowSuccess((prev) => ({ ...prev, [tableName]: false }));
     }, 3000); // Hide success message after 3 seconds
+  };
+
+  const handleEdit = (tableName: string) => {
+    if (!sourceType[tableName]) {
+      setError("Please select a source type before editing.");
+      return;
+    }
+    setEditMode((prev) => ({ ...prev, [tableName]: true }));
+    setError(""); // Clear error when edit mode is enabled
   };
 
   // Drag-and-drop logic
@@ -481,6 +494,8 @@ const MappingRules: React.FC = () => {
               </select>
             </div>
 
+            {error && <div className="text-red-600 mb-4">{error}</div>}
+
             <motion.div variants={itemVariants}>
               <DragDropContext onDragEnd={onDragEnd}>
                 <table className="w-full">
@@ -512,6 +527,7 @@ const MappingRules: React.FC = () => {
                                     onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
                                     placeholder="Enter source column"
                                     className="w-full p-2 border border-gray-300 rounded-lg"
+                                    disabled={!editMode["Item Upload"]}
                                   />
                                 </td>
                                 <td className="p-3 text-gray-700">{row.destination}</td>
@@ -525,10 +541,17 @@ const MappingRules: React.FC = () => {
                   </Droppable>
                 </table>
               </DragDropContext>
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end mt-4 gap-2">
+                <button
+                  onClick={() => handleEdit("Item Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </button>
                 <button
                   onClick={() => handleSaveMapping("Item Upload")}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   <Save className="w-4 h-4" />
                   Save Mapping Rule
