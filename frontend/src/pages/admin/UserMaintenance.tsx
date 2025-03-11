@@ -237,7 +237,6 @@
 
 // export default UserMaintenance;
 
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, X, Users, Loader2 } from "lucide-react";
@@ -250,9 +249,9 @@ interface User {
   last_name: string;
   gender: string;
   email: string;
-  is_super_user: boolean;
+  is_inspection_user: boolean;
   is_admin: boolean;
-  is_common_user: boolean;
+  is_reports_user: boolean;
 }
 
 const UserMaintenance: React.FC = () => {
@@ -293,9 +292,9 @@ const UserMaintenance: React.FC = () => {
       const response = await axios.post("http://54.210.159.220:8000/update-user-type-v1", {
         modifier_user_id: 7, // Replace with actual admin ID
         target_user_id: userId,
-        is_super_user: userToUpdate.is_super_user,
+        is_inspection_user: userToUpdate.is_inspection_user,
         is_admin: userToUpdate.is_admin,
-        is_common_user: userToUpdate.is_common_user,
+        is_reports_user: userToUpdate.is_reports_user,
       });
 
       if (response.data) {
@@ -464,9 +463,9 @@ const UserMaintenance: React.FC = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Last Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Gender</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Email</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Super User</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Inspection User</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Admin</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Common User</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Reports User</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-blue-600">Actions</th>
                 </tr>
               </thead>
@@ -497,10 +496,11 @@ const UserMaintenance: React.FC = () => {
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <input
                             type="checkbox"
-                            checked={user.is_super_user}
+                            checked={user.is_inspection_user}
                             onChange={(e) =>
-                              handleCheckboxChange(user.user_id, "is_super_user", e.target.checked)
+                              handleCheckboxChange(user.user_id, "is_inspection_user", e.target.checked)
                             }
+                            disabled={editingUserId !== user.user_id}
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
@@ -510,24 +510,35 @@ const UserMaintenance: React.FC = () => {
                             onChange={(e) =>
                               handleCheckboxChange(user.user_id, "is_admin", e.target.checked)
                             }
+                            disabled={editingUserId !== user.user_id}
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <input
                             type="checkbox"
-                            checked={user.is_common_user}
+                            checked={user.is_reports_user}
                             onChange={(e) =>
-                              handleCheckboxChange(user.user_id, "is_common_user", e.target.checked)
+                              handleCheckboxChange(user.user_id, "is_reports_user", e.target.checked)
                             }
+                            disabled={editingUserId !== user.user_id}
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          <button
-                            onClick={() => handleRoleUpdate(user.user_id)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                          >
-                            Save
-                          </button>
+                          {editingUserId === user.user_id ? (
+                            <button
+                              onClick={() => handleRoleUpdate(user.user_id)}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              Save
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setEditingUserId(user.user_id)}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              Edit
+                            </button>
+                          )}
                         </td>
                       </motion.tr>
                     ))
