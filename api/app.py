@@ -630,7 +630,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             db.refresh(user_data)
             if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
             elif ENV == "TEST":
-                from_email, from_password = get_secret["test/auditly/secrets"].items()
+                from_email, from_password = get_secret("test/auditly/secrets").items()
                 send_email(from_email, from_password, user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
             return {
                 "message": "OTP Sent Successfully to registerd email",
