@@ -6,6 +6,7 @@ import random
 import io
 import datetime
 import base64
+import hashlib
 from send_email import send_email
 from settings import ENV
 from secret import get_secret
@@ -32,6 +33,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Hash password using SHA-256
+def hash_password_sha256(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# Verify password function
+def verify_password_sha256(plain_password, hashed_password) -> bool:
+    return hash_password_sha256(plain_password) == hashed_password
 
 app = FastAPI()
 
@@ -582,13 +591,15 @@ async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already exists. Please choose a different username.")
 
+        hashed_password = hash_password_sha256(password)
+
         new_user = AuditlyUser(
             auditly_user_name = auditly_user_name,
             first_name = first_name,
             last_name = last_name,
             gender = gender,
             email = email,
-            password = password
+            password = hashed_password
         )
         db.add(new_user)
         db.commit()
@@ -620,9 +631,11 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         auditly_user_name = request.user_name
         password = request.password
 
-        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).filter(AuditlyUser.password == password).first()
+        user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name).first()
+        if not user_data or not verify_password_sha256(password, user_data.password):
+                raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        if user_data:
+        else:
             otp_login = _gen_otp()
             user_data.reset_otp = otp_login
             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
@@ -637,10 +650,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
                 "auditly_user_name": user_data.auditly_user_name,
                 "user_type": user_data.user_type
              }
-        else:
-            return {
-                "message": "Invalid Username or Password",
-             }
+       
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
