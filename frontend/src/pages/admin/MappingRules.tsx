@@ -318,7 +318,6 @@
 // export default MappingRules;
 
 
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, Database, Upload, ChevronRight, Save, Edit } from "lucide-react";
@@ -401,6 +400,17 @@ const MappingRules: React.FC = () => {
     { id: "5", column: "Column 5", destination: "date_delivered" },
     { id: "6", column: "Column 6", destination: "serial_number" },
     { id: "7", column: "Column 7", destination: "shipped_to_address" },
+  ]);
+
+  const [returnsRows, setReturnsRows] = useState([
+    { id: "1", column: "Column 1", destination: "original_sales_order_number" },
+    { id: "2", column: "Column 2", destination: "original_sales_order_line" },
+    { id: "3", column: "Column 3", destination: "account_number" },
+    { id: "4", column: "Column 4", destination: "date_purchased" },
+    { id: "5", column: "Column 5", destination: "date_delivered" },
+    { id: "6", column: "Column 6", destination: "serial_number" },
+    { id: "7", column: "Column 7", destination: "shipped_to_address" },
+    { id: "8", column: "Column 8", destination: "Status" },
   ]);
 
   const handleSourceColumnChange = (key: string, value: string) => {
@@ -677,6 +687,114 @@ const MappingRules: React.FC = () => {
                 </button>
               </div>
               {showSuccess["Customer Serial Upload"] && (
+                <div className="mt-4 text-green-600">
+                  Mapping rule saved successfully!
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Returns Upload Section */}
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
+        >
+          <div className="h-2 bg-gradient-to-r from-amber-500 to-orange-600" />
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <motion.div
+                whileHover="hover"
+                variants={iconVariants}
+                className="p-2 rounded-lg bg-amber-50"
+              >
+                <Upload className="w-6 h-6 text-amber-600" />
+              </motion.div>
+              <h2 className="text-xl font-semibold text-gray-800">Returns Upload</h2>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
+              <select
+                value={sourceType["Returns Upload"] || ""}
+                onChange={(e) => handleSourceTypeChange("Returns Upload", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Source Type</option>
+                <option value="csv">CSV Upload</option>
+                <option value="powerbi">Power BI</option>
+                <option value="d365">D365</option>
+                <option value="azure">Azure</option>
+              </select>
+            </div>
+
+            {error["Returns Upload"] && (
+              <div className="text-red-600 mb-4">{error["Returns Upload"]}</div>
+            )}
+
+            <motion.div variants={itemVariants}>
+              <DragDropContext onDragEnd={(result) => onDragEnd(result, returnsRows, setReturnsRows)}>
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-amber-50/50">
+                      <th className="p-3 text-left text-gray-700">Columns</th>
+                      <th className="p-3 text-left text-gray-700">Source Table</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
+                    </tr>
+                  </thead>
+                  <Droppable droppableId="returnsRows">
+                    {(provided) => (
+                      <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                        {returnsRows.map((row, index) => (
+                          <Draggable key={row.id} draggableId={row.id} index={index}>
+                            {(provided) => (
+                              <tr
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="border-b border-amber-100"
+                              >
+                                <td className="p-3 text-gray-700" {...provided.dragHandleProps}>
+                                  {row.column}
+                                </td>
+                                <td className="p-3">
+                                  <input
+                                    type="text"
+                                    value={sourceColumns[row.destination] || ""}
+                                    onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
+                                    placeholder="Enter source column"
+                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                    disabled={!editMode["Returns Upload"]}
+                                  />
+                                </td>
+                                <td className="p-3 text-gray-700">{row.destination}</td>
+                              </tr>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </tbody>
+                    )}
+                  </Droppable>
+                </table>
+              </DragDropContext>
+              <div className="flex justify-end mt-4 gap-2">
+                <button
+                  onClick={() => handleEdit("Returns Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleSaveMapping("Returns Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Mapping Rule
+                </button>
+              </div>
+              {showSuccess["Returns Upload"] && (
                 <div className="mt-4 text-green-600">
                   Mapping rule saved successfully!
                 </div>
