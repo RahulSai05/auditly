@@ -57,58 +57,58 @@ const AdminLayout = () => {
     if (isMobile) {
       setIsSidebarOpen(false);
     }
-    
+
     // Prevent event bubbling to parent elements
     e.stopPropagation();
   };
 
   // Animation variants
   const sidebarVariants = {
-    open: { 
+    open: {
       x: 0,
       transition: {
         type: "spring",
         stiffness: 300,
         damping: 30,
         staggerChildren: 0.05,
-        delayChildren: 0.1
-      }
+        delayChildren: 0.1,
+      },
     },
-    closed: { 
+    closed: {
       x: "-100%",
       transition: {
         type: "spring",
         stiffness: 300,
         damping: 30,
         staggerChildren: 0.05,
-        staggerDirection: -1
-      }
-    }
+        staggerDirection: -1,
+      },
+    },
   };
 
   const itemVariants = {
-    open: { 
-      opacity: 1, 
+    open: {
+      opacity: 1,
       x: 0,
       transition: {
         type: "spring",
         stiffness: 300,
-        damping: 30
-      }
+        damping: 30,
+      },
     },
-    closed: { 
-      opacity: 0, 
+    closed: {
+      opacity: 0,
       x: -20,
       transition: {
         type: "spring",
         stiffness: 300,
-        damping: 30
-      }
-    }
+        damping: 30,
+      },
+    },
   };
 
   const dropdownVariants = {
-    open: { 
+    open: {
       height: "auto",
       opacity: 1,
       transition: {
@@ -116,10 +116,10 @@ const AdminLayout = () => {
         stiffness: 300,
         damping: 30,
         staggerChildren: 0.05,
-        delayChildren: 0.1
-      }
+        delayChildren: 0.1,
+      },
     },
-    closed: { 
+    closed: {
       height: 0,
       opacity: 0,
       transition: {
@@ -127,26 +127,26 @@ const AdminLayout = () => {
         stiffness: 300,
         damping: 30,
         staggerChildren: 0.05,
-        staggerDirection: -1
-      }
-    }
+        staggerDirection: -1,
+      },
+    },
   };
 
   const overlayVariants = {
-    open: { 
+    open: {
       opacity: 1,
-      transition: { duration: 0.3 }
+      transition: { duration: 0.3 },
     },
-    closed: { 
+    closed: {
       opacity: 0,
-      transition: { duration: 0.3 }
-    }
+      transition: { duration: 0.3 },
+    },
   };
 
   // Handle connector toggle without affecting parent dropdown
   const handleConnectorToggle = (e) => {
     e.stopPropagation(); // Prevent event from bubbling up
-    setConnectorsOpen(prev => !prev);
+    setConnectorsOpen((prev) => !prev);
   };
 
   return (
@@ -204,7 +204,7 @@ const AdminLayout = () => {
         animate={isSidebarOpen ? "open" : isMobile ? "closed" : "open"}
         variants={sidebarVariants}
       >
-        <motion.div 
+        <motion.div
           className="p-5 font-bold text-xl text-gray-900 border-b border-gray-300 flex justify-between items-center"
           variants={itemVariants}
         >
@@ -214,7 +214,7 @@ const AdminLayout = () => {
             transition={{ delay: 0.2 }}
             className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
           >
-            Admin Panel
+            User Panel
           </motion.span>
         </motion.div>
 
@@ -251,9 +251,7 @@ const AdminLayout = () => {
                   variants={dropdownVariants}
                   className="mt-2 space-y-1 overflow-hidden"
                 >
-                  <motion.li 
-                    variants={itemVariants}
-                  >
+                  <motion.li variants={itemVariants}>
                     <motion.div
                       className="flex items-center p-3 rounded-lg transition duration-300 hover:bg-blue-400 hover:text-white pl-12 cursor-pointer"
                       onClick={handleConnectorToggle}
@@ -269,7 +267,11 @@ const AdminLayout = () => {
                       <span>Connectors</span>
                       <motion.div
                         animate={{ rotate: connectorsOpen ? 90 : 0 }}
-                        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                        transition={{
+                          duration: 0.3,
+                          type: "spring",
+                          stiffness: 300,
+                        }}
                         className="ml-auto"
                       >
                         <ChevronRight className="w-4 h-4" />
@@ -348,15 +350,26 @@ const AdminLayout = () => {
                     </AnimatePresence>
                   </motion.li>
                   {[
-                    { name: "api-configurations", icon: <Database className="w-5 h-5 mr-2" /> },
-                    { name: "email-configurations", icon: <Mail className="w-5 h-5 mr-2" /> },
-                    { name: "users-maintenance", icon: <Users className="w-5 h-5 mr-2" /> },
+                    {
+                      name: "api-configurations",
+                      icon: <Database className="w-5 h-5 mr-2" />,
+                    },
+                    {
+                      name: "email-configurations",
+                      icon: <Mail className="w-5 h-5 mr-2" />,
+                    },
+                    {
+                      name: "users-maintenance",
+                      icon: <Users className="w-5 h-5 mr-2" />,
+                    },
                   ].map((item) => (
                     <motion.li key={item.name} variants={itemVariants}>
                       <NavLink
                         to={`/admin/settings/${item.name}`}
                         className={({ isActive }) =>
-                          `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                          `${nestedLinkStyle} ${
+                            isActive ? activeLinkStyle : ""
+                          }`
                         }
                         onClick={handleLinkClick}
                       >
@@ -368,7 +381,10 @@ const AdminLayout = () => {
                         </motion.div>
                         {item.name
                           .split("-")
-                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() + word.slice(1)
+                          )
                           .join(" ")}
                       </NavLink>
                     </motion.li>
@@ -516,16 +532,30 @@ const AdminLayout = () => {
                   className="mt-2 space-y-1 overflow-hidden"
                 >
                   {[
-                    { name: "item-master-upload", icon: <Asterisk className="w-5 h-5 mr-2" /> },
-                    { name: "customer-serial-upload", icon: <Usb className="w-5 h-5 mr-2" /> },
-                    { name: "item-image-upload", icon: <Image className="w-5 h-5 mr-2" /> },
-                    { name: "return-upload", icon: <Undo2 className="w-5 h-5 mr-2" /> },
+                    {
+                      name: "item-master-upload",
+                      icon: <Asterisk className="w-5 h-5 mr-2" />,
+                    },
+                    {
+                      name: "customer-serial-upload",
+                      icon: <Usb className="w-5 h-5 mr-2" />,
+                    },
+                    {
+                      name: "item-image-upload",
+                      icon: <Image className="w-5 h-5 mr-2" />,
+                    },
+                    {
+                      name: "return-upload",
+                      icon: <Undo2 className="w-5 h-5 mr-2" />,
+                    },
                   ].map((item) => (
                     <motion.li key={item.name} variants={itemVariants}>
                       <NavLink
                         to={`/admin/settings/${item.name}`}
                         className={({ isActive }) =>
-                          `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                          `${nestedLinkStyle} ${
+                            isActive ? activeLinkStyle : ""
+                          }`
                         }
                         onClick={handleLinkClick}
                       >
@@ -537,7 +567,10 @@ const AdminLayout = () => {
                         </motion.div>
                         {item.name
                           .split("-")
-                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() + word.slice(1)
+                          )
                           .join(" ")}
                       </NavLink>
                     </motion.li>
@@ -548,10 +581,7 @@ const AdminLayout = () => {
           </motion.li>
 
           {/* Logout */}
-          <motion.li 
-            variants={itemVariants}
-            className="mt-auto"
-          >
+          <motion.li variants={itemVariants} className="mt-auto">
             <motion.button
               className="flex items-center p-3 rounded-lg transition duration-300 hover:bg-red-100 text-red-600 hover:text-red-700 w-full mt-8"
               whileHover={{ x: 5 }}
@@ -570,7 +600,7 @@ const AdminLayout = () => {
       </motion.div>
 
       {/* Main content */}
-      <motion.div 
+      <motion.div
         className="flex-1 overflow-auto bg-white shadow-md rounded-lg p-4 md:p-6 m-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
