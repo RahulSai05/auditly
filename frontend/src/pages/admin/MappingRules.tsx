@@ -317,6 +317,8 @@
 
 // export default MappingRules;
 
+
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, Database, Upload, ChevronRight, Save } from "lucide-react";
@@ -376,14 +378,23 @@ const MappingRules: React.FC = () => {
   };
 
   const [sourceColumns, setSourceColumns] = useState<{ [key: string]: string }>({});
+  const [sourceType, setSourceType] = useState<{ [key: string]: string }>({});
+  const [showSuccess, setShowSuccess] = useState<{ [key: string]: boolean }>({});
 
   const handleSourceColumnChange = (key: string, value: string) => {
     setSourceColumns((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleSourceTypeChange = (tableName: string, value: string) => {
+    setSourceType((prev) => ({ ...prev, [tableName]: value }));
+  };
+
   const handleSaveMapping = (tableName: string) => {
     console.log(`Saved mapping for ${tableName}:`, sourceColumns);
-    // Add logic to save the mapping rules (e.g., API call)
+    setShowSuccess((prev) => ({ ...prev, [tableName]: true }));
+    setTimeout(() => {
+      setShowSuccess((prev) => ({ ...prev, [tableName]: false }));
+    }, 3000); // Hide success message after 3 seconds
   };
 
   return (
@@ -437,14 +448,29 @@ const MappingRules: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800">Item Upload</h2>
             </div>
 
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
+              <select
+                value={sourceType["Item Upload"] || ""}
+                onChange={(e) => handleSourceTypeChange("Item Upload", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Source Type</option>
+                <option value="csv">CSV Upload</option>
+                <option value="powerbi">Power BI</option>
+                <option value="d365">D365</option>
+                <option value="azure">Azure</option>
+              </select>
+            </div>
+
             <motion.div variants={itemVariants}>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-blue-50/50">
                       <th className="p-3 text-left text-gray-700">Columns</th>
-                      <th className="p-3 text-left text-gray-700">Destination Table</th>
                       <th className="p-3 text-left text-gray-700">Source Table</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -457,7 +483,6 @@ const MappingRules: React.FC = () => {
                     ].map((row, index) => (
                       <tr key={index} className="border-b border-blue-100">
                         <td className="p-3 text-gray-700">{row.column}</td>
-                        <td className="p-3 text-gray-700">{row.destination}</td>
                         <td className="p-3">
                           <input
                             type="text"
@@ -467,6 +492,7 @@ const MappingRules: React.FC = () => {
                             className="w-full p-2 border border-gray-300 rounded-lg"
                           />
                         </td>
+                        <td className="p-3 text-gray-700">{row.destination}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -481,6 +507,11 @@ const MappingRules: React.FC = () => {
                   Save Mapping Rule
                 </button>
               </div>
+              {showSuccess["Item Upload"] && (
+                <div className="mt-4 text-green-600">
+                  Mapping rule saved successfully!
+                </div>
+              )}
             </motion.div>
           </div>
         </motion.div>
@@ -504,14 +535,29 @@ const MappingRules: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800">Customer Serial Upload</h2>
             </div>
 
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
+              <select
+                value={sourceType["Customer Serial Upload"] || ""}
+                onChange={(e) => handleSourceTypeChange("Customer Serial Upload", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Source Type</option>
+                <option value="csv">CSV Upload</option>
+                <option value="powerbi">Power BI</option>
+                <option value="d365">D365</option>
+                <option value="azure">Azure</option>
+              </select>
+            </div>
+
             <motion.div variants={itemVariants}>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-green-50/50">
                       <th className="p-3 text-left text-gray-700">Columns</th>
-                      <th className="p-3 text-left text-gray-700">Destination Table</th>
                       <th className="p-3 text-left text-gray-700">Source Table</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -526,7 +572,6 @@ const MappingRules: React.FC = () => {
                     ].map((row, index) => (
                       <tr key={index} className="border-b border-green-100">
                         <td className="p-3 text-gray-700">{row.column}</td>
-                        <td className="p-3 text-gray-700">{row.destination}</td>
                         <td className="p-3">
                           <input
                             type="text"
@@ -536,6 +581,7 @@ const MappingRules: React.FC = () => {
                             className="w-full p-2 border border-gray-300 rounded-lg"
                           />
                         </td>
+                        <td className="p-3 text-gray-700">{row.destination}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -550,6 +596,11 @@ const MappingRules: React.FC = () => {
                   Save Mapping Rule
                 </button>
               </div>
+              {showSuccess["Customer Serial Upload"] && (
+                <div className="mt-4 text-green-600">
+                  Mapping rule saved successfully!
+                </div>
+              )}
             </motion.div>
           </div>
         </motion.div>
@@ -573,14 +624,29 @@ const MappingRules: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800">Returns Upload</h2>
             </div>
 
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
+              <select
+                value={sourceType["Returns Upload"] || ""}
+                onChange={(e) => handleSourceTypeChange("Returns Upload", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Source Type</option>
+                <option value="csv">CSV Upload</option>
+                <option value="powerbi">Power BI</option>
+                <option value="d365">D365</option>
+                <option value="azure">Azure</option>
+              </select>
+            </div>
+
             <motion.div variants={itemVariants}>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-amber-50/50">
                       <th className="p-3 text-left text-gray-700">Columns</th>
-                      <th className="p-3 text-left text-gray-700">Destination Table</th>
                       <th className="p-3 text-left text-gray-700">Source Table</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -596,7 +662,6 @@ const MappingRules: React.FC = () => {
                     ].map((row, index) => (
                       <tr key={index} className="border-b border-amber-100">
                         <td className="p-3 text-gray-700">{row.column}</td>
-                        <td className="p-3 text-gray-700">{row.destination}</td>
                         <td className="p-3">
                           <input
                             type="text"
@@ -606,6 +671,7 @@ const MappingRules: React.FC = () => {
                             className="w-full p-2 border border-gray-300 rounded-lg"
                           />
                         </td>
+                        <td className="p-3 text-gray-700">{row.destination}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -620,6 +686,11 @@ const MappingRules: React.FC = () => {
                   Save Mapping Rule
                 </button>
               </div>
+              {showSuccess["Returns Upload"] && (
+                <div className="mt-4 text-green-600">
+                  Mapping rule saved successfully!
+                </div>
+              )}
             </motion.div>
           </div>
         </motion.div>
