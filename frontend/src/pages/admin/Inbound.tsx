@@ -14,8 +14,7 @@ const dataSources = [
   {
     id: 1,
     title: "Amazon S3",
-    description:
-      "Secure cloud storage with unlimited scalability and high availability.",
+    description: "Secure cloud storage with unlimited scalability and high availability.",
     icon: Cloud,
     color: "#FF9900",
     status: "Enterprise",
@@ -23,7 +22,7 @@ const dataSources = [
   {
     id: 3,
     title: "Azure Blob",
-    description: "Microsoft's scalable object storage for unstructured data.",
+    description: "Microsoft's scalable object storage solution for unstructured data.",
     icon: Database,
     color: "#0089D6",
     status: "Cloud",
@@ -31,11 +30,19 @@ const dataSources = [
   {
     id: 3,
     title: "CSV Import",
-    description: "Simple and efficient data import from structured CSV files.",
+    description: "Efficient and straightforward data import from structured CSV files.",
     icon: FileText,
     color: "#424242",
     status: "Basic",
   },
+  {
+    id: 4,
+    title: "Power BI",
+    description: "Business analytics tool for visualizing data and sharing insights across your organization.",
+    icon: Cloud,
+    color: "#FF9900",
+    status: "Enterprise",
+  }
 ];
 
 const containerVariants = {
