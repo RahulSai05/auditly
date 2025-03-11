@@ -29,6 +29,14 @@ const destinations = [
     color: "#00796B",
     status: "Popular",
   },
+  {
+    id: 4,
+    title: "Outbound Automate",
+    description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
+    icon: Share2,
+    color: "#FF9900",
+    status: "Enterprise",
+  }
 ];
 
 const containerVariants = {
