@@ -8,6 +8,7 @@ import datetime
 import base64
 from send_email import send_email
 from settings import ENV
+from secret import get_secret
 from pydantic import BaseModel
 from database import engine, SessionLocal
 from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
@@ -627,7 +628,10 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
-            send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+            if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+            elif ENV == "TEST":
+                from_email, from_password = get_secret["test/auditly/secrets"].items()
+                send_email(from_email, from_password, user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
             return {
                 "message": "OTP Sent Successfully to registerd email",
                 "auditly_user_name": user_data.auditly_user_name,
