@@ -318,6 +318,7 @@
 // export default MappingRules;
 
 
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, Database, Upload, ChevronRight, Save, Edit } from "lucide-react";
@@ -381,15 +382,25 @@ const MappingRules: React.FC = () => {
   const [sourceType, setSourceType] = useState<{ [key: string]: string }>({});
   const [showSuccess, setShowSuccess] = useState<{ [key: string]: boolean }>({});
   const [editMode, setEditMode] = useState<{ [key: string]: boolean }>({});
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<{ [key: string]: string }>({});
 
   // Drag-and-drop state for rows
-  const [rows, setRows] = useState([
+  const [itemRows, setItemRows] = useState([
     { id: "1", column: "Column 1", destination: "item_number" },
     { id: "2", column: "Column 2", destination: "item_description" },
     { id: "3", column: "Column 3", destination: "brand_id" },
     { id: "4", column: "Column 4", destination: "category" },
     { id: "5", column: "Column 5", destination: "configuration" },
+  ]);
+
+  const [customerSerialRows, setCustomerSerialRows] = useState([
+    { id: "1", column: "Column 1", destination: "original_sales_order_number" },
+    { id: "2", column: "Column 2", destination: "original_sales_order_line" },
+    { id: "3", column: "Column 3", destination: "account_number" },
+    { id: "4", column: "Column 4", destination: "date_purchased" },
+    { id: "5", column: "Column 5", destination: "date_delivered" },
+    { id: "6", column: "Column 6", destination: "serial_number" },
+    { id: "7", column: "Column 7", destination: "shipped_to_address" },
   ]);
 
   const handleSourceColumnChange = (key: string, value: string) => {
@@ -398,7 +409,7 @@ const MappingRules: React.FC = () => {
 
   const handleSourceTypeChange = (tableName: string, value: string) => {
     setSourceType((prev) => ({ ...prev, [tableName]: value }));
-    setError(""); // Clear error when a source type is selected
+    setError((prev) => ({ ...prev, [tableName]: "" })); // Clear error when a source type is selected
   };
 
   const handleSaveMapping = (tableName: string) => {
@@ -412,15 +423,15 @@ const MappingRules: React.FC = () => {
 
   const handleEdit = (tableName: string) => {
     if (!sourceType[tableName]) {
-      setError("Please select a source type before editing.");
+      setError((prev) => ({ ...prev, [tableName]: "Please select a source type before editing." }));
       return;
     }
     setEditMode((prev) => ({ ...prev, [tableName]: true }));
-    setError(""); // Clear error when edit mode is enabled
+    setError((prev) => ({ ...prev, [tableName]: "" })); // Clear error when edit mode is enabled
   };
 
   // Drag-and-drop logic
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = (result: DropResult, rows: any[], setRows: any) => {
     if (!result.destination) return; // Dropped outside the list
     const items = Array.from(rows);
     const [reorderedItem] = items.splice(result.source.index, 1);
@@ -494,10 +505,10 @@ const MappingRules: React.FC = () => {
               </select>
             </div>
 
-            {error && <div className="text-red-600 mb-4">{error}</div>}
+            {error["Item Upload"] && <div className="text-red-600 mb-4">{error["Item Upload"]}</div>}
 
             <motion.div variants={itemVariants}>
-              <DragDropContext onDragEnd={onDragEnd}>
+              <DragDropContext onDragEnd={(result) => onDragEnd(result, itemRows, setItemRows)}>
                 <table className="w-full">
                   <thead>
                     <tr className="bg-blue-50/50">
@@ -506,10 +517,10 @@ const MappingRules: React.FC = () => {
                       <th className="p-3 text-left text-gray-700">Destination Table</th>
                     </tr>
                   </thead>
-                  <Droppable droppableId="rows">
+                  <Droppable droppableId="itemRows">
                     {(provided) => (
                       <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                        {rows.map((row, index) => (
+                        {itemRows.map((row, index) => (
                           <Draggable key={row.id} draggableId={row.id} index={index}>
                             {(provided) => (
                               <tr
@@ -558,6 +569,114 @@ const MappingRules: React.FC = () => {
                 </button>
               </div>
               {showSuccess["Item Upload"] && (
+                <div className="mt-4 text-green-600">
+                  Mapping rule saved successfully!
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Customer Serial Upload Section */}
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden mb-8"
+        >
+          <div className="h-2 bg-gradient-to-r from-green-500 to-teal-600" />
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <motion.div
+                whileHover="hover"
+                variants={iconVariants}
+                className="p-2 rounded-lg bg-green-50"
+              >
+                <Upload className="w-6 h-6 text-green-600" />
+              </motion.div>
+              <h2 className="text-xl font-semibold text-gray-800">Customer Serial Upload</h2>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
+              <select
+                value={sourceType["Customer Serial Upload"] || ""}
+                onChange={(e) => handleSourceTypeChange("Customer Serial Upload", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Source Type</option>
+                <option value="csv">CSV Upload</option>
+                <option value="powerbi">Power BI</option>
+                <option value="d365">D365</option>
+                <option value="azure">Azure</option>
+              </select>
+            </div>
+
+            {error["Customer Serial Upload"] && (
+              <div className="text-red-600 mb-4">{error["Customer Serial Upload"]}</div>
+            )}
+
+            <motion.div variants={itemVariants}>
+              <DragDropContext onDragEnd={(result) => onDragEnd(result, customerSerialRows, setCustomerSerialRows)}>
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-green-50/50">
+                      <th className="p-3 text-left text-gray-700">Columns</th>
+                      <th className="p-3 text-left text-gray-700">Source Table</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
+                    </tr>
+                  </thead>
+                  <Droppable droppableId="customerSerialRows">
+                    {(provided) => (
+                      <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                        {customerSerialRows.map((row, index) => (
+                          <Draggable key={row.id} draggableId={row.id} index={index}>
+                            {(provided) => (
+                              <tr
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="border-b border-green-100"
+                              >
+                                <td className="p-3 text-gray-700" {...provided.dragHandleProps}>
+                                  {row.column}
+                                </td>
+                                <td className="p-3">
+                                  <input
+                                    type="text"
+                                    value={sourceColumns[row.destination] || ""}
+                                    onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
+                                    placeholder="Enter source column"
+                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                    disabled={!editMode["Customer Serial Upload"]}
+                                  />
+                                </td>
+                                <td className="p-3 text-gray-700">{row.destination}</td>
+                              </tr>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </tbody>
+                    )}
+                  </Droppable>
+                </table>
+              </DragDropContext>
+              <div className="flex justify-end mt-4 gap-2">
+                <button
+                  onClick={() => handleEdit("Customer Serial Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleSaveMapping("Customer Serial Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Mapping Rule
+                </button>
+              </div>
+              {showSuccess["Customer Serial Upload"] && (
                 <div className="mt-4 text-green-600">
                   Mapping rule saved successfully!
                 </div>
