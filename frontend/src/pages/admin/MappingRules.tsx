@@ -318,10 +318,10 @@
 // export default MappingRules;
 
 
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, Database, Upload, ChevronRight, Save } from "lucide-react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 const MappingRules: React.FC = () => {
   const containerVariants = {
@@ -381,6 +381,15 @@ const MappingRules: React.FC = () => {
   const [sourceType, setSourceType] = useState<{ [key: string]: string }>({});
   const [showSuccess, setShowSuccess] = useState<{ [key: string]: boolean }>({});
 
+  // Drag-and-drop state for rows
+  const [rows, setRows] = useState([
+    { id: "1", column: "Column 1", destination: "item_number" },
+    { id: "2", column: "Column 2", destination: "item_description" },
+    { id: "3", column: "Column 3", destination: "brand_id" },
+    { id: "4", column: "Column 4", destination: "category" },
+    { id: "5", column: "Column 5", destination: "configuration" },
+  ]);
+
   const handleSourceColumnChange = (key: string, value: string) => {
     setSourceColumns((prev) => ({ ...prev, [key]: value }));
   };
@@ -395,6 +404,15 @@ const MappingRules: React.FC = () => {
     setTimeout(() => {
       setShowSuccess((prev) => ({ ...prev, [tableName]: false }));
     }, 3000); // Hide success message after 3 seconds
+  };
+
+  // Drag-and-drop logic
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return; // Dropped outside the list
+    const items = Array.from(rows);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setRows(items);
   };
 
   return (
@@ -464,7 +482,7 @@ const MappingRules: React.FC = () => {
             </div>
 
             <motion.div variants={itemVariants}>
-              <div className="overflow-x-auto">
+              <DragDropContext onDragEnd={onDragEnd}>
                 <table className="w-full">
                   <thead>
                     <tr className="bg-blue-50/50">
@@ -473,31 +491,40 @@ const MappingRules: React.FC = () => {
                       <th className="p-3 text-left text-gray-700">Destination Table</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {[
-                      { column: "Column 1", destination: "item_number" },
-                      { column: "Column 2", destination: "item_description" },
-                      { column: "Column 3", destination: "brand_id" },
-                      { column: "Column 4", destination: "category" },
-                      { column: "Column 5", destination: "configuration" },
-                    ].map((row, index) => (
-                      <tr key={index} className="border-b border-blue-100">
-                        <td className="p-3 text-gray-700">{row.column}</td>
-                        <td className="p-3">
-                          <input
-                            type="text"
-                            value={sourceColumns[row.destination] || ""}
-                            onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
-                            placeholder="Enter source column"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                          />
-                        </td>
-                        <td className="p-3 text-gray-700">{row.destination}</td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  <Droppable droppableId="rows">
+                    {(provided) => (
+                      <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                        {rows.map((row, index) => (
+                          <Draggable key={row.id} draggableId={row.id} index={index}>
+                            {(provided) => (
+                              <tr
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="border-b border-blue-100"
+                              >
+                                <td className="p-3 text-gray-700" {...provided.dragHandleProps}>
+                                  {row.column}
+                                </td>
+                                <td className="p-3">
+                                  <input
+                                    type="text"
+                                    value={sourceColumns[row.destination] || ""}
+                                    onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
+                                    placeholder="Enter source column"
+                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                  />
+                                </td>
+                                <td className="p-3 text-gray-700">{row.destination}</td>
+                              </tr>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </tbody>
+                    )}
+                  </Droppable>
                 </table>
-              </div>
+              </DragDropContext>
               <div className="flex justify-end mt-4">
                 <button
                   onClick={() => handleSaveMapping("Item Upload")}
@@ -508,185 +535,6 @@ const MappingRules: React.FC = () => {
                 </button>
               </div>
               {showSuccess["Item Upload"] && (
-                <div className="mt-4 text-green-600">
-                  Mapping rule saved successfully!
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Customer Serial Upload Section */}
-        <motion.div
-          variants={cardVariants}
-          whileHover="hover"
-          className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden mb-8"
-        >
-          <div className="h-2 bg-gradient-to-r from-green-500 to-teal-600" />
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <motion.div
-                whileHover="hover"
-                variants={iconVariants}
-                className="p-2 rounded-lg bg-green-50"
-              >
-                <Upload className="w-6 h-6 text-green-600" />
-              </motion.div>
-              <h2 className="text-xl font-semibold text-gray-800">Customer Serial Upload</h2>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
-              <select
-                value={sourceType["Customer Serial Upload"] || ""}
-                onChange={(e) => handleSourceTypeChange("Customer Serial Upload", e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">Select Source Type</option>
-                <option value="csv">CSV Upload</option>
-                <option value="powerbi">Power BI</option>
-                <option value="d365">D365</option>
-                <option value="azure">Azure</option>
-              </select>
-            </div>
-
-            <motion.div variants={itemVariants}>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-green-50/50">
-                      <th className="p-3 text-left text-gray-700">Columns</th>
-                      <th className="p-3 text-left text-gray-700">Source Table</th>
-                      <th className="p-3 text-left text-gray-700">Destination Table</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { column: "Column 1", destination: "original_sales_order_number" },
-                      { column: "Column 2", destination: "original_sales_order_line" },
-                      { column: "Column 3", destination: "account_number" },
-                      { column: "Column 4", destination: "date_purchased" },
-                      { column: "Column 5", destination: "date_delivered" },
-                      { column: "Column 6", destination: "serial_number" },
-                      { column: "Column 7", destination: "shipped_to_address" },
-                    ].map((row, index) => (
-                      <tr key={index} className="border-b border-green-100">
-                        <td className="p-3 text-gray-700">{row.column}</td>
-                        <td className="p-3">
-                          <input
-                            type="text"
-                            value={sourceColumns[row.destination] || ""}
-                            onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
-                            placeholder="Enter source column"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                          />
-                        </td>
-                        <td className="p-3 text-gray-700">{row.destination}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => handleSaveMapping("Customer Serial Upload")}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  <Save className="w-4 h-4" />
-                  Save Mapping Rule
-                </button>
-              </div>
-              {showSuccess["Customer Serial Upload"] && (
-                <div className="mt-4 text-green-600">
-                  Mapping rule saved successfully!
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Returns Upload Section */}
-        <motion.div
-          variants={cardVariants}
-          whileHover="hover"
-          className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
-        >
-          <div className="h-2 bg-gradient-to-r from-amber-500 to-orange-600" />
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <motion.div
-                whileHover="hover"
-                variants={iconVariants}
-                className="p-2 rounded-lg bg-amber-50"
-              >
-                <Upload className="w-6 h-6 text-amber-600" />
-              </motion.div>
-              <h2 className="text-xl font-semibold text-gray-800">Returns Upload</h2>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Source Type</label>
-              <select
-                value={sourceType["Returns Upload"] || ""}
-                onChange={(e) => handleSourceTypeChange("Returns Upload", e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">Select Source Type</option>
-                <option value="csv">CSV Upload</option>
-                <option value="powerbi">Power BI</option>
-                <option value="d365">D365</option>
-                <option value="azure">Azure</option>
-              </select>
-            </div>
-
-            <motion.div variants={itemVariants}>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-amber-50/50">
-                      <th className="p-3 text-left text-gray-700">Columns</th>
-                      <th className="p-3 text-left text-gray-700">Source Table</th>
-                      <th className="p-3 text-left text-gray-700">Destination Table</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { column: "Column 1", destination: "original_sales_order_number" },
-                      { column: "Column 2", destination: "original_sales_order_line" },
-                      { column: "Column 3", destination: "account_number" },
-                      { column: "Column 4", destination: "date_purchased" },
-                      { column: "Column 5", destination: "date_delivered" },
-                      { column: "Column 6", destination: "serial_number" },
-                      { column: "Column 7", destination: "shipped_to_address" },
-                      { column: "Column 8", destination: "Status" },
-                    ].map((row, index) => (
-                      <tr key={index} className="border-b border-amber-100">
-                        <td className="p-3 text-gray-700">{row.column}</td>
-                        <td className="p-3">
-                          <input
-                            type="text"
-                            value={sourceColumns[row.destination] || ""}
-                            onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
-                            placeholder="Enter source column"
-                            className="w-full p-2 border border-gray-300 rounded-lg"
-                          />
-                        </td>
-                        <td className="p-3 text-gray-700">{row.destination}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => handleSaveMapping("Returns Upload")}
-                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-                >
-                  <Save className="w-4 h-4" />
-                  Save Mapping Rule
-                </button>
-              </div>
-              {showSuccess["Returns Upload"] && (
                 <div className="mt-4 text-green-600">
                   Mapping rule saved successfully!
                 </div>
