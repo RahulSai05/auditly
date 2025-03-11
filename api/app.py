@@ -1400,7 +1400,10 @@ async def get_users(db: Session = Depends(get_db)):
                 "email": user.email,
                 "is_reports_user": user.is_reports_user,
                 "is_admin": user.is_admin,
-                "is_inpection_user": user.is_inspection_user
+                "is_inpection_user": user.is_inspection_user,
+                "user_company": user.user_company 
+
+
             } for user in users]
         }
     except Exception as e:
