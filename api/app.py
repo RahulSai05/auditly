@@ -1580,103 +1580,60 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
 
 
 
-class UpdateUser(BaseModel):
-    user_id: str
-    is_super_user: int
-    is_admin: int
-    is_common_user: int
-
-@app.post("/update-user-type")
-async def update_user_type(request: UpdateUser, db: Session = Depends(get_db)):   
-    """
-    API which will allow admin to changes roles for different users
-    """ 
-
-    user_id = request.user_id
-    is_super_user = request.is_super_user
-    is_admin = request.is_admin
-    is_common_user = request.is_common_user
-    user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == user_id).first()
-    if user_data:
-        user_data.is_super_user = is_super_user
-        user_data.is_common_user = is_common_user
-        user_data.is_admin = is_admin
-
-        db.commit()
-        db.refresh(user_data)
-        return {
-            "message": "User type Updated!!",
-            "data": {
-                "User ID": user_data.auditly_user_id,
-            }
-            }
-    else:
-        return {
-            "message": "Invalid Username or Password",
-            }
-
-
-# class UpdateUserTypeRequest1(BaseModel):
-#     modifier_user_id: int  # Admin ID making the request
-#     target_user_id: int  # ID of the user whose type is being modified
+# class UpdateUser(BaseModel):
+#     user_id: str
 #     is_super_user: int
 #     is_admin: int
 #     is_common_user: int
 
-# @app.post("/update-user-type-v1")
-# async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Depends(get_db)):
+# @app.post("/update-user-type")
+# async def update_user_type(request: UpdateUser, db: Session = Depends(get_db)):   
 #     """
-#     API to allow an admin to change roles for other users.
-#     Only a user with is_admin=1 can modify user roles.
-#     """
+#     API which will allow admin to changes roles for different users
+#     """ 
 
-#     # Fetch the admin making the change
-#     modifier_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.modifier_user_id).first()
-#     if not modifier_user or modifier_user.is_admin != 1:
-#         raise HTTPException(status_code=403, detail="Permission Denied. Only admins can update user roles.")
+#     user_id = request.user_id
+#     is_super_user = request.is_super_user
+#     is_admin = request.is_admin
+#     is_common_user = request.is_common_user
+#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == user_id).first()
+#     if user_data:
+#         user_data.is_super_user = is_super_user
+#         user_data.is_common_user = is_common_user
+#         user_data.is_admin = is_admin
 
-#     # Fetch the target user
-#     target_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.target_user_id).first()
-#     if not target_user:
-#         raise HTTPException(status_code=404, detail="Target user not found.")
-
-#     # Update user roles
-#     target_user.is_super_user = request.is_super_user
-#     target_user.is_admin = request.is_admin
-#     target_user.is_common_user = request.is_common_user
-
-#     db.commit()
-#     db.refresh(target_user)
-
-#     return {
-#         "message": "User type updated successfully!",
-#         "updated_user": {
-#             "User ID": target_user.auditly_user_id,
-#             "is_super_user": target_user.is_super_user,
-#             "is_admin": target_user.is_admin,
-#             "is_common_user": target_user.is_common_user
-#         }
-#     }
+#         db.commit()
+#         db.refresh(user_data)
+#         return {
+#             "message": "User type Updated!!",
+#             "data": {
+#                 "User ID": user_data.auditly_user_id,
+#             }
+#             }
+#     else:
+#         return {
+#             "message": "Invalid Username or Password",
+#             }
 
 
 class UpdateUserTypeRequest1(BaseModel):
     modifier_user_id: int  # Admin ID making the request
     target_user_id: int  # ID of the user whose type is being modified
-    is_super_user: int
-    is_admin: int
-    is_common_user: int
+    is_super_user: bool
+    is_admin: bool
+    is_common_user: bool
 
 @app.post("/update-user-type-v1")
 async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Depends(get_db)):
     """
     API to allow an admin to change roles for other users.
-    Only a user with is_admin=1 can modify user roles.
+    Only a user with is_admin=True can modify user roles.
     A user cannot modify their own roles.
     """
 
     # Fetch the admin making the change
     modifier_user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.modifier_user_id).first()
-    if not modifier_user or modifier_user.is_admin != 1:
+    if not modifier_user or not modifier_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission Denied. Only admins can update user roles.")
 
     # Check if the admin is trying to modify their own roles
@@ -1689,9 +1646,9 @@ async def update_user_type_v1(request: UpdateUserTypeRequest1, db: Session = Dep
         raise HTTPException(status_code=404, detail="Target user not found.")
 
     # Update user roles
-    target_user.is_super_user = int(request.is_super_user)
-    target_user.is_admin = int(request.is_admin)
-    target_user.is_common_user = int(request.is_common_user)
+    target_user.is_super_user = request.is_super_user
+    target_user.is_admin = request.is_admin
+    target_user.is_common_user = request.is_common_user
 
     db.commit()
     db.refresh(target_user)
