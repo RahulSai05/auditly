@@ -237,6 +237,7 @@
 
 // export default UserMaintenance;
 
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, X, Users, Loader2 } from "lucide-react";
@@ -249,9 +250,9 @@ interface User {
   last_name: string;
   gender: string;
   email: string;
-  is_inspection_user: boolean;
+  is_inspection_user: boolean; // Updated from is_super_user
   is_admin: boolean;
-  is_reports_user: boolean;
+  is_reports_user: boolean; // Updated from is_common_user
 }
 
 const UserMaintenance: React.FC = () => {
@@ -292,9 +293,9 @@ const UserMaintenance: React.FC = () => {
       const response = await axios.post("http://54.210.159.220:8000/update-user-type-v1", {
         modifier_user_id: 7, // Replace with actual admin ID
         target_user_id: userId,
-        is_inspection_user: userToUpdate.is_inspection_user,
+        is_inspection_user: userToUpdate.is_inspection_user, // Updated from is_super_user
         is_admin: userToUpdate.is_admin,
-        is_reports_user: userToUpdate.is_reports_user,
+        is_reports_user: userToUpdate.is_reports_user, // Updated from is_common_user
       });
 
       if (response.data) {
