@@ -317,10 +317,9 @@
 
 // export default MappingRules;
 
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FileText, Database, Upload, ChevronRight, Edit, Save } from "lucide-react";
+import { FileText, Database, Upload, ChevronRight, Save } from "lucide-react";
 
 const MappingRules: React.FC = () => {
   const containerVariants = {
@@ -376,30 +375,15 @@ const MappingRules: React.FC = () => {
     }
   };
 
-  const arrowVariants = {
-    hover: {
-      x: [0, 5, 0],
-      transition: {
-        duration: 1,
-        repeat: Infinity,
-      }
-    }
+  const [sourceColumns, setSourceColumns] = useState<{ [key: string]: string }>({});
+
+  const handleSourceColumnChange = (key: string, value: string) => {
+    setSourceColumns((prev) => ({ ...prev, [key]: value }));
   };
 
-  const [editMode, setEditMode] = useState<{ [key: string]: boolean }>({});
-  const [columnNames, setColumnNames] = useState<{ [key: string]: string }>({});
-
-  const handleEdit = (key: string) => {
-    setEditMode((prev) => ({ ...prev, [key]: true }));
-  };
-
-  const handleSave = (key: string) => {
-    setEditMode((prev) => ({ ...prev, [key]: false }));
-    // Save logic here (e.g., API call to save the mapping rule)
-  };
-
-  const handleColumnNameChange = (key: string, value: string) => {
-    setColumnNames((prev) => ({ ...prev, [key]: value }));
+  const handleSaveMapping = (tableName: string) => {
+    console.log(`Saved mapping for ${tableName}:`, sourceColumns);
+    // Add logic to save the mapping rules (e.g., API call)
   };
 
   return (
@@ -453,51 +437,49 @@ const MappingRules: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800">Item Upload</h2>
             </div>
 
-            <motion.div variants={itemVariants} className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <motion.div whileHover="hover" variants={iconVariants}>
-                  <Database className="w-5 h-5 text-blue-600" />
-                </motion.div>
-                <select className="p-2 border border-gray-300 rounded-lg">
-                  <option value="csv">CSV Upload</option>
-                  <option value="powerbi">Power BI</option>
-                  <option value="d365">D365</option>
-                  <option value="azure">Azure</option>
-                </select>
+            <motion.div variants={itemVariants}>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-blue-50/50">
+                      <th className="p-3 text-left text-gray-700">Columns</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
+                      <th className="p-3 text-left text-gray-700">Source Table</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { column: "Column 1", destination: "item_number" },
+                      { column: "Column 2", destination: "item_description" },
+                      { column: "Column 3", destination: "brand_id" },
+                      { column: "Column 4", destination: "category" },
+                      { column: "Column 5", destination: "configuration" },
+                    ].map((row, index) => (
+                      <tr key={index} className="border-b border-blue-100">
+                        <td className="p-3 text-gray-700">{row.column}</td>
+                        <td className="p-3 text-gray-700">{row.destination}</td>
+                        <td className="p-3">
+                          <input
+                            type="text"
+                            value={sourceColumns[row.destination] || ""}
+                            onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
+                            placeholder="Enter source column"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
-                <p className="text-gray-700 mb-2">Source table name: <span className="font-semibold text-blue-700">Items</span></p>
-                <ul className="space-y-2">
-                  {["item_number", "Item_description", "brand_id", "category", "configuration"].map((item, index) => (
-                    <motion.li
-                      key={item}
-                      variants={itemVariants}
-                      whileHover={{ x: 5 }}
-                      className="flex items-center gap-2 text-gray-600 p-2 hover:bg-blue-100/50 rounded-lg transition-colors duration-200"
-                    >
-                      <motion.div variants={arrowVariants} whileHover="hover">
-                        <ChevronRight className="w-4 h-4 text-blue-500" />
-                      </motion.div>
-                      <span>Column {index + 1} ⟷ </span>
-                      {editMode[item] ? (
-                        <input
-                          type="text"
-                          value={columnNames[item] || item}
-                          onChange={(e) => handleColumnNameChange(item, e.target.value)}
-                          className="border border-gray-300 rounded-lg p-1"
-                        />
-                      ) : (
-                        <span>{columnNames[item] || item}</span>
-                      )}
-                      <button
-                        onClick={() => (editMode[item] ? handleSave(item) : handleEdit(item))}
-                        className="ml-2 p-1 rounded-lg bg-blue-100 hover:bg-blue-200"
-                      >
-                        {editMode[item] ? <Save className="w-4 h-4 text-blue-600" /> : <Edit className="w-4 h-4 text-blue-600" />}
-                      </button>
-                    </motion.li>
-                  ))}
-                </ul>
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={() => handleSaveMapping("Item Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Mapping Rule
+                </button>
               </div>
             </motion.div>
           </div>
@@ -522,59 +504,51 @@ const MappingRules: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800">Customer Serial Upload</h2>
             </div>
 
-            <motion.div variants={itemVariants} className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <motion.div whileHover="hover" variants={iconVariants}>
-                  <Database className="w-5 h-5 text-green-600" />
-                </motion.div>
-                <select className="p-2 border border-gray-300 rounded-lg">
-                  <option value="csv">CSV Upload</option>
-                  <option value="powerbi">Power BI</option>
-                  <option value="d365">D365</option>
-                  <option value="azure">Azure</option>
-                </select>
+            <motion.div variants={itemVariants}>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-green-50/50">
+                      <th className="p-3 text-left text-gray-700">Columns</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
+                      <th className="p-3 text-left text-gray-700">Source Table</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { column: "Column 1", destination: "original_sales_order_number" },
+                      { column: "Column 2", destination: "original_sales_order_line" },
+                      { column: "Column 3", destination: "account_number" },
+                      { column: "Column 4", destination: "date_purchased" },
+                      { column: "Column 5", destination: "date_delivered" },
+                      { column: "Column 6", destination: "serial_number" },
+                      { column: "Column 7", destination: "shipped_to_address" },
+                    ].map((row, index) => (
+                      <tr key={index} className="border-b border-green-100">
+                        <td className="p-3 text-gray-700">{row.column}</td>
+                        <td className="p-3 text-gray-700">{row.destination}</td>
+                        <td className="p-3">
+                          <input
+                            type="text"
+                            value={sourceColumns[row.destination] || ""}
+                            onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
+                            placeholder="Enter source column"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="bg-green-50/50 rounded-lg p-4 border border-green-100">
-                <p className="text-gray-700 mb-2">Source table name: <span className="font-semibold text-green-700">customer_item_data</span></p>
-                <ul className="space-y-2">
-                  {[
-                    "original_sales_order_number",
-                    "original_sales_order_line",
-                    "account_number",
-                    "date_purchased",
-                    "date_delivered",
-                    "serial_number",
-                    "shipped_to_address"
-                  ].map((item, index) => (
-                    <motion.li
-                      key={item}
-                      variants={itemVariants}
-                      whileHover={{ x: 5 }}
-                      className="flex items-center gap-2 text-gray-600 p-2 hover:bg-green-100/50 rounded-lg transition-colors duration-200"
-                    >
-                      <motion.div variants={arrowVariants} whileHover="hover">
-                        <ChevronRight className="w-4 h-4 text-green-500" />
-                      </motion.div>
-                      <span>Column {index + 1} ⟷ </span>
-                      {editMode[item] ? (
-                        <input
-                          type="text"
-                          value={columnNames[item] || item}
-                          onChange={(e) => handleColumnNameChange(item, e.target.value)}
-                          className="border border-gray-300 rounded-lg p-1"
-                        />
-                      ) : (
-                        <span>{columnNames[item] || item}</span>
-                      )}
-                      <button
-                        onClick={() => (editMode[item] ? handleSave(item) : handleEdit(item))}
-                        className="ml-2 p-1 rounded-lg bg-green-100 hover:bg-green-200"
-                      >
-                        {editMode[item] ? <Save className="w-4 h-4 text-green-600" /> : <Edit className="w-4 h-4 text-green-600" />}
-                      </button>
-                    </motion.li>
-                  ))}
-                </ul>
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={() => handleSaveMapping("Customer Serial Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Mapping Rule
+                </button>
               </div>
             </motion.div>
           </div>
@@ -599,59 +573,52 @@ const MappingRules: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800">Returns Upload</h2>
             </div>
 
-            <motion.div variants={itemVariants} className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <motion.div whileHover="hover" variants={iconVariants}>
-                  <Database className="w-5 h-5 text-amber-600" />
-                </motion.div>
-                <select className="p-2 border border-gray-300 rounded-lg">
-                  <option value="csv">CSV Upload</option>
-                  <option value="powerbi">Power BI</option>
-                  <option value="d365">D365</option>
-                  <option value="azure">Azure</option>
-                </select>
+            <motion.div variants={itemVariants}>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-amber-50/50">
+                      <th className="p-3 text-left text-gray-700">Columns</th>
+                      <th className="p-3 text-left text-gray-700">Destination Table</th>
+                      <th className="p-3 text-left text-gray-700">Source Table</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { column: "Column 1", destination: "original_sales_order_number" },
+                      { column: "Column 2", destination: "original_sales_order_line" },
+                      { column: "Column 3", destination: "account_number" },
+                      { column: "Column 4", destination: "date_purchased" },
+                      { column: "Column 5", destination: "date_delivered" },
+                      { column: "Column 6", destination: "serial_number" },
+                      { column: "Column 7", destination: "shipped_to_address" },
+                      { column: "Column 8", destination: "Status" },
+                    ].map((row, index) => (
+                      <tr key={index} className="border-b border-amber-100">
+                        <td className="p-3 text-gray-700">{row.column}</td>
+                        <td className="p-3 text-gray-700">{row.destination}</td>
+                        <td className="p-3">
+                          <input
+                            type="text"
+                            value={sourceColumns[row.destination] || ""}
+                            onChange={(e) => handleSourceColumnChange(row.destination, e.target.value)}
+                            placeholder="Enter source column"
+                            className="w-full p-2 border border-gray-300 rounded-lg"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="bg-amber-50/50 rounded-lg p-4 border border-amber-100">
-                <ul className="space-y-2">
-                  {[
-                    "original_sales_order_number",
-                    "original_sales_order_line",
-                    "account_number",
-                    "date_purchased",
-                    "date_delivered",
-                    "serial_number",
-                    "shipped_to_address",
-                    "Status"
-                  ].map((item, index) => (
-                    <motion.li
-                      key={item}
-                      variants={itemVariants}
-                      whileHover={{ x: 5 }}
-                      className="flex items-center gap-2 text-gray-600 p-2 hover:bg-amber-100/50 rounded-lg transition-colors duration-200"
-                    >
-                      <motion.div variants={arrowVariants} whileHover="hover">
-                        <ChevronRight className="w-4 h-4 text-amber-500" />
-                      </motion.div>
-                      <span>Column {index + 1} ⟷ </span>
-                      {editMode[item] ? (
-                        <input
-                          type="text"
-                          value={columnNames[item] || item}
-                          onChange={(e) => handleColumnNameChange(item, e.target.value)}
-                          className="border border-gray-300 rounded-lg p-1"
-                        />
-                      ) : (
-                        <span>{columnNames[item] || item}</span>
-                      )}
-                      <button
-                        onClick={() => (editMode[item] ? handleSave(item) : handleEdit(item))}
-                        className="ml-2 p-1 rounded-lg bg-amber-100 hover:bg-amber-200"
-                      >
-                        {editMode[item] ? <Save className="w-4 h-4 text-amber-600" /> : <Edit className="w-4 h-4 text-amber-600" />}
-                      </button>
-                    </motion.li>
-                  ))}
-                </ul>
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={() => handleSaveMapping("Returns Upload")}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Mapping Rule
+                </button>
               </div>
             </motion.div>
           </div>
