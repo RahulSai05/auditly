@@ -220,7 +220,7 @@ const MappingRules: React.FC = () => {
             <option value="csv">CSV Upload</option>
             <option value="powerbi">Power BI</option>
             <option value="d365">D365</option>
-            <option value="azure">Azure</option>
+            {/* <option value="azure">Azure</option> */}
           </select>
         </div>
 
