@@ -28,8 +28,6 @@ from skimage.metrics import structural_similarity as ssim
 Base.metadata.create_all(bind=engine)
 
 s3_bucket = "myauditlybucket"
-aws_access_key = "AKIAYQNJSVDEGXPDZYQ6"
-aws_secret_key = "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"
 
 def get_db():
     """Provide a database session to the API endpoints."""
