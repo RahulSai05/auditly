@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Stepper } from "../../../components/Stepper";
 import { useNavigate } from "react-router-dom";
 import ProductDetails from "../../../components/ProductDetails";
@@ -20,6 +20,7 @@ export default function Inspection() {
     const [activeSection, setActiveSection] = useState<string>("package");
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const errorRef = useRef<HTMLDivElement>(null);
 
     const conditions = [
         { id: "sealed", label: "factory_seal", icon: <Shield className="w-5 h-5" /> },
@@ -86,6 +87,11 @@ export default function Inspection() {
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             setIsLoading(false);
+
+            // Scroll to the error message
+            if (errorRef.current) {
+                errorRef.current.scrollIntoView({ behavior: "smooth" });
+            }
             return;
         }
 
@@ -181,13 +187,13 @@ export default function Inspection() {
         </motion.label>
     );
 
-    const SectionTab = ({ id, label, icon, active }: { id: string; label: string; icon: JSX.Element; active: boolean }) => (
+    const SectionTab = ({ id, label, icon, active, hasError }: { id: string; label: string; icon: JSX.Element; active: boolean; hasError: boolean }) => (
         <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveSection(id)}
             className={`
-                flex items-center gap-3 px-6 py-4 rounded-lg transition-all duration-200
+                flex items-center gap-3 px-6 py-4 rounded-lg transition-all duration-200 relative
                 ${active 
                     ? 'bg-blue-50 text-blue-700 shadow-sm' 
                     : 'text-gray-600 hover:bg-gray-50'}
@@ -195,6 +201,13 @@ export default function Inspection() {
         >
             {icon}
             <span className="font-medium">{label}</span>
+            {hasError && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
+                />
+            )}
         </motion.button>
     );
 
@@ -235,18 +248,21 @@ export default function Inspection() {
                         label="Package Condition"
                         icon={<Package className="w-5 h-5" />}
                         active={activeSection === "package"}
+                        hasError={!!errors.condition}
                     />
                     <SectionTab
                         id="product"
                         label="Product Condition"
                         icon={<Shield className="w-5 h-5" />}
                         active={activeSection === "product"}
+                        hasError={!!errors.productCondition}
                     />
                     <SectionTab
                         id="issues"
                         label="Surface Issues"
                         icon={<Droplets className="w-5 h-5" />}
                         active={activeSection === "issues"}
+                        hasError={!!errors.issue}
                     />
                 </div>
 
@@ -269,15 +285,6 @@ export default function Inspection() {
                                         name="condition"
                                     />
                                 ))}
-                                {errors.condition && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="text-red-500 text-sm col-span-full"
-                                    >
-                                        {errors.condition}
-                                    </motion.div>
-                                )}
                             </motion.div>
                         )}
 
@@ -298,15 +305,6 @@ export default function Inspection() {
                                         name="productCondition"
                                     />
                                 ))}
-                                {errors.productCondition && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="text-red-500 text-sm col-span-full"
-                                    >
-                                        {errors.productCondition}
-                                    </motion.div>
-                                )}
                             </motion.div>
                         )}
 
@@ -327,20 +325,27 @@ export default function Inspection() {
                                         name="issue"
                                     />
                                 ))}
-                                {errors.issue && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="text-red-500 text-sm col-span-full"
-                                    >
-                                        {errors.issue}
-                                    </motion.div>
-                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             </motion.div>
+
+            {/* Consolidated Error Message */}
+            {Object.keys(errors).length > 0 && (
+                <motion.div
+                    ref={errorRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg"
+                >
+                    <ul className="list-disc list-inside">
+                        {Object.values(errors).map((error, index) => (
+                            <li key={index}>{error}</li>
+                        ))}
+                    </ul>
+                </motion.div>
+            )}
 
             <motion.div 
                 initial={{ y: 20, opacity: 0 }}
