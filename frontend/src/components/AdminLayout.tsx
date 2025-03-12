@@ -31,6 +31,23 @@ const AdminLayout = () => {
   const [reportsOpen, setReportsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [userData, setUserData] = useState(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isReportUser, setIsReportUser] = useState(false);
+  const [isInspectionUser, setIsInspectionUser] = useState(false);
+
+  useEffect(() => {
+    if (userData && Array.isArray(userData["User Type"])) {
+      setIsAdmin(userData["User Type"].includes("admin"));
+      setIsReportUser(userData["User Type"].includes("reports_user"));
+      setIsInspectionUser(userData["User Type"].includes("inpection_user"));
+    }
+  }, [userData]);
+  console.log(userData);
 
   // Handle screen resize
   useEffect(() => {
@@ -220,338 +237,220 @@ const AdminLayout = () => {
 
         <ul className="space-y-2 p-5 flex-1">
           {/* Settings Dropdown */}
-          <motion.li variants={itemVariants}>
-            <motion.button
-              onClick={() => setSettingsOpen(!settingsOpen)}
-              className={`${baseLinkStyle} w-full group`}
-              whileHover={{ x: 5 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <motion.div
-                whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                transition={{ duration: 0.5 }}
+          {isAdmin ? (
+            <motion.li variants={itemVariants}>
+              <motion.button
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                className={`${baseLinkStyle} w-full group`}
+                whileHover={{ x: 5 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <SettingsIcon className="w-6 h-6 mr-3" />
-              </motion.div>
-              <span className="flex-1 text-left">Settings</span>
-              <motion.div
-                animate={{ rotate: settingsOpen ? 90 : 0 }}
-                transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </motion.div>
-            </motion.button>
-
-            <AnimatePresence>
-              {settingsOpen && (
-                <motion.ul
-                  initial="closed"
-                  animate="open"
-                  exit="closed"
-                  variants={dropdownVariants}
-                  className="mt-2 space-y-1 overflow-hidden"
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <motion.li variants={itemVariants}>
-                    <motion.div
-                      className="flex items-center p-3 rounded-lg transition duration-300 hover:bg-blue-400 hover:text-white pl-12 cursor-pointer"
-                      onClick={handleConnectorToggle}
-                      whileHover={{ x: 5 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
+                  <SettingsIcon className="w-6 h-6 mr-3" />
+                </motion.div>
+                <span className="flex-1 text-left">Settings</span>
+                <motion.div
+                  animate={{ rotate: settingsOpen ? 90 : 0 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </motion.div>
+              </motion.button>
+
+              <AnimatePresence>
+                {settingsOpen && (
+                  <motion.ul
+                    initial="closed"
+                    animate="open"
+                    exit="closed"
+                    variants={dropdownVariants}
+                    className="mt-2 space-y-1 overflow-hidden"
+                  >
+                    <motion.li variants={itemVariants}>
                       <motion.div
-                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Cable className="w-5 h-5 mr-2" />
-                      </motion.div>
-                      <span>Connectors</span>
-                      <motion.div
-                        animate={{ rotate: connectorsOpen ? 90 : 0 }}
-                        transition={{
-                          duration: 0.3,
-                          type: "spring",
-                          stiffness: 300,
-                        }}
-                        className="ml-auto"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </motion.div>
-                    </motion.div>
-                    <AnimatePresence>
-                      {connectorsOpen && (
-                        <motion.div
-                          initial="closed"
-                          animate="open"
-                          exit="closed"
-                          variants={dropdownVariants}
-                          className="ml-5 overflow-hidden"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <motion.li variants={itemVariants}>
-                            <NavLink
-                              to="/admin/settings/connectors/inbound"
-                              className={({ isActive }) =>
-                                `${nestedLinkStyle} ${
-                                  isActive ? activeLinkStyle : ""
-                                }`
-                              }
-                              onClick={handleLinkClick}
-                            >
-                              <motion.div
-                                whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                                transition={{ duration: 0.5 }}
-                              >
-                                <Inbox className="w-5 h-5 mr-2" />
-                              </motion.div>
-                              Inbound
-                            </NavLink>
-                          </motion.li>
-                          <motion.li variants={itemVariants}>
-                            <NavLink
-                              to="/admin/settings/connectors/outbound"
-                              className={({ isActive }) =>
-                                `${nestedLinkStyle} ${
-                                  isActive ? activeLinkStyle : ""
-                                }`
-                              }
-                              onClick={handleLinkClick}
-                            >
-                              <motion.div
-                                whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                                transition={{ duration: 0.5 }}
-                              >
-                                <ExternalLink className="w-5 h-5 mr-2" />
-                              </motion.div>
-                              Outbound
-                            </NavLink>
-                          </motion.li>
-                          {/* New Data Mapping Rules Link */}
-                          <motion.li variants={itemVariants}>
-                            <NavLink
-                              to="/admin/settings/mapping-rules"
-                              className={({ isActive }) =>
-                                `${nestedLinkStyle} ${
-                                  isActive ? activeLinkStyle : ""
-                                }`
-                              }
-                              onClick={handleLinkClick}
-                            >
-                              <motion.div
-                                whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                                transition={{ duration: 0.5 }}
-                              >
-                                <FileText className="w-5 h-5 mr-2" />
-                              </motion.div>
-                              Data Mapping Rules
-                            </NavLink>
-                          </motion.li>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.li>
-                  {[
-                    {
-                      name: "api-configurations",
-                      icon: <Database className="w-5 h-5 mr-2" />,
-                    },
-                    {
-                      name: "email-configurations",
-                      icon: <Mail className="w-5 h-5 mr-2" />,
-                    },
-                    {
-                      name: "users-maintenance",
-                      icon: <Users className="w-5 h-5 mr-2" />,
-                    },
-                  ].map((item) => (
-                    <motion.li key={item.name} variants={itemVariants}>
-                      <NavLink
-                        to={`/admin/settings/${item.name}`}
-                        className={({ isActive }) =>
-                          `${nestedLinkStyle} ${
-                            isActive ? activeLinkStyle : ""
-                          }`
-                        }
-                        onClick={handleLinkClick}
+                        className="flex items-center p-3 rounded-lg transition duration-300 hover:bg-blue-400 hover:text-white pl-12 cursor-pointer"
+                        onClick={handleConnectorToggle}
+                        whileHover={{ x: 5 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         <motion.div
                           whileHover={{ rotate: [0, -10, 10, -5, 0] }}
                           transition={{ duration: 0.5 }}
                         >
-                          {item.icon}
+                          <Cable className="w-5 h-5 mr-2" />
                         </motion.div>
-                        {item.name
-                          .split("-")
-                          .map(
-                            (word) =>
-                              word.charAt(0).toUpperCase() + word.slice(1)
-                          )
-                          .join(" ")}
-                      </NavLink>
+                        <span>Connectors</span>
+                        <motion.div
+                          animate={{ rotate: connectorsOpen ? 90 : 0 }}
+                          transition={{
+                            duration: 0.3,
+                            type: "spring",
+                            stiffness: 300,
+                          }}
+                          className="ml-auto"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </motion.div>
+                      </motion.div>
+                      <AnimatePresence>
+                        {connectorsOpen && (
+                          <motion.div
+                            initial="closed"
+                            animate="open"
+                            exit="closed"
+                            variants={dropdownVariants}
+                            className="ml-5 overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <motion.li variants={itemVariants}>
+                              <NavLink
+                                to="/admin/settings/connectors/inbound"
+                                className={({ isActive }) =>
+                                  `${nestedLinkStyle} ${
+                                    isActive ? activeLinkStyle : ""
+                                  }`
+                                }
+                                onClick={handleLinkClick}
+                              >
+                                <motion.div
+                                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                                  transition={{ duration: 0.5 }}
+                                >
+                                  <Inbox className="w-5 h-5 mr-2" />
+                                </motion.div>
+                                Inbound
+                              </NavLink>
+                            </motion.li>
+                            <motion.li variants={itemVariants}>
+                              <NavLink
+                                to="/admin/settings/connectors/outbound"
+                                className={({ isActive }) =>
+                                  `${nestedLinkStyle} ${
+                                    isActive ? activeLinkStyle : ""
+                                  }`
+                                }
+                                onClick={handleLinkClick}
+                              >
+                                <motion.div
+                                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                                  transition={{ duration: 0.5 }}
+                                >
+                                  <ExternalLink className="w-5 h-5 mr-2" />
+                                </motion.div>
+                                Outbound
+                              </NavLink>
+                            </motion.li>
+                            {/* New Data Mapping Rules Link */}
+                            <motion.li variants={itemVariants}>
+                              <NavLink
+                                to="/admin/settings/mapping-rules"
+                                className={({ isActive }) =>
+                                  `${nestedLinkStyle} ${
+                                    isActive ? activeLinkStyle : ""
+                                  }`
+                                }
+                                onClick={handleLinkClick}
+                              >
+                                <motion.div
+                                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                                  transition={{ duration: 0.5 }}
+                                >
+                                  <FileText className="w-5 h-5 mr-2" />
+                                </motion.div>
+                                Data Mapping Rules
+                              </NavLink>
+                            </motion.li>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </motion.li>
+                    {[
+                      {
+                        name: "api-configurations",
+                        icon: <Database className="w-5 h-5 mr-2" />,
+                      },
+                      {
+                        name: "email-configurations",
+                        icon: <Mail className="w-5 h-5 mr-2" />,
+                      },
+                      {
+                        name: "users-maintenance",
+                        icon: <Users className="w-5 h-5 mr-2" />,
+                      },
+                    ].map((item) => (
+                      <motion.li key={item.name} variants={itemVariants}>
+                        <NavLink
+                          to={`/admin/settings/${item.name}`}
+                          className={({ isActive }) =>
+                            `${nestedLinkStyle} ${
+                              isActive ? activeLinkStyle : ""
+                            }`
+                          }
+                          onClick={handleLinkClick}
+                        >
+                          <motion.div
+                            whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {item.icon}
+                          </motion.div>
+                          {item.name
+                            .split("-")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            )
+                            .join(" ")}
+                        </NavLink>
+                      </motion.li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </motion.li>
+          ) : (
+            ""
+          )}
 
           {/* Reports Dropdown */}
-          <motion.li variants={itemVariants}>
-            <motion.button
-              onClick={() => setReportsOpen(!reportsOpen)}
-              className={`${baseLinkStyle} w-full group`}
-              whileHover={{ x: 5 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <motion.div
-                whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                transition={{ duration: 0.5 }}
+          {isReportUser ? (
+            <motion.li variants={itemVariants}>
+              <motion.button
+                onClick={() => setReportsOpen(!reportsOpen)}
+                className={`${baseLinkStyle} w-full group`}
+                whileHover={{ x: 5 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <FileText className="w-6 h-6 mr-3" />
-              </motion.div>
-              <span className="flex-1 text-left">Reports</span>
-              <motion.div
-                animate={{ rotate: reportsOpen ? 90 : 0 }}
-                transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </motion.div>
-            </motion.button>
-
-            <AnimatePresence>
-              {reportsOpen && (
-                <motion.ul
-                  initial="closed"
-                  animate="open"
-                  exit="closed"
-                  variants={dropdownVariants}
-                  className="mt-2 space-y-1 overflow-hidden"
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <motion.li variants={itemVariants}>
-                    <NavLink
-                      to="/admin/reports/items"
-                      className={({ isActive }) =>
-                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
-                      }
-                      onClick={handleLinkClick}
-                    >
-                      <motion.div
-                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <BoxesIcon className="w-5 h-5 mr-2" />
-                      </motion.div>
-                      Items
-                    </NavLink>
-                  </motion.li>
-                  <motion.li variants={itemVariants}>
-                    <NavLink
-                      to="/admin/reports/customer-serials"
-                      className={({ isActive }) =>
-                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
-                      }
-                      onClick={handleLinkClick}
-                    >
-                      <motion.div
-                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <UserCircle className="w-5 h-5 mr-2" />
-                      </motion.div>
-                      Customer Serials
-                    </NavLink>
-                  </motion.li>
-                  <motion.li variants={itemVariants}>
-                    <NavLink
-                      to="/admin/reports/returns"
-                      className={({ isActive }) =>
-                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
-                      }
-                      onClick={handleLinkClick}
-                    >
-                      <motion.div
-                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <RefreshCw className="w-5 h-5 mr-2" />
-                      </motion.div>
-                      Returns
-                    </NavLink>
-                  </motion.li>
-                  <motion.li variants={itemVariants}>
-                    <NavLink
-                      to="/admin/reports/audity-inspections"
-                      className={({ isActive }) =>
-                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
-                      }
-                      onClick={handleLinkClick}
-                    >
-                      <motion.div
-                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <FileText className="w-5 h-5 mr-2" />
-                      </motion.div>
-                      Auditly Inspections
-                    </NavLink>
-                  </motion.li>
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </motion.li>
-
-          {/* Maintenance Dropdown */}
-          <motion.li variants={itemVariants}>
-            <motion.button
-              onClick={() => setMaintenanceOpen(!maintenanceOpen)}
-              className={`${baseLinkStyle} w-full group`}
-              whileHover={{ x: 5 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <motion.div
-                whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                transition={{ duration: 0.5 }}
-              >
-                <Construction className="w-6 h-6 mr-3" />
-              </motion.div>
-              <span className="flex-1 text-left">Maintenance</span>
-              <motion.div
-                animate={{ rotate: maintenanceOpen ? 90 : 0 }}
-                transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </motion.div>
-            </motion.button>
-
-            <AnimatePresence>
-              {maintenanceOpen && (
-                <motion.ul
-                  initial="closed"
-                  animate="open"
-                  exit="closed"
-                  variants={dropdownVariants}
-                  className="mt-2 space-y-1 overflow-hidden"
+                  <FileText className="w-6 h-6 mr-3" />
+                </motion.div>
+                <span className="flex-1 text-left">Reports</span>
+                <motion.div
+                  animate={{ rotate: reportsOpen ? 90 : 0 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
                 >
-                  {[
-                    {
-                      name: "item-master-upload",
-                      icon: <Asterisk className="w-5 h-5 mr-2" />,
-                    },
-                    {
-                      name: "customer-serial-upload",
-                      icon: <Usb className="w-5 h-5 mr-2" />,
-                    },
-                    {
-                      name: "item-image-upload",
-                      icon: <Image className="w-5 h-5 mr-2" />,
-                    },
-                    {
-                      name: "return-upload",
-                      icon: <Undo2 className="w-5 h-5 mr-2" />,
-                    },
-                  ].map((item) => (
-                    <motion.li key={item.name} variants={itemVariants}>
+                  <ChevronRight className="w-4 h-4" />
+                </motion.div>
+              </motion.button>
+
+              <AnimatePresence>
+                {reportsOpen && (
+                  <motion.ul
+                    initial="closed"
+                    animate="open"
+                    exit="closed"
+                    variants={dropdownVariants}
+                    className="mt-2 space-y-1 overflow-hidden"
+                  >
+                    <motion.li variants={itemVariants}>
                       <NavLink
-                        to={`/admin/settings/${item.name}`}
+                        to="/admin/reports/items"
                         className={({ isActive }) =>
                           `${nestedLinkStyle} ${
                             isActive ? activeLinkStyle : ""
@@ -563,22 +462,160 @@ const AdminLayout = () => {
                           whileHover={{ rotate: [0, -10, 10, -5, 0] }}
                           transition={{ duration: 0.5 }}
                         >
-                          {item.icon}
+                          <BoxesIcon className="w-5 h-5 mr-2" />
                         </motion.div>
-                        {item.name
-                          .split("-")
-                          .map(
-                            (word) =>
-                              word.charAt(0).toUpperCase() + word.slice(1)
-                          )
-                          .join(" ")}
+                        Items
                       </NavLink>
                     </motion.li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </motion.li>
+                    <motion.li variants={itemVariants}>
+                      <NavLink
+                        to="/admin/reports/customer-serials"
+                        className={({ isActive }) =>
+                          `${nestedLinkStyle} ${
+                            isActive ? activeLinkStyle : ""
+                          }`
+                        }
+                        onClick={handleLinkClick}
+                      >
+                        <motion.div
+                          whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <UserCircle className="w-5 h-5 mr-2" />
+                        </motion.div>
+                        Customer Serials
+                      </NavLink>
+                    </motion.li>
+                    <motion.li variants={itemVariants}>
+                      <NavLink
+                        to="/admin/reports/returns"
+                        className={({ isActive }) =>
+                          `${nestedLinkStyle} ${
+                            isActive ? activeLinkStyle : ""
+                          }`
+                        }
+                        onClick={handleLinkClick}
+                      >
+                        <motion.div
+                          whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <RefreshCw className="w-5 h-5 mr-2" />
+                        </motion.div>
+                        Returns
+                      </NavLink>
+                    </motion.li>
+                    <motion.li variants={itemVariants}>
+                      <NavLink
+                        to="/admin/reports/audity-inspections"
+                        className={({ isActive }) =>
+                          `${nestedLinkStyle} ${
+                            isActive ? activeLinkStyle : ""
+                          }`
+                        }
+                        onClick={handleLinkClick}
+                      >
+                        <motion.div
+                          whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <FileText className="w-5 h-5 mr-2" />
+                        </motion.div>
+                        Auditly Inspections
+                      </NavLink>
+                    </motion.li>
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </motion.li>
+          ) : (
+            ""
+          )}
+
+          {/* Maintenance Dropdown */}
+          {isInspectionUser ? (
+            <motion.li variants={itemVariants}>
+              <motion.button
+                onClick={() => setMaintenanceOpen(!maintenanceOpen)}
+                className={`${baseLinkStyle} w-full group`}
+                whileHover={{ x: 5 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Construction className="w-6 h-6 mr-3" />
+                </motion.div>
+                <span className="flex-1 text-left">Maintenance</span>
+                <motion.div
+                  animate={{ rotate: maintenanceOpen ? 90 : 0 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </motion.div>
+              </motion.button>
+
+              <AnimatePresence>
+                {maintenanceOpen && (
+                  <motion.ul
+                    initial="closed"
+                    animate="open"
+                    exit="closed"
+                    variants={dropdownVariants}
+                    className="mt-2 space-y-1 overflow-hidden"
+                  >
+                    {[
+                      {
+                        name: "item-master-upload",
+                        icon: <Asterisk className="w-5 h-5 mr-2" />,
+                      },
+                      {
+                        name: "customer-serial-upload",
+                        icon: <Usb className="w-5 h-5 mr-2" />,
+                      },
+                      {
+                        name: "item-image-upload",
+                        icon: <Image className="w-5 h-5 mr-2" />,
+                      },
+                      {
+                        name: "return-upload",
+                        icon: <Undo2 className="w-5 h-5 mr-2" />,
+                      },
+                    ].map((item) => (
+                      <motion.li key={item.name} variants={itemVariants}>
+                        <NavLink
+                          to={`/admin/settings/${item.name}`}
+                          className={({ isActive }) =>
+                            `${nestedLinkStyle} ${
+                              isActive ? activeLinkStyle : ""
+                            }`
+                          }
+                          onClick={handleLinkClick}
+                        >
+                          <motion.div
+                            whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {item.icon}
+                          </motion.div>
+                          {item.name
+                            .split("-")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            )
+                            .join(" ")}
+                        </NavLink>
+                      </motion.li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </motion.li>
+          ) : (
+            ""
+          )}
 
           {/* Logout */}
           <motion.li variants={itemVariants} className="mt-auto">

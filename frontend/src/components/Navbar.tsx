@@ -1,18 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
-import { Lock, MessageCircleQuestion, Home, Menu, X } from "lucide-react";
+import {
+  Lock,
+  MessageCircleQuestion,
+  Home,
+  Menu,
+  X,
+  FileText,
+  Construction,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useNavigate();
+  const [userData, setUserData] = useState(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isReportUser, setIsReportUser] = useState(false);
+  const [isInspectionUser, setIsInspectionUser] = useState(false);
+
+  useEffect(() => {
+    if (userData && Array.isArray(userData["User Type"])) {
+      setIsAdmin(userData["User Type"].includes("admin"));
+      setIsReportUser(userData["User Type"].includes("reports_user"));
+      setIsInspectionUser(userData["User Type"].includes("inpection_user"));
+    }
+  }, [userData]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  // Animation variants for the mobile menu
   const menuVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: {
@@ -37,16 +60,37 @@ export function Navbar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
-
-            <span style={{ fontSize: '1.7em' }}>a</span>uditly
+          <div
+            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+            style={{
+              fontFamily: "Prompt, sans-serif",
+              fontWeight: 400,
+              opacity: 0.9,
+            }}
+          >
+            <span style={{ fontSize: "1.7em" }}>a</span>uditly
           </div>
-          <span className="text-black" style={{ fontFamily: 'Prompt, sans-serif', fontSize: '1.1em', opacity: 0.8 }}>.</span>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent" style={{ fontFamily: 'Prompt, sans-serif', fontWeight: 400, opacity: 0.9 }}>
-            <span style={{ fontSize: '1.2em' }}>a</span>i
+          <span
+            className="text-black"
+            style={{
+              fontFamily: "Prompt, sans-serif",
+              fontSize: "1.1em",
+              opacity: 0.8,
+            }}
+          >
+            .
+          </span>
+          <div
+            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
+            style={{
+              fontFamily: "Prompt, sans-serif",
+              fontWeight: 400,
+              opacity: 0.9,
+            }}
+          >
+            <span style={{ fontSize: "1.2em" }}>a</span>i
           </div>
         </motion.div>
-         
 
         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
         <motion.button
@@ -86,7 +130,10 @@ export function Navbar() {
                   lg:items-center
                 "
               >
-                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.li
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Link
                     to="/"
                     className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
@@ -96,17 +143,63 @@ export function Navbar() {
                     Home
                   </Link>
                 </motion.li>
-                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link
-                    to="/admin/reports/items"
-                    className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition" 
-                    onClick={() => setIsOpen(false)}
+                {isAdmin ? (
+                  <motion.li
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Lock className="w-5 h-5" />
-                    Admin
-                  </Link>
-                </motion.li>
-                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link
+                      to="/admin/reports/items"
+                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Lock className="w-5 h-5" />
+                      Admin
+                    </Link>
+                  </motion.li>
+                ) : (
+                  ""
+                )}
+
+                {isReportUser ? (
+                  <motion.li
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      to="/admin/reports/items"
+                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <FileText className="w-5 h-5" />
+                      Reports
+                    </Link>
+                  </motion.li>
+                ) : (
+                  ""
+                )}
+                {isInspectionUser ? (
+                  <motion.li
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      to="/admin/settings/item-master-upload"
+                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Construction className="w-5 h-5" />
+                      Maintenance
+                    </Link>
+                  </motion.li>
+                ) : (
+                  ""
+                )}
+
+                <motion.li
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Link
                     to="/help-center"
                     className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
@@ -116,7 +209,11 @@ export function Navbar() {
                     Help Center
                   </Link>
                 </motion.li>
-                <motion.li className="lg:ml-4" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.li
+                  className="lg:ml-4"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Profile />
                 </motion.li>
               </ul>
@@ -140,4 +237,3 @@ export function Navbar() {
     </header>
   );
 }
-

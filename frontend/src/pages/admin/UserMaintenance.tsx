@@ -33,6 +33,17 @@ const UserMaintenance: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [updatedUser, setUpdatedUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+  const [userId, setuserId] = useState(36);
+
+  useEffect(() => {
+    if (userData && userData["User ID"]) {
+      setuserId(userData["User ID"]);
+    }
+  });
 
   // Fetch users from the API
   useEffect(() => {
@@ -77,8 +88,12 @@ const UserMaintenance: React.FC = () => {
   };
 
   const handleUserSelect = (user: User) => {
-    // If the user is already selected, deselect them
-    if (selectedUser && selectedUser.user_id === user.user_id) {
+    console.log(user.user_id);
+    console.log(userId);
+    if (user.user_id == userId) {
+      console.log("no");
+    } else if (selectedUser && selectedUser.user_id === user.user_id) {
+      // If the user is already selected, deselect them
       setSelectedUser(null);
       setUpdatedUser(null);
     } else {
@@ -106,7 +121,7 @@ const UserMaintenance: React.FC = () => {
 
     try {
       const updateData: UpdateUserRequest = {
-        modifier_user_id: 36, // Always use 36 as per requirement
+        modifier_user_id: userId, // Always use 36 as per requirement
         target_user_id: selectedUser.user_id || 0,
         is_inspection_user: updatedUser.is_inpection_user,
         is_admin: updatedUser.is_admin,
