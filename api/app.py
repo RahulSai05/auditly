@@ -920,7 +920,7 @@ If you did not request this password reset, please contact our support team imme
 Best regards,
 The Auditly Team
 """
-            send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))            
+                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))            
             return {
                 "message": "OTP Sent Successfully to registerd email"
              }
