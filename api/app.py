@@ -749,7 +749,7 @@ Your OTP for Login:
 
 This OTP is valid for the next 5 minutes. Please do not share this code with anyone for security reasons.
 
-If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/help-center.
+If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
 
 Best regards,
 The Auditly Team
@@ -770,7 +770,7 @@ Your OTP for Login:
 
 This OTP is valid for the next 5 minutes. Please do not share this code with anyone for security reasons.
 
-If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/help-center.
+If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
 
 Best regards,
 The Auditly Team
@@ -896,7 +896,7 @@ Your OTP to Reset Password:
 
 This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
 
-If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/help-center.
+If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
 
 Best regards,
 The Auditly Team
@@ -915,7 +915,7 @@ Your OTP to Reset Password:
 
 This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
 
-If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/help-center.
+If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
 
 Best regards,
 The Auditly Team
