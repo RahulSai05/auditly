@@ -881,10 +881,46 @@ async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)
             db.refresh(user_data)
             print(send_email)
             #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
-            if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
+            # if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
+            # elif ENV == "TEST":
+            #     secret_data = get_secret("test/auditly/secrets")
+            #     send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
+            if ENV == "DEV":
+                email_body = """
+Dear User,
+
+We received a request to reset your password for your Auditly account. To proceed, please use the One-Time Password (OTP) provided below:
+
+Your OTP to Reset Password:
+{otp}
+
+This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
+
+If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/support.
+
+Best regards,
+The Auditly Team
+"""
+                send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))
+
             elif ENV == "TEST":
                 secret_data = get_secret("test/auditly/secrets")
-                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
+                email_body = """
+Dear User,
+
+We received a request to reset your password for your Auditly account. To proceed, please use the One-Time Password (OTP) provided below:
+
+Your OTP to Reset Password:
+{otp}
+
+This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
+
+If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/support.
+
+Best regards,
+The Auditly Team
+"""
+            send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))            
             return {
                 "message": "OTP Sent Successfully to registerd email"
              }
