@@ -732,10 +732,50 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
-            if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+            # if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+            # elif ENV == "TEST":
+            #     secret_data = get_secret("test/auditly/secrets")
+            #     send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+            if ENV == "DEV":
+                email_body = """
+Dear User,
+
+Thank you for choosing Auditly, your trusted partner for streamlined audits and compliance management.
+
+To ensure the security of your account, we require you to verify your identity using a One-Time Password (OTP). Please find your OTP below:
+
+Your OTP for Login:
+{otp}
+
+This OTP is valid for the next 5 minutes. Please do not share this code with anyone for security reasons.
+
+If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/support.
+
+Best regards,
+The Auditly Team
+"""
+                send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Your Auditly Login OTP", email_body.format(otp=str(otp_login)))
+
             elif ENV == "TEST":
                 secret_data = get_secret("test/auditly/secrets")
-                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
+                email_body = """
+Dear User,
+
+Thank you for choosing Auditly, your trusted partner for streamlined audits and compliance management.
+
+To ensure the security of your account, we require you to verify your identity using a One-Time Password (OTP). Please find your OTP below:
+
+Your OTP for Login:
+{otp}
+
+This OTP is valid for the next 5 minutes. Please do not share this code with anyone for security reasons.
+
+If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditly.com/support.
+
+Best regards,
+The Auditly Team
+"""
+                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Your Auditly Login OTP", email_body.format(otp=str(otp_login)))            
             return {
                 "message": "OTP Sent Successfully to registerd email",
                 "auditly_user_name": user_data.auditly_user_name,
