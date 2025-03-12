@@ -7,6 +7,7 @@ import io
 import datetime
 import base64
 import hashlib
+import boto3
 from send_email import send_email
 from settings import ENV
 from secret import get_secret
@@ -25,6 +26,10 @@ from skimage.metrics import structural_similarity as ssim
 
 # Initialize the database tables if not already done
 Base.metadata.create_all(bind=engine)
+
+s3_bucket = "myauditlybucket"
+aws_access_key = "AKIAYQNJSVDEGXPDZYQ6"
+aws_secret_key = "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"
 
 def get_db():
     """Provide a database session to the API endpoints."""
@@ -142,20 +147,38 @@ async def upload_customer_images(
 
     existing_customer_data = db.query(CustomerData).filter_by(customer_item_data_id=customer_item_data_id).first()
     
-    if ENV == "TEST":UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/customer_image"   
+    if ENV == "TEST":UPLOAD_DIRECTORY = "/auditly/static/customer_image"   
     elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/customer_image"   
 
+
+    # Define S3 file paths
+    front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
+    back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
+
+    
     # try:
     # Save front image
     if front_image and back_image:
-        front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
-        with open(front_image_path, "wb") as f:
-            f.write(await front_image.read())
+        # front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
+        # with open(front_image_path, "wb") as f:
+        #     f.write(await front_image.read())
 
-        # Save back image
-        back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
-        with open(back_image_path, "wb") as f:
-            f.write(await back_image.read())
+        # # Save back image
+        # back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
+        # with open(back_image_path, "wb") as f:
+        #     f.write(await back_image.read())
+        # Create S3 client
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key
+        )
+        # Upload front image
+        s3_client.upload_fileobj(front_image.file, s3_bucket, front_image_path)
+
+        # Upload back image
+        s3_client.upload_fileobj(back_image.file, s3_bucket, back_image_path)
+
     else:
         front_image_path, back_image_path = None, None
         
@@ -757,10 +780,10 @@ async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)
             db.refresh(user_data)
             print(send_email)
             #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
-            if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp_login))
+            if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
             elif ENV == "TEST":
                 secret_data = get_secret("test/auditly/secrets")
-                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp_login))
+                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
             return {
                 "message": "OTP Sent Successfully to registerd email"
              }
@@ -790,9 +813,10 @@ async def reset_password(request: ResettPassword, db: Session = Depends(get_db))
     reset_opt = request.otp
     new_password = request.password
 
+    hashed_password = hash_password_sha256(new_password)
     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.email == email,AuditlyUser.reset_otp == reset_opt).first()
     if user_data and user_data.reset_otp_expiration > datetime.datetime.now():
-        user_data.password = new_password
+        user_data.password = hashed_password
         user_data.reset_otp_expiration = None   
         user_data.reset_otp = None
         db.commit()
