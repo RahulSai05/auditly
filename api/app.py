@@ -145,40 +145,102 @@ async def upload_customer_images(
     else:
         update_return_condition("returns_processing", customer_item_data_id, db)    
 
+    # existing_customer_data = db.query(CustomerData).filter_by(customer_item_data_id=customer_item_data_id).first()
+    
+    # if ENV == "TEST":UPLOAD_DIRECTORY = "/auditly/static/customer_image"   
+    # elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/customer_image"   
+
+
+    # # Define S3 file paths
+    # front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
+    # back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
+
+    
+    # # try:
+    # # Save front image
+    # if front_image and back_image:
+    #     # front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
+    #     # with open(front_image_path, "wb") as f:
+    #     #     f.write(await front_image.read())
+
+    #     # # Save back image
+    #     # back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
+    #     # with open(back_image_path, "wb") as f:
+    #     #     f.write(await back_image.read())
+    #     # Create S3 client
+    #     s3_client = boto3.client(
+    #         "s3",
+    #         aws_access_key_id=aws_access_key,
+    #         aws_secret_access_key=aws_secret_key
+    #     )
+    #     # Upload front image
+    #     s3_client.upload_fileobj(front_image.file, s3_bucket, front_image_path)
+
+    #     # Upload back image
+    #     s3_client.upload_fileobj(back_image.file, s3_bucket, back_image_path)
+
+    # else:
+    #     front_image_path, back_image_path = None, None
+        
+
+    # # Save file paths in the database
+    # if not existing_customer_data: 
+    #     new_customer_data = CustomerData(
+    #         customer_item_data_id=customer_item_data_id,
+    #         customer_front_image=front_image_path,
+    #         customer_back_image=back_image_path,
+    #         factory_seal=factory_seal,
+    #         no_factory_seal=no_factory_seal,
+    #         minimal_tear=minimal_tear,
+    #         no_package=no_package,
+    #         new_conditiono=new_conditiono,
+    #         not_new_condition=not_new_condition,
+    #         bio_stains=bio_stains,
+    #         package_stains=package_stains,
+    #     )
+    #     db.add(new_customer_data)
+    #     db.commit()
+    #     db.refresh(new_customer_data)
+    # else:
+    #     existing_customer_data.customer_front_image = front_image_path or existing_customer_data.customer_front_image
+    #     existing_customer_data.customer_back_image = back_image_path or existing_customer_data.customer_back_image
+    #     existing_customer_data.factory_seal = factory_seal
+    #     existing_customer_data.no_factory_seal = no_factory_seal
+    #     existing_customer_data.minimal_tear = minimal_tear
+    #     existing_customer_data.no_package = no_package
+    #     existing_customer_data.new_conditiono = new_conditiono
+    #     existing_customer_data.not_new_condition = not_new_condition
+    #     existing_customer_data.bio_stains = bio_stains
+    #     existing_customer_data.package_stains = package_stains
+    #     db.commit()
+    #     db.refresh(existing_customer_data)
+
+    # return {
+    #     "message": "Images uploaded and saved successfully.",
+    #     "data": {
+    #         "id": customer_item_data_id,
+    #         "front_image_path": front_image_path,
+    #         "back_image_path": back_image_path,
+    #     },
+    # }
+
     existing_customer_data = db.query(CustomerData).filter_by(customer_item_data_id=customer_item_data_id).first()
-    
-    if ENV == "TEST":UPLOAD_DIRECTORY = "/auditly/static/customer_image"   
+
+    if ENV == "TEST":UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/customer_image"   
     elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/customer_image"   
+        
 
-
-    # Define S3 file paths
-    front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
-    back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
-
-    
     # try:
     # Save front image
     if front_image and back_image:
-        # front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
-        # with open(front_image_path, "wb") as f:
-        #     f.write(await front_image.read())
+        front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
+        with open(front_image_path, "wb") as f:
+            f.write(await front_image.read())
 
-        # # Save back image
-        # back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
-        # with open(back_image_path, "wb") as f:
-        #     f.write(await back_image.read())
-        # Create S3 client
-        s3_client = boto3.client(
-            "s3",
-            aws_access_key_id=aws_access_key,
-            aws_secret_access_key=aws_secret_key
-        )
-        # Upload front image
-        s3_client.upload_fileobj(front_image.file, s3_bucket, front_image_path)
-
-        # Upload back image
-        s3_client.upload_fileobj(back_image.file, s3_bucket, back_image_path)
-
+        # Save back image
+        back_image_path = os.path.join(UPLOAD_DIRECTORY, back_image.filename)
+        with open(back_image_path, "wb") as f:
+            f.write(await back_image.read())
     else:
         front_image_path, back_image_path = None, None
         
@@ -223,6 +285,7 @@ async def upload_customer_images(
             "back_image_path": back_image_path,
         },
     }
+
 
 
 @app.get("/customer-images/{id}")
