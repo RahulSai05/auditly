@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/Dropmenu";
-import { CircleUser, LogOut, User, Settings, CreditCard, Lock, RefreshCw } from "lucide-react";
+import { CircleUser, LogOut, User, Settings, Lock, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function Profile() {
@@ -87,7 +87,7 @@ export function Profile() {
           <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
-            onClick={() => navigate("/edit-profile")} 
+            onClick={() => navigate("/edit-profile")}
           >
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
               <User className="w-5 h-5 text-blue-600" />
@@ -104,7 +104,7 @@ export function Profile() {
             </span>
             <span>User Maintenance</span> {/* Updated label */}
           </motion.div>
-{/*           <motion.div
+          {/*           <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
           >

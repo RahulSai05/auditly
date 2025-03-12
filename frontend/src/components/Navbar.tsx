@@ -130,26 +130,29 @@ export function Navbar() {
                   lg:items-center
                 "
               >
-                <motion.li
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/"
-                    className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
-                    onClick={() => setIsOpen(false)}
+                {
+                  isInspectionUser ? <motion.li
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Home className="w-5 h-5" />
-                    Home
-                  </Link>
-                </motion.li>
+                    <Link
+                      to="/"
+                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Home className="w-5 h-5" />
+                      Home
+                    </Link>
+                  </motion.li> : ""
+                }
+
                 {isAdmin ? (
                   <motion.li
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Link
-                      to="/admin/reports/items"
+                      to="/admin/settings/connectors/inbound"
                       className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
                       onClick={() => setIsOpen(false)}
                     >

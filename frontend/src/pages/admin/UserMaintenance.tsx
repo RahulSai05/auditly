@@ -88,10 +88,9 @@ const UserMaintenance: React.FC = () => {
   };
 
   const handleUserSelect = (user: User) => {
-    console.log(user.user_id);
-    console.log(userId);
+    // If the user is the logged in user, don't select them
     if (user.user_id == userId) {
-      console.log("no");
+      return;
     } else if (selectedUser && selectedUser.user_id === user.user_id) {
       // If the user is already selected, deselect them
       setSelectedUser(null);
@@ -112,8 +111,34 @@ const UserMaintenance: React.FC = () => {
     });
   };
 
+  // Check if at least one role is selected
+  const hasAtLeastOneRole = (user: User): boolean => {
+    return user.is_admin || user.is_reports_user || user.is_inpection_user;
+  };
+
+  // Check if at least one role has changed
+  const hasRoleChanged = (original: User, updated: User): boolean => {
+    return (
+      original.is_admin !== updated.is_admin ||
+      original.is_reports_user !== updated.is_reports_user ||
+      original.is_inpection_user !== updated.is_inpection_user
+    );
+  };
+
   const handleUpdateUser = async () => {
     if (!selectedUser || !updatedUser) return;
+
+    // Check if at least one role is selected
+    if (!hasAtLeastOneRole(updatedUser)) {
+      setError("Please select at least one role for the user.");
+      return;
+    }
+
+    // Check if at least one role has changed
+    if (!hasRoleChanged(selectedUser, updatedUser)) {
+      setError("Please change at least one role to update the user.");
+      return;
+    }
 
     setUpdateLoading(true);
     setError("");
@@ -176,6 +201,11 @@ const UserMaintenance: React.FC = () => {
         damping: 10,
       },
     },
+  };
+
+  // Check if a user is the currently logged in user
+  const isCurrentUser = (user: User): boolean => {
+    return user.user_id == userId;
   };
 
   return (
@@ -349,11 +379,13 @@ const UserMaintenance: React.FC = () => {
                       <motion.tr
                         key={user.user_id}
                         variants={rowVariants}
-                        className={`hover:bg-blue-50/50 transition-colors group ${
-                          selectedUser && selectedUser.user_id === user.user_id
+                        className={`transition-colors group ${isCurrentUser(user)
+                            ? "bg-gray-100 opacity-60 cursor-not-allowed"
+                            : "hover:bg-blue-50/50"
+                          } ${selectedUser && selectedUser.user_id === user.user_id
                             ? "bg-blue-100/50"
                             : ""
-                        }`}
+                          }`}
                       >
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <input
@@ -361,11 +393,18 @@ const UserMaintenance: React.FC = () => {
                             name="selectedUser"
                             checked={selectedUser?.user_id === user.user_id}
                             onChange={() => handleUserSelect(user)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            disabled={isCurrentUser(user)}
+                            className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${isCurrentUser(user) ? "cursor-not-allowed" : ""
+                              }`}
                           />
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           {user.user_name}
+                          {isCurrentUser(user) && (
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-800">
+                              You
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           {user.first_name}
@@ -375,11 +414,10 @@ const UserMaintenance: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.gender.toLowerCase() === "male"
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.gender.toLowerCase() === "male"
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-pink-100 text-pink-800"
-                            }`}
+                              }`}
                           >
                             {user.gender}
                           </span>
@@ -403,7 +441,10 @@ const UserMaintenance: React.FC = () => {
                                 handleCheckboxChange("is_admin");
                               }
                             }}
-                            disabled={selectedUser?.user_id !== user.user_id}
+                            disabled={
+                              selectedUser?.user_id !== user.user_id ||
+                              isCurrentUser(user)
+                            }
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>
@@ -420,7 +461,10 @@ const UserMaintenance: React.FC = () => {
                                 handleCheckboxChange("is_reports_user");
                               }
                             }}
-                            disabled={selectedUser?.user_id !== user.user_id}
+                            disabled={
+                              selectedUser?.user_id !== user.user_id ||
+                              isCurrentUser(user)
+                            }
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>
@@ -437,7 +481,10 @@ const UserMaintenance: React.FC = () => {
                                 handleCheckboxChange("is_inpection_user");
                               }
                             }}
-                            disabled={selectedUser?.user_id !== user.user_id}
+                            disabled={
+                              selectedUser?.user_id !== user.user_id ||
+                              isCurrentUser(user)
+                            }
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>

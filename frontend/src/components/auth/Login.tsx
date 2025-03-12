@@ -27,13 +27,39 @@ const Login = () => {
     type: "",
   });
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [userData, setUserData] = useState(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+  // useEffect(() => {
+  //   if (localStorage.getItem("token")) {
+  //     navigate("/");
+  //   }
+  // }, [navigate]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isReportUser, setIsReportUser] = useState(false);
+  const [isInspectionUser, setIsInspectionUser] = useState(false);
 
+  // Handle redirection based on user data
   useEffect(() => {
-    if (localStorage.getItem("token")) {
-      navigate("/");
-    }
-  }, [navigate]);
+    if (userData) {
+      const userTypeArray = Array.isArray(userData["User Type"]) ? userData["User Type"] : [];
+      setIsAdmin(userTypeArray.includes("admin"));
+      setIsReportUser(userTypeArray.includes("reports_user"));
+      setIsInspectionUser(userTypeArray.includes("inspection_user"));
 
+      // Redirect based on the user role
+      if (isAdmin) {
+        navigate('/admin/settings/connectors/inbound');
+      } else if (isInspectionUser) {
+        navigate('/');
+      } else if (isReportUser) {
+        navigate('/admin/reports/items');
+      } else {
+        navigate('/login');
+      }
+    }
+  }, [userData, isAdmin, isReportUser, isInspectionUser, navigate]);;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -42,7 +68,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: "", type: "" });
-  
+
     try {
       if (!otpSent) {
         // Step 1: Send username and password to get OTP
@@ -53,7 +79,7 @@ const Login = () => {
             password: formData.password,
           }
         );
-  
+
         if (data.message === "Invalid Username or Password") {
           setMessage({ text: "Invalid username or password", type: "error" });
         } else {
@@ -72,19 +98,25 @@ const Login = () => {
             login_otp: formData.otp,
           }
         );
-  
+
         if (data.message === "Login Successfull") {
           localStorage.setItem("token", JSON.stringify(data.data));
           localStorage.setItem("userType", data.data.user_type); // Store user type
+          setUserData(data.data)
           setMessage({
             text: "Login successful! Redirecting...",
             type: "success",
           });
-          setTimeout(() => navigate("/"), 1500);
+
         } else {
           setMessage({ text: "Invalid OTP", type: "error" });
         }
       }
+      setTimeout(() => {
+        console.log(userData)
+
+      }, 3000);
+
     } catch (error: any) {
       setMessage({
         text: error.response?.data?.message || "Login failed!",
@@ -92,6 +124,8 @@ const Login = () => {
       });
     } finally {
       setLoading(false);
+
+
     }
   };
 
@@ -129,35 +163,35 @@ const Login = () => {
   };
 
   const inputVariants = {
-    focus: { 
-      scale: 1.02, 
+    focus: {
+      scale: 1.02,
       boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.3)",
-      transition: { duration: 0.3 } 
+      transition: { duration: 0.3 }
     },
-    blur: { 
-      scale: 1, 
+    blur: {
+      scale: 1,
       boxShadow: "0 0 0 0px rgba(59, 130, 246, 0)",
-      transition: { duration: 0.3 } 
+      transition: { duration: 0.3 }
     },
   };
 
   const buttonVariants = {
-    hover: { 
+    hover: {
       scale: 1.03,
       boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      transition: { 
+      transition: {
         duration: 0.3,
         type: "spring",
         stiffness: 500,
         damping: 15
-      } 
+      }
     },
-    tap: { 
+    tap: {
       scale: 0.97,
       boxShadow: "0 5px 10px -3px rgba(0, 0, 0, 0.1), 0 2px 3px -2px rgba(0, 0, 0, 0.05)",
-      transition: { 
+      transition: {
         duration: 0.1,
-      } 
+      }
     },
     disabled: {
       scale: 1,
@@ -200,7 +234,7 @@ const Login = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           initial={{ opacity: 0.1, x: -100, y: -100 }}
-          animate={{ 
+          animate={{
             opacity: [0.1, 0.2, 0.1],
             x: [-100, -80, -100],
             y: [-100, -120, -100],
@@ -214,7 +248,7 @@ const Login = () => {
         />
         <motion.div
           initial={{ opacity: 0.1, x: 100, y: 100 }}
-          animate={{ 
+          animate={{
             opacity: [0.1, 0.2, 0.1],
             x: [100, 120, 100],
             y: [100, 80, 100],
@@ -239,13 +273,13 @@ const Login = () => {
             className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
             transition={formTransition}
           >
-            <motion.div 
+            <motion.div
               className="h-2 bg-gradient-to-r from-blue-500 to-purple-600"
               initial={{ scaleX: 0, originX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
             />
-            
+
             <div className="p-8 sm:p-10">
               <motion.div
                 className="text-center mb-8"
@@ -261,7 +295,7 @@ const Login = () => {
                     damping: 20,
                     delay: 0.1,
                   }}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.05,
                     rotate: 5,
                     transition: { duration: 0.3 }
@@ -273,26 +307,26 @@ const Login = () => {
                     <User className="h-10 w-10 text-blue-600" />
                   )}
                 </motion.div>
-                
+
                 <motion.h2
                   className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mb-2"
                   variants={itemVariants}
                 >
                   {otpSent ? "Verify OTP" : "Welcome Back"}
                 </motion.h2>
-                
+
                 <motion.p
                   className="text-gray-600"
                   variants={itemVariants}
                 >
-                  {otpSent 
-                    ? "Enter the verification code sent to your email" 
+                  {otpSent
+                    ? "Enter the verification code sent to your email"
                     : "Sign in to your account"}
                 </motion.p>
               </motion.div>
 
-              <motion.form 
-                onSubmit={handleSubmit} 
+              <motion.form
+                onSubmit={handleSubmit}
                 className="space-y-6"
                 variants={itemVariants}
               >
@@ -310,7 +344,7 @@ const Login = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Username
                         </label>
-                        <motion.div 
+                        <motion.div
                           className="relative"
                           variants={inputVariants}
                           animate={focusedField === "user_name" ? "focus" : "blur"}
@@ -336,7 +370,7 @@ const Login = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Password
                         </label>
-                        <motion.div 
+                        <motion.div
                           className="relative"
                           variants={inputVariants}
                           animate={focusedField === "password" ? "focus" : "blur"}
@@ -370,7 +404,7 @@ const Login = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Verification Code
                         </label>
-                        <motion.div 
+                        <motion.div
                           className="relative"
                           variants={inputVariants}
                           animate={focusedField === "otp" ? "focus" : "blur"}
@@ -406,7 +440,7 @@ const Login = () => {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   {loading ? (
-                    <motion.span 
+                    <motion.span
                       className="flex items-center justify-center gap-2"
                       animate={{ opacity: [0.6, 1, 0.6] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
@@ -435,11 +469,10 @@ const Login = () => {
                     animate={{ opacity: 1, y: 0, height: "auto" }}
                     exit={{ opacity: 0, y: 10, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`mt-6 p-4 rounded-lg flex items-center gap-3 ${
-                      message.type === "success"
-                        ? "bg-green-50 text-green-800 border border-green-200"
-                        : "bg-red-50 text-red-800 border border-red-200"
-                    }`}
+                    className={`mt-6 p-4 rounded-lg flex items-center gap-3 ${message.type === "success"
+                      ? "bg-green-50 text-green-800 border border-green-200"
+                      : "bg-red-50 text-red-800 border border-red-200"
+                      }`}
                   >
                     <motion.div
                       initial={{ scale: 0 }}

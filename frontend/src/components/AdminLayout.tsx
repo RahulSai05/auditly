@@ -47,7 +47,6 @@ const AdminLayout = () => {
       setIsInspectionUser(userData["User Type"].includes("inpection_user"));
     }
   }, [userData]);
-  console.log(userData);
 
   // Handle screen resize
   useEffect(() => {
@@ -309,8 +308,7 @@ const AdminLayout = () => {
                               <NavLink
                                 to="/admin/settings/connectors/inbound"
                                 className={({ isActive }) =>
-                                  `${nestedLinkStyle} ${
-                                    isActive ? activeLinkStyle : ""
+                                  `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                                   }`
                                 }
                                 onClick={handleLinkClick}
@@ -328,8 +326,7 @@ const AdminLayout = () => {
                               <NavLink
                                 to="/admin/settings/connectors/outbound"
                                 className={({ isActive }) =>
-                                  `${nestedLinkStyle} ${
-                                    isActive ? activeLinkStyle : ""
+                                  `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                                   }`
                                 }
                                 onClick={handleLinkClick}
@@ -348,8 +345,7 @@ const AdminLayout = () => {
                               <NavLink
                                 to="/admin/settings/mapping-rules"
                                 className={({ isActive }) =>
-                                  `${nestedLinkStyle} ${
-                                    isActive ? activeLinkStyle : ""
+                                  `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                                   }`
                                 }
                                 onClick={handleLinkClick}
@@ -385,8 +381,7 @@ const AdminLayout = () => {
                         <NavLink
                           to={`/admin/settings/${item.name}`}
                           className={({ isActive }) =>
-                            `${nestedLinkStyle} ${
-                              isActive ? activeLinkStyle : ""
+                            `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                             }`
                           }
                           onClick={handleLinkClick}
@@ -452,8 +447,7 @@ const AdminLayout = () => {
                       <NavLink
                         to="/admin/reports/items"
                         className={({ isActive }) =>
-                          `${nestedLinkStyle} ${
-                            isActive ? activeLinkStyle : ""
+                          `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                           }`
                         }
                         onClick={handleLinkClick}
@@ -471,8 +465,7 @@ const AdminLayout = () => {
                       <NavLink
                         to="/admin/reports/customer-serials"
                         className={({ isActive }) =>
-                          `${nestedLinkStyle} ${
-                            isActive ? activeLinkStyle : ""
+                          `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                           }`
                         }
                         onClick={handleLinkClick}
@@ -490,8 +483,7 @@ const AdminLayout = () => {
                       <NavLink
                         to="/admin/reports/returns"
                         className={({ isActive }) =>
-                          `${nestedLinkStyle} ${
-                            isActive ? activeLinkStyle : ""
+                          `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                           }`
                         }
                         onClick={handleLinkClick}
@@ -509,8 +501,7 @@ const AdminLayout = () => {
                       <NavLink
                         to="/admin/reports/audity-inspections"
                         className={({ isActive }) =>
-                          `${nestedLinkStyle} ${
-                            isActive ? activeLinkStyle : ""
+                          `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                           }`
                         }
                         onClick={handleLinkClick}
@@ -587,8 +578,7 @@ const AdminLayout = () => {
                         <NavLink
                           to={`/admin/settings/${item.name}`}
                           className={({ isActive }) =>
-                            `${nestedLinkStyle} ${
-                              isActive ? activeLinkStyle : ""
+                            `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""
                             }`
                           }
                           onClick={handleLinkClick}
