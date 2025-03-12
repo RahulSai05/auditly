@@ -756,7 +756,11 @@ async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)
             db.commit()
             db.refresh(user_data)
             print(send_email)
-            send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
+            #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
+            if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp_login))
+            elif ENV == "TEST":
+                secret_data = get_secret("test/auditly/secrets")
+                send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp_login))
             return {
                 "message": "OTP Sent Successfully to registerd email"
              }
@@ -898,7 +902,11 @@ Thanks,
 Audit team
 """
     print(customer_email)
-    send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
+    #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
+    if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
+    elif ENV == "TEST":
+        secret_data = get_secret("test/auditly/secrets")
+        send_email(secret_data["from_email_address"], secret_data["from_email_password"], customer_email, subject, body, [user_front_image, user_back_image])
 
 
     def classify_condition(front_score, back_score, ssi_score):
@@ -1454,7 +1462,12 @@ Authorization Token – """+token+"""
 Thanks,
 Audit team
 """
-        send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+       # send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+        if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+        elif ENV == "TEST":
+            secret_data = get_secret("test/auditly/secrets")
+            send_email(secret_data["from_email_address"], secret_data["from_email_password"], onboard_email, subject, body)
+        
 
 
         return {
