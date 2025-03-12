@@ -94,7 +94,7 @@ export function Profile() {
             </span>
             <span>Edit Profile</span>
           </motion.div>
-          <motion.div
+          {/* <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
             onClick={() => navigate("/admin/settings/users-maintenance")} // Updated redirect path
@@ -103,7 +103,7 @@ export function Profile() {
               <Settings className="w-5 h-5 text-blue-600" />
             </span>
             <span>User Maintenance</span> {/* Updated label */}
-          </motion.div>
+          </motion.div> */}
           {/*           <motion.div
             whileHover={{ x: 5 }}
             className="flex items-center gap-x-3 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors duration-300 text-base"
