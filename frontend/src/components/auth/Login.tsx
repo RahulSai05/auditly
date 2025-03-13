@@ -31,11 +31,7 @@ const Login = () => {
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
-  // useEffect(() => {
-  //   if (localStorage.getItem("token")) {
-  //     navigate("/");
-  //   }
-  // }, [navigate]);
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReportUser, setIsReportUser] = useState(false);
   const [isInspectionUser, setIsInspectionUser] = useState(false);
@@ -59,7 +55,7 @@ const Login = () => {
         navigate('/login');
       }
     }
-  }, [userData, isAdmin, isReportUser, isInspectionUser, navigate]);;
+  }, [userData, isAdmin, isReportUser, isInspectionUser, navigate]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -112,10 +108,7 @@ const Login = () => {
           setMessage({ text: "Invalid OTP", type: "error" });
         }
       }
-      setTimeout(() => {
-        console.log(userData)
 
-      }, 3000);
 
     } catch (error: any) {
       setMessage({

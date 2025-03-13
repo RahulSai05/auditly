@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldOff, ArrowLeft, LogIn, Mail } from 'lucide-react';
@@ -6,6 +6,35 @@ import { ShieldOff, ArrowLeft, LogIn, Mail } from 'lucide-react';
 function Unauthorized() {
   const navigate = useNavigate();
 
+  const [userData, setUserData] = useState(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isReportUser, setIsReportUser] = useState(false);
+  const [isInspectionUser, setIsInspectionUser] = useState(false);
+
+  // Handle redirection based on user data
+  useEffect(() => {
+    if (userData) {
+      const userTypeArray = Array.isArray(userData["User Type"]) ? userData["User Type"] : [];
+      setIsAdmin(userTypeArray.includes("admin"));
+      setIsReportUser(userTypeArray.includes("reports_user"));
+      setIsInspectionUser(userTypeArray.includes("inspection_user"));
+
+      // Redirect based on the user role
+      if (isAdmin) {
+        navigate('/admin/settings/connectors/inbound');
+      } else if (isInspectionUser) {
+        navigate('/');
+      } else if (isReportUser) {
+        navigate('/admin/reports/items');
+      } else {
+        navigate('/login');
+      }
+    }
+  }, [userData, isAdmin, isReportUser, isInspectionUser, navigate]);
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("token"); // Clear the token from localStorage
@@ -37,14 +66,14 @@ function Unauthorized() {
   };
 
   const buttonVariants = {
-    hover: { 
+    hover: {
       scale: 1.03,
-      transition: { 
+      transition: {
         duration: 0.3,
         type: "spring",
         stiffness: 500,
         damping: 15
-      } 
+      }
     },
     tap: { scale: 0.97 }
   };
@@ -78,7 +107,7 @@ function Unauthorized() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           initial={{ opacity: 0.1, x: -100, y: -100 }}
-          animate={{ 
+          animate={{
             opacity: [0.1, 0.2, 0.1],
             x: [-100, -80, -100],
             y: [-100, -120, -100],
@@ -92,7 +121,7 @@ function Unauthorized() {
         />
         <motion.div
           initial={{ opacity: 0.1, x: 100, y: 100 }}
-          animate={{ 
+          animate={{
             opacity: [0.1, 0.2, 0.1],
             x: [100, 120, 100],
             y: [100, 80, 100],
@@ -106,7 +135,7 @@ function Unauthorized() {
         />
       </div>
 
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -115,7 +144,7 @@ function Unauthorized() {
         <motion.div
           className="w-full bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
         >
-          <motion.div 
+          <motion.div
             className="h-2 bg-gradient-to-r from-red-500 to-red-600"
             initial={{ scaleX: 0, originX: 0 }}
             animate={{ scaleX: 1 }}
@@ -136,7 +165,7 @@ function Unauthorized() {
                   stiffness: 260,
                   damping: 20,
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.05,
                   rotate: 5,
                   transition: { duration: 0.3 }
@@ -145,14 +174,14 @@ function Unauthorized() {
                 <ShieldOff className="w-10 h-10 text-red-600" />
               </motion.div>
 
-              <motion.h1 
+              <motion.h1
                 variants={itemVariants}
                 className="text-2xl font-bold text-red-600 mb-4"
               >
                 Unauthorized Access
               </motion.h1>
 
-              <motion.p 
+              <motion.p
                 variants={itemVariants}
                 className="text-gray-600 mb-8"
               >
@@ -190,8 +219,8 @@ function Unauthorized() {
             >
               <div className="flex items-center justify-center gap-2 text-gray-600 text-sm">
                 <span>Need help?</span>
-                <a 
-                  href="mailto:questions@auditlyai.com" 
+                <a
+                  href="mailto:questions@auditlyai.com"
                   className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
                 >
                   <Mail className="w-4 h-4" />

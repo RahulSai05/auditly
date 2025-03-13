@@ -36,6 +36,8 @@ const AdminLayout = () => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
+  console.log(userData["User Type"])
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReportUser, setIsReportUser] = useState(false);
   const [isInspectionUser, setIsInspectionUser] = useState(false);

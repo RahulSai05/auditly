@@ -1,0 +1,113 @@
+{
+    "message": "Users retrieved successfully.",
+    "data": [
+        {
+            "user_id": 34,
+            "user_name": "harshikha",
+            "first_name": "harshikha",
+            "last_name": "harshikha",
+            "gender": "Female",
+            "email": "harshikha.penikalapati@gmail.com",
+            "is_reports_user": false,
+            "is_admin": false,
+            "is_inpection_user": false,
+            "user_company": "Walmart"
+        },
+        {
+            "user_id": 35,
+            "user_name": "nike",
+            "first_name": "nike",
+            "last_name": "nike",
+            "gender": "Female",
+            "email": "rsai126126@gmail.com",
+            "is_reports_user": true,
+            "is_admin": true,
+            "is_inpection_user": true,
+            "user_company": "Walmart"
+        },
+        {
+            "user_id": 36,
+            "user_name": "magesh",
+            "first_name": "Magesh",
+            "last_name": "Dhanaraj",
+            "gender": "Male",
+            "email": "maggy@gmail.com",
+            "is_reports_user": true,
+            "is_admin": true,
+            "is_inpection_user": true,
+            "user_company": "Walmart"
+        },
+        {
+            "user_id": 37,
+            "user_name": "rahul",
+            "first_name": "Rahul",
+            "last_name": "Reddy",
+            "gender": "Male",
+            "email": "rsai126126@gmail.com",
+            "is_reports_user": true,
+            "is_admin": false,
+            "is_inpection_user": true,
+            "user_company": "Walmart"
+        },
+        {
+            "user_id": 38,
+            "user_name": "kar@kar.com",
+            "first_name": "asdasd",
+            "last_name": "asdasdasd",
+            "gender": "Male",
+            "email": "kar@kar.com",
+            "is_reports_user": false,
+            "is_admin": false,
+            "is_inpection_user": false,
+            "user_company": "awda"
+        },
+        {
+            "user_id": 39,
+            "user_name": "karthikprof81@gmail.com",
+            "first_name": "karthikprof81@gmail.com",
+            "last_name": "karthikprof81@gmail.com",
+            "gender": "Male",
+            "email": "karthikprof81@gmail.com",
+            "is_reports_user": false,
+            "is_admin": true,
+            "is_inpection_user": false,
+            "user_company": "karthikprof81@gmail.com"
+        },
+        {
+            "user_id": 40,
+            "user_name": "karthikjidagam81@gmail.com",
+            "first_name": "karthikjidagam81@gmail.com",
+            "last_name": "karthikjidagam81@gmail.com",
+            "gender": "Male",
+            "email": "karthikjidagam81@gmail.com",
+            "is_reports_user": true,
+            "is_admin": true,
+            "is_inpection_user": true,
+            "user_company": "karthikjidagam81@gmail.com"
+        },
+        {
+            "user_id": 41,
+            "user_name": "rahul05",
+            "first_name": "rahul",
+            "last_name": "reddy",
+            "gender": "Male",
+            "email": "rahulgr20@gmail.com",
+            "is_reports_user": true,
+            "is_admin": true,
+            "is_inpection_user": true,
+            "user_company": "walmart"
+        },
+        {
+            "user_id": 42,
+            "user_name": "rahul06",
+            "first_name": "rahul",
+            "last_name": "reddy",
+            "gender": "Male",
+            "email": "rsai126126@gmail.com",
+            "is_reports_user": true,
+            "is_admin": true,
+            "is_inpection_user": true,
+            "user_company": "Walmart"
+        }
+    ]
+}

@@ -1,7 +1,7 @@
-
-import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation, Navigate, Outlet, useFetcher } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
+// Import all your page components as before
 import Home from "./pages/Home";
 import HelpCenter from "./pages/HelpCenter";
 import Options from "./pages/Options";
@@ -41,29 +41,188 @@ import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import { RootState } from "./store/store";
 
-export default function App() {
-  const itemData = useSelector((state: RootState) => state.ids);
-  const navigate = useNavigate();
+// Type definitions
+interface UserData {
+  "User Type": string[];
+  [key: string]: any;
+}
+
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+
+// Protected route components
+const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const [userData] = useState<UserData | null>(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  const isAdmin = userData && Array.isArray(userData["User Type"]) &&
+    userData["User Type"].includes("admin");
+
+  return isAdmin ? <>{children}</> : <Navigate to="/unauthorized" />;
+};
+
+const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const [userData] = useState<UserData | null>(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  const isReportUser = userData && Array.isArray(userData["User Type"]) &&
+    userData["User Type"].includes("reports_user");
+
+  return (isReportUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
+};
+
+const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const [userData] = useState<UserData | null>(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  const isInspectionUser = userData && Array.isArray(userData["User Type"]) &&
+    userData["User Type"].includes("inpection_user");
+
+  return (isInspectionUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
+};
+
+// Auth verification component
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const isLoggedIn = localStorage.getItem("token") !== null;
   const location = useLocation();
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+export default function App(): JSX.Element {
+  const itemData = useSelector((state: RootState) => state.ids);
+  const location = useLocation();
+
+
+  const navigate = useNavigate();
+
+
+  const [userData, setUserData] = useState<UserData | null>(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
+
+  useEffect(() => {
+    const localUser = localStorage.getItem("token");
+    setUserData(localUser ? JSON.parse(localUser) : null);
+  }, [location.pathname]); // Sync state with localStorage
+
+  useEffect(() => {
+    console.log("Updated userData:", userData);
+  }, [userData]); // Log changes
+
+  useEffect(() => {
+    const checkUserValidity = async () => {
+      try {
+        const res = await fetch("http://54.210.159.220:8000/users");
+        const data = await res.json();
+
+        if (data.data && userData) {
+          const userExists = data.data.some((user: any) => user?.user_name === userData["User Name"]);
+
+          let userExistsData = userExists
+            ? data.data.filter((user: any) => user?.user_name === userData["User Name"])[0]
+            : null;
+
+          if (userExists && userExistsData) {
+            // Check if user has EXACTLY the permissions specified in User Type array (no more, no less)
+            const requiredUserTypes = userData["User Type"];
+            let isAuthorized = true;
+
+            // Check all required permissions are present
+            for (let i = 0; i < requiredUserTypes.length; i++) {
+              const userType = requiredUserTypes[i];
+
+              if (userType === "reports_user" && !userExistsData.is_reports_user) {
+                console.log("Missing required permission: reports_user");
+                isAuthorized = false;
+                break;
+              } else if (userType === "admin" && !userExistsData.is_admin) {
+                console.log("Missing required permission: admin");
+                isAuthorized = false;
+                break;
+              } else if (userType === "inpection_user" && !userExistsData.is_inpection_user) {
+                console.log("Missing required permission: inpection_user");
+                isAuthorized = false;
+                break;
+              }
+            }
+
+            // Check no additional permissions are present
+            if (isAuthorized) {
+              // Check if user has reports_user permission
+              if (userExistsData.is_reports_user && !requiredUserTypes.includes("reports_user")) {
+                console.log("User has unauthorized permission: reports_user");
+                isAuthorized = false;
+              }
+
+              // Check if user has admin permission
+              if (userExistsData.is_admin && !requiredUserTypes.includes("admin")) {
+                console.log("User has unauthorized permission: admin");
+                isAuthorized = false;
+              }
+
+              // Check if user has inpection_user permission
+              if (userExistsData.is_inpection_user && !requiredUserTypes.includes("inpection_user")) {
+                console.log("User has unauthorized permission: inpection_user");
+                isAuthorized = false;
+              }
+            }
+
+            console.log("User exists data:", userExistsData);
+            console.log("User types required:", userData["User Type"]);
+            console.log("User authorized with exact permissions:", isAuthorized);
+
+            if (!isAuthorized) {
+              localStorage.removeItem("token");
+              localStorage.removeItem("usertype");
+              navigate("/login");
+            }
+          } else if (!userExists) {
+            console.log("User does not exist");
+            localStorage.removeItem("token");
+            localStorage.removeItem("usertype");
+            navigate("/login");
+          }
+        } else {
+          console.log("Invalid user state");
+          localStorage.removeItem("token");
+          localStorage.removeItem("usertype");
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Error checking user validity:", error);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      console.log("Checking user validity...");
+      checkUserValidity();
+    }, 200);
+
+    return () => clearTimeout(timer); // Cleanup timeout
+  }, [location.pathname, userData]); // Ensure fresh userData
+
+
+
+
+
 
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
-
-
-
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem("token");
-    const currentPath = window.location.pathname;
-
-    // Redirect to login only if not on auth-related routes
-    if (
-      !isLoggedIn &&
-      !authRoutes.includes(currentPath)
-    ) {
-      navigate("/login");
-    }
-  }, [navigate]);
 
   useEffect(() => {
     console.log(itemData);
@@ -75,51 +234,177 @@ export default function App() {
       {!shouldHideNavbarAndFooter && <Navbar />}
 
       <Routes>
-        {/* Non-Admin Routes */}
-        {/*only inspecion user need to access this routes and if admin is admin try to do then we need to redirect to /admin/settings/connectors/inbound and if report user tru to do that /admin/reports/items - karthik */}
-
-
-
-        <Route path="/" element={<Home />} />
-        <Route path="/options" element={<Options />} />
-        <Route path="/help-center" element={<HelpCenter />} />
-        <Route path="/option/manual" element={<GetAll />} />
-        <Route path="/return/details" element={<Details />} />
-        <Route path="/return/inspection" element={<Inspection />} />
-        <Route path="/return/upload-media" element={<UploadMedia />} />
-        <Route path="/return/compare" element={<Compare />} />
-        <Route path="/return/review" element={<Review />} />
-        <Route path="/return/done" element={<Done />} />
-        <Route path="/auto/scan" element={<Scan />} />
-
-        {/* Admin Routes with AdminLayout */}
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/settings/Item-master-upload" element={<ItemUpload />} />
-          <Route path="/admin/settings/Item-Image-Upload" element={<ItemImageUpload />} />
-          <Route path="/admin/reports/items" element={<DashboardTables />} />
-          <Route path="/admin/reports/customer-serials" element={<CustomerSerials />} />
-          <Route path="/admin/reports/returns" element={<ReturnDetails />} />
-          <Route path="/admin/settings/Return-Upload" element={<ItemReturn />} />
-          <Route path="/admin/reports/audity-inspections" element={<AuditlyInspection />} />
-          <Route path="/admin/settings/customer-serial-Upload" element={<CustomerSerialUpload />} />
-          <Route path="/admin/settings/users-maintenance" element={<UserMaintenance />} />
-          <Route path="/admin/settings/connectors/inbound" element={<Inbound />} />
-          <Route path="/admin/settings/connectors/outbound" element={<Outbound />} />
-          <Route path="/admin/settings/email-configurations" element={<EmailConfigurations />} />
-          <Route path="/admin/settings/api-configurations" element={<ApiConfigurations />} />
-          <Route path="/admin/settings/mapping-rules" element={<MappingRules />} />
-        </Route>
-
-        {/* Auth Routes */}
+        {/* Public Routes - No Authentication Required */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/onboard" element={<Onboard />} />
-        <Route path="/inspection-data" element={<InspectionData />} />
+
+        {/* Protected Routes with AdminLayout - Authentication Required */}
+        <Route element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
+          {/* Admin Only Routes */}
+          <Route path="/admin/settings/connectors/inbound" element={
+            <AdminRoute>
+              <Inbound />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/connectors/outbound" element={
+            <AdminRoute>
+              <Outbound />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/mapping-rules" element={
+            <AdminRoute>
+              <MappingRules />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/api-configurations" element={
+            <AdminRoute>
+              <ApiConfigurations />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/email-configurations" element={
+            <AdminRoute>
+              <EmailConfigurations />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/users-maintenance" element={
+            <AdminRoute>
+              <UserMaintenance />
+            </AdminRoute>
+          } />
+
+          {/* Reports User Routes (Reports users and Admins) */}
+          <Route path="/admin/reports/items" element={
+            <ReportsRoute>
+              <DashboardTables />
+            </ReportsRoute>
+          } />
+          <Route path="/admin/reports/customer-serials" element={
+            <ReportsRoute>
+              <CustomerSerials />
+            </ReportsRoute>
+          } />
+          <Route path="/admin/reports/returns" element={
+            <ReportsRoute>
+              <ReturnDetails />
+            </ReportsRoute>
+          } />
+          <Route path="/admin/reports/audity-inspections" element={
+            <ReportsRoute>
+              <AuditlyInspection />
+            </ReportsRoute>
+          } />
+
+          {/* Inspection User Routes (Inspection users and Admins) */}
+          <Route path="/admin/dashboard" element={
+            <InspectionRoute>
+              <Dashboard />
+            </InspectionRoute>
+          } />
+          <Route path="/admin/settings/Item-master-upload" element={
+            <InspectionRoute>
+              <ItemUpload />
+            </InspectionRoute>
+          } />
+          <Route path="/admin/settings/customer-serial-Upload" element={
+            <InspectionRoute>
+              <CustomerSerialUpload />
+            </InspectionRoute>
+          } />
+          <Route path="/admin/settings/Item-Image-Upload" element={
+            <InspectionRoute>
+              <ItemImageUpload />
+            </InspectionRoute>
+          } />
+          <Route path="/admin/settings/Return-Upload" element={
+            <InspectionRoute>
+              <ItemReturn />
+            </InspectionRoute>
+          } />
+
+          {/* Standard Inspection User Routes */}
+          <Route path="/" element={
+            <InspectionRoute>
+              <Home />
+            </InspectionRoute>
+          } />
+          <Route path="/options" element={
+            <InspectionRoute>
+              <Options />
+            </InspectionRoute>
+          } />
+          <Route path="/help-center" element={
+            <InspectionRoute>
+              <HelpCenter />
+            </InspectionRoute>
+          } />
+          <Route path="/option/manual" element={
+            <InspectionRoute>
+              <GetAll />
+            </InspectionRoute>
+          } />
+          <Route path="/return/details" element={
+            <InspectionRoute>
+              <Details />
+            </InspectionRoute>
+          } />
+          <Route path="/return/inspection" element={
+            <InspectionRoute>
+              <Inspection />
+            </InspectionRoute>
+          } />
+          <Route path="/return/upload-media" element={
+            <InspectionRoute>
+              <UploadMedia />
+            </InspectionRoute>
+          } />
+          <Route path="/return/compare" element={
+            <InspectionRoute>
+              <Compare />
+            </InspectionRoute>
+          } />
+          <Route path="/return/review" element={
+            <InspectionRoute>
+              <Review />
+            </InspectionRoute>
+          } />
+          <Route path="/return/done" element={
+            <InspectionRoute>
+              <Done />
+            </InspectionRoute>
+          } />
+          <Route path="/auto/scan" element={
+            <InspectionRoute>
+              <Scan />
+            </InspectionRoute>
+          } />
+        </Route>
+
+        {/* Other Protected Routes outside AdminLayout */}
+        <Route path="/edit-profile" element={
+          <ProtectedRoute>
+            <EditProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/onboard" element={
+          <ProtectedRoute>
+            <Onboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/inspection-data" element={
+          <ProtectedRoute>
+            <InspectionData />
+          </ProtectedRoute>
+        } />
+
+        {/* Catch-all redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {/* Conditionally render Footer */}
@@ -127,5 +412,3 @@ export default function App() {
     </>
   );
 }
-
-
