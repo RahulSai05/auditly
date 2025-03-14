@@ -296,6 +296,12 @@ export default function App(): JSX.Element {
               <ReturnDetails />
             </ReportsRoute>
           } />
+          //-here
+          <Route path="/admin/reports/item-images" element={
+            <ReportsRoute>
+              <ItemImages />
+            </ReportsRoute>
+          } />
           <Route path="/admin/reports/audity-inspections" element={
             <ReportsRoute>
               <AuditlyInspection />
@@ -316,12 +322,6 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/customer-serial-Upload" element={
             <InspectionRoute>
               <CustomerSerialUpload />
-            </InspectionRoute>
-          } />
-          //-here
-          <Route path="/admin/settings/item-images" element={
-            <InspectionRoute>
-              <ItemImages />
             </InspectionRoute>
           } />
           <Route path="/admin/settings/Item-Image-Upload" element={
