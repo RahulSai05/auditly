@@ -19,6 +19,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
 import ItemImageUpload from "./pages/admin/ItemImageUpload";
+import ItemImages from "./pages/admin/ItemImages";
 import MappingRules from "./pages/admin/MappingRules";
 import AdminLayout from "./components/AdminLayout";
 import ItemReturn from "./pages/admin/ItemReturn";
@@ -315,6 +316,12 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/customer-serial-Upload" element={
             <InspectionRoute>
               <CustomerSerialUpload />
+            </InspectionRoute>
+          } />
+          //-here
+          <Route path="/admin/settings/item-images" element={
+            <InspectionRoute>
+              <ItemImages />
             </InspectionRoute>
           } />
           <Route path="/admin/settings/Item-Image-Upload" element={
