@@ -1721,7 +1721,6 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
         "item_id": item.id,
         "item_number": item.item_number,
         "item_description": item.item_description,
-        "brand_id": item.brand_id,
         "category": item.category,
         "configuration": item.configuration,
         "front_image_path": base_data.base_front_image,
