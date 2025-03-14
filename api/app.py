@@ -1694,6 +1694,7 @@ async def update_user_type(request: UpdateUserTypeRequest, db: Session = Depends
     }
 
 
+app.mount("/static", StaticFiles(directory="/home/ec2-user/auditly/static"), name="static")
 
 @app.get("/images/{item_number}")
 async def get_images_by_item_number(item_number: int, db: Session = Depends(get_db)):
@@ -1719,13 +1720,7 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
     if not base_data:
         raise HTTPException(status_code=404, detail="Base images not found for this item")
 
-    # Verify file existence
-    front_image = f"/static/base_images/{os.path.basename(base_data.base_front_image)}"
-    back_image = f"/static/base_images/{os.path.basename(base_data.base_back_image)}"
-
-    front_image_path = f"{front_image}" if os.path.exists(f"/home/ec2-user/auditly{front_image}") else None
-    back_image_path = f"{back_image}" if os.path.exists(f"/home/ec2-user/auditly{back_image}") else None
-
+    # Return relative paths for the images
     return {
         "item_id": item.id,
         "item_number": item.item_number,
@@ -1733,6 +1728,6 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
         "brand_id": item.brand_id,
         "category": item.category,
         "configuration": item.configuration,
-        "front_image_path": front_image_path or "Image not found",
-        "back_image_path": back_image_path or "Image not found",
+        "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",  # Relative path
+        "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
     }
