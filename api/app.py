@@ -326,7 +326,7 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
         dict: Contains the paths to the front and back images.
     """
     # Query the database for the base data record with the given ID
-    base_data = db.query(BaseData).filter(BaseData.id == id).first()
+    base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == id).first()
 
     # Check if the record exists
     if not base_data:
