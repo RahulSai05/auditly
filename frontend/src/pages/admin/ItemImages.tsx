@@ -1,23 +1,50 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Loader2, X, Image as ImageIcon, ClipboardList } from "lucide-react";
+
+interface ItemData {
+  item_id: number;
+  item_number: number;
+  item_description: string;
+  brand_id: number;
+  category: string;
+  configuration: string;
+  front_image_path: string;
+  back_image_path: string;
+}
 
 const ItemImages: React.FC = () => {
   const [itemNumber, setItemNumber] = useState<string>("");
-  const [itemData, setItemData] = useState<{
-    item_id: number;
-    item_number: number;
-    item_description: string;
-    brand_id: number;
-    category: string;
-    configuration: string;
-    front_image_path: string;
-    back_image_path: string;
-  } | null>(null);
+  const [itemData, setItemData] = useState<ItemData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Replace this with your actual backend URL
-  const backendUrl = "http://54.210.159.220:8000"; // Example: Replace with your backend URL
+  const backendUrl = "http://54.210.159.220:8000";
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+      },
+    },
+  };
 
   const fetchItemData = async () => {
     if (!itemNumber) {
@@ -30,14 +57,10 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
-      // Fetch item data
       const response = await axios.get(`${backendUrl}/images/${itemNumber}`);
       const data = response.data;
-
-      // Construct full image URLs dynamically
       data.front_image_path = `${backendUrl}${data.front_image_path}`;
       data.back_image_path = `${backendUrl}${data.back_image_path}`;
-
       setItemData(data);
     } catch (err: any) {
       setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
@@ -46,84 +69,225 @@ const ItemImages: React.FC = () => {
     }
   };
 
+  const handleClear = () => {
+    setItemNumber("");
+    setItemData(null);
+    setError(null);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !loading) {
+      fetchItemData();
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-8">Item Image Viewer</h1>
-
-      {/* Input for item number */}
-      <div className="flex items-center gap-4 mb-8">
-        <input
-          type="text"
-          placeholder="Enter Item Number"
-          value={itemNumber}
-          onChange={(e) => setItemNumber(e.target.value)}
-          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-        />
-        <button
-          onClick={fetchItemData}
-          disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-16"
         >
-          {loading ? "Loading..." : "Fetch Data"}
-        </button>
-      </div>
+          <motion.div
+            initial={{ scale: 0.8, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 200,
+              damping: 20,
+            }}
+            className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
+          >
+            <ClipboardList className="w-10 h-10 text-blue-600" />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
+          >
+            Item Image Viewer
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-xl text-gray-600 max-w-2xl mx-auto"
+          >
+            View and verify item images with real-time updates
+          </motion.p>
+        </motion.div>
 
-      {/* Display error message */}
-      {error && (
-        <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
-          {error}
-        </div>
-      )}
-
-      {/* Display item data and images */}
-      {itemData && (
-        <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6">Item Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <p><span className="font-semibold">Item Number:</span> {itemData.item_number}</p>
-              <p><span className="font-semibold">Description:</span> {itemData.item_description}</p>
-              <p><span className="font-semibold">Brand ID:</span> {itemData.brand_id}</p>
-              <p><span className="font-semibold">Category:</span> {itemData.category}</p>
-              <p><span className="font-semibold">Configuration:</span> {itemData.configuration}</p>
-            </div>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Front Image</h3>
-                <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
-                  {itemData.front_image_path ? (
-                    <img
-                      src={itemData.front_image_path}
-                      alt="Front Image"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No front image available
-                    </div>
+        {/* Search Section */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+          className="max-w-6xl mx-auto"
+        >
+          <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50">
+            <div className="p-8">
+              <div className="flex gap-4 max-w-3xl mx-auto">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Enter item number..."
+                    value={itemNumber}
+                    onChange={(e) => setItemNumber(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full px-6 py-4 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
+                    disabled={loading}
+                  />
+                  {itemNumber && (
+                    <motion.button
+                      onClick={handleClear}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-50 rounded-full transition-colors"
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <X className="w-5 h-5 text-blue-400" />
+                    </motion.button>
                   )}
                 </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Back Image</h3>
-                <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
-                  {itemData.back_image_path ? (
-                    <img
-                      src={itemData.back_image_path}
-                      alt="Back Image"
-                      className="w-full h-full object-cover"
-                    />
+                <motion.button
+                  onClick={fetchItemData}
+                  disabled={loading}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300 hover:translate-y-[-2px]"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No back image available
-                    </div>
+                    <Search className="w-6 h-6" />
                   )}
-                </div>
+                </motion.button>
               </div>
+
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mt-4 p-4 bg-red-50 text-red-800 rounded-xl flex items-center gap-2 max-w-3xl mx-auto"
+                  >
+                    <X className="w-5 h-5 flex-shrink-0" />
+                    <p>{error}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+
+            <AnimatePresence mode="wait">
+              {itemData && (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="border-t border-blue-50"
+                >
+                  <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Item Details */}
+                    <motion.div 
+                      variants={itemVariants}
+                      className="lg:col-span-1 bg-blue-50/50 rounded-2xl p-6"
+                    >
+                      <h3 className="text-xl font-semibold text-gray-900 mb-6">Item Details</h3>
+                      <div className="space-y-4">
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Item Number</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.item_number}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Description</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.item_description}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Brand ID</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.brand_id}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Category</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.category}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Configuration</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.configuration}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Images Section */}
+                    <motion.div 
+                      variants={itemVariants}
+                      className="lg:col-span-2 grid grid-cols-2 gap-8"
+                    >
+                      {/* Front Image */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-semibold text-gray-900">Front View</h3>
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                            Primary
+                          </span>
+                        </div>
+                        <motion.div 
+                          className="aspect-square rounded-2xl border-2 border-blue-100 overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          {itemData.front_image_path ? (
+                            <img
+                              src={itemData.front_image_path}
+                              alt="Front View"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                              <ImageIcon className="w-16 h-16 mb-2" />
+                              <p className="text-sm">No front image available</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      </div>
+
+                      {/* Back Image */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-semibold text-gray-900">Back View</h3>
+                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                            Secondary
+                          </span>
+                        </div>
+                        <motion.div 
+                          className="aspect-square rounded-2xl border-2 border-gray-100 overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          {itemData.back_image_path ? (
+                            <img
+                              src={itemData.back_image_path}
+                              alt="Back View"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                              <ImageIcon className="w-16 h-16 mb-2" />
+                              <p className="text-sm">No back image available</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
-      )}
+        </motion.div>
+      </div>
     </div>
   );
 };

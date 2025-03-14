@@ -1,7 +1,6 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { Search, Loader2, X, ClipboardList, Box, Truck, Building2, ShoppingBag } from "lucide-react";
+import { Search, Loader2, X, ClipboardList, Box, Truck, Building2, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ShippingInfo {
@@ -9,6 +8,7 @@ interface ShippingInfo {
   address: string;
   city: string;
   state: string;
+  country: string;
 }
 
 interface ReceiptData {
@@ -24,9 +24,30 @@ interface ReceiptData {
 
 const AuditlyInspection = () => {
   const [receiptNumber, setReceiptNumber] = useState("");
-  const [data, setData] = useState<ReceiptData | null>(null);
+  const [data, setData] = useState<ReceiptData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0); // Track the current receipt index
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await axios.post("http://54.210.159.220:8000/get-inspection-data", {
+          receipt_number: null,
+        });
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching details:", error);
+        setError("Failed to fetch details. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, []);
 
   const handleSearch = async () => {
     if (!receiptNumber.trim()) {
@@ -37,10 +58,11 @@ const AuditlyInspection = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.post("http://54.210.159.220:8000/get-receipt-data", {
+      const response = await axios.post("http://54.210.159.220:8000/get-inspection-data", {
         receipt_number: receiptNumber,
       });
       setData(response.data);
+      setCurrentIndex(0); // Reset to the first item after search
     } catch (error) {
       console.error("Error fetching details:", error);
       setError("Failed to fetch details. Please try again.");
@@ -58,6 +80,18 @@ const AuditlyInspection = () => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading) {
       handleSearch();
+    }
+  };
+
+  const handleNext = () => {
+    if (data && currentIndex < data.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (data && currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
     }
   };
 
@@ -186,47 +220,73 @@ const AuditlyInspection = () => {
             </div>
 
             <AnimatePresence mode="wait">
-              {data && (
+              {data && data.length > 0 && (
                 <motion.div
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
                   className="border-t border-blue-50"
                 >
+                  {/* Navigation Buttons */}
+                  <div className="flex justify-between items-center p-4 bg-blue-50">
+                    <motion.button
+                      onClick={handlePrevious}
+                      disabled={currentIndex === 0}
+                      className="p-2 bg-white rounded-full shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <ChevronLeft className="w-6 h-6 text-blue-600" />
+                    </motion.button>
+                    <span className="text-sm text-gray-600">
+                      {currentIndex + 1} of {data.length}
+                    </span>
+                    <motion.button
+                      onClick={handleNext}
+                      disabled={currentIndex === data.length - 1}
+                      className="p-2 bg-white rounded-full shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <ChevronRight className="w-6 h-6 text-blue-600" />
+                    </motion.button>
+                  </div>
+
+                  {/* Display Current Receipt */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-blue-50">
                     {[
                       {
                         icon: Box,
                         title: "Item Details",
                         data: [
-                          { label: "Description", value: data.item_description },
-                          { label: "Brand", value: data.brand_name },
-                          { label: "Condition", value: data.overall_condition },
+                          { label: "Description", value: data[currentIndex].item_description },
+                          { label: "Brand", value: data[currentIndex].brand_name },
+                          { label: "Condition", value: data[currentIndex].overall_condition },
                         ],
                       },
                       {
                         icon: ShoppingBag,
                         title: "Order Info",
                         data: [
-                          { label: "Return Order #", value: data.return_order_number },
-                          { label: "Original Order #", value: data.original_sales_order_number },
-                          { label: "Quantity", value: data.return_qty },
+                          { label: "Return Order #", value: data[currentIndex].return_order_number },
+                          { label: "Original Order #", value: data[currentIndex].original_sales_order_number },
+                          { label: "Quantity", value: data[currentIndex].return_qty },
                         ],
                       },
                       {
                         icon: Building2,
                         title: "Shipping Address",
                         data: [
-                          { label: "Recipient", value: data.shipping_info.shipped_to_person },
-                          { label: "Address", value: data.shipping_info.address },
-                          { label: "Location", value: `${data.shipping_info.city}, ${data.shipping_info.state}` },
+                          { label: "Recipient", value: data[currentIndex].shipping_info.shipped_to_person },
+                          { label: "Address", value: data[currentIndex].shipping_info.address },
+                          { label: "Location", value: `${data[currentIndex].shipping_info.city}, ${data[currentIndex].shipping_info.state}, ${data[currentIndex].shipping_info.country}` },
                         ],
                       },
                       {
                         icon: Truck,
                         title: "Inspection Status",
                         data: [
-                          { label: "Receipt Number", value: data.receipt_number },
+                          { label: "Receipt Number", value: data[currentIndex].receipt_number },
                           { label: "Status", value: "Inspection Complete", isStatus: true },
                         ],
                       },
