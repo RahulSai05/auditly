@@ -3,11 +3,21 @@ import axios from "axios";
 
 const ItemImages: React.FC = () => {
   const [itemNumber, setItemNumber] = useState<string>("");
-  const [itemData, setItemData] = useState<any>(null);
+  const [itemData, setItemData] = useState<{
+    item_id: number;
+    item_number: number;
+    item_description: string;
+    brand_id: number;
+    category: string;
+    configuration: string;
+    front_image_path: string;
+    back_image_path: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = "http://54.210.159.220:8000";
+  // Replace this with your actual backend URL
+  const backendUrl = "http://54.210.159.220:8000"; // Example: Replace with your backend URL
 
   const fetchItemData = async () => {
     if (!itemNumber) {
@@ -20,23 +30,17 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
+      // Fetch item data
       const response = await axios.get(`${backendUrl}/images/${itemNumber}`);
       const data = response.data;
 
-      // Handle image availability
-      data.front_image_path =
-        data.front_image_path !== "Image not found"
-          ? `${backendUrl}${data.front_image_path}`
-          : null;
-
-      data.back_image_path =
-        data.back_image_path !== "Image not found"
-          ? `${backendUrl}${data.back_image_path}`
-          : null;
+      // Construct full image URLs dynamically
+      data.front_image_path = `${backendUrl}${data.front_image_path}`;
+      data.back_image_path = `${backendUrl}${data.back_image_path}`;
 
       setItemData(data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Error fetching item data.");
+      setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
     } finally {
       setLoading(false);
     }
@@ -46,6 +50,7 @@ const ItemImages: React.FC = () => {
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100">
       <h1 className="text-3xl font-bold mb-8">Item Image Viewer</h1>
 
+      {/* Input for item number */}
       <div className="flex items-center gap-4 mb-8">
         <input
           type="text"
@@ -63,37 +68,24 @@ const ItemImages: React.FC = () => {
         </button>
       </div>
 
+      {/* Display error message */}
       {error && (
         <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
           {error}
         </div>
       )}
 
+      {/* Display item data and images */}
       {itemData && (
         <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-6">Item Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <p>
-                <span className="font-semibold">Item Number:</span>{" "}
-                {itemData.item_number}
-              </p>
-              <p>
-                <span className="font-semibold">Description:</span>{" "}
-                {itemData.item_description}
-              </p>
-              <p>
-                <span className="font-semibold">Brand ID:</span>{" "}
-                {itemData.brand_id}
-              </p>
-              <p>
-                <span className="font-semibold">Category:</span>{" "}
-                {itemData.category}
-              </p>
-              <p>
-                <span className="font-semibold">Configuration:</span>{" "}
-                {itemData.configuration}
-              </p>
+              <p><span className="font-semibold">Item Number:</span> {itemData.item_number}</p>
+              <p><span className="font-semibold">Description:</span> {itemData.item_description}</p>
+              <p><span className="font-semibold">Brand ID:</span> {itemData.brand_id}</p>
+              <p><span className="font-semibold">Category:</span> {itemData.category}</p>
+              <p><span className="font-semibold">Configuration:</span> {itemData.configuration}</p>
             </div>
             <div className="space-y-6">
               <div>
