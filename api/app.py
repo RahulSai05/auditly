@@ -515,7 +515,7 @@ async def upload_base_images(
     new_base_data = BaseData(
         base_front_image=front_image_path,
         base_back_image=back_image_path,
-        base_to_item_mapping=item.id
+        base_to_item_mapping=item.item_number
     ) 
     db.add(new_base_data)
     db.commit()
