@@ -313,7 +313,7 @@ async def get_customer_images(id: int, db: Session = Depends(get_db)):
         "back_image_path": customer_data.customer_back_image,
     }
 
-@app.get("/base-images/{id}")
+@app.get("/base-images/{item-number}")
 async def get_base_images(id: int, db: Session = Depends(get_db)):
     """
     Retrieve the paths to the base front and back images from the database.
