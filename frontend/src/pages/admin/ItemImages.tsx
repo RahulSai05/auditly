@@ -17,7 +17,7 @@ const ItemImages: React.FC = () => {
 
   useEffect(() => {
     const fetchItemImages = async () => {
-      const itemNumber = 123; // Replace with the actual item number or get it from props/route
+      const itemNumber = 52093240; // Replace with the actual item number or get it from props/route
       try {
         const response = await axios.get(`http://54.210.159.220:8000/images/${itemNumber}`);
         setItemData(response.data);
