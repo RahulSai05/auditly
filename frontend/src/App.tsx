@@ -225,6 +225,8 @@ export default function App(): JSX.Element {
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
+  const inspection_with_adminlayoutRoutes = ["/"]
+
   useEffect(() => {
     console.log(itemData);
   }, [itemData]);
@@ -335,62 +337,7 @@ export default function App(): JSX.Element {
             </InspectionRoute>
           } />
 
-          {/* Standard Inspection User Routes */}
-          <Route path="/" element={
-            <InspectionRoute>
-              <Home />
-            </InspectionRoute>
-          } />
-          <Route path="/options" element={
-            <InspectionRoute>
-              <Options />
-            </InspectionRoute>
-          } />
-          <Route path="/help-center" element={
-            <InspectionRoute>
-              <HelpCenter />
-            </InspectionRoute>
-          } />
-          <Route path="/option/manual" element={
-            <InspectionRoute>
-              <GetAll />
-            </InspectionRoute>
-          } />
-          <Route path="/return/details" element={
-            <InspectionRoute>
-              <Details />
-            </InspectionRoute>
-          } />
-          <Route path="/return/inspection" element={
-            <InspectionRoute>
-              <Inspection />
-            </InspectionRoute>
-          } />
-          <Route path="/return/upload-media" element={
-            <InspectionRoute>
-              <UploadMedia />
-            </InspectionRoute>
-          } />
-          <Route path="/return/compare" element={
-            <InspectionRoute>
-              <Compare />
-            </InspectionRoute>
-          } />
-          <Route path="/return/review" element={
-            <InspectionRoute>
-              <Review />
-            </InspectionRoute>
-          } />
-          <Route path="/return/done" element={
-            <InspectionRoute>
-              <Done />
-            </InspectionRoute>
-          } />
-          <Route path="/auto/scan" element={
-            <InspectionRoute>
-              <Scan />
-            </InspectionRoute>
-          } />
+
         </Route>
 
         {/* Other Protected Routes outside AdminLayout */}
@@ -410,6 +357,62 @@ export default function App(): JSX.Element {
           </ProtectedRoute>
         } />
 
+        {/* Standard Inspection User Routes */}
+        <Route path="/" element={
+          <InspectionRoute>
+            <Home />
+          </InspectionRoute>
+        } />
+        <Route path="/options" element={
+          <InspectionRoute>
+            <Options />
+          </InspectionRoute>
+        } />
+        <Route path="/help-center" element={
+          <InspectionRoute>
+            <HelpCenter />
+          </InspectionRoute>
+        } />
+        <Route path="/option/manual" element={
+          <InspectionRoute>
+            <GetAll />
+          </InspectionRoute>
+        } />
+        <Route path="/return/details" element={
+          <InspectionRoute>
+            <Details />
+          </InspectionRoute>
+        } />
+        <Route path="/return/inspection" element={
+          <InspectionRoute>
+            <Inspection />
+          </InspectionRoute>
+        } />
+        <Route path="/return/upload-media" element={
+          <InspectionRoute>
+            <UploadMedia />
+          </InspectionRoute>
+        } />
+        <Route path="/return/compare" element={
+          <InspectionRoute>
+            <Compare />
+          </InspectionRoute>
+        } />
+        <Route path="/return/review" element={
+          <InspectionRoute>
+            <Review />
+          </InspectionRoute>
+        } />
+        <Route path="/return/done" element={
+          <InspectionRoute>
+            <Done />
+          </InspectionRoute>
+        } />
+        <Route path="/auto/scan" element={
+          <InspectionRoute>
+            <Scan />
+          </InspectionRoute>
+        } />
         {/* Catch-all redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
