@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from database import engine, SessionLocal
 from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Optional
 from sqlalchemy import distinct, desc, or_
