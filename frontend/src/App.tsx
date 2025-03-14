@@ -95,7 +95,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isLoggedIn = localStorage.getItem("token") !== null;
   const location = useLocation();
 
-  if (!isLoggedIn) {
+  const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
+  const isauthroute = authRoutes.includes(location.pathname);
+
+  if (!isLoggedIn && !isauthroute) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -189,7 +192,12 @@ export default function App(): JSX.Element {
             if (!isAuthorized) {
               localStorage.removeItem("token");
               localStorage.removeItem("usertype");
-              navigate("/login");
+              const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
+              const isauthroute = authRoutes.includes(location.pathname);
+              if (isauthroute) {
+                console.log("Asd")
+                navigate("/login");
+              }
             }
           } else if (!userExists) {
             console.log("User does not exist");
@@ -201,7 +209,12 @@ export default function App(): JSX.Element {
           console.log("Invalid user state");
           localStorage.removeItem("token");
           localStorage.removeItem("usertype");
-          navigate("/login");
+          const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
+          const isauthroute = authRoutes.includes(location.pathname);
+          if (!isauthroute) {
+            console.log("here logged in")
+            navigate("/login");
+          }
         }
       } catch (error) {
         console.error("Error checking user validity:", error);
@@ -225,7 +238,6 @@ export default function App(): JSX.Element {
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
-  const inspection_with_adminlayoutRoutes = ["/"]
 
   useEffect(() => {
     console.log(itemData);

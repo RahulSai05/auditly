@@ -42,10 +42,15 @@ const Login = () => {
       const userTypeArray = Array.isArray(userData["User Type"]) ? userData["User Type"] : [];
       setIsAdmin(userTypeArray.includes("admin"));
       setIsReportUser(userTypeArray.includes("reports_user"));
-      setIsInspectionUser(userTypeArray.includes("inspection_user"));
+      setIsInspectionUser(userTypeArray.includes("inpection_user"));
 
       // Redirect based on the user role
-      if (isAdmin) {
+      if (isAdmin && isInspectionUser && isReportUser) {
+        console.log("all done");
+
+        navigate('/')
+      } else if (isAdmin) {
+        console.log("all done");
         navigate('/admin/settings/connectors/inbound');
       } else if (isInspectionUser) {
         navigate('/');
