@@ -125,11 +125,11 @@ const ItemImages: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="max-w-3xl mx-auto"
+          className="max-w-6xl mx-auto"
         >
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50">
             <div className="p-8">
-              <div className="flex gap-4">
+              <div className="flex gap-4 max-w-3xl mx-auto">
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -172,7 +172,7 @@ const ItemImages: React.FC = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="mt-4 p-4 bg-red-50 text-red-800 rounded-xl flex items-center gap-2"
+                    className="mt-4 p-4 bg-red-50 text-red-800 rounded-xl flex items-center gap-2 max-w-3xl mx-auto"
                   >
                     <X className="w-5 h-5 flex-shrink-0" />
                     <p>{error}</p>
@@ -187,57 +187,98 @@ const ItemImages: React.FC = () => {
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
-                  className="border-t border-blue-50 p-6"
+                  className="border-t border-blue-50"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <motion.div variants={itemVariants} className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Item Details</h3>
-                      <div className="space-y-2">
-                        <p><span className="font-medium text-gray-700">Item Number:</span> {itemData.item_number}</p>
-                        <p><span className="font-medium text-gray-700">Description:</span> {itemData.item_description}</p>
-                        <p><span className="font-medium text-gray-700">Brand ID:</span> {itemData.brand_id}</p>
-                        <p><span className="font-medium text-gray-700">Category:</span> {itemData.category}</p>
-                        <p><span className="font-medium text-gray-700">Configuration:</span> {itemData.configuration}</p>
+                  <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Item Details */}
+                    <motion.div 
+                      variants={itemVariants}
+                      className="lg:col-span-1 bg-blue-50/50 rounded-2xl p-6"
+                    >
+                      <h3 className="text-xl font-semibold text-gray-900 mb-6">Item Details</h3>
+                      <div className="space-y-4">
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Item Number</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.item_number}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Description</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.item_description}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Brand ID</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.brand_id}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Category</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.category}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm">
+                          <p className="text-sm text-gray-500">Configuration</p>
+                          <p className="text-lg font-medium text-gray-900">{itemData.configuration}</p>
+                        </div>
                       </div>
                     </motion.div>
 
-                    <motion.div variants={itemVariants} className="space-y-6">
+                    {/* Images Section */}
+                    <motion.div 
+                      variants={itemVariants}
+                      className="lg:col-span-2 grid grid-cols-2 gap-8"
+                    >
+                      {/* Front Image */}
                       <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Images</h3>
-                        <div className="grid grid-cols-1 gap-4">
-                          <div className="space-y-2">
-                            <p className="font-medium text-gray-700">Front Image</p>
-                            <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
-                              {itemData.front_image_path ? (
-                                <img
-                                  src={itemData.front_image_path}
-                                  alt="Front"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <ImageIcon className="w-8 h-8" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <p className="font-medium text-gray-700">Back Image</p>
-                            <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
-                              {itemData.back_image_path ? (
-                                <img
-                                  src={itemData.back_image_path}
-                                  alt="Back"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <ImageIcon className="w-8 h-8" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-semibold text-gray-900">Front View</h3>
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                            Primary
+                          </span>
                         </div>
+                        <motion.div 
+                          className="aspect-square rounded-2xl border-2 border-blue-100 overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          {itemData.front_image_path ? (
+                            <img
+                              src={itemData.front_image_path}
+                              alt="Front View"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                              <ImageIcon className="w-16 h-16 mb-2" />
+                              <p className="text-sm">No front image available</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      </div>
+
+                      {/* Back Image */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-semibold text-gray-900">Back View</h3>
+                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                            Secondary
+                          </span>
+                        </div>
+                        <motion.div 
+                          className="aspect-square rounded-2xl border-2 border-gray-100 overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          {itemData.back_image_path ? (
+                            <img
+                              src={itemData.back_image_path}
+                              alt="Back View"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                              <ImageIcon className="w-16 h-16 mb-2" />
+                              <p className="text-sm">No back image available</p>
+                            </div>
+                          )}
+                        </motion.div>
                       </div>
                     </motion.div>
                   </div>
