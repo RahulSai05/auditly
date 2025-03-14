@@ -1,21 +1,21 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
 
-const WithRole = ({ allowedRoles, children }: { allowedRoles: string[], children: JSX.Element }) => {
-  const navigate = useNavigate();
-  const userType = localStorage.getItem("userType");
+// const WithRole = ({ allowedRoles, children }: { allowedRoles: string[], children: JSX.Element }) => {
+//   const navigate = useNavigate();
+//   const userType = localStorage.getItem("userType");
 
-  useEffect(() => {
-    if (!userType || !allowedRoles.includes(userType)) {
-      navigate("/unauthorized");
-    }
-  }, [userType, allowedRoles, navigate]);
+//   useEffect(() => {
+//     if (!userType || !allowedRoles.includes(userType)) {
+//       navigate("/unauthorized");
+//     }
+//   }, [userType, allowedRoles, navigate]);
 
-  if (!userType || !allowedRoles.includes(userType)) {
-    return null; // Return null or a loading spinner while checking
-  }
+//   if (!userType || !allowedRoles.includes(userType)) {
+//     return null; // Return null or a loading spinner while checking
+//   }
 
-  return children;
-};
+//   return children;
+// };
 
-export default WithRole;
+// export default WithRole;
