@@ -1693,39 +1693,6 @@ async def update_user_type(request: UpdateUserTypeRequest, db: Session = Depends
         }
     }
 
-# @app.get("/images/{item_number}")
-# async def get_images_by_item_number(item_number: int, db: Session = Depends(get_db)):
-#     """
-#     Retrieve base front and back images using the item number.
-
-#     Args:
-#         item_number (int): The item number to fetch images for.
-#         db (Session): The database session dependency.
-
-#     Returns:
-#         dict: Contains the item details and image paths.
-#     """
-#     # Fetch the item based on the item_number
-#     item = db.query(Item).filter(Item.item_number == item_number).first()
-    
-#     if not item:
-#         raise HTTPException(status_code=404, detail="Item not found")
-
-#     # Fetch the base image data using the item's ID
-#     base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
-
-#     if not base_data:
-#         raise HTTPException(status_code=404, detail="Base images not found for this item")
-
-#     return {
-#         "item_id": item.id,
-#         "item_number": item.item_number,
-#         "item_description": item.item_description,
-#         "category": item.category,
-#         "configuration": item.configuration,
-#         "front_image_path": base_data.base_front_image,
-#         "back_image_path": base_data.base_back_image,
-#     }
 
 
 @app.get("/images/{item_number}")
@@ -1752,7 +1719,13 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
     if not base_data:
         raise HTTPException(status_code=404, detail="Base images not found for this item")
 
-    # Return relative paths for the images
+    # Verify file existence
+    front_image = f"/static/base_images/{os.path.basename(base_data.base_front_image)}"
+    back_image = f"/static/base_images/{os.path.basename(base_data.base_back_image)}"
+
+    front_image_path = f"{front_image}" if os.path.exists(f"/home/ec2-user/auditly{front_image}") else None
+    back_image_path = f"{back_image}" if os.path.exists(f"/home/ec2-user/auditly{back_image}") else None
+
     return {
         "item_id": item.id,
         "item_number": item.item_number,
@@ -1760,6 +1733,6 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
         "brand_id": item.brand_id,
         "category": item.category,
         "configuration": item.configuration,
-        "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",  # Relative path
-        "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
+        "front_image_path": front_image_path or "Image not found",
+        "back_image_path": back_image_path or "Image not found",
     }
