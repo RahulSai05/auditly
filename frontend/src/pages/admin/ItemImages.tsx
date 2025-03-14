@@ -16,6 +16,9 @@ const ItemImages: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Replace this with your actual backend URL
+  const backendUrl = "http://54.210.159.220:8000"; // Example: Replace with your backend URL
+
   const fetchItemData = async () => {
     if (!itemNumber) {
       setError("Please enter an item number.");
@@ -27,11 +30,11 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
-      const response = await axios.get(`http://54.210.159.220:8000/images/${itemNumber}`);
+      // Fetch item data
+      const response = await axios.get(`${backendUrl}/images/${itemNumber}`);
       const data = response.data;
 
       // Construct full image URLs dynamically
-      const backendUrl = "http://your-api-url"; // Replace with your backend URL
       data.front_image_path = `${backendUrl}${data.front_image_path}`;
       data.back_image_path = `${backendUrl}${data.back_image_path}`;
 
