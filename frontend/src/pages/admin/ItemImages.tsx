@@ -19,7 +19,7 @@ const ItemImages: React.FC = () => {
     const fetchItemImages = async () => {
       const itemNumber = 52093240; // Replace with the actual item number or get it from props/route
       try {
-        const response = await axios.get(`http://54.210.159.220:8000/images/${itemNumber}`);
+        const response = await axios.get(`http://your-api-url/images/${itemNumber}`);
         setItemData(response.data);
       } catch (err: any) {
         setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item images.");
@@ -65,7 +65,7 @@ const ItemImages: React.FC = () => {
               <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
                 {itemData.front_image_path ? (
                   <img
-                    src={itemData.front_image_path}
+                    src={itemData.front_image_path} // Use the full URL returned by the API
                     alt="Front Image"
                     className="w-full h-full object-cover"
                   />
@@ -81,7 +81,7 @@ const ItemImages: React.FC = () => {
               <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
                 {itemData.back_image_path ? (
                   <img
-                    src={itemData.back_image_path}
+                    src={itemData.back_image_path} // Use the full URL returned by the API
                     alt="Back Image"
                     className="w-full h-full object-cover"
                   />
