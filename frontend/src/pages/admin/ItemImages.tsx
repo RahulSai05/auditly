@@ -27,7 +27,7 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
-      const response = await axios.get(`http://your-api-url/images/${itemNumber}`);
+      const response = await axios.get(`http://54.210.159.220:8000/images/${itemNumber}`);
       const data = response.data;
 
       // Construct full image URLs dynamically
