@@ -982,59 +982,59 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
     user_back_image = customer_data.customer_back_image
     
 
-#     if factory_seal and new_conditiono:
-#         condition = "in good condition, making it resalable."
-#         print("Sent Email")
-
-#     else:
-#         condition = "NOT in good condition, hence cannot be resold."
-#         print("Sent Email")
-
-#     subject = """
-#      Customer Account - """+str(account_number)+"""; Serial Number - """+str(serial_number)+"""; Inspection Id - """+str(receipt_number)+"""
-# """
-#     body = """
-# Hello,
-
-# The serial """+str(serial_number)+ """returned by the customer """+str(account_name)+""" – """+str(account_number)+""" was inspected for returns and found to be """+condition+""" 
-
-# Below are the reference details:
-
-# Customer_Name –  """+account_name+"""
-# Customer_Account – """+str(account_number)+"""
-# Serial_Number – """+str(serial_number)+"""
-# Sales Order number- """+str(sales_order_number)+"""
-# Return Order Number- """+str(return_order_number)+"""
-# Inspection Number - """+str(receipt_number)+"""
-
-# Returned Images are atached.
-
-# Thanks,
-# Audit team
-# """
-#     print(customer_email)
-#     if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
-#     elif ENV == "TEST":
-#         secret_data = get_secret("test/auditly/secrets")
-#         send_email(secret_data["from_email_address"], secret_data["from_email_password"], customer_email, subject, body, [user_front_image, user_back_image])
-
-def send_inspection_email(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, customer_email, user_front_image, user_back_image, factory_seal, new_condition):
-    if factory_seal and new_condition:
+    if factory_seal and new_conditiono:
         condition = "in good condition, making it resalable."
+        print("Sent Email")
+
     else:
         condition = "NOT in good condition, hence cannot be resold."
+        print("Sent Email")
 
-    subject = _generate_inspection_email_subject(account_number, serial_number, receipt_number)
-    body = _generate_inspection_email_body(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, condition)
+    subject = """
+     Customer Account - """+str(account_number)+"""; Serial Number - """+str(serial_number)+"""; Inspection Id - """+str(receipt_number)+"""
+"""
+    body = """
+Hello,
 
-    print("Sent Email")
+The serial """+str(serial_number)+ """returned by the customer """+str(account_name)+""" – """+str(account_number)+""" was inspected for returns and found to be """+condition+""" 
+
+Below are the reference details:
+
+Customer_Name –  """+account_name+"""
+Customer_Account – """+str(account_number)+"""
+Serial_Number – """+str(serial_number)+"""
+Sales Order number- """+str(sales_order_number)+"""
+Return Order Number- """+str(return_order_number)+"""
+Inspection Number - """+str(receipt_number)+"""
+
+Returned Images are atached.
+
+Thanks,
+Audit team
+"""
     print(customer_email)
-
-    if ENV == "DEV":
-        send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
+    if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
     elif ENV == "TEST":
         secret_data = get_secret("test/auditly/secrets")
         send_email(secret_data["from_email_address"], secret_data["from_email_password"], customer_email, subject, body, [user_front_image, user_back_image])
+
+# def send_inspection_email(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, customer_email, user_front_image, user_back_image, factory_seal, new_condition):
+#     if factory_seal and new_condition:
+#         condition = "in good condition, making it resalable."
+#     else:
+#         condition = "NOT in good condition, hence cannot be resold."
+
+#     subject = _generate_inspection_email_subject(account_number, serial_number, receipt_number)
+#     body = _generate_inspection_email_body(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, condition)
+
+#     print("Sent Email")
+#     print(customer_email)
+
+#     if ENV == "DEV":
+#         send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
+#     elif ENV == "TEST":
+#         secret_data = get_secret("test/auditly/secrets")
+#         send_email(secret_data["from_email_address"], secret_data["from_email_password"], customer_email, subject, body, [user_front_image, user_back_image])
 
     def classify_condition(front_score, back_score, ssi_score):
         average_score = (front_score + back_score) / 2
