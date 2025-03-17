@@ -37,3 +37,32 @@ Best regards,
 The Auditly Team
 """
     return email_body
+
+
+def _generate_inspection_email_body(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, condition):
+    body = f"""
+Hello,
+
+The serial {serial_number} returned by the customer {account_name} – {account_number} was inspected for returns and found to be {condition}.
+
+Below are the reference details:
+
+Customer_Name – {account_name}
+Customer_Account – {account_number}
+Serial_Number – {serial_number}
+Sales Order number – {sales_order_number}
+Return Order Number – {return_order_number}
+Inspection Number – {receipt_number}
+
+Returned Images are attached.
+
+Thanks,
+Audit team
+"""
+    return body
+
+def _generate_inspection_email_subject(account_number, serial_number, receipt_number):
+    subject = f"""
+Customer Account - {account_number}; Serial Number - {serial_number}; Inspection Id - {receipt_number}
+"""
+    return subject
