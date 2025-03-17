@@ -12,6 +12,8 @@ from send_email import send_email
 from settings import ENV
 from secret import get_secret
 from pydantic import BaseModel
+from email_body import _login_email_body, _forget_password_email_body
+from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
 from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
@@ -339,9 +341,6 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
         "back_image_path": base_data.base_back_image,
     }
 
-class CompareImagesRequest(BaseModel):
-    customer_id: int
-    item_id: int
 @app.post("/upload-customer-return-item-data")
 async def upload_customer_item_data(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
@@ -531,10 +530,6 @@ async def upload_base_images(
         }
     }
 
-# @app.get("/items")
-# async def get_items(db: Session = Depends(get_db)):
-#     items = db.query(Item).all()
-#     return items
 
 @app.get("/items")
 def get_all_items(db: Session = Depends(get_db)):
@@ -555,10 +550,6 @@ def get_all_items(db: Session = Depends(get_db)):
         }
         for item in items
     ]
-# @app.get("/customer-item-data")
-# async def get_customer_item_data(db: Session = Depends(get_db)):
-#     customer_item_data = db.query(CustomerItemData).all()
-#     return customer_item_data
 
 
 @app.get("/customer-item-data")
@@ -646,18 +637,6 @@ async def get_item_details(return_order_number: str, db: Session = Depends(get_d
             raise HTTPException(status_code=404, detail="Item not found for the given return order number.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
-
-
-
-class AuditlyUserRequest(BaseModel):
-    user_name : str
-    first_name: str
-    last_name: str
-    gender: str
-    email: str
-    password: str
-    user_company: str
-
     
 
 
@@ -710,10 +689,6 @@ async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 
-class LoginRequest(BaseModel):
-    user_name : str
-    password: str
-
 @app.post("/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):   
     """
@@ -733,49 +708,13 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
-            # if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
-            # elif ENV == "TEST":
-            #     secret_data = get_secret("test/auditly/secrets")
-            #     send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Login OTP", "Pleae find the OPT login: "+str(otp_login))
             if ENV == "DEV":
-                email_body = """
-Dear User,
-
-Thank you for choosing Auditly, your trusted partner for streamlined audits and compliance management.
-
-To ensure the security of your account, we require you to verify your identity using a One-Time Password (OTP). Please find your OTP below:
-
-Your OTP for Login:
-{otp}
-
-This OTP is valid for the next 5 minutes. Please do not share this code with anyone for security reasons.
-
-If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
-
-Best regards,
-The Auditly Team
-"""
+                email_body = _login_email_body(otp_login)
                 send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Your Auditly Login OTP", email_body.format(otp=str(otp_login)))
 
             elif ENV == "TEST":
                 secret_data = get_secret("test/auditly/secrets")
-                email_body = """
-Dear User,
-
-Thank you for choosing Auditly, your trusted partner for streamlined audits and compliance management.
-
-To ensure the security of your account, we require you to verify your identity using a One-Time Password (OTP). Please find your OTP below:
-
-Your OTP for Login:
-{otp}
-
-This OTP is valid for the next 5 minutes. Please do not share this code with anyone for security reasons.
-
-If you did not request this OTP or are having trouble logging in, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
-
-Best regards,
-The Auditly Team
-"""
+                email_body = _login_email_body(otp_login)
                 send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Your Auditly Login OTP", email_body.format(otp=str(otp_login)))            
             return {
                 "message": "OTP Sent Successfully to registerd email",
@@ -784,12 +723,6 @@ The Auditly Team
        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-
-
-
-class VerifyLogin(BaseModel):
-    user_name : str
-    login_otp: str
 
 @app.post("/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
@@ -821,12 +754,6 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
             }
     # except Exception as e:
     #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-    
-    
-class LogoutRequest(BaseModel):
-    user_name : str
-    user_id: str
-
 
 @app.post("/logout")
 async def login(request: LogoutRequest, db: Session = Depends(get_db)):   
@@ -859,86 +786,108 @@ def _gen_otp():
     otp = random.randint(100000, 999999)
     return otp
 
-class ForgetPassword(BaseModel):
-    user_name : str
-    user_id: str
+
+# @app.post("/forget-password")
+# async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)):   
+#     """
+#     API to send otp to reset password 
+#     """ 
+#     try:  
+#         auditly_user_name = request.user_name
+#         auditly_user_id = request.user_id
+
+#         user_data = db.query(AuditlyUser).filter(or_(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.auditly_user_id == auditly_user_id)).first()
+
+#         if user_data:
+#             otp = _gen_otp()
+#             user_data.reset_otp = otp
+#             user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
+#             db.commit()
+#             db.refresh(user_data)
+#             print(send_email)
+#             if ENV == "DEV":
+#                 email_body = """
+# Dear User,
+
+# We received a request to reset your password for your Auditly account. To proceed, please use the One-Time Password (OTP) provided below:
+
+# Your OTP to Reset Password:
+# {otp}
+
+# This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
+
+# If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
+
+# Best regards,
+# The Auditly Team
+# """
+#                 send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))
+
+#             elif ENV == "TEST":
+#                 secret_data = get_secret("test/auditly/secrets")
+#                 email_body = """
+# Dear User,
+
+# We received a request to reset your password for your Auditly account. To proceed, please use the One-Time Password (OTP) provided below:
+
+# Your OTP to Reset Password:
+# {otp}
+
+# This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
+
+# If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
+
+# Best regards,
+# The Auditly Team
+# """
+#                 send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))            
+#             return {
+#                 "message": "OTP Sent Successfully to registerd email"
+#              }
+#         else:
+#             return {
+#                 "message": "User does not exist"
+#              }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 @app.post("/forget-password")
 async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)):   
     """
-    API to send otp to reset password 
+    API to send OTP to reset password.
     """ 
     try:  
         auditly_user_name = request.user_name
         auditly_user_id = request.user_id
 
-        user_data = db.query(AuditlyUser).filter(or_(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.auditly_user_id == auditly_user_id)).first()
+        user_data = db.query(AuditlyUser).filter(or_(AuditlyUser.auditly_user_name == auditly_user_name, AuditlyUser.auditly_user_id == auditly_user_id)).first()
 
         if user_data:
             otp = _gen_otp()
             user_data.reset_otp = otp
-            user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
+            user_data.reset_otp_expiration = datetime.datetime.now() + datetime.timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
-            print(send_email)
-            #send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to restet your password: "+str(otp))
-            # if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
-            # elif ENV == "TEST":
-            #     secret_data = get_secret("test/auditly/secrets")
-            #     send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset OTP", "Pleae find the OPT to reset you password: "+str(otp))
+
             if ENV == "DEV":
-                email_body = """
-Dear User,
-
-We received a request to reset your password for your Auditly account. To proceed, please use the One-Time Password (OTP) provided below:
-
-Your OTP to Reset Password:
-{otp}
-
-This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
-
-If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
-
-Best regards,
-The Auditly Team
-"""
+                email_body = _forget_password_email_body(otp)
                 send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))
 
             elif ENV == "TEST":
                 secret_data = get_secret("test/auditly/secrets")
-                email_body = """
-Dear User,
-
-We received a request to reset your password for your Auditly account. To proceed, please use the One-Time Password (OTP) provided below:
-
-Your OTP to Reset Password:
-{otp}
-
-This OTP is valid for the next 5 minutes. For security reasons, please do not share this code with anyone.
-
-If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
-
-Best regards,
-The Auditly Team
-"""
+                email_body = _forget_password_email_body(otp)
                 send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))            
+            
             return {
-                "message": "OTP Sent Successfully to registerd email"
+                "message": "OTP Sent Successfully to registered email",
+                "auditly_user_name": user_data.auditly_user_name,
              }
         else:
             return {
                 "message": "User does not exist"
              }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
-
-
-
-class ResettPassword(BaseModel):
-    user_name : str
-    email : str
-    otp : str
-    password : str
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 @app.post("/reset-password")
 async def reset_password(request: ResettPassword, db: Session = Depends(get_db)):   
@@ -1122,11 +1071,6 @@ def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, 
     db.commit()
     db.refresh(new_item_condition)
 
-# Pydantic models
-class CompareImagesRequest(BaseModel):
-    customer_id: int
-    item_id: int
-
 # Initialize feature extractor globally to avoid reloading it multiple times
 feature_extractor = ResNet50(weights="imagenet", include_top=False, pooling="avg")
 model = Model(inputs=feature_extractor.input, outputs=feature_extractor.output)
@@ -1202,8 +1146,7 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode('utf-8')
 
-class ReceiptSearchRequest(BaseModel):
-    receipt_number: str
+
 
 @app.post("/get-receipt-data/")
 async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
@@ -1246,128 +1189,6 @@ async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(
         }
     }
 
-
-
-# class ReceiptSearch(BaseModel):
-#     search_user_id: str
-#     receipt_number: Optional[str] = None
-#     token: Optional[str] = None
-
-# @app.post("/get-inspection-data")
-# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-#     request_user_id = request.search_user_id
-#     token = request.token
-#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
-#     print(user_data)
-#     customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == request_user_id).filter(OnboardUser.token == request.token).first()
-#     if not ((user_data and not token) or (token and customer_data)): 
-#           return {
-#             "message": "Invalid User",
-#     }
-
-#     if request.receipt_number is None:
-#         data = db.query(
-#             CustomerItemCondition,
-#             CustomerItemData,
-#             Item,
-#             Brand
-#         ).join(
-#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-#         ).join(
-#             Item, CustomerItemData.item_id == Item.id
-#         ).join(
-#             Brand, Item.brand_id == Brand.id
-#         ).all()
-#     else:
-#         data = db.query(
-#             CustomerItemCondition,
-#             CustomerItemData,
-#             Item,
-#             Brand
-#         ).join(
-#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-#         ).join(
-#             Item, CustomerItemData.item_id == Item.id
-#         ).join(
-#             Brand, Item.brand_id == Brand.id
-#         ).filter(
-#             CustomerItemCondition.ack_number == request.receipt_number
-#         ).first()
-         
-#         data = [data]
-
-#     if not data:
-#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
-
-#     receipt_data_list = []
-#     for condition, item_data, item, brand in data:
-#         receipt_data_list.append({
-#             "receipt_number": condition.ack_number,
-#             "overall_condition": condition.overall_condition,
-#             "item_description": item.item_description,
-#             "brand_name": brand.brand_name,
-#             "original_sales_order_number": item_data.original_sales_order_number,
-#             "return_order_number": item_data.return_order_number,
-#             "return_qty": item_data.return_qty,
-#             "shipping_info": {
-#                 "shipped_to_person": item_data.shipped_to_person,
-#                 "address": item_data.shipped_to_address,
-#                 "city": item_data.city,
-#                 "state": item_data.state,
-#                 "country": item_data.country
-#             }
-#         })
-#     return receipt_data_list
-
-# @app.post("/get-inspection-data")
-# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-#     request_user_id = request.search_user_id
-#     token = request.token
-#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
-#     customer_data = db.query(OnboardUser).filter(
-#         OnboardUser.customer_user_id == request_user_id, OnboardUser.token == request.token
-#     ).first()
-    
-#     if not ((user_data and not token) or (token and customer_data)):
-#         return {"message": "Invalid User"}
-    
-#     data = db.query(
-#         CustomerItemCondition,
-#         CustomerItemData,
-#         Item,
-#         Brand
-#     ).join(
-#         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-#     ).join(
-#         Item, CustomerItemData.item_id == Item.id
-#     ).join(
-#         Brand, Item.brand_id == Brand.id
-#     ).all()
-    
-#     if not data:
-#         raise HTTPException(status_code=404, detail="Data not found")
-    
-#     receipt_data_list = []
-#     for condition, item_data, item, brand in data:
-#         receipt_data_list.append({
-#             "shipped_to_person": item_data.shipped_to_person,
-#             "original_sales_order_number": item_data.original_sales_order_number,
-#             "item_number": item.item_number,
-#             "item_description": item.item_description,
-#             "original_sales_order_line": item_data.original_sales_order_line,
-#             "serial_number": item_data.serial_number,
-#             "return_order_number": item_data.return_order_number,
-#             "date_purchased": item_data.date_purchased,
-#             "date_shipped": item_data.date_shipped,
-#             "date_delivered": item_data.date_delivered,
-#             "return_created_date": item_data.return_created_date,
-#             "ack_number": condition.ack_number,
-#             "difference_front_image": condition.difference_front_image,
-#             "difference_back_image": condition.difference_back_image
-#         })
-    
-#     return receipt_data_list
-
 @app.get("/base-images/mapping/{base_to_item_mapping}")
 async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = Depends(get_db)):
     base_data_records = db.query(BaseData).filter(BaseData.base_to_item_mapping == base_to_item_mapping).all()
@@ -1389,16 +1210,6 @@ async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = De
         }
         for base_data in base_data_records
     ]
-
-
-
-class UpdateProfileRequest(BaseModel):
-    user_name: str
-    first_name: str = None
-    last_name: str = None
-    gender: str = None
-    email: str = None
-
     
 @app.put("/update-profile")
 async def update_profile(request: UpdateProfileRequest, db: Session = Depends(get_db)):
@@ -1537,23 +1348,6 @@ async def search_customers(query: str = "", db: Session = Depends(get_db)):
 
 
 
-# @app.get("/users")
-# async def get_users(db: Session = Depends(get_db)):
-#     try:
-#         users = db.query(AuditlyUser).all()
-#         return {
-#             "message": "Users retrieved successfully.",
-#             "data": [{
-#                 "user_name": user.auditly_user_name,
-#                 "first_name": user.first_name,
-#                 "last_name": user.last_name,
-#                 "gender": user.gender,
-#                 "email": user.email
-#             } for user in users]
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
-
 
 @app.get("/users")
 async def get_users(db: Session = Depends(get_db)):
@@ -1578,11 +1372,6 @@ async def get_users(db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
-
-
-class Onboard(BaseModel):
-    onboard_name: str
-    onboard_email: str
 
 @app.post("/onboard")
 async def onboard(request: Onboard, db: Session = Depends(get_db)):   
@@ -1642,13 +1431,6 @@ Audit team
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
-
-class UpdateUserTypeRequest(BaseModel):
-    modifier_user_id: int  # Admin ID making the request
-    target_user_id: int  # ID of the user whose type is being modified
-    is_inspection_user: bool
-    is_admin: bool
-    is_reports_user: bool
    
 @app.post("/update-user-type")
 async def update_user_type(request: UpdateUserTypeRequest, db: Session = Depends(get_db)):
@@ -1695,9 +1477,19 @@ async def update_user_type(request: UpdateUserTypeRequest, db: Session = Depends
     }
 
 
-app.mount("/static", StaticFiles(directory="/home/ec2-user/auditly/static"), name="static")
+if ENV == "DEV":
+    static_dir = "/Users/rahul/Desktop/auditly/auditly/static"  # Local development path
+else:
+    static_dir = "/home/ec2-user/auditly/static"  # Cloud deployment path
 
-@app.get("/images/{item_number}")
+    # Ensure the directory exists
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir, exist_ok=True)
+
+# Mount the static directory
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/images/{item_number}") 
 async def get_images_by_item_number(item_number: int, db: Session = Depends(get_db)):
     """
     Retrieve base front and back images using the item number.
@@ -1732,11 +1524,6 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
         "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",  # Relative path
         "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
     }
-
-
-
-class ReceiptSearch(BaseModel):
-    receipt_number: Optional[str] = None
 
 @app.post("/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
