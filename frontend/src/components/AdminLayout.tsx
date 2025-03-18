@@ -699,7 +699,7 @@ const AdminLayout = () => {
                         icon: <Image className="w-5 h-5 mr-2" />,
                       },
                       {
-                        name: "return-upload",
+                        name: "returns-upload",
                         icon: <Undo2 className="w-5 h-5 mr-2" />,
                       },
                     ].map((item) => (
