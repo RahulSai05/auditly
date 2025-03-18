@@ -673,10 +673,10 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Search, FileText, X, AlertCircle, CheckCircle2, Loader2, Users2 } from "lucide-react";
 
-interface NotificationType {
-  type: 'success' | 'error' | '';
-  message: string;
-}
+// interface NotificationType {
+//   type: 'success' | 'error' | '';
+//   message: string;
+// }
 
 const CustomerSerialUpload: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
