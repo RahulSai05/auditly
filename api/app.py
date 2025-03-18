@@ -996,13 +996,13 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
     body = """
 Hello,
 
-The serial """+str(serial_number)+ """returned by the customer """+str(account_name)+""" – """+str(account_number)+""" was inspected for returns and found to be """+condition+""" 
+The serial """+str(serial_number)+ """ returned by the customer """+str(account_name)+""" – """+str(account_number)+""" was inspected for returns and found to be """+condition+""" 
 
 Below are the reference details:
 
-Customer_Name –  """+account_name+"""
-Customer_Account – """+str(account_number)+"""
-Serial_Number – """+str(serial_number)+"""
+Customer Name –  """+account_name+"""
+Customer Account – """+str(account_number)+"""
+Serial Number – """+str(serial_number)+"""
 Sales Order number- """+str(sales_order_number)+"""
 Return Order Number- """+str(return_order_number)+"""
 Inspection Number - """+str(receipt_number)+"""
