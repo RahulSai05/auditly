@@ -53,7 +53,7 @@ const Scan = () => {
 
       setIsScanning(false);
       axios
-        .get(`http://54.210.159.220:8000/item_order_instance`, {
+        .get(`https://auditlyai.com/api/item_order_instance`, {
           params: { identifier: decodedText },
         })
         .then((response) => {

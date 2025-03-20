@@ -74,7 +74,7 @@ const Login = () => {
       if (!otpSent) {
         // Step 1: Send username and password to get OTP
         const { data } = await axios.post(
-          "http://54.210.159.220:8000/login",
+          "https://auditlyai.com/api/login",
           {
             user_name: formData.user_name,
             password: formData.password,
@@ -93,7 +93,7 @@ const Login = () => {
       } else {
         // Step 2: Verify OTP
         const { data } = await axios.post(
-          "http://54.210.159.220:8000/verify-login-otp",
+          "https://auditlyai.com/api/verify-login-otp",
           {
             user_name: formData.user_name,
             login_otp: formData.otp,

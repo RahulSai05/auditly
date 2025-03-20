@@ -77,7 +77,7 @@ const DashboardTables: React.FC = () => {
     const fetchData = async () => {
       try {
         const itemsResponse = await axios.get<Item[]>(
-          "http://54.210.159.220:8000/items"
+          "https://auditlyai.com/api/items"
         );
         setItems(itemsResponse.data);
       } catch (error) {

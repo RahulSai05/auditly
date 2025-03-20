@@ -72,7 +72,7 @@ const ReturnDetails: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get<ReturnData[]>(
-          "http://54.210.159.220:8000/customer-item-data"
+          "https://auditlyai.com/api/customer-item-data"
         );
 
         // Map the API response to the required fields

@@ -49,7 +49,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://54.210.159.220:8000/upload-items-csv",
+//         "https://auditlyai.com/api/upload-items-csv",
 //         formData,
 //         {
 //           headers: { "Content-Type": "multipart/form-data" },
@@ -74,7 +74,7 @@
 //     setIsLoading(true);
 //     try {
 //       const response = await axios.get(
-//         "http://54.210.159.220:8000/search-items",
+//         "https://auditlyai.com/api/search-items",
 //         {
 //           params: { query: searchQuery },
 //         }
@@ -385,7 +385,7 @@ const ItemUpload = () => {
 
     try {
       const response = await axios.post(
-        "http://54.210.159.220:8000/upload-items-csv",
+        "https://auditlyai.com/api/upload-items-csv",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -410,7 +410,7 @@ const ItemUpload = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        "http://54.210.159.220:8000/search-items",
+        "https://auditlyai.com/api/search-items",
         {
           params: { query: searchQuery },
         }

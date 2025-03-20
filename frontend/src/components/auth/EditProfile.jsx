@@ -44,7 +44,7 @@ const EditProfile = () => {
         return;
       }
 
-      const response = await axios.put("http://54.210.159.220:8000/update-profile", {
+      const response = await axios.put("https://auditlyai.com/api/update-profile", {
         user_name: formData.user_name,
         first_name: formData.first_name,
         last_name: formData.last_name,

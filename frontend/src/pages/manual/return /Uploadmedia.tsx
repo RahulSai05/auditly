@@ -65,7 +65,7 @@ export default function UploadMedia() {
 
         try {
             const response = await axios.post(
-                `http://54.210.159.220:8000/upload-customer-images?${queryParams.toString()}`,
+                `https://auditlyai.com/api/upload-customer-images?${queryParams.toString()}`,
                 formData,
                 {
                     headers: { "Content-Type": "multipart/form-data" },

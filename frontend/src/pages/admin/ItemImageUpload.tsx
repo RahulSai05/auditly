@@ -85,7 +85,7 @@
 //     setIsLoading(true);
 //     try {
 //       const response = await axios.post(
-//         `http://54.210.159.220:8000/upload-base-images/?item_number=${itemNumber}`,
+//         `https://auditlyai.com/api/upload-base-images/?item_number=${itemNumber}`,
 //         formData,
 //         {
 //           headers: { "Content-Type": "multipart/form-data" },
@@ -345,7 +345,7 @@ const ItemImageUpload = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `http://54.210.159.220:8000/upload-base-images/?item_number=${itemNumber}`,
+        `https://auditlyai.com/api/upload-base-images/?item_number=${itemNumber}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

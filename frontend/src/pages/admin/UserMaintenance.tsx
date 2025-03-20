@@ -50,7 +50,7 @@ const UserMaintenance: React.FC = () => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("http://54.210.159.220:8000/users");
+        const response = await axios.get("https://auditlyai.com/api/users");
         if (response.data && response.data.data) {
           // Add id field if not present
           const usersWithIds = response.data.data.map(
@@ -154,7 +154,7 @@ const UserMaintenance: React.FC = () => {
       };
 
       const response = await axios.post(
-        "http://54.210.159.220:8000/update-user-type",
+        "https://auditlyai.com/api/update-user-type",
         updateData
       );
 

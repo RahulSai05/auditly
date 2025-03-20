@@ -21,7 +21,7 @@ const GetAll: React.FC = () => {
         setError("");
         try {
             const response = await axios.get(
-                "http://54.210.159.220:8000/item_order_instance",
+                "https://auditlyai.com/api/item_order_instance",
                 { params: { identifier: searchQuery } }
             );
 
@@ -333,7 +333,7 @@ export default GetAll;
 //         setError("");
 //         try {
 //             const response = await axios.get(
-//                 "http://54.210.159.220:8000/item_order_instance",
+//                 "https://auditlyai.com/api/item_order_instance",
 //                 { params: { identifier: searchQuery } }
 //             );
 

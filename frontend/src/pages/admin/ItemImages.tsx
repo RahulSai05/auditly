@@ -20,7 +20,7 @@ const ItemImages: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = "http://54.210.159.220:8000";
+  const backendUrl = "https://auditlyai.com/api";
 
   const containerVariants = {
     hidden: { opacity: 0 },

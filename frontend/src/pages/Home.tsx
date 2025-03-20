@@ -31,7 +31,7 @@ export default function Home() {
     setError("");
     try {
       const response = await axios.post(
-        "http://54.210.159.220:8000/get-receipt-data",
+        "https://auditlyai.com/api/get-receipt-data",
         {
           receipt_number: receiptNumber,
         }

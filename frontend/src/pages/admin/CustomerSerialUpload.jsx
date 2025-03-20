@@ -49,7 +49,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://54.210.159.220:8000/customer-serial-upload",
+//         "https://auditlyai.com/api/customer-serial-upload",
 //         formData,
 //         {
 //           headers: { "Content-Type": "multipart/form-data" },
@@ -74,7 +74,7 @@
 //     setIsLoading(true);
 //     try {
 //       const response = await axios.get(
-//         "http://54.210.159.220:8000/customer-item-data", // Updated API endpoint
+//         "https://auditlyai.com/api/customer-item-data", // Updated API endpoint
 //         { params: { query: searchQuery } }
 //       );
 
@@ -387,7 +387,7 @@ const CustomerSerialUpload = () => {
 
     try {
       const response = await axios.post(
-        "http://54.210.159.220:8000/customer-serial-upload",
+        "https://auditlyai.com/api/customer-serial-upload",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -412,7 +412,7 @@ const CustomerSerialUpload = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        "http://54.210.159.220:8000/customer-item-data",
+        "https://auditlyai.com/api/customer-item-data",
         { params: { query: searchQuery } }
       );
 

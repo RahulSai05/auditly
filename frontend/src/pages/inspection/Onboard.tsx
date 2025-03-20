@@ -24,7 +24,7 @@ const Onboard: React.FC = () => {
     setShowEmailAlert(false);
 
     try {
-      const response = await axios.post("http://54.210.159.220:8000/onboard", {
+      const response = await axios.post("https://auditlyai.com/api/onboard", {
         onboard_name: onboardName,
         onboard_email: onboardEmail,
       });

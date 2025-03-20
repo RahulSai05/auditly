@@ -53,7 +53,7 @@
 
 //   try {
 //     const { data } = await axios.post(
-//       "http://54.210.159.220:8000/register",
+//       "https://auditlyai.com/api/register",
 //       formData
 //     );
 //     setMessage({
@@ -593,7 +593,7 @@ const Register = () => {
 
     try {
       const { data } = await axios.post(
-        "http://54.210.159.220:8000/register",
+        "https://auditlyai.com/api/register",
         formData
       );
       setMessage({

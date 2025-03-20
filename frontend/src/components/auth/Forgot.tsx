@@ -30,7 +30,7 @@ const ForgotPassword = () => {
       }
 
       const { data } = await axios.post(
-        "http://54.210.159.220:8000/forget-password",
+        "https://auditlyai.com/api/forget-password",
         {
           user_name: inputValue,
           user_id: inputValue,

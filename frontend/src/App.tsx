@@ -130,7 +130,7 @@ export default function App(): JSX.Element {
   useEffect(() => {
     const checkUserValidity = async () => {
       try {
-        const res = await fetch("http://54.210.159.220:8000/users");
+        const res = await fetch("https://auditlyai.com/api/users");
         const data = await res.json();
 
         if (data.data && userData) {

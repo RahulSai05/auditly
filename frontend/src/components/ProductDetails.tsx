@@ -25,7 +25,7 @@ export default function ProductDetails() {
       setLoading(true);
       setError(null);
       axios
-        .get(`http://54.210.159.220:8000/item-details/${returnOrderNumber}`)
+        .get(`https://auditlyai.com/api/item-details/${returnOrderNumber}`)
         .then((response) => {
           setItemDetails(response.data);
         })

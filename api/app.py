@@ -61,7 +61,7 @@ app.add_middleware(
 
 
 
-@app.get("/item_order_instance")
+@app.get("/api/item_order_instance")
 async def get_item_instance_details(
     identifier: str = Query(..., title="Serial Number or Return Order Number"),  # Single input field
     db: Session = Depends(get_db)
@@ -116,7 +116,7 @@ async def get_item_instance_details(
     }
 
 
-@app.post("/upload-customer-images")
+@app.post("/api/upload-customer-images")
 async def upload_customer_images(
     customer_item_data_id: int,  
     factory_seal: bool = False,
@@ -289,7 +289,7 @@ async def upload_customer_images(
 
 
 
-@app.get("/customer-images/{id}")
+@app.get("/api/customer-images/{id}")
 async def get_customer_images(id: int, db: Session = Depends(get_db)):
     """
     Retrieve the paths to the customer's front and back images from the database.
@@ -315,7 +315,7 @@ async def get_customer_images(id: int, db: Session = Depends(get_db)):
         "back_image_path": customer_data.customer_back_image,
     }
 
-@app.get("/base-images/{item-number}")
+@app.get("/api/base-images/{item-number}")
 async def get_base_images(id: int, db: Session = Depends(get_db)):
     """
     Retrieve the paths to the base front and back images from the database.
@@ -341,7 +341,7 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
         "back_image_path": base_data.base_back_image,
     }
 
-@app.post("/upload-customer-return-item-data")
+@app.post("/api/upload-customer-return-item-data")
 async def upload_customer_item_data(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
     Upload a CSV file and insert data into the customer_item_data table.
@@ -388,7 +388,7 @@ async def upload_customer_item_data(file: UploadFile = File(...), db: Session = 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
     
-@app.get("/search-customer-return-item-data")
+@app.get("/api/search-customer-return-item-data")
 async def search_customer_item_data(query: str, db: Session = Depends(get_db)):
     """
     Search the customer_item_data table based on a query.
@@ -409,7 +409,7 @@ async def search_customer_item_data(query: str, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
-@app.post("/upload-items-csv")
+@app.post("/api/upload-items-csv")
 async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
     Upload a CSV file to add or update items in the database.
@@ -448,7 +448,7 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
-@app.get("/search-items")
+@app.get("/api/search-items")
 async def search_items(query: str = "", db: Session = Depends(get_db)):
     """
     Search for items in the database by item_number, item_description, or brand_id.
@@ -482,7 +482,7 @@ def update_return_condition(status, return_order_mapping_key, db):
     db.refresh(new_return_mapping)
 
 
-@app.post("/upload-base-images/")
+@app.post("/api/upload-base-images/")
 async def upload_base_images(
     item_number: int,
     front_image: UploadFile = File(...),
@@ -552,7 +552,7 @@ def get_all_items(db: Session = Depends(get_db)):
     ]
 
 
-@app.get("/customer-item-data")
+@app.get("/api/customer-item-data")
 async def get_customer_item_data(db: Session = Depends(get_db)):
     customer_item_data = db.query(CustomerItemData).join(Item).all()
     
@@ -611,7 +611,7 @@ async def get_customer_item_data(db: Session = Depends(get_db)):
     
 
 
-@app.get("/item-details/{return_order_number}")
+@app.get("/api/item-details/{return_order_number}")
 async def get_item_details(return_order_number: str, db: Session = Depends(get_db)):
     """
     Fetch item details based on the return order number.
@@ -640,7 +640,7 @@ async def get_item_details(return_order_number: str, db: Session = Depends(get_d
     
 
 
-@app.post("/register")
+@app.post("/api/register")
 async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
     """
     API to register new user and return user ID.
@@ -689,7 +689,7 @@ async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 
-@app.post("/login")
+@app.post("/api/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):   
     """
     API for logging in with user id and passoword.
@@ -724,7 +724,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
-@app.post("/verify-login-otp")
+@app.post("/api/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
     """
     API for verifying otp to login
@@ -755,7 +755,7 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
     # except Exception as e:
     #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
-@app.post("/logout")
+@app.post("/api/logout")
 async def login(request: LogoutRequest, db: Session = Depends(get_db)):   
     """
     API for logging out.
@@ -851,7 +851,7 @@ def _gen_otp():
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
-@app.post("/forget-password")
+@app.post("/api/forget-password")
 async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)):   
     """
     API to send OTP to reset password.
@@ -889,7 +889,7 @@ async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
-@app.post("/reset-password")
+@app.post("/api/reset-password")
 async def reset_password(request: ResettPassword, db: Session = Depends(get_db)):   
     """
     API to send otp to reset password 
@@ -920,7 +920,7 @@ async def reset_password(request: ResettPassword, db: Session = Depends(get_db))
 
 
 
-@app.post("/compare-images/")
+@app.post("/api/compare-images/")
 async def compare_images(request: CompareImagesRequest, db: Session = Depends(get_db)):
     """
     Compare base and customer images and return similarity scores with highlighted differences in Base64.
@@ -1164,7 +1164,7 @@ def encode_image_to_base64(image_path):
 
 
 
-@app.post("/get-receipt-data/")
+@app.post("/api/get-receipt-data/")
 async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(get_db)):
     # Assuming CustomerItemCondition links to CustomerItemData which links to Item and so on
     data = db.query(
@@ -1205,7 +1205,7 @@ async def get_receipt_data(request: ReceiptSearchRequest, db: Session = Depends(
         }
     }
 
-@app.get("/base-images/mapping/{base_to_item_mapping}")
+@app.get("/api/base-images/mapping/{base_to_item_mapping}")
 async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = Depends(get_db)):
     base_data_records = db.query(BaseData).filter(BaseData.base_to_item_mapping == base_to_item_mapping).all()
 
@@ -1227,7 +1227,7 @@ async def get_base_images_by_mapping(base_to_item_mapping: int, db: Session = De
         for base_data in base_data_records
     ]
     
-@app.put("/update-profile")
+@app.put("/api/update-profile")
 async def update_profile(request: UpdateProfileRequest, db: Session = Depends(get_db)):
     """
     API to update user profile details.
@@ -1269,7 +1269,7 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
 
 
-@app.get("/sales-data")
+@app.get("/api/sales-data")
 async def get_sales_data(db: Session = Depends(get_db)):
     try:
         sales_data = db.query(SalesData).all()
@@ -1301,7 +1301,7 @@ async def get_sales_data(db: Session = Depends(get_db)):
 
 
 
-@app.post("/customer-serial-upload/")
+@app.post("/api/customer-serial-upload/")
 async def upload_customer_data(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
     Upload a CSV file to add or update customer data in the database.
@@ -1343,7 +1343,7 @@ async def upload_customer_data(file: UploadFile = File(...), db: Session = Depen
 
 
 
-@app.get("/search-customer-serials")
+@app.get("/api/search-customer-serials")
 async def search_customers(query: str = "", db: Session = Depends(get_db)):
     """
     Search for customer data in the database by various fields like SalesOrder, CustomerAccount, Name, etc.
@@ -1365,7 +1365,7 @@ async def search_customers(query: str = "", db: Session = Depends(get_db)):
 
 
 
-@app.get("/users")
+@app.get("/api/users")
 async def get_users(db: Session = Depends(get_db)):
     try:
         users = db.query(AuditlyUser).all()
@@ -1389,7 +1389,7 @@ async def get_users(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
 
-@app.post("/onboard")
+@app.post("/api/onboard")
 async def onboard(request: Onboard, db: Session = Depends(get_db)):   
     """
     API to onboard an third party to use api
@@ -1448,7 +1448,7 @@ Audit team
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
    
-@app.post("/update-user-type")
+@app.post("/api/update-user-type")
 async def update_user_type(request: UpdateUserTypeRequest, db: Session = Depends(get_db)):
     """
     API to allow an admin to change roles for other users.
@@ -1541,7 +1541,7 @@ async def get_images_by_item_number(item_number: int, db: Session = Depends(get_
         "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
     }
 
-@app.post("/get-inspection-data")
+@app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
     # request_user_id = request.search_user_id
     # token = request.token

@@ -42,7 +42,7 @@ export default function UploadMedia() {
             try {
                 const [comparisonResponse, baseImagesResponse] = await Promise.all([
                     axios.post(
-                        "http://54.210.159.220:8000/compare-images/",
+                        "https://auditlyai.com/api/compare-images/",
                         {
                             customer_id: parseInt(customerId),
                             item_id: parseInt(itemId),
@@ -51,7 +51,7 @@ export default function UploadMedia() {
                             headers: { "Content-Type": "application/json" },
                         }
                     ),
-                    axios.get(`http://54.210.159.220:8000/base-images/mapping/${itemId}`)
+                    axios.get(`https://auditlyai.com/api/base-images/mapping/${itemId}`)
                 ]);
 
                 setData(comparisonResponse.data);

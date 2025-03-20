@@ -75,7 +75,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "http://54.210.159.220:8000/reset-password",
+        "https://auditlyai.com/api/reset-password",
         {
           user_name: formData.user_name,
           email: formData.email,

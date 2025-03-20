@@ -34,7 +34,7 @@ const AuditlyInspection = () => {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.post("http://54.210.159.220:8000/get-inspection-data", {
+        const response = await axios.post("https://auditlyai.com/api/get-inspection-data", {
           receipt_number: null,
         });
         setData(response.data);
@@ -58,7 +58,7 @@ const AuditlyInspection = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.post("http://54.210.159.220:8000/get-inspection-data", {
+      const response = await axios.post("https://auditlyai.com/api/get-inspection-data", {
         receipt_number: receiptNumber,
       });
       setData(response.data);

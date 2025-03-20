@@ -38,7 +38,7 @@ const ReceiptDataPage: React.FC = () => {
       }
 
       const response = await axios.post(
-        "http://54.210.159.220:8000/get-inspection-data",
+        "https://auditlyai.com/api/get-inspection-data",
         payload
       );
 
