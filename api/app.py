@@ -531,7 +531,7 @@ async def upload_base_images(
     }
 
 
-@app.get("/items")
+@app.get("/api/items")
 def get_all_items(db: Session = Depends(get_db)):
     items = db.query(Item).all()
 
