@@ -294,7 +294,6 @@
 
 // export default ItemImages;
 
-
 import React, { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -317,7 +316,7 @@ const ItemImages: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = "https://auditlyai.com/api";
+  const backendUrl = "https://auditlyai.com"; // Updated to root domain
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -354,7 +353,7 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
-      const response = await axios.get(`${backendUrl}/images/${itemNumber}`);
+      const response = await axios.get(`${backendUrl}/api/images/${itemNumber}`); // Updated API endpoint
       const data = response.data;
       // Use the image paths as returned by the API
       setItemData(data);
@@ -536,7 +535,7 @@ const ItemImages: React.FC = () => {
                         >
                           {itemData.front_image_path ? (
                             <img
-                              src={itemData.front_image_path}
+                              src={`${backendUrl}${itemData.front_image_path}`} // Updated image URL
                               alt="Front View"
                               className="w-full h-full object-cover"
                             />
@@ -564,7 +563,7 @@ const ItemImages: React.FC = () => {
                         >
                           {itemData.back_image_path ? (
                             <img
-                              src={itemData.back_image_path}
+                              src={`${backendUrl}${itemData.back_image_path}`} // Updated image URL
                               alt="Back View"
                               className="w-full h-full object-cover"
                             />
