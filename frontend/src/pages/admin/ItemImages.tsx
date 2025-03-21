@@ -294,6 +294,7 @@
 
 // export default ItemImages;
 
+
 import React, { useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -535,7 +536,7 @@ const ItemImages: React.FC = () => {
                         >
                           {itemData.front_image_path ? (
                             <img
-                              src={`${backendUrl}${itemData.front_image_path}`}
+                              src={`${backendUrl}${itemData.front_image_path}`} // Updated image URL
                               alt="Front View"
                               className="w-full h-full object-cover"
                               width="500"
@@ -565,7 +566,7 @@ const ItemImages: React.FC = () => {
                         >
                           {itemData.back_image_path ? (
                             <img
-                              src={`${backendUrl}${itemData.back_image_path}`}
+                              src={`${backendUrl}${itemData.back_image_path}`} // Updated image URL
                               alt="Back View"
                               className="w-full h-full object-cover"
                               width="500"
