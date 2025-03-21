@@ -316,7 +316,7 @@ const ItemImages: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = "https://auditlyai.com"; // Updated to root domain
+  const backendUrl = "https://auditlyai.com"; // Root domain
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -353,9 +353,9 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
-      const response = await axios.get(`${backendUrl}/api/images/${itemNumber}`); // Updated API endpoint
+      const response = await axios.get(`${backendUrl}/api/images/${itemNumber}`);
       const data = response.data;
-      // Use the image paths as returned by the API
+      console.log("API Response:", data); // Debugging
       setItemData(data);
     } catch (err: any) {
       setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
@@ -535,9 +535,11 @@ const ItemImages: React.FC = () => {
                         >
                           {itemData.front_image_path ? (
                             <img
-                              src={`${backendUrl}${itemData.front_image_path}`} // Updated image URL
+                              src={`${backendUrl}${itemData.front_image_path}`}
                               alt="Front View"
                               className="w-full h-full object-cover"
+                              width="500"
+                              height="500"
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
@@ -563,9 +565,11 @@ const ItemImages: React.FC = () => {
                         >
                           {itemData.back_image_path ? (
                             <img
-                              src={`${backendUrl}${itemData.back_image_path}`} // Updated image URL
+                              src={`${backendUrl}${itemData.back_image_path}`}
                               alt="Back View"
                               className="w-full h-full object-cover"
+                              width="500"
+                              height="500"
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
