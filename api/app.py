@@ -1505,7 +1505,7 @@ if not os.path.exists(static_dir):
 # Mount the static directory
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-@app.get("/images/{item_number}") 
+@app.get("/api/images/{item_number}") 
 async def get_images_by_item_number(item_number: int, db: Session = Depends(get_db)):
     """
     Retrieve base front and back images using the item number.
