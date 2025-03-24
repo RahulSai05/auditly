@@ -500,6 +500,7 @@ async def upload_base_images(
     if not item:
         raise HTTPException(status_code=404, detail="Item not found for the given item_number")
 
+    base_image_exists = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
     # Save front image
     front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
     with open(front_image_path, "wb") as f:
@@ -510,13 +511,18 @@ async def upload_base_images(
     with open(back_image_path, "wb") as f:
         f.write(await back_image.read())
 
+    if base_image_exists:
+        base_image_exists.base_front_image=front_image_path
+        base_image_exists.base_back_image=base_back_image
+
+    else:
     # Create a new BaseData entry
-    new_base_data = BaseData(
-        base_front_image=front_image_path,
-        base_back_image=back_image_path,
-        base_to_item_mapping=item.id
-    ) 
-    db.add(new_base_data)
+        new_base_data = BaseData(
+            base_front_image=front_image_path,
+            base_back_image=back_image_path,
+            base_to_item_mapping=item.id
+        ) 
+        db.add(new_base_data)
     db.commit()
     db.refresh(new_base_data)
 
