@@ -160,7 +160,6 @@ const DashboardTables: React.FC = () => {
         const itemsResponse = await axios.get<Item[]>(
           "https://auditlyai.com/api/items"
         );
-        // Ensure all items have properly formatted fields
         const validatedItems = itemsResponse.data.map(item => ({
           ...item,
           item_number: item.item_number ? String(item.item_number) : '',
@@ -193,7 +192,6 @@ const DashboardTables: React.FC = () => {
   const filteredItems = useMemo(() => {
     try {
       return items.filter((item) => {
-        // Safely handle all filter comparisons
         const itemNumber = item.item_number?.toString().toLowerCase() || '';
         const searchItemNumber = searchFilters.itemNumber.toLowerCase();
         
@@ -218,7 +216,7 @@ const DashboardTables: React.FC = () => {
       });
     } catch (error) {
       console.error("Error filtering items:", error);
-      return items; // Fallback to showing all items if filtering fails
+      return items;
     }
   }, [items, searchFilters]);
 
