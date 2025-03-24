@@ -529,7 +529,6 @@ async def upload_base_images(
     return {
         "message": "Images uploaded and saved successfully.",
         "data": {
-            "id": new_base_data.id,
             "front_image_path": front_image_path,
             "back_image_path": back_image_path,
             "item_number": item_number
