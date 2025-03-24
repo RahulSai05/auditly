@@ -25,7 +25,7 @@ interface Brand {
 
 interface Item {
   id: number;
-  item_number: string | number;
+  item_number: string;
   item_description: string;
   category: string;
   configuration: string;
@@ -45,7 +45,6 @@ interface AdvancedSearchProps {
   onClose: () => void;
   filters: SearchFilters;
   onFilterChange: (filters: SearchFilters) => void;
-  brands: string[];
 }
 
 const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
@@ -53,7 +52,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   onClose,
   filters,
   onFilterChange,
-  brands
 }) => {
   const handleInputChange = (field: keyof SearchFilters, value: string) => {
     onFilterChange({
@@ -160,15 +158,7 @@ const DashboardTables: React.FC = () => {
         const itemsResponse = await axios.get<Item[]>(
           "https://auditlyai.com/api/items"
         );
-        const validatedItems = itemsResponse.data.map(item => ({
-          ...item,
-          item_number: item.item_number ? String(item.item_number) : '',
-          item_description: item.item_description || '',
-          category: item.category || '',
-          configuration: item.configuration || '',
-          brand: item.brand || { id: 0, brand_name: '', description: '' }
-        }));
-        setItems(validatedItems);
+        setItems(itemsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -190,34 +180,28 @@ const DashboardTables: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    try {
-      return items.filter((item) => {
-        const itemNumber = item.item_number?.toString().toLowerCase() || '';
-        const searchItemNumber = searchFilters.itemNumber.toLowerCase();
-        
-        const itemDescription = item.item_description?.toLowerCase() || '';
-        const searchItemDescription = searchFilters.itemDescription.toLowerCase();
-        
-        const brandName = item.brand?.brand_name || '';
-        
-        const itemCategory = item.category?.toLowerCase() || '';
-        const searchCategory = searchFilters.category.toLowerCase();
-        
-        const itemConfig = item.configuration?.toLowerCase() || '';
-        const searchConfig = searchFilters.configuration.toLowerCase();
+    return items.filter((item) => {
+      const matchesItemNumber = searchFilters.itemNumber === "" ||
+        item.item_number.toLowerCase().includes(searchFilters.itemNumber.toLowerCase());
+      
+      const matchesItemDescription = searchFilters.itemDescription === "" ||
+        item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase());
+      
+      const matchesBrand = searchFilters.brand === "" ||
+        item.brand.brand_name === searchFilters.brand;
+      
+      const matchesCategory = searchFilters.category === "" ||
+        item.category.toLowerCase().includes(searchFilters.category.toLowerCase());
+      
+      const matchesConfiguration = searchFilters.configuration === "" ||
+        item.configuration.toLowerCase().includes(searchFilters.configuration.toLowerCase());
 
-        return (
-          (searchFilters.itemNumber === '' || itemNumber.includes(searchItemNumber)) &&
-          (searchFilters.itemDescription === '' || itemDescription.includes(searchItemDescription)) &&
-          (searchFilters.brand === '' || brandName === searchFilters.brand) &&
-          (searchFilters.category === '' || itemCategory.includes(searchCategory)) &&
-          (searchFilters.configuration === '' || itemConfig.includes(searchConfig))
-        );
-      });
-    } catch (error) {
-      console.error("Error filtering items:", error);
-      return items;
-    }
+      return matchesItemNumber && 
+             matchesItemDescription && 
+             matchesBrand &&
+             matchesCategory &&
+             matchesConfiguration;
+    });
   }, [items, searchFilters]);
 
   const exportToXLSX = (data: Item[]) => {
@@ -236,7 +220,7 @@ const DashboardTables: React.FC = () => {
   );
 
   const uniqueBrands = useMemo(() => 
-    Array.from(new Set(items.map(item => item.brand?.brand_name).filter(Boolean)), 
+    Array.from(new Set(items.map((item) => item.brand.brand_name))), 
     [items]
   );
 
@@ -396,7 +380,6 @@ const DashboardTables: React.FC = () => {
                     onClose={() => setIsAdvancedSearchOpen(false)}
                     filters={searchFilters}
                     onFilterChange={setSearchFilters}
-                    brands={uniqueBrands}
                   />
                 </div>
 
