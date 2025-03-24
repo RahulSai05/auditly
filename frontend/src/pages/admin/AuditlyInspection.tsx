@@ -334,7 +334,6 @@
 
 // export default AuditlyInspection;
 
-
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { 
@@ -347,7 +346,8 @@ import {
   User,
   Package,
   FilterX,
-  MapPin
+  MapPin,
+  CheckCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from "xlsx";
@@ -375,8 +375,8 @@ interface ReceiptData {
 interface SearchFilters {
   receiptNumber: string;
   returnOrderNumber: string;
-  customerName: string;
   itemDescription: string;
+  productCondition: string;
 }
 
 interface AdvancedSearchProps {
@@ -452,20 +452,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <User className="w-4 h-4" />
-                Customer Name
-              </label>
-              <input
-                type="text"
-                value={filters.customerName}
-                onChange={(e) => handleInputChange('customerName', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Enter customer name..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Package className="w-4 h-4" />
                 Item Description
               </label>
@@ -475,6 +461,20 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 onChange={(e) => handleInputChange('itemDescription', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 placeholder="Enter item description..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <CheckCircle className="w-4 h-4" />
+                Product Condition
+              </label>
+              <input
+                type="text"
+                value={filters.productCondition}
+                onChange={(e) => handleInputChange('productCondition', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                placeholder="Enter condition (e.g. New, Used)"
               />
             </div>
           </div>
@@ -492,8 +492,8 @@ const AuditlyInspection = () => {
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     receiptNumber: "",
     returnOrderNumber: "",
-    customerName: "",
     itemDescription: "",
+    productCondition: "",
   });
 
   const containerVariants = {
@@ -547,16 +547,16 @@ const AuditlyInspection = () => {
       const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
         (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
       
-      const matchesCustomerName = searchFilters.customerName === "" ||
-        (item.shipping_info?.shipped_to_person && item.shipping_info.shipped_to_person.toLowerCase().includes(searchFilters.customerName.toLowerCase()));
-      
       const matchesItemDescription = searchFilters.itemDescription === "" ||
         (item.item_description && item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
 
+      const matchesProductCondition = searchFilters.productCondition === "" ||
+        (item.overall_condition && item.overall_condition.toLowerCase().includes(searchFilters.productCondition.toLowerCase()));
+
       return matchesReceiptNumber && 
              matchesReturnOrder && 
-             matchesCustomerName && 
-             matchesItemDescription;
+             matchesItemDescription &&
+             matchesProductCondition;
     });
   }, [data, searchFilters]);
 
@@ -573,8 +573,8 @@ const AuditlyInspection = () => {
     setSearchFilters({
       receiptNumber: "",
       returnOrderNumber: "",
-      customerName: "",
       itemDescription: "",
+      productCondition: "",
     });
   };
 
@@ -671,7 +671,7 @@ const AuditlyInspection = () => {
 
                 <div className="relative mb-6">
                   <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
                           <ClipboardList className="w-5 h-5" />
@@ -687,14 +687,14 @@ const AuditlyInspection = () => {
 
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                          <User className="w-5 h-5" />
+                          <CheckCircle className="w-5 h-5" />
                         </div>
                         <input
                           type="text"
-                          placeholder="Search by customer name..."
+                          placeholder="Search by product condition..."
                           className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-                          value={searchFilters.customerName}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, customerName: e.target.value })}
+                          value={searchFilters.productCondition}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, productCondition: e.target.value })}
                         />
                       </div>
                     </div>
