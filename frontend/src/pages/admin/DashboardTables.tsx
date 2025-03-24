@@ -469,10 +469,7 @@
 
 // export default DashboardTables;
 
-
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Package2,
   Loader2,
@@ -486,8 +483,34 @@ import {
   Tag,
   Package
 } from "lucide-react";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
+
+// Sample data for demonstration
+const sampleItems = [
+  {
+    id: 1,
+    item_number: "ITM001",
+    item_description: "Basic Widget",
+    category: "Widgets",
+    configuration: "Standard",
+    brand: { id: 1, brand_name: "TechCorp", description: "Technology Solutions" }
+  },
+  {
+    id: 2,
+    item_number: "ITM002",
+    item_description: "Advanced Gadget",
+    category: "Gadgets",
+    configuration: "Premium",
+    brand: { id: 2, brand_name: "InnovateCo", description: "Innovative Products" }
+  },
+  {
+    id: 3,
+    item_number: "ITM003",
+    item_description: "Smart Device",
+    category: "Devices",
+    configuration: "Smart",
+    brand: { id: 1, brand_name: "TechCorp", description: "Technology Solutions" }
+  }
+];
 
 interface Brand {
   id: number;
@@ -590,8 +613,8 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 };
 
 const DashboardTables: React.FC = () => {
-  const [items, setItems] = useState<Item[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>(sampleItems); // Initialize with sample data
+  const [isLoading, setIsLoading] = useState(false);
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     itemNumber: "",
@@ -624,23 +647,6 @@ const DashboardTables: React.FC = () => {
     },
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const itemsResponse = await axios.get<Item[]>(
-          "https://auditlyai.com/api/items"
-        );
-        setItems(itemsResponse.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   const clearFilters = () => {
     setSearchFilters({
       itemNumber: "",
@@ -653,19 +659,19 @@ const DashboardTables: React.FC = () => {
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesItemNumber = searchFilters.itemNumber === "" ||
+      const matchesItemNumber = !searchFilters.itemNumber || 
         item.item_number.toLowerCase().includes(searchFilters.itemNumber.toLowerCase());
       
-      const matchesItemDescription = searchFilters.itemDescription === "" ||
+      const matchesItemDescription = !searchFilters.itemDescription || 
         item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase());
       
-      const matchesBrand = searchFilters.brand === "" ||
+      const matchesBrand = !searchFilters.brand || 
         item.brand.brand_name === searchFilters.brand;
       
-      const matchesCategory = searchFilters.category === "" ||
+      const matchesCategory = !searchFilters.category || 
         item.category.toLowerCase().includes(searchFilters.category.toLowerCase());
       
-      const matchesConfiguration = searchFilters.configuration === "" ||
+      const matchesConfiguration = !searchFilters.configuration || 
         item.configuration.toLowerCase().includes(searchFilters.configuration.toLowerCase());
 
       return matchesItemNumber && 
@@ -675,15 +681,6 @@ const DashboardTables: React.FC = () => {
              matchesConfiguration;
     });
   }, [items, searchFilters]);
-
-  const exportToXLSX = (data: Item[]) => {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Item Records");
-    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelFile], { type: "application/octet-stream" });
-    saveAs(blob, "item_records.xlsx");
-  };
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
     <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
@@ -768,175 +765,3 @@ const DashboardTables: React.FC = () => {
                     <button
                       onClick={clearFilters}
                       className="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors flex items-center gap-2"
-                    >
-                      <FilterX className="w-4 h-4" />
-                      Clear Filters
-                    </button>
-                    <button
-                      onClick={() => exportToXLSX(filteredItems)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-                    >
-                      Export to XLSX
-                    </button>
-                  </div>
-                </div>
-
-                <div className="relative mb-6">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                          <Search className="w-5 h-5" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Search by item number..."
-                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-                          value={searchFilters.itemNumber}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, itemNumber: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                          <Package className="w-5 h-5" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Search by description..."
-                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-                          value={searchFilters.itemDescription}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, itemDescription: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                          <Filter className="w-5 h-5" />
-                        </div>
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 pointer-events-none">
-                          <ChevronDown className="w-5 h-5" />
-                        </div>
-                        <select
-                          className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl appearance-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-                          value={searchFilters.brand}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, brand: e.target.value })}
-                        >
-                          <option value="">All Brands</option>
-                          {uniqueBrands.map((brand) => (
-                            <option key={brand} value={brand}>
-                              {brand}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="md:w-auto">
-                      <button
-                        onClick={() => setIsAdvancedSearchOpen(!isAdvancedSearchOpen)}
-                        className={`w-full md:w-auto px-4 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
-                          isAdvancedSearchOpen 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                            : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                        }`}
-                      >
-                        <SlidersHorizontal className="w-4 h-4" />
-                        {isAdvancedSearchOpen ? 'Hide Filters' : 'More Filters'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <AdvancedSearch
-                    isOpen={isAdvancedSearchOpen}
-                    onClose={() => setIsAdvancedSearchOpen(false)}
-                    filters={searchFilters}
-                    onFilterChange={setSearchFilters}
-                  />
-                </div>
-
-                <div className="overflow-hidden rounded-xl border border-blue-100">
-                  <div className="overflow-x-auto">
-                    <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
-                      <table className="min-w-full divide-y divide-blue-100">
-                        <thead className="sticky top-0 bg-white z-10">
-                          <tr>
-                            <TableHeader>Item Number</TableHeader>
-                            <TableHeader>Description</TableHeader>
-                            <TableHeader>Category</TableHeader>
-                            <TableHeader>Configuration</TableHeader>
-                            <TableHeader>Brand</TableHeader>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-blue-50">
-                          <AnimatePresence>
-                            {filteredItems.length === 0 ? (
-                              <motion.tr
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                              >
-                                <td
-                                  colSpan={5}
-                                  className="px-6 py-12 text-center text-gray-500 bg-gray-50/50"
-                                >
-                                  <div className="flex flex-col items-center justify-center gap-2">
-                                    <Package className="w-10 h-10 text-gray-400" />
-                                    <p className="text-lg font-medium">No matching items found</p>
-                                    <p className="text-sm">Try adjusting your search filters</p>
-                                    <button
-                                      onClick={clearFilters}
-                                      className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
-                                    >
-                                      <FilterX className="w-4 h-4" />
-                                      Clear all filters
-                                    </button>
-                                  </div>
-                                </td>
-                              </motion.tr>
-                            ) : (
-                              filteredItems.map((item, index) => (
-                                <motion.tr
-                                  key={item.id}
-                                  variants={itemVariants}
-                                  custom={index}
-                                  initial="hidden"
-                                  animate="visible"
-                                  exit="hidden"
-                                  className="hover:bg-blue-50/50 transition-colors duration-200"
-                                  whileHover={{ scale: 1.002 }}
-                                >
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    {item.item_number}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.item_description}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.category}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.configuration}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.brand.brand_name}
-                                  </td>
-                                </motion.tr>
-                              ))
-                            )}
-                          </AnimatePresence>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-};
-
-export default DashboardTables;
