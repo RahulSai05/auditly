@@ -353,12 +353,10 @@
 
 // export default ReturnDetails;
 
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, 
   Loader2, 
   ClipboardList, 
   Users2,
@@ -369,19 +367,11 @@ import {
   Tag,
   User,
   Package,
-  Filter
+  Filter,
+  Search
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import Papa from "papaparse";
 import { saveAs } from "file-saver";
-
-const debounce = (func: Function, delay: number) => {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: any[]) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
 
 interface ReturnData {
   return_order_number: string;
@@ -473,20 +463,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Tag className="w-4 h-4" />
-                Customer Name
-              </label>
-              <input
-                type="text"
-                value={filters.customerName}
-                onChange={(e) => handleInputChange('customerName', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Search by customer name..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Package className="w-4 h-4" />
                 Item Description
               </label>
@@ -495,21 +471,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 value={filters.itemDescription}
                 onChange={(e) => handleInputChange('itemDescription', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Search by item description..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Filter className="w-4 h-4" />
-                Serial Number
-              </label>
-              <input
-                type="text"
-                value={filters.serialNumber}
-                onChange={(e) => handleInputChange('serialNumber', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Search by serial number..."
+                placeholder="Enter item description..."
               />
             </div>
 
@@ -520,7 +482,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               </label>
               <select
                 value={filters.dateType}
-                onChange={(e) => handleInputChange('dateType', e.target.value)}
+                onChange={(e) => handleInputChange('dateType', e.target.value as 'purchased' | 'shipped' | 'delivered' | 'return_created')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
               >
                 <option value="purchased">Date Purchased</option>
@@ -530,21 +492,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Tag className="w-4 h-4" />
-                Sales Order Number
-              </label>
-              <input
-                type="text"
-                value={filters.salesOrderNumber}
-                onChange={(e) => handleInputChange('salesOrderNumber', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Search by sales order..."
-              />
-            </div>
-
-            <div className="space-y-2 col-span-3">
+            <div className="space-y-2 col-span-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Calendar className="w-4 h-4" />
                 Date Range
@@ -588,13 +536,6 @@ const ReturnDetails: React.FC = () => {
     },
     dateType: "purchased",
   });
-
-  const handleSearchChange = useCallback(
-    debounce((value: string) => {
-      setSearchFilters(prev => ({ ...prev, returnOrderNumber: value }));
-    }, 100),
-    []
-  );
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -696,6 +637,15 @@ const ReturnDetails: React.FC = () => {
     });
   }, [returnData, searchFilters]);
 
+  const exportToXLSX = (data: ReturnData[]) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Return Data");
+    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelFile], { type: "application/octet-stream" });
+    saveAs(blob, "return_data.xlsx");
+  };
+
   const clearFilters = () => {
     setSearchFilters({
       returnOrderNumber: "",
@@ -711,61 +661,6 @@ const ReturnDetails: React.FC = () => {
       dateType: "purchased",
     });
   };
-
-  const exportToCSV = (data: ReturnData[]) => {
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "return_records.csv");
-  };
-
-  const exportToExcel = (data: ReturnData[]) => {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Return Records");
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, "return_records.xlsx");
-  };
-
-  const SearchBar = React.memo(
-    ({
-      value,
-      onChange,
-      placeholder,
-    }: {
-      value: string;
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-      placeholder: string;
-    }) => (
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-            <Search className="w-5 h-5" />
-          </div>
-          <input
-            type="text"
-            placeholder={placeholder}
-            className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-            defaultValue={value}
-            onChange={onChange}
-          />
-        </div>
-        <div className="md:w-auto">
-          <button
-            onClick={() => setIsAdvancedSearchOpen(!isAdvancedSearchOpen)}
-            className={`w-full md:w-auto px-4 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
-              isAdvancedSearchOpen 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-            }`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            {isAdvancedSearchOpen ? 'Hide Filters' : 'More Filters'}
-          </button>
-        </div>
-      </div>
-    )
-  );
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
     <th className="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50/50">
@@ -850,7 +745,7 @@ const ReturnDetails: React.FC = () => {
                       Clear Filters
                     </button>
                     <button
-                      onClick={() => exportToExcel(filteredReturnData)}
+                      onClick={() => exportToXLSX(filteredReturnData)}
                       className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
                     >
                       Export to XLSX
@@ -858,12 +753,62 @@ const ReturnDetails: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="relative">
-                  <SearchBar
-                    value={searchFilters.returnOrderNumber}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Search by Return Order Number..."
-                  />
+                <div className="relative mb-6">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                          <Tag className="w-5 h-5" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search by RMA number..."
+                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+                          value={searchFilters.returnOrderNumber}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, returnOrderNumber: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                          <User className="w-5 h-5" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search by customer name..."
+                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+                          value={searchFilters.customerName}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, customerName: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                          <Package className="w-5 h-5" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search by serial number..."
+                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+                          value={searchFilters.serialNumber}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, serialNumber: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="md:w-auto">
+                      <button
+                        onClick={() => setIsAdvancedSearchOpen(!isAdvancedSearchOpen)}
+                        className={`w-full md:w-auto px-4 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                          isAdvancedSearchOpen 
+                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                            : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                        }`}
+                      >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        {isAdvancedSearchOpen ? 'Hide Filters' : 'More Filters'}
+                      </button>
+                    </div>
+                  </div>
 
                   <AdvancedSearch
                     isOpen={isAdvancedSearchOpen}
