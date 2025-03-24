@@ -513,7 +513,7 @@ async def upload_base_images(
 
     if base_image_exists:
         base_image_exists.base_front_image=front_image_path
-        base_image_exists.base_back_image=base_back_image
+        base_image_exists.base_back_image=back_image_path
 
     else:
     # Create a new BaseData entry
