@@ -335,7 +335,7 @@
 // export default AuditlyInspection;
 
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Search, Loader2, X, ClipboardList, Box, Truck, Building2, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -599,19 +599,6 @@ const AuditlyInspection: React.FC = () => {
                           onChange={(e) => setSearchFilters({ ...searchFilters, overallCondition: e.target.value })}
                         />
                       </div>
-                    </div>
-                    <div className="md:w-auto">
-                      <button
-                        onClick={() => setIsAdvancedSearchOpen(!isAdvancedSearchOpen)}
-                        className={`w-full md:w-auto px-4 py-3 rounded-xl transition-colors flex items-center justify-center gap-2 ${
-                          isAdvancedSearchOpen 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                            : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                        }`}
-                      >
-                        <Search className="w-4 h-4" />
-                        {isAdvancedSearchOpen ? 'Hide Filters' : 'More Filters'}
-                      </button>
                     </div>
                   </div>
                 </div>
