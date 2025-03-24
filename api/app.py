@@ -514,6 +514,8 @@ async def upload_base_images(
     if base_image_exists:
         base_image_exists.base_front_image=front_image_path
         base_image_exists.base_back_image=back_image_path
+        db.commit()
+        db.refresh(base_image_exists)
 
     else:
     # Create a new BaseData entry
@@ -523,8 +525,10 @@ async def upload_base_images(
             base_to_item_mapping=item.id
         ) 
         db.add(new_base_data)
-    db.commit()
-    db.refresh(new_base_data)
+        db.commit()
+        db.refresh(new_base_data)
+
+    
 
     return {
         "message": "Images uploaded and saved successfully.",
