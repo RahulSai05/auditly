@@ -389,7 +389,7 @@ import {
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { format, isWithinInterval, parseISO } from 'date-fns';
-import AdvancedSearch, { SearchFilters } from './components/AdvancedSearch';
+import AdvancedSearch, { SearchFilters } from '../components/AdvancedSearch';
 
 // Debounce function
 const debounce = (func: Function, delay: number) => {
