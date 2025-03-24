@@ -335,7 +335,6 @@
 // export default AuditlyInspection;
 
 
-
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { 
@@ -344,13 +343,11 @@ import {
   X, 
   ClipboardList, 
   SlidersHorizontal,
-  Calendar,
   Tag,
   User,
   Package,
   FilterX,
-  ChevronLeft, 
-  ChevronRight 
+  MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from "xlsx";
@@ -373,21 +370,13 @@ interface ReceiptData {
   return_qty: number;
   receipt_number: string;
   shipping_info: ShippingInfo;
-  date_received: string;
-  date_inspected: string;
 }
 
 interface SearchFilters {
   receiptNumber: string;
   returnOrderNumber: string;
-  salesOrderNumber: string;
   customerName: string;
   itemDescription: string;
-  dateRange: {
-    start: string;
-    end: string;
-  };
-  dateType: 'received' | 'inspected';
 }
 
 interface AdvancedSearchProps {
@@ -432,7 +421,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <ClipboardList className="w-4 h-4" />
@@ -463,20 +452,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Tag className="w-4 h-4" />
-                Sales Order #
-              </label>
-              <input
-                type="text"
-                value={filters.salesOrderNumber}
-                onChange={(e) => handleInputChange('salesOrderNumber', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Enter sales order number..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <User className="w-4 h-4" />
                 Customer Name
               </label>
@@ -502,42 +477,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 placeholder="Enter item description..."
               />
             </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Calendar className="w-4 h-4" />
-                Date Type
-              </label>
-              <select
-                value={filters.dateType}
-                onChange={(e) => handleInputChange('dateType', e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-              >
-                <option value="received">Date Received</option>
-                <option value="inspected">Date Inspected</option>
-              </select>
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Calendar className="w-4 h-4" />
-                Date Range
-              </label>
-              <div className="flex gap-4">
-                <input
-                  type="date"
-                  value={filters.dateRange.start}
-                  onChange={(e) => handleInputChange('dateRange', { ...filters.dateRange, start: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                />
-                <input
-                  type="date"
-                  value={filters.dateRange.end}
-                  onChange={(e) => handleInputChange('dateRange', { ...filters.dateRange, end: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                />
-              </div>
-            </div>
           </div>
         </motion.div>
       )}
@@ -553,14 +492,8 @@ const AuditlyInspection = () => {
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     receiptNumber: "",
     returnOrderNumber: "",
-    salesOrderNumber: "",
     customerName: "",
     itemDescription: "",
-    dateRange: {
-      start: "",
-      end: "",
-    },
-    dateType: "received",
   });
 
   const containerVariants = {
@@ -609,36 +542,21 @@ const AuditlyInspection = () => {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesReceiptNumber = searchFilters.receiptNumber === "" || 
-        item.receipt_number.toLowerCase().includes(searchFilters.receiptNumber.toLowerCase());
+        (item.receipt_number && item.receipt_number.toLowerCase().includes(searchFilters.receiptNumber.toLowerCase()));
       
       const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
-        item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase());
-      
-      const matchesSalesOrder = searchFilters.salesOrderNumber === "" ||
-        item.original_sales_order_number.toLowerCase().includes(searchFilters.salesOrderNumber.toLowerCase());
+        (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
       
       const matchesCustomerName = searchFilters.customerName === "" ||
-        item.shipping_info.shipped_to_person.toLowerCase().includes(searchFilters.customerName.toLowerCase());
+        (item.shipping_info?.shipped_to_person && item.shipping_info.shipped_to_person.toLowerCase().includes(searchFilters.customerName.toLowerCase()));
       
       const matchesItemDescription = searchFilters.itemDescription === "" ||
-        item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase());
-
-      let matchesDateRange = true;
-      if (searchFilters.dateRange.start && searchFilters.dateRange.end) {
-        const startDate = new Date(searchFilters.dateRange.start);
-        const endDate = new Date(searchFilters.dateRange.end);
-        const dateField = `date_${searchFilters.dateType}`;
-        const dateToCheck = new Date(item[dateField as keyof typeof item] as string);
-
-        matchesDateRange = dateToCheck >= startDate && dateToCheck <= endDate;
-      }
+        (item.item_description && item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
 
       return matchesReceiptNumber && 
              matchesReturnOrder && 
-             matchesSalesOrder && 
              matchesCustomerName && 
-             matchesItemDescription &&
-             matchesDateRange;
+             matchesItemDescription;
     });
   }, [data, searchFilters]);
 
@@ -655,14 +573,8 @@ const AuditlyInspection = () => {
     setSearchFilters({
       receiptNumber: "",
       returnOrderNumber: "",
-      salesOrderNumber: "",
       customerName: "",
       itemDescription: "",
-      dateRange: {
-        start: "",
-        end: "",
-      },
-      dateType: "received",
     });
   };
 
@@ -775,19 +687,6 @@ const AuditlyInspection = () => {
 
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                          <Tag className="w-5 h-5" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Search by return order..."
-                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
-                          value={searchFilters.returnOrderNumber}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, returnOrderNumber: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
                           <User className="w-5 h-5" />
                         </div>
                         <input
@@ -833,14 +732,12 @@ const AuditlyInspection = () => {
                           <tr>
                             <TableHeader>Receipt #</TableHeader>
                             <TableHeader>Return Order #</TableHeader>
-                            <TableHeader>Sales Order #</TableHeader>
                             <TableHeader>Customer</TableHeader>
                             <TableHeader>Item Description</TableHeader>
                             <TableHeader>Brand</TableHeader>
                             <TableHeader>Condition</TableHeader>
                             <TableHeader>Qty</TableHeader>
-                            <TableHeader>Date Received</TableHeader>
-                            <TableHeader>Date Inspected</TableHeader>
+                            <TableHeader>Address</TableHeader>
                             <TableHeader>Status</TableHeader>
                           </tr>
                         </thead>
@@ -853,7 +750,7 @@ const AuditlyInspection = () => {
                                 exit={{ opacity: 0 }}
                               >
                                 <td
-                                  colSpan={11}
+                                  colSpan={9}
                                   className="px-6 py-12 text-center text-gray-500 bg-gray-50/50"
                                 >
                                   <div className="flex flex-col items-center justify-center gap-2">
@@ -883,34 +780,33 @@ const AuditlyInspection = () => {
                                   whileHover={{ scale: 1.002 }}
                                 >
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    {item.receipt_number}
+                                    {item.receipt_number || 'N/A'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.return_order_number}
+                                    {item.return_order_number || 'N/A'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.original_sales_order_number}
+                                    {item.shipping_info?.shipped_to_person || 'N/A'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.shipping_info.shipped_to_person}
+                                    {item.item_description || 'N/A'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.item_description}
+                                    {item.brand_name || 'N/A'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.brand_name}
+                                    {item.overall_condition || 'N/A'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.overall_condition}
+                                    {item.return_qty || 'N/A'}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.return_qty}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.date_received}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {item.date_inspected}
+                                  <td className="px-6 py-4 text-sm text-gray-600">
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="w-4 h-4 text-blue-400" />
+                                      {item.shipping_info ? 
+                                        `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` : 
+                                        'N/A'}
+                                    </div>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700">
