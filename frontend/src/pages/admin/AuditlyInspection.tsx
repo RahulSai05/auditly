@@ -334,6 +334,8 @@
 
 // export default AuditlyInspection;
 
+
+
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { 
@@ -343,7 +345,6 @@ import {
   ClipboardList, 
   SlidersHorizontal,
   Tag,
-  User,
   Package,
   FilterX,
   MapPin,
@@ -424,20 +425,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <ClipboardList className="w-4 h-4" />
-                Receipt Number
-              </label>
-              <input
-                type="text"
-                value={filters.receiptNumber}
-                onChange={(e) => handleInputChange('receiptNumber', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Enter receipt number..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Tag className="w-4 h-4" />
                 Return Order #
               </label>
@@ -461,20 +448,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 onChange={(e) => handleInputChange('itemDescription', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 placeholder="Enter item description..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <CheckCircle className="w-4 h-4" />
-                Product Condition
-              </label>
-              <input
-                type="text"
-                value={filters.productCondition}
-                onChange={(e) => handleInputChange('productCondition', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Enter condition (e.g. New, Used)"
               />
             </div>
           </div>
