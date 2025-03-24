@@ -182,20 +182,20 @@ const DashboardTables: React.FC = () => {
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesItemNumber = searchFilters.itemNumber === "" ||
-        item.item_number.toLowerCase().includes(searchFilters.itemNumber.toLowerCase());
+        item.item_number?.toLowerCase().includes(searchFilters.itemNumber.toLowerCase());
       
       const matchesItemDescription = searchFilters.itemDescription === "" ||
-        item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase());
+        item.item_description?.toLowerCase().includes(searchFilters.itemDescription.toLowerCase());
       
       const matchesBrand = searchFilters.brand === "" ||
-        item.brand.brand_name === searchFilters.brand;
+        item.brand?.brand_name?.toLowerCase() === searchFilters.brand.toLowerCase();
       
       const matchesCategory = searchFilters.category === "" ||
-        item.category.toLowerCase().includes(searchFilters.category.toLowerCase());
+        item.category?.toLowerCase().includes(searchFilters.category.toLowerCase());
       
       const matchesConfiguration = searchFilters.configuration === "" ||
-        item.configuration.toLowerCase().includes(searchFilters.configuration.toLowerCase());
-
+        item.configuration?.toLowerCase().includes(searchFilters.configuration.toLowerCase());
+  
       return matchesItemNumber && 
              matchesItemDescription && 
              matchesBrand &&
