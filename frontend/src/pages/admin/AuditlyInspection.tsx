@@ -334,10 +334,9 @@
 
 // export default AuditlyInspection;
 
-
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { Search, Loader2, X, ClipboardList, Box, Truck, Building2, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Loader2, X, ClipboardList, Box, Truck, Building2, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ShippingInfo {
@@ -378,39 +377,15 @@ const AuditlyInspection: React.FC = () => {
     returnOrderNumber: "",
     originalSalesOrderNumber: "",
   });
-  const [currentIndex, setCurrentIndex] = useState(0); // Track the current receipt index
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<ReceiptData[]>(
-          "https://auditlyai.com/api/get-inspection-data"
-        );
+        const response = await axios.post("https://auditlyai.com/api/get-inspection-data", {
+          receipt_number: null,
+        });
 
-        const mappedData = response.data.map((item) => ({
+        const mappedData = response.data.map((item: any) => ({
           item_description: item.item_description || "N/A",
           brand_name: item.brand_name || "N/A",
           overall_condition: item.overall_condition || "N/A",
