@@ -25,7 +25,7 @@ interface Brand {
 
 interface Item {
   id: number;
-  item_number: string;
+  item_number: string | number;
   item_description: string;
   category: string;
   configuration: string;
@@ -180,10 +180,10 @@ const DashboardTables: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    console.log("Filtering items with filters:", searchFilters);
     return items.filter((item) => {
+      const itemNumber = typeof item.item_number === 'string' ? item.item_number : item.item_number.toString();
       const matchesItemNumber = searchFilters.itemNumber === "" ||
-        item.item_number.toLowerCase().includes(searchFilters.itemNumber.toLowerCase());
+        itemNumber.toLowerCase().includes(searchFilters.itemNumber.toLowerCase());
       
       const matchesItemDescription = searchFilters.itemDescription === "" ||
         item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase());
@@ -436,7 +436,7 @@ const DashboardTables: React.FC = () => {
                                   whileHover={{ scale: 1.002 }}
                                 >
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    {item.item_number}
+                                    {typeof item.item_number === 'string' ? item.item_number : item.item_number.toString()}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     {item.item_description}
