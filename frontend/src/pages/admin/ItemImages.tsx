@@ -358,12 +358,10 @@ const ItemImages: React.FC = () => {
   setItemData(null);
 
   try {
-    const params = new URLSearchParams();
-    if (searchType === "number") {
-      params.append('item_number', searchTerm);
-    } else {
-      params.append('item_description', searchTerm);
-    }
+    // Use the search endpoint with query parameters
+    const params = {
+      [searchType === "number" ? "item_number" : "item_description"]: searchTerm
+    };
 
     const response = await axios.get(`${backendUrl}/images/search`, { params });
     const data = response.data;
