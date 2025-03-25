@@ -621,6 +621,7 @@ const ImageViewerModal = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
   const staticUrl = "https://auditlyai.com";
+  const [imageError, setImageError] = useState(false);
 
   const getImageUrl = (path: string) => {
     if (!path) return '';
@@ -634,6 +635,12 @@ const ImageViewerModal = ({
 
   const frontImageUrl = getImageUrl(images.difference_images.front);
   const backImageUrl = getImageUrl(images.difference_images.back);
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.target as HTMLImageElement;
+    target.onerror = null; // Prevent infinite loop
+    setImageError(true);
+  };
 
   return (
     <motion.div
@@ -653,13 +660,19 @@ const ImageViewerModal = ({
           <div className="flex items-center gap-4">
             <button
               className={`px-4 py-2 rounded-lg ${activeTab === 'front' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => setActiveTab('front')}
+              onClick={() => {
+                setActiveTab('front');
+                setImageError(false);
+              }}
             >
               Front View
             </button>
             <button
               className={`px-4 py-2 rounded-lg ${activeTab === 'back' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => setActiveTab('back')}
+              onClick={() => {
+                setActiveTab('back');
+                setImageError(false);
+              }}
             >
               Back View
             </button>
@@ -674,17 +687,18 @@ const ImageViewerModal = ({
 
         <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
           <div className="relative w-full max-w-2xl">
-            {activeTab === 'front' ? (
+            {imageError ? (
+              <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
+                <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
+                <p className="text-gray-500">Image not available</p>
+              </div>
+            ) : activeTab === 'front' ? (
               frontImageUrl ? (
                 <img
                   src={frontImageUrl}
                   alt="Front difference view"
                   className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = 'https://via.placeholder.com/500x500?text=Image+Not+Available';
-                  }}
+                  onError={handleImageError}
                 />
               ) : (
                 <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
@@ -692,24 +706,18 @@ const ImageViewerModal = ({
                   <p className="text-gray-500">No front image available</p>
                 </div>
               )
+            ) : backImageUrl ? (
+              <img
+                src={backImageUrl}
+                alt="Back difference view"
+                className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
+                onError={handleImageError}
+              />
             ) : (
-              backImageUrl ? (
-                <img
-                  src={backImageUrl}
-                  alt="Back difference view"
-                  className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = 'https://via.placeholder.com/500x500?text=Image+Not+Available';
-                  }}
-                />
-              ) : (
-                <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
-                  <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
-                  <p className="text-gray-500">No back image available</p>
-                </div>
-              )
+              <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
+                <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
+                <p className="text-gray-500">No back image available</p>
+              </div>
             )}
             <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
               <span className="text-sm font-medium">
@@ -729,7 +737,6 @@ const ImageViewerModal = ({
     </motion.div>
   );
 };
-
 const AuditlyInspection = () => {
   const [data, setData] = useState<ReceiptData[]>([]);
   const [loading, setLoading] = useState(false);
