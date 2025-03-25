@@ -348,32 +348,34 @@ const ItemImages: React.FC = () => {
   };
 
   const fetchItemData = async () => {
-    if (!searchTerm) {
-      setError(`Please enter an item ${searchType === "number" ? "number" : "description"}.`);
-      return;
+  if (!searchTerm) {
+    setError(`Please enter an item ${searchType === "number" ? "number" : "description"}.`);
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+  setItemData(null);
+
+  try {
+    const params = new URLSearchParams();
+    if (searchType === "number") {
+      params.append('item_number', searchTerm);
+    } else {
+      params.append('item_description', searchTerm);
     }
 
-    setLoading(true);
-    setError(null);
-    setItemData(null);
-
-    try {
-      const params = searchType === "number" 
-        ? { item_number: searchTerm }
-        : { item_description: searchTerm };
-      
-      const response = await axios.get(`${backendUrl}/images/search`, { params });
-      const data = response.data;
-      // Prepend the static URL to the image paths
-      data.front_image_path = `${staticUrl}${data.front_image_path}`;
-      data.back_image_path = `${staticUrl}${data.back_image_path}`;
-      setItemData(data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const response = await axios.get(`${backendUrl}/images/search`, { params });
+    const data = response.data;
+    data.front_image_path = `${staticUrl}${data.front_image_path}`;
+    data.back_image_path = `${staticUrl}${data.back_image_path}`;
+    setItemData(data);
+  } catch (err: any) {
+    setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleClear = () => {
     setSearchTerm("");
