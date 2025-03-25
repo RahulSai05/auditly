@@ -1671,55 +1671,144 @@ async def get_images_by_item_number_or_description(
     }
 
 
+# @app.post("/api/get-inspection-data")
+# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+#     # Authentication checks (commented out as per your example)
+#     # if request.receipt_number is None:
+#     #     data = db.query(
+#     #         CustomerItemCondition,
+#     #         CustomerItemData,
+#     #         Item,
+#     #         Brand
+#     #     ).join(
+#     #         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#     #     ).join(
+#     #         Item, CustomerItemData.item_id == Item.id
+#     #     ).join(
+#     #         Brand, Item.brand_id == Brand.id
+#     #     ).all()
+#     # else:
+#     #     data = db.query(
+#     #         CustomerItemCondition,
+#     #         CustomerItemData,
+#     #         Item,
+#     #         Brand
+#     #     ).join(
+#     #         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#     #     ).join(
+#     #         Item, CustomerItemData.item_id == Item.id
+#     #     ).join(
+#     #         Brand, Item.brand_id == Brand.id
+#     #     ).filter(
+#     #         CustomerItemCondition.ack_number == request.receipt_number
+#     #     ).first()
+#     #     
+#     #     data = [data]
+
+#     # Modified query to include base_data for images
+#     if request.receipt_number is None:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand,
+#             BaseData  # Added BaseData to the query
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).outerjoin(  # Using outerjoin in case base images don't exist
+#             BaseData, BaseData.base_to_item_mapping == Item.id
+#         ).all()
+#     else:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand,
+#             BaseData  # Added BaseData to the query
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).outerjoin(  # Using outerjoin in case base images don't exist
+#             BaseData, BaseData.base_to_item_mapping == Item.id
+#         ).filter(
+#             CustomerItemCondition.ack_number == request.receipt_number
+#         ).first()
+        
+#         data = [data]
+
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+
+#     receipt_data_list = []
+#     for condition, item_data, item, brand, base_data in data:  # Now unpacking base_data too
+#         receipt_data = {
+#             "receipt_number": condition.ack_number,
+#             "overall_condition": condition.overall_condition,
+#             "item_description": item.item_description,
+#             "brand_name": brand.brand_name,
+#             "original_sales_order_number": item_data.original_sales_order_number,
+#             "return_order_number": item_data.return_order_number,
+#             "return_qty": item_data.return_qty,
+#             "shipping_info": {
+#                 "shipped_to_person": item_data.shipped_to_person,
+#                 "address": item_data.shipped_to_address,
+#                 "city": item_data.city,
+#                 "state": item_data.state,
+#                 "country": item_data.country
+#             },
+#             # Adding image data
+#             "images": {
+#                 "difference_images": {
+#                     "front": condition.difference_front_image,
+#                     "back": condition.difference_back_image
+#                 },
+#                 "similarity_scores": {
+#                     "front": condition.front_similarity,
+#                     "back": condition.back_similarity,
+#                     "average": condition.average_ssi
+#                 }
+#             }
+#         }
+        
+#         # Add base images if they exist
+#         if base_data:
+#             receipt_data["images"]["base_images"] = {
+#                 "front": base_data.base_front_image,
+#                 "back": base_data.base_back_image
+#             }
+        
+#         receipt_data_list.append(receipt_data)
+    
+#     return receipt_data_list
+
+
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
+import os
+
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-    # Authentication checks (commented out as per your example)
-    # if request.receipt_number is None:
-    #     data = db.query(
-    #         CustomerItemCondition,
-    #         CustomerItemData,
-    #         Item,
-    #         Brand
-    #     ).join(
-    #         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-    #     ).join(
-    #         Item, CustomerItemData.item_id == Item.id
-    #     ).join(
-    #         Brand, Item.brand_id == Brand.id
-    #     ).all()
-    # else:
-    #     data = db.query(
-    #         CustomerItemCondition,
-    #         CustomerItemData,
-    #         Item,
-    #         Brand
-    #     ).join(
-    #         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-    #     ).join(
-    #         Item, CustomerItemData.item_id == Item.id
-    #     ).join(
-    #         Brand, Item.brand_id == Brand.id
-    #     ).filter(
-    #         CustomerItemCondition.ack_number == request.receipt_number
-    #     ).first()
-    #     
-    #     data = [data]
-
-    # Modified query to include base_data for images
     if request.receipt_number is None:
         data = db.query(
             CustomerItemCondition,
             CustomerItemData,
             Item,
             Brand,
-            BaseData  # Added BaseData to the query
+            BaseData
         ).join(
             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
         ).join(
             Item, CustomerItemData.item_id == Item.id
         ).join(
             Brand, Item.brand_id == Brand.id
-        ).outerjoin(  # Using outerjoin in case base images don't exist
+        ).outerjoin(
             BaseData, BaseData.base_to_item_mapping == Item.id
         ).all()
     else:
@@ -1728,14 +1817,14 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
             CustomerItemData,
             Item,
             Brand,
-            BaseData  # Added BaseData to the query
+            BaseData
         ).join(
             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
         ).join(
             Item, CustomerItemData.item_id == Item.id
         ).join(
             Brand, Item.brand_id == Brand.id
-        ).outerjoin(  # Using outerjoin in case base images don't exist
+        ).outerjoin(
             BaseData, BaseData.base_to_item_mapping == Item.id
         ).filter(
             CustomerItemCondition.ack_number == request.receipt_number
@@ -1747,7 +1836,11 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
 
     receipt_data_list = []
-    for condition, item_data, item, brand, base_data in data:  # Now unpacking base_data too
+    for condition, item_data, item, brand, base_data in data:
+        # Construct web-accessible URLs for difference images
+        front_diff_url = f"/api/difference-images/{condition.id}/front" if condition.difference_front_image else None
+        back_diff_url = f"/api/difference-images/{condition.id}/back" if condition.difference_back_image else None
+        
         receipt_data = {
             "receipt_number": condition.ack_number,
             "overall_condition": condition.overall_condition,
@@ -1763,11 +1856,10 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
                 "state": item_data.state,
                 "country": item_data.country
             },
-            # Adding image data
             "images": {
                 "difference_images": {
-                    "front": condition.difference_front_image,
-                    "back": condition.difference_back_image
+                    "front": front_diff_url,
+                    "back": back_diff_url
                 },
                 "similarity_scores": {
                     "front": condition.front_similarity,
@@ -1777,13 +1869,45 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
             }
         }
         
-        # Add base images if they exist
         if base_data:
             receipt_data["images"]["base_images"] = {
-                "front": base_data.base_front_image,
-                "back": base_data.base_back_image
+                "front": f"/api/base-images/{base_data.id}/front",
+                "back": f"/api/base-images/{base_data.id}/back"
             }
         
         receipt_data_list.append(receipt_data)
     
     return receipt_data_list
+
+# Add these new endpoints to serve images
+@app.get("/api/difference-images/{condition_id}/{image_type}")
+async def get_difference_image(condition_id: int, image_type: str, db: Session = Depends(get_db)):
+    condition = db.query(CustomerItemCondition).filter(CustomerItemCondition.id == condition_id).first()
+    if not condition:
+        raise HTTPException(status_code=404, detail="Condition not found")
+    
+    image_path = condition.difference_front_image if image_type == "front" else condition.difference_back_image
+    if not image_path:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Security check
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail="Image file not found")
+    
+    return FileResponse(image_path)
+
+@app.get("/api/base-images/{base_data_id}/{image_type}")
+async def get_base_image(base_data_id: int, image_type: str, db: Session = Depends(get_db)):
+    base_data = db.query(BaseData).filter(BaseData.id == base_data_id).first()
+    if not base_data:
+        raise HTTPException(status_code=404, detail="Base data not found")
+    
+    image_path = base_data.base_front_image if image_type == "front" else base_data.base_back_image
+    if not image_path:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Security check
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail="Image file not found")
+    
+    return FileResponse(image_path)
