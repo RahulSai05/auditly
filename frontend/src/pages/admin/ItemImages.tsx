@@ -20,7 +20,8 @@
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState<string | null>(null);
 
-//   const backendUrl = "https://auditlyai.com/api";
+//   const backendUrl = "https://auditlyai.com/api"; // API endpoint
+//   const staticUrl = "https://auditlyai.com"; // Root domain for static files
 
 //   const containerVariants = {
 //     hidden: { opacity: 0 },
@@ -59,8 +60,9 @@
 //     try {
 //       const response = await axios.get(`${backendUrl}/images/${itemNumber}`);
 //       const data = response.data;
-//       data.front_image_path = `${backendUrl}${data.front_image_path}`;
-//       data.back_image_path = `${backendUrl}${data.back_image_path}`;
+//       // Prepend the static URL to the image paths
+//       data.front_image_path = `${staticUrl}${data.front_image_path}`;
+//       data.back_image_path = `${staticUrl}${data.back_image_path}`;
 //       setItemData(data);
 //     } catch (err: any) {
 //       setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
@@ -312,7 +314,8 @@ interface ItemData {
 }
 
 const ItemImages: React.FC = () => {
-  const [itemNumber, setItemNumber] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchType, setSearchType] = useState<"number" | "description">("number");
   const [itemData, setItemData] = useState<ItemData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -345,8 +348,8 @@ const ItemImages: React.FC = () => {
   };
 
   const fetchItemData = async () => {
-    if (!itemNumber) {
-      setError("Please enter an item number.");
+    if (!searchTerm) {
+      setError(`Please enter an item ${searchType === "number" ? "number" : "description"}.`);
       return;
     }
 
@@ -355,7 +358,11 @@ const ItemImages: React.FC = () => {
     setItemData(null);
 
     try {
-      const response = await axios.get(`${backendUrl}/images/${itemNumber}`);
+      const params = searchType === "number" 
+        ? { item_number: searchTerm }
+        : { item_description: searchTerm };
+      
+      const response = await axios.get(`${backendUrl}/images/search`, { params });
       const data = response.data;
       // Prepend the static URL to the image paths
       data.front_image_path = `${staticUrl}${data.front_image_path}`;
@@ -369,7 +376,7 @@ const ItemImages: React.FC = () => {
   };
 
   const handleClear = () => {
-    setItemNumber("");
+    setSearchTerm("");
     setItemData(null);
     setError(null);
   };
@@ -378,6 +385,13 @@ const ItemImages: React.FC = () => {
     if (e.key === "Enter" && !loading) {
       fetchItemData();
     }
+  };
+
+  const toggleSearchType = () => {
+    setSearchType(prev => prev === "number" ? "description" : "number");
+    setSearchTerm("");
+    setItemData(null);
+    setError(null);
   };
 
   return (
@@ -428,41 +442,64 @@ const ItemImages: React.FC = () => {
         >
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50">
             <div className="p-8">
-              <div className="flex gap-4 max-w-3xl mx-auto">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    placeholder="Enter item number..."
-                    value={itemNumber}
-                    onChange={(e) => setItemNumber(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full px-6 py-4 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
-                    disabled={loading}
-                  />
-                  {itemNumber && (
-                    <motion.button
-                      onClick={handleClear}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-50 rounded-full transition-colors"
-                      whileHover={{ scale: 1.1, rotate: 90 }}
-                      whileTap={{ scale: 0.9 }}
+              <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+                {/* Search Type Toggle */}
+                <div className="flex items-center justify-center gap-4">
+                  <span className="text-sm font-medium text-gray-500">Search by:</span>
+                  <button
+                    onClick={toggleSearchType}
+                    className="relative inline-flex items-center h-10 rounded-full bg-blue-50 px-4 transition-colors hover:bg-blue-100"
+                  >
+                    <span className="text-sm font-medium text-blue-600">
+                      {searchType === "number" ? "Item Number" : "Description"}
+                    </span>
+                    <motion.span
+                      className="absolute -right-1 -top-1 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                      animate={{ rotate: searchType === "number" ? 0 : 180 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 20 }}
                     >
-                      <X className="w-5 h-5 text-blue-400" />
-                    </motion.button>
-                  )}
+                      {searchType === "number" ? "#" : "A"}
+                    </motion.span>
+                  </button>
                 </div>
-                <motion.button
-                  onClick={fetchItemData}
-                  disabled={loading}
-                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300 hover:translate-y-[-2px]"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {loading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : (
-                    <Search className="w-6 h-6" />
-                  )}
-                </motion.button>
+
+                {/* Search Input */}
+                <div className="flex gap-4">
+                  <div className="relative flex-1">
+                    <input
+                      type={searchType === "number" ? "number" : "text"}
+                      placeholder={`Enter item ${searchType === "number" ? "number" : "description"}...`}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="w-full px-6 py-4 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
+                      disabled={loading}
+                    />
+                    {searchTerm && (
+                      <motion.button
+                        onClick={handleClear}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-50 rounded-full transition-colors"
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <X className="w-5 h-5 text-blue-400" />
+                      </motion.button>
+                    )}
+                  </div>
+                  <motion.button
+                    onClick={fetchItemData}
+                    disabled={loading}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300 hover:translate-y-[-2px]"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {loading ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                      <Search className="w-6 h-6" />
+                    )}
+                  </motion.button>
+                </div>
               </div>
 
               <AnimatePresence mode="wait">
