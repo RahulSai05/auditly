@@ -1514,41 +1514,41 @@ if not os.path.exists(static_dir):
 # Mount the static directory
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-@app.get("/api/images/{item_number}") 
-async def get_images_by_item_number(item_number: int, db: Session = Depends(get_db)):
-    """
-    Retrieve base front and back images using the item number.
+# @app.get("/api/images/{item_number}") 
+# async def get_images_by_item_number(item_number: int, db: Session = Depends(get_db)):
+#     """
+#     Retrieve base front and back images using the item number.
 
-    Args:
-        item_number (int): The item number to fetch images for.
-        db (Session): The database session dependency.
+#     Args:
+#         item_number (int): The item number to fetch images for.
+#         db (Session): The database session dependency.
 
-    Returns:
-        dict: Contains the item details and relative image paths.
-    """
-    # Fetch the item based on the item_number
-    item = db.query(Item).filter(Item.item_number == item_number).first()
+#     Returns:
+#         dict: Contains the item details and relative image paths.
+#     """
+#     # Fetch the item based on the item_number
+#     item = db.query(Item).filter(Item.item_number == item_number).first()
     
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+#     if not item:
+#         raise HTTPException(status_code=404, detail="Item not found")
 
-    # Fetch the base image data using the item's ID
-    base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
+#     # Fetch the base image data using the item's ID
+#     base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
 
-    if not base_data:
-        raise HTTPException(status_code=404, detail="Base images not found for this item")
+#     if not base_data:
+#         raise HTTPException(status_code=404, detail="Base images not found for this item")
 
-    # Return relative paths for the images
-    return {
-        "item_id": item.id,
-        "item_number": item.item_number,
-        "item_description": item.item_description,
-        "brand_id": item.brand_id,
-        "category": item.category,
-        "configuration": item.configuration,
-        "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",  # Relative path
-        "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
-    }
+#     # Return relative paths for the images
+#     return {
+#         "item_id": item.id,
+#         "item_number": item.item_number,
+#         "item_description": item.item_description,
+#         "brand_id": item.brand_id,
+#         "category": item.category,
+#         "configuration": item.configuration,
+#         "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",  # Relative path
+#         "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
+#     }
 
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
@@ -1615,3 +1615,57 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
         })
     return receipt_data_list
 
+
+@app.get("/api/images/search")
+async def get_images_by_item_number_or_description(
+    item_number: Optional[int] = None,
+    item_description: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve base front and back images using either the item number or item description.
+
+    Args:
+        item_number (int, optional): The item number to fetch images for.
+        item_description (str, optional): The item description to search for.
+        db (Session): The database session dependency.
+
+    Returns:
+        dict: Contains the item details and relative image paths.
+    """
+    if not item_number and not item_description:
+        raise HTTPException(
+            status_code=400,
+            detail="Either item_number or item_description must be provided"
+        )
+
+    # Start building the query
+    query = db.query(Item)
+    
+    if item_number:
+        query = query.filter(Item.item_number == item_number)
+    if item_description:
+        query = query.filter(Item.item_description.contains(item_description))
+    
+    item = query.first()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # Fetch the base image data using the item's ID
+    base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
+
+    if not base_data:
+        raise HTTPException(status_code=404, detail="Base images not found for this item")
+
+    # Return relative paths for the images
+    return {
+        "item_id": item.id,
+        "item_number": item.item_number,
+        "item_description": item.item_description,
+        "brand_id": item.brand_id,
+        "category": item.category,
+        "configuration": item.configuration,
+        "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",
+        "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",
+    }
