@@ -616,45 +616,42 @@ const ImageViewerModal = ({
       back: string;
       average: string;
     };
+    base_images?: {
+      front: string;
+      back: string;
+    };
   }; 
   onClose: () => void 
 }) => {
   const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
-  const [imageLoadError, setImageLoadError] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState('');
+  const [imageType, setImageType] = useState<'difference' | 'base'>('difference');
+  const [imageLoadState, setImageLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
 
-  // Construct proper image URL with cache-busting
-  const getImageUrl = (path: string) => {
-    if (!path) return '';
-    
-    // If it's already a full URL, return as-is
-    if (path.startsWith('http')) return path;
-    
-    // Handle server absolute paths
-    if (path.startsWith('/home')) {
-      // Extract the relevant part of the path
-      const match = path.match(/\/image_outputs\/\d+\/(front|back)_differences\.png/);
-      if (match) {
-        // Construct the proper web-accessible URL
-        return `https://auditlyai.com/api/images${match[0]}?t=${Date.now()}`;
-      }
-      return `https://auditlyai.com/api/images${path.split('/image_outputs')[1]}?t=${Date.now()}`;
+  const getImageUrl = () => {
+    if (imageType === 'difference') {
+      return activeTab === 'front' 
+        ? images.difference_images.front
+        : images.difference_images.back;
+    } else if (images.base_images) {
+      return activeTab === 'front'
+        ? images.base_images.front
+        : images.base_images.back;
     }
-    
-    // Default case for regular paths
-    return `https://auditlyai.com${path}?t=${Date.now()}`;
+    return null;
   };
 
+  const currentImageUrl = getImageUrl();
+
   useEffect(() => {
-    setImageLoadError(false);
-    const url = activeTab === 'front' 
-      ? getImageUrl(images.difference_images.front)
-      : getImageUrl(images.difference_images.back);
-    setCurrentImageUrl(url);
-  }, [activeTab, images]);
+    setImageLoadState('loading');
+  }, [currentImageUrl, imageType]);
+
+  const handleImageLoad = () => {
+    setImageLoadState('loaded');
+  };
 
   const handleImageError = () => {
-    setImageLoadError(true);
+    setImageLoadState('error');
   };
 
   return (
@@ -686,6 +683,22 @@ const ImageViewerModal = ({
               Back View
             </button>
           </div>
+          {images.base_images && (
+            <div className="flex items-center gap-4">
+              <button
+                className={`px-4 py-2 rounded-lg ${imageType === 'difference' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+                onClick={() => setImageType('difference')}
+              >
+                Difference
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg ${imageType === 'base' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+                onClick={() => setImageType('base')}
+              >
+                Base
+              </button>
+            </div>
+          )}
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600"
@@ -696,39 +709,53 @@ const ImageViewerModal = ({
 
         <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
           <div className="relative w-full max-w-2xl">
-            {imageLoadError || !currentImageUrl ? (
+            {imageLoadState === 'error' || !currentImageUrl ? (
               <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
                 <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
                 <p className="text-gray-500">
-                  {!currentImageUrl ? 'No image available' : 'Failed to load image'}
+                  {!currentImageUrl ? 'Image not available' : 'Failed to load image'}
                 </p>
               </div>
             ) : (
-              <img
-                src={currentImageUrl}
-                alt={`${activeTab} difference view`}
-                className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-                onError={handleImageError}
-              />
+              <>
+                {imageLoadState === 'loading' && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                  </div>
+                )}
+                <img
+                  src={currentImageUrl}
+                  alt={`${activeTab} ${imageType} view`}
+                  className={`w-full h-auto rounded-lg shadow-lg border border-gray-200 ${
+                    imageLoadState === 'loaded' ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                />
+              </>
             )}
             <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
               <span className="text-sm font-medium">
-                {activeTab === 'front' ? 'Front Difference' : 'Back Difference'}
+                {activeTab === 'front' ? 'Front' : 'Back'} {imageType === 'difference' ? 'Difference' : 'Base'}
               </span>
             </div>
-            <div className="absolute bottom-4 right-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
-              <span className="text-sm font-medium">
-                Similarity: {activeTab === 'front' 
-                  ? images.similarity_scores.front 
-                  : images.similarity_scores.back}
-              </span>
-            </div>
+            {imageType === 'difference' && (
+              <div className="absolute bottom-4 right-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
+                <span className="text-sm font-medium">
+                  Similarity: {activeTab === 'front' 
+                    ? images.similarity_scores.front 
+                    : images.similarity_scores.back}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
     </motion.div>
   );
 };
+
+
 const AuditlyInspection = () => {
   const [data, setData] = useState<ReceiptData[]>([]);
   const [loading, setLoading] = useState(false);
