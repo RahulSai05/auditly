@@ -620,6 +620,20 @@ const ImageViewerModal = ({
   onClose: () => void 
 }) => {
   const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
+  const staticUrl = "https://auditlyai.com";
+
+  const getImageUrl = (path: string) => {
+    if (!path) return '';
+    // Check if path already includes the domain
+    if (path.startsWith('http')) return path;
+    // Handle absolute paths from server
+    if (path.startsWith('/home')) return `https://auditlyai.com${path}`;
+    // Handle regular static paths
+    return `${staticUrl}${path}`;
+  };
+
+  const frontImageUrl = getImageUrl(images.difference_images.front);
+  const backImageUrl = getImageUrl(images.difference_images.back);
 
   return (
     <motion.div
@@ -660,11 +674,43 @@ const ImageViewerModal = ({
 
         <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
           <div className="relative w-full max-w-2xl">
-            <img
-              src={images.difference_images[activeTab]}
-              alt={`${activeTab} view`}
-              className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-            />
+            {activeTab === 'front' ? (
+              frontImageUrl ? (
+                <img
+                  src={frontImageUrl}
+                  alt="Front difference view"
+                  className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = 'https://via.placeholder.com/500x500?text=Image+Not+Available';
+                  }}
+                />
+              ) : (
+                <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
+                  <p className="text-gray-500">No front image available</p>
+                </div>
+              )
+            ) : (
+              backImageUrl ? (
+                <img
+                  src={backImageUrl}
+                  alt="Back difference view"
+                  className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = 'https://via.placeholder.com/500x500?text=Image+Not+Available';
+                  }}
+                />
+              ) : (
+                <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
+                  <p className="text-gray-500">No back image available</p>
+                </div>
+              )
+            )}
             <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
               <span className="text-sm font-medium">
                 {activeTab === 'front' ? 'Front Difference' : 'Back Difference'}
@@ -672,7 +718,9 @@ const ImageViewerModal = ({
             </div>
             <div className="absolute bottom-4 right-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
               <span className="text-sm font-medium">
-                Similarity: {images.similarity_scores[activeTab]}
+                Similarity: {activeTab === 'front' 
+                  ? images.similarity_scores.front 
+                  : images.similarity_scores.back}
               </span>
             </div>
           </div>
@@ -783,6 +831,10 @@ const AuditlyInspection = () => {
     </th>
   );
 
+  const hasImages = (item: ReceiptData) => {
+    return item.images?.difference_images?.front || item.images?.difference_images?.back;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -830,6 +882,20 @@ const AuditlyInspection = () => {
               className="flex items-center justify-center py-12"
             >
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-white rounded-xl p-6 text-center"
+            >
+              <div className="text-red-500 mb-4">{error}</div>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Try Again
+              </button>
             </motion.div>
           ) : (
             <motion.div
@@ -1011,10 +1077,15 @@ const AuditlyInspection = () => {
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <button
                                       onClick={() => setSelectedItem(item)}
-                                      className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                                      disabled={!hasImages(item)}
+                                      className={`flex items-center gap-1 px-3 py-1 rounded-lg transition-colors text-sm ${
+                                        hasImages(item) 
+                                          ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                      }`}
                                     >
                                       <ImageIcon className="w-4 h-4" />
-                                      View
+                                      {hasImages(item) ? 'View' : 'No Images'}
                                     </button>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
@@ -1038,7 +1109,7 @@ const AuditlyInspection = () => {
       </div>
 
       {/* Image Viewer Modal */}
-      {selectedItem && (
+      {selectedItem && selectedItem.images && (
         <ImageViewerModal 
           images={selectedItem.images} 
           onClose={() => setSelectedItem(null)} 
