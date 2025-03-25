@@ -620,26 +620,41 @@ const ImageViewerModal = ({
   onClose: () => void 
 }) => {
   const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
-  const staticUrl = "https://auditlyai.com";
-  const [imageError, setImageError] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState('');
 
+  // Construct proper image URL with cache-busting
   const getImageUrl = (path: string) => {
     if (!path) return '';
-    // Check if path already includes the domain
+    
+    // If it's already a full URL, return as-is
     if (path.startsWith('http')) return path;
-    // Handle absolute paths from server
-    if (path.startsWith('/home')) return `https://auditlyai.com${path}`;
-    // Handle regular static paths
-    return `${staticUrl}${path}`;
+    
+    // Handle server absolute paths
+    if (path.startsWith('/home')) {
+      // Extract the relevant part of the path
+      const match = path.match(/\/image_outputs\/\d+\/(front|back)_differences\.png/);
+      if (match) {
+        // Construct the proper web-accessible URL
+        return `https://auditlyai.com/api/images${match[0]}?t=${Date.now()}`;
+      }
+      return `https://auditlyai.com/api/images${path.split('/image_outputs')[1]}?t=${Date.now()}`;
+    }
+    
+    // Default case for regular paths
+    return `https://auditlyai.com${path}?t=${Date.now()}`;
   };
 
-  const frontImageUrl = getImageUrl(images.difference_images.front);
-  const backImageUrl = getImageUrl(images.difference_images.back);
+  useEffect(() => {
+    setImageLoadError(false);
+    const url = activeTab === 'front' 
+      ? getImageUrl(images.difference_images.front)
+      : getImageUrl(images.difference_images.back);
+    setCurrentImageUrl(url);
+  }, [activeTab, images]);
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    target.onerror = null; // Prevent infinite loop
-    setImageError(true);
+  const handleImageError = () => {
+    setImageLoadError(true);
   };
 
   return (
@@ -660,19 +675,13 @@ const ImageViewerModal = ({
           <div className="flex items-center gap-4">
             <button
               className={`px-4 py-2 rounded-lg ${activeTab === 'front' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => {
-                setActiveTab('front');
-                setImageError(false);
-              }}
+              onClick={() => setActiveTab('front')}
             >
               Front View
             </button>
             <button
               className={`px-4 py-2 rounded-lg ${activeTab === 'back' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => {
-                setActiveTab('back');
-                setImageError(false);
-              }}
+              onClick={() => setActiveTab('back')}
             >
               Back View
             </button>
@@ -687,37 +696,20 @@ const ImageViewerModal = ({
 
         <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
           <div className="relative w-full max-w-2xl">
-            {imageError ? (
+            {imageLoadError || !currentImageUrl ? (
               <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
                 <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-gray-500">Image not available</p>
+                <p className="text-gray-500">
+                  {!currentImageUrl ? 'No image available' : 'Failed to load image'}
+                </p>
               </div>
-            ) : activeTab === 'front' ? (
-              frontImageUrl ? (
-                <img
-                  src={frontImageUrl}
-                  alt="Front difference view"
-                  className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
-                  onError={handleImageError}
-                />
-              ) : (
-                <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
-                  <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
-                  <p className="text-gray-500">No front image available</p>
-                </div>
-              )
-            ) : backImageUrl ? (
+            ) : (
               <img
-                src={backImageUrl}
-                alt="Back difference view"
+                src={currentImageUrl}
+                alt={`${activeTab} difference view`}
                 className="w-full h-auto rounded-lg shadow-lg border border-gray-200"
                 onError={handleImageError}
               />
-            ) : (
-              <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
-                <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-gray-500">No back image available</p>
-              </div>
             )}
             <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
               <span className="text-sm font-medium">
