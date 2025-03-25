@@ -358,23 +358,28 @@ const ItemImages: React.FC = () => {
   setItemData(null);
 
   try {
-    // Use the search endpoint with query parameters
-    const params = {
-      [searchType === "number" ? "item_number" : "item_description"]: searchTerm
-    };
+    // Construct the correct URL based on search type
+    let url;
+    if (searchType === "number") {
+      url = `${backendUrl}/images/search?item_number=${encodeURIComponent(searchTerm)}`;
+    } else {
+      url = `${backendUrl}/images/search?item_description=${encodeURIComponent(searchTerm)}`;
+    }
 
-    const response = await axios.get(`${backendUrl}/images/search`, { params });
+    console.log("Making request to:", url); // For debugging
+
+    const response = await axios.get(url);
     const data = response.data;
     data.front_image_path = `${staticUrl}${data.front_image_path}`;
     data.back_image_path = `${staticUrl}${data.back_image_path}`;
     setItemData(data);
   } catch (err: any) {
+    console.error("API Error:", err); // For debugging
     setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
   } finally {
     setLoading(false);
   }
 };
-
   const handleClear = () => {
     setSearchTerm("");
     setItemData(null);
