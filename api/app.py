@@ -1550,70 +1550,70 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 #         "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",    # Relative path
 #     }
 
-@app.post("/api/get-inspection-data")
-async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-    # request_user_id = request.search_user_id
-    # token = request.token
-    # user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
-    # print(user_data)
-    # customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == request_user_id).filter(OnboardUser.token == request.token).first()
-    # if not ((user_data and not token) or (token and customer_data)): 
-    #       return {
-    #         "message": "Invalid User",
-    # }
-    if request.receipt_number is None:
-        data = db.query(
-            CustomerItemCondition,
-            CustomerItemData,
-            Item,
-            Brand
-        ).join(
-            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-        ).join(
-            Item, CustomerItemData.item_id == Item.id
-        ).join(
-            Brand, Item.brand_id == Brand.id
-        ).all()
-    else:
-        data = db.query(
-            CustomerItemCondition,
-            CustomerItemData,
-            Item,
-            Brand
-        ).join(
-            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-        ).join(
-            Item, CustomerItemData.item_id == Item.id
-        ).join(
-            Brand, Item.brand_id == Brand.id
-        ).filter(
-            CustomerItemCondition.ack_number == request.receipt_number
-        ).first()
+# @app.post("/api/get-inspection-data")
+# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+#     # request_user_id = request.search_user_id
+#     # token = request.token
+#     # user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request_user_id).first()
+#     # print(user_data)
+#     # customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == request_user_id).filter(OnboardUser.token == request.token).first()
+#     # if not ((user_data and not token) or (token and customer_data)): 
+#     #       return {
+#     #         "message": "Invalid User",
+#     # }
+#     if request.receipt_number is None:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).all()
+#     else:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).filter(
+#             CustomerItemCondition.ack_number == request.receipt_number
+#         ).first()
          
-        data = [data]
+#         data = [data]
 
-    if not data:
-        raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
 
-    receipt_data_list = []
-    for condition, item_data, item, brand in data:
-        receipt_data_list.append({
-            "receipt_number": condition.ack_number,
-            "overall_condition": condition.overall_condition,
-            "item_description": item.item_description,
-            "brand_name": brand.brand_name,
-            "original_sales_order_number": item_data.original_sales_order_number,
-            "return_order_number": item_data.return_order_number,
-            "return_qty": item_data.return_qty,
-            "shipping_info": {
-                "shipped_to_person": item_data.shipped_to_person,
-                "address": item_data.shipped_to_address,
-                "city": item_data.city,
-                "state": item_data.state,
-                "country": item_data.country
-            }
-        })
-    return receipt_data_list
+#     receipt_data_list = []
+#     for condition, item_data, item, brand in data:
+#         receipt_data_list.append({
+#             "receipt_number": condition.ack_number,
+#             "overall_condition": condition.overall_condition,
+#             "item_description": item.item_description,
+#             "brand_name": brand.brand_name,
+#             "original_sales_order_number": item_data.original_sales_order_number,
+#             "return_order_number": item_data.return_order_number,
+#             "return_qty": item_data.return_qty,
+#             "shipping_info": {
+#                 "shipped_to_person": item_data.shipped_to_person,
+#                 "address": item_data.shipped_to_address,
+#                 "city": item_data.city,
+#                 "state": item_data.state,
+#                 "country": item_data.country
+#             }
+#         })
+#     return receipt_data_list
 
 
 @app.get("/api/images/search")
@@ -1669,3 +1669,121 @@ async def get_images_by_item_number_or_description(
         "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",
         "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",
     }
+
+
+@app.post("/api/get-inspection-data")
+async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+    # Authentication checks (commented out as per your example)
+    # if request.receipt_number is None:
+    #     data = db.query(
+    #         CustomerItemCondition,
+    #         CustomerItemData,
+    #         Item,
+    #         Brand
+    #     ).join(
+    #         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+    #     ).join(
+    #         Item, CustomerItemData.item_id == Item.id
+    #     ).join(
+    #         Brand, Item.brand_id == Brand.id
+    #     ).all()
+    # else:
+    #     data = db.query(
+    #         CustomerItemCondition,
+    #         CustomerItemData,
+    #         Item,
+    #         Brand
+    #     ).join(
+    #         CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+    #     ).join(
+    #         Item, CustomerItemData.item_id == Item.id
+    #     ).join(
+    #         Brand, Item.brand_id == Brand.id
+    #     ).filter(
+    #         CustomerItemCondition.ack_number == request.receipt_number
+    #     ).first()
+    #     
+    #     data = [data]
+
+    # Modified query to include base_data for images
+    if request.receipt_number is None:
+        data = db.query(
+            CustomerItemCondition,
+            CustomerItemData,
+            Item,
+            Brand,
+            BaseData  # Added BaseData to the query
+        ).join(
+            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+        ).join(
+            Item, CustomerItemData.item_id == Item.id
+        ).join(
+            Brand, Item.brand_id == Brand.id
+        ).outerjoin(  # Using outerjoin in case base images don't exist
+            BaseData, BaseData.base_to_item_mapping == Item.id
+        ).all()
+    else:
+        data = db.query(
+            CustomerItemCondition,
+            CustomerItemData,
+            Item,
+            Brand,
+            BaseData  # Added BaseData to the query
+        ).join(
+            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+        ).join(
+            Item, CustomerItemData.item_id == Item.id
+        ).join(
+            Brand, Item.brand_id == Brand.id
+        ).outerjoin(  # Using outerjoin in case base images don't exist
+            BaseData, BaseData.base_to_item_mapping == Item.id
+        ).filter(
+            CustomerItemCondition.ack_number == request.receipt_number
+        ).first()
+        
+        data = [data]
+
+    if not data:
+        raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+
+    receipt_data_list = []
+    for condition, item_data, item, brand, base_data in data:  # Now unpacking base_data too
+        receipt_data = {
+            "receipt_number": condition.ack_number,
+            "overall_condition": condition.overall_condition,
+            "item_description": item.item_description,
+            "brand_name": brand.brand_name,
+            "original_sales_order_number": item_data.original_sales_order_number,
+            "return_order_number": item_data.return_order_number,
+            "return_qty": item_data.return_qty,
+            "shipping_info": {
+                "shipped_to_person": item_data.shipped_to_person,
+                "address": item_data.shipped_to_address,
+                "city": item_data.city,
+                "state": item_data.state,
+                "country": item_data.country
+            },
+            # Adding image data
+            "images": {
+                "difference_images": {
+                    "front": condition.difference_front_image,
+                    "back": condition.difference_back_image
+                },
+                "similarity_scores": {
+                    "front": condition.front_similarity,
+                    "back": condition.back_similarity,
+                    "average": condition.average_ssi
+                }
+            }
+        }
+        
+        # Add base images if they exist
+        if base_data:
+            receipt_data["images"]["base_images"] = {
+                "front": base_data.base_front_image,
+                "back": base_data.base_back_image
+            }
+        
+        receipt_data_list.append(receipt_data)
+    
+    return receipt_data_list
