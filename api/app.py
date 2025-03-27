@@ -1969,7 +1969,9 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 @app.get("/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
     # Convert URL object to string explicitly
-    redirect_uri = str(request.url_for("powerbi_callback"))
+    # redirect_uri = str(request.url_for("powerbi_callback"))
+    redirect_uri = "https://auditlyai.com/powerbi/callback"
+
     
     print("\n=== AUTH_LOGIN START ===")
     print(f"Initial session keys: {list(request.session.keys())}")
@@ -2087,7 +2089,7 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             "powerbi_user_email": user_data['email']
         })
 
-        return RedirectResponse(url="http://localhost:3000/dashboard")
+        return RedirectResponse(url="https://auditlyai.com/dashboard"")
         
     except OAuthError as e:
         db.rollback()
