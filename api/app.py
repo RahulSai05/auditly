@@ -765,7 +765,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         else:
             otp_login = _gen_otp()
             user_data.reset_otp = otp_login
-            user_data.reset_otp_expiration = datetime.datetime.now()+datetime.timedelta(seconds=600)
+            user_data.reset_otp_expiration = datetime.now()+timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
             if ENV == "DEV":
@@ -797,7 +797,7 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
 
 
     if user_data:
-        user_data.last_login_time = datetime.datetime.now()
+        user_data.last_login_time = datetime.now()
         db.commit()
         db.refresh(user_data)
         return {
@@ -827,7 +827,7 @@ async def login(request: LogoutRequest, db: Session = Depends(get_db)):
         user_data = db.query(AuditlyUser).filter(or_(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.auditly_user_id == auditly_user_id)).first()
 
         if user_data:
-            user_data.last_logout_time = datetime.datetime.now()
+            user_data.last_logout_time = datetime.now()
             db.commit()
             db.refresh(user_data)
             return {
@@ -925,7 +925,7 @@ async def forget_password(request: ForgetPassword, db: Session = Depends(get_db)
         if user_data:
             otp = _gen_otp()
             user_data.reset_otp = otp
-            user_data.reset_otp_expiration = datetime.datetime.now() + datetime.timedelta(seconds=600)
+            user_data.reset_otp_expiration = datetime.now() + timedelta(seconds=600)
             db.commit()
             db.refresh(user_data)
 
@@ -962,7 +962,7 @@ async def reset_password(request: ResettPassword, db: Session = Depends(get_db))
 
     hashed_password = hash_password_sha256(new_password)
     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.email == email,AuditlyUser.reset_otp == reset_opt).first()
-    if user_data and user_data.reset_otp_expiration > datetime.datetime.now():
+    if user_data and user_data.reset_otp_expiration > datetime.now():
         user_data.password = hashed_password
         user_data.reset_otp_expiration = None   
         user_data.reset_otp = None
