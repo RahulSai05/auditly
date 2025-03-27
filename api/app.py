@@ -1966,7 +1966,7 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 
 
 
-@app.get("/powerbi/auth_login")
+@app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
     # Convert URL object to string explicitly
     # redirect_uri = str(request.url_for("powerbi_callback"))
@@ -2000,7 +2000,7 @@ async def powerbi_auth_login(request: Request):
         )
 
 
-@app.get("/powerbi/callback")
+@app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
     print("\n=== POWERBI CALLBACK STARTED ===")
     
