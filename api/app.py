@@ -2002,7 +2002,7 @@ async def powerbi_auth_login(request: Request):
             detail="Failed to initiate authentication"
         )
 
-@router.get("/powerbi/callback")
+@app.get("/powerbi/callback")
 async def powerbi_callback(
     request: Request,
     db: Session = Depends(get_db)
