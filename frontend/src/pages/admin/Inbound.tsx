@@ -265,25 +265,9 @@ const Inbound: React.FC = () => {
     try {
       setLoading(prev => ({ ...prev, [source.id]: true }));
       
-      const response = await fetch(source.authEndpoint, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to initiate authentication');
-      }
-  
-      const data = await response.json();
+      // Simply redirect to your backend endpoint
+      window.location.href = source.authEndpoint;
       
-      if (!data.redirectUrl) {
-        throw new Error('No redirect URL received');
-      }
-  
-      window.location.href = data.redirectUrl;
     } catch (error) {
       console.error("Authentication error:", error);
       alert("Failed to initiate Power BI authentication. Please try again.");
