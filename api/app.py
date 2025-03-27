@@ -1960,7 +1960,7 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
     return FileResponse(image_path)
 
 
-@app.get(f"{/api/powerbi/auth_login")
+@app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
     """Initiate Power BI OAuth flow"""
     try:
@@ -1989,7 +1989,7 @@ async def powerbi_auth_login(request: Request):
             status_code=303
         )
 
-@app.get(/api/powerbi/callback")
+@app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
     """Handle Power BI OAuth callback"""
     try:
