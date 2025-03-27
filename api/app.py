@@ -1970,7 +1970,7 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 @app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
     """Initiates Power BI OAuth2 flow"""
-    redirect_uri = "https://auditlyai.com/powerbi/callback"
+    redirect_uri = "https://auditlyai.com/api/powerbi/callback"
     
     try:
         # Generate secure state and nonce
