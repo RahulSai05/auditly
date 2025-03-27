@@ -1968,53 +1968,77 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 
 @app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
-    # Use your production URL
+    """Initiates Power BI OAuth2 flow"""
     redirect_uri = "https://auditlyai.com/powerbi/callback"
     
-    print(f"\n=== AUTH LOGIN STARTED ===")
-    print(f"Using redirect_uri: {redirect_uri}")
-
-    state = str(uuid.uuid4())
-    request.session["oauth_state"] = state
-    
     try:
+        # Generate secure state and nonce
+        state = str(uuid.uuid4())
+        nonce = str(uuid.uuid4())
+        
+        # Store in session
+        request.session.update({
+            "oauth_state": state,
+            "oauth_nonce": nonce,
+            "redirect_after_auth": str(request.url_for("powerbi_callback"))
+        })
+
+        # Generate authorization URL
         auth_url = await oauth.microsoft.create_authorization_url(
             redirect_uri,
             state=state,
+            nonce=nonce,
             scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/.default"],
             prompt="select_account"
         )
-        print(f"Generated auth URL: {auth_url}")
-        return RedirectResponse(url=auth_url['url'])
-    except Exception as e:
-        print(f"AUTH ERROR: {str(e)}")
-        raise HTTPException(status_code=400, detail="Authentication failed")
 
-@app.get("/powerbi/callback")
-async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
-    print("\n=== CALLBACK TRIGGERED ===")
-    print(f"Query params: {dict(request.query_params)}")
-    
+        logging.info(f"Auth URL generated: {auth_url['url']}")
+        return RedirectResponse(url=auth_url['url'], status_code=303)
+        
+    except Exception as e:
+        logging.error(f"Auth initiation failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to initiate authentication"
+        )
+
+@router.get("/powerbi/callback")
+async def powerbi_callback(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Handles Power BI OAuth2 callback"""
     try:
-        # Verify state
-        expected_state = request.session.get("oauth_state")
+        logging.info("Power BI callback initiated")
+        
+        # Verify state parameter
+        expected_state = request.session.pop("oauth_state", None)
         received_state = request.query_params.get("state")
         
         if not expected_state or expected_state != received_state:
-            print(f"State mismatch! Expected: {expected_state}, Got: {received_state}")
-            raise HTTPException(status_code=400, detail="Invalid state")
+            logging.error(f"State mismatch. Expected: {expected_state}, Got: {received_state}")
+            raise HTTPException(status_code=400, detail="Invalid state parameter")
 
-        # Get tokens
+        # Exchange code for tokens
         token = await oauth.microsoft.authorize_access_token(request)
-        print("Token received!")
-        
-        # Decode ID token
+        if not token:
+            raise HTTPException(status_code=400, detail="No token received")
+
+        # Verify and decode ID token
         id_token = token.get('id_token')
         if not id_token:
-            raise HTTPException(status_code=400, detail="No ID token")
-            
-        claims = jwt.decode(id_token, options={"verify_signature": False})
-        print(f"User claims: {claims}")
+            raise HTTPException(status_code=400, detail="No ID token received")
+
+        claims = jwt.decode(
+            id_token,
+            options={"verify_signature": False},
+            audience=settings.MICROSOFT_CLIENT_ID
+        )
+        
+        # Verify nonce
+        expected_nonce = request.session.pop("oauth_nonce", None)
+        if claims.get('nonce') != expected_nonce:
+            raise HTTPException(status_code=400, detail="Invalid nonce")
 
         # Prepare user data
         user_data = {
@@ -2029,12 +2053,14 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             PowerBiUser.power_bi_user_id == user_data['id']
         ).first()
 
+        expires_in = token.get("expires_in", 3600)
+        token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
         if existing_user:
-            print(f"Updating user {existing_user.id}")
             existing_user.access_token = token['access_token']
             existing_user.refresh_token = token.get('refresh_token', existing_user.refresh_token)
+            existing_user.token_expiry = token_expiry
         else:
-            print("Creating new user")
             new_user = PowerBiUser(
                 power_bi_user_id=user_data['id'],
                 power_bi_email=user_data['email'],
@@ -2042,16 +2068,27 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
                 tenant_id=user_data['tenant_id'],
                 access_token=token['access_token'],
                 refresh_token=token.get('refresh_token', ''),
-                token_expiry=datetime.now(timezone.utc) + timedelta(seconds=3600)
+                token_expiry=token_expiry,
+                created_at=datetime.now(timezone.utc)
             )
             db.add(new_user)
         
         db.commit()
-        print("Data saved successfully!")
-        
+
+        # Set user session
+        request.session.update({
+            "powerbi_user_id": user_data['id'],
+            "powerbi_user_email": user_data['email']
+        })
+
         return RedirectResponse(url="https://auditlyai.com/dashboard")
 
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        print(f"CALLBACK ERROR: {str(e)}")
-        return RedirectResponse(url="https://auditlyai.com/error?message=auth_failed")
+        logging.error(f"Callback processing failed: {str(e)}", exc_info=True)
+        return RedirectResponse(
+            url="https://auditlyai.com/error?message=auth_failed",
+            status_code=303
+        )
