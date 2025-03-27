@@ -2094,7 +2094,7 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
         print(f"Unexpected error: {traceback.format_exc()}")
         return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
 
-@app.get("/powerbi/datasets")
+@app.get("/api/powerbi/datasets")
 async def get_powerbi_datasets(db: Session = Depends(get_db)):
     """
     Fetch all datasets in a Power BI workspace.
