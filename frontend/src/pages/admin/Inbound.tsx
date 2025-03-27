@@ -261,30 +261,28 @@ const Inbound: React.FC = () => {
 
   const handleAuthClick = async (source: any) => {
     if (!source.authEndpoint) return;
-
+  
     try {
       setLoading(prev => ({ ...prev, [source.id]: true }));
       
-      // Make API call to your backend
       const response = await fetch(source.authEndpoint, {
         method: 'GET',
-        credentials: 'include', // Important for session cookies
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to initiate authentication');
       }
-
+  
       const data = await response.json();
       
       if (!data.redirectUrl) {
         throw new Error('No redirect URL received');
       }
-
-      // Redirect to the Microsoft login page
+  
       window.location.href = data.redirectUrl;
     } catch (error) {
       console.error("Authentication error:", error);
