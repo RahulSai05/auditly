@@ -3,6 +3,7 @@ import numpy as np
 import csv
 import cv2
 import random
+import logging
 import io
 import datetime
 import base64
