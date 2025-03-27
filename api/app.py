@@ -2093,76 +2093,94 @@ async def powerbi_auth_login(request: Request):
 #         print(f"Unexpected error: {traceback.format_exc()}")
 #         return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
 
-
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
     print("\n=== POWERBI CALLBACK STARTED ===")
     
     try:
-        # 1. Verify state
-        expected_state = request.session.pop("oauth_state", None)
+        # 1. Verify we're actually hitting this endpoint
+        print("Callback endpoint triggered!")
+        print(f"Incoming query params: {dict(request.query_params)}")
+        
+        # 2. Debug session state
+        print(f"Session keys: {list(request.session.keys())}")
+        expected_state = request.session.get("oauth_state")
         received_state = request.query_params.get("state")
         print(f"State verification - Expected: {expected_state}, Received: {received_state}")
         
         if not expected_state or expected_state != received_state:
             raise OAuthError("Invalid state parameter")
 
-        # 2. Get tokens
+        # 3. Get and log tokens
         token = await oauth.microsoft.authorize_access_token(request)
-        print(f"Token keys: {token.keys()}")
+        print("Token received successfully!")
+        print(f"Token keys: {list(token.keys())}")
         
-        # 3. Process ID token
+        # 4. Decode and verify ID token
         id_token = token.get('id_token')
         if not id_token:
             raise OAuthError("No ID token received")
             
         claims = jwt.decode(id_token, options={"verify_signature": False})
-        print(f"Claims received: {claims.keys()}")
-        
-        # 4. Prepare user data
+        print(f"User claims: {claims}")
+
+        # 5. Prepare user data with null checks
         user_data = {
-            'id': claims.get('oid') or claims.get('sub'),
-            'email': claims.get('email') or claims.get('preferred_username'),
+            'id': claims.get('oid') or claims.get('sub') or str(uuid.uuid4()),
+            'email': claims.get('email') or claims.get('preferred_username') or "no-email-provided",
             'name': claims.get('name', ''),
-            'tenant_id': claims.get('tid'),
+            'tenant_id': claims.get('tid', '')
         }
-        print(f"User data extracted: {user_data}")
+        print(f"Processed user data: {user_data}")
 
-        # 5. Database operations
-        existing_user = db.query(PowerBiUser).filter(
-            PowerBiUser.power_bi_user_id == user_data['id']
-        ).first()
+        # 6. Database operations with explicit commit/rollback
+        try:
+            existing_user = db.query(PowerBiUser).filter(
+                PowerBiUser.power_bi_user_id == user_data['id']
+            ).first()
 
-        if existing_user:
-            print(f"Updating existing user: {existing_user.id}")
-            existing_user.access_token = token['access_token']
-            if 'refresh_token' in token:
-                existing_user.refresh_token = token['refresh_token']
-            existing_user.token_expiry = datetime.now(timezone.utc) + timedelta(
-                seconds=token.get("expires_in", 3600)
-            )
-        else:
-            print("Creating new user")
-            powerbi_user = PowerBiUser(
-                power_bi_email=user_data['email'],
-                power_bi_username=user_data['name'],
-                power_bi_user_id=user_data['id'],
-                access_token=token['access_token'],
-                refresh_token=token.get('refresh_token', ''),
-                token_expiry=datetime.now(timezone.utc) + timedelta(
+            if existing_user:
+                print(f"Updating existing user: {existing_user.id}")
+                existing_user.access_token = token['access_token']
+                existing_user.refresh_token = token.get('refresh_token', existing_user.refresh_token)
+                existing_user.token_expiry = datetime.now(timezone.utc) + timedelta(
                     seconds=token.get("expires_in", 3600)
-                ),
-                tenant_id=user_data['tenant_id'],
-                created_at=datetime.now(timezone.utc)
-            )
-            db.add(powerbi_user)
-        
-        db.commit()
-        print("Database commit successful")
+                )
+            else:
+                print("Creating new user record")
+                powerbi_user = PowerBiUser(
+                    power_bi_email=user_data['email'],
+                    power_bi_username=user_data['name'],
+                    power_bi_user_id=user_data['id'],
+                    access_token=token['access_token'],
+                    refresh_token=token.get('refresh_token', ''),
+                    token_expiry=datetime.now(timezone.utc) + timedelta(
+                        seconds=token.get("expires_in", 3600)
+                    ),
+                    tenant_id=user_data['tenant_id'],
+                    created_at=datetime.now(timezone.utc)
+                )
+                db.add(powerbi_user)
+            
+            db.commit()
+            print("Database commit successful!")
+            
+            # Verify the record exists
+            verified_user = db.query(PowerBiUser).filter(
+                PowerBiUser.power_bi_user_id == user_data['id']
+            ).first()
+            print(f"Verification - User in DB: {verified_user is not None}")
+
+        except Exception as db_error:
+            db.rollback()
+            print(f"Database error: {str(db_error)}")
+            raise
 
         return RedirectResponse(url="https://auditlyai.com/dashboard")
         
     except Exception as e:
-        db.rollback()
-        print(f"ERROR: {str(e)}\n{traceback.format_exc()}")
+        print(f"\n!!! CALLBACK ERROR !!!")
+        print(f"Error type: {type(e)}")
+        print(f"Error details: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
         return RedirectResponse(url="https://auditlyai.com/error?message=auth_failed")
