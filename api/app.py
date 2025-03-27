@@ -1965,222 +1965,92 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 
 
 
-
 @app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
-    # Convert URL object to string explicitly
-    # redirect_uri = str(request.url_for("powerbi_callback"))
+    # Use your production URL
     redirect_uri = "https://auditlyai.com/powerbi/callback"
+    
+    print(f"\n=== AUTH LOGIN STARTED ===")
+    print(f"Using redirect_uri: {redirect_uri}")
 
-
-    # Generate state
-    state = str(int(time.time()))
+    state = str(uuid.uuid4())
     request.session["oauth_state"] = state
     
     try:
-        # Use authorize_redirect instead of create_authorization_url
-        return await oauth.microsoft.authorize_redirect(
-            request,
+        auth_url = await oauth.microsoft.create_authorization_url(
             redirect_uri,
             state=state,
+            scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/.default"],
             prompt="select_account"
         )
+        print(f"Generated auth URL: {auth_url}")
+        return RedirectResponse(url=auth_url['url'])
     except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail="Authentication initiation failed. Please check server logs."
-        )
+        print(f"AUTH ERROR: {str(e)}")
+        raise HTTPException(status_code=400, detail="Authentication failed")
 
-
-# @app.get("/api/powerbi/callback")
-# async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
-#     print("\n=== POWERBI CALLBACK STARTED ===")
-    
-#     try:
-#         # Debug incoming request
-#         print(f"Query params: {dict(request.query_params)}")
-        
-#         # Verify state parameter
-#         expected_state = request.session.pop("oauth_state", None)
-#         received_state = request.query_params.get("state")
-        
-#         if not expected_state or expected_state != received_state:
-#             print("State mismatch error")
-#             raise OAuthError("Invalid state parameter")
-
-#         # Get tokens
-#         token = await oauth.microsoft.authorize_access_token(request)
-#         print("Token received successfully")
-        
-#         # Decode ID token
-#         id_token = token.get('id_token')
-#         if not id_token:
-#             raise OAuthError("No ID token received")
-            
-#         claims = jwt.decode(id_token, options={"verify_signature": False})
-#         print(f"User claims decoded: {claims.keys()}")
-
-#         # Prepare user data
-#         user_data = {
-#             'id': claims.get('oid') or claims.get('sub'),
-#             'email': claims.get('email') or claims.get('preferred_username'),
-#             'name': claims.get('name', ''),
-#             'tenant_id': claims.get('tid'),
-#             'claims': claims
-#         }
-
-#         # Calculate token expiry (1 hour default if not specified)
-#         expires_in = token.get("expires_in", 3600)
-#         token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-
-#         # Check if user exists
-#         existing_user = db.query(PowerBiUser).filter(
-#             PowerBiUser.power_bi_user_id == user_data['id']
-#         ).first()
-
-#         if existing_user:
-#             print("Updating existing user")
-#             # print(token['access_token'])
-#             headers = {
-#                 "Authorization": f"Bearer {token['access_token']}"
-#             }
-
-#             # Get all workspaces
-#             response = requests.get(
-#                 "https://api.powerbi.com/v1.0/myorg/groups",
-#                 headers=headers
-#             )
-#             print(response)
-#             existing_user.access_token = token['access_token']
-#             if 'refresh_token' in token:
-#                 existing_user.refresh_token = token['refresh_token']
-#             existing_user.token_expiry = token_expiry
-#             existing_user.power_bi_response = user_data['claims']
-#         else:
-#             print("Creating new user")
-#             powerbi_user = PowerBiUser(
-#                 power_bi_email=user_data['email'],
-#                 power_bi_username=user_data['name'],
-#                 power_bi_user_id=user_data['id'],
-#                 power_bi_response=user_data['claims'],
-#                 access_token=token['access_token'],
-#                 refresh_token=token.get('refresh_token', ''),
-#                 token_expiry=token_expiry,
-#                 tenant_id=user_data['tenant_id'],
-#                 created_at=datetime.now(timezone.utc)
-
-#             )
-#             db.add(powerbi_user)
-        
-#         db.commit()
-#         print("Data successfully saved to database")
-
-#         # Store minimal session data
-#         request.session.update({
-#             "powerbi_user_id": user_data['id'],
-#             "powerbi_user_email": user_data['email']
-#         })
-
-#         return RedirectResponse(url="https://auditlyai.com/dashboard")
-        
-#     except OAuthError as e:
-#         db.rollback()
-#         print(f"OAuth error: {str(e)}")
-#         return RedirectResponse(url=f"http://localhost:3000/error?message={str(e)}")
-        
-#     except Exception as e:
-#         db.rollback()
-#         print(f"Unexpected error: {traceback.format_exc()}")
-#         return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
-
-@app.get("/api/powerbi/callback")
+@app.get("/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
-    print("\n=== POWERBI CALLBACK STARTED ===")
+    print("\n=== CALLBACK TRIGGERED ===")
+    print(f"Query params: {dict(request.query_params)}")
     
     try:
-        # 1. Verify we're actually hitting this endpoint
-        print("Callback endpoint triggered!")
-        print(f"Incoming query params: {dict(request.query_params)}")
-        
-        # 2. Debug session state
-        print(f"Session keys: {list(request.session.keys())}")
+        # Verify state
         expected_state = request.session.get("oauth_state")
         received_state = request.query_params.get("state")
-        print(f"State verification - Expected: {expected_state}, Received: {received_state}")
         
         if not expected_state or expected_state != received_state:
-            raise OAuthError("Invalid state parameter")
+            print(f"State mismatch! Expected: {expected_state}, Got: {received_state}")
+            raise HTTPException(status_code=400, detail="Invalid state")
 
-        # 3. Get and log tokens
+        # Get tokens
         token = await oauth.microsoft.authorize_access_token(request)
-        print("Token received successfully!")
-        print(f"Token keys: {list(token.keys())}")
+        print("Token received!")
         
-        # 4. Decode and verify ID token
+        # Decode ID token
         id_token = token.get('id_token')
         if not id_token:
-            raise OAuthError("No ID token received")
+            raise HTTPException(status_code=400, detail="No ID token")
             
         claims = jwt.decode(id_token, options={"verify_signature": False})
         print(f"User claims: {claims}")
 
-        # 5. Prepare user data with null checks
+        # Prepare user data
         user_data = {
-            'id': claims.get('oid') or claims.get('sub') or str(uuid.uuid4()),
-            'email': claims.get('email') or claims.get('preferred_username') or "no-email-provided",
+            'id': claims.get('oid') or claims.get('sub'),
+            'email': claims.get('email') or claims.get('preferred_username'),
             'name': claims.get('name', ''),
-            'tenant_id': claims.get('tid', '')
+            'tenant_id': claims.get('tid')
         }
-        print(f"Processed user data: {user_data}")
 
-        # 6. Database operations with explicit commit/rollback
-        try:
-            existing_user = db.query(PowerBiUser).filter(
-                PowerBiUser.power_bi_user_id == user_data['id']
-            ).first()
+        # Database operations
+        existing_user = db.query(PowerBiUser).filter(
+            PowerBiUser.power_bi_user_id == user_data['id']
+        ).first()
 
-            if existing_user:
-                print(f"Updating existing user: {existing_user.id}")
-                existing_user.access_token = token['access_token']
-                existing_user.refresh_token = token.get('refresh_token', existing_user.refresh_token)
-                existing_user.token_expiry = datetime.now(timezone.utc) + timedelta(
-                    seconds=token.get("expires_in", 3600)
-                )
-            else:
-                print("Creating new user record")
-                powerbi_user = PowerBiUser(
-                    power_bi_email=user_data['email'],
-                    power_bi_username=user_data['name'],
-                    power_bi_user_id=user_data['id'],
-                    access_token=token['access_token'],
-                    refresh_token=token.get('refresh_token', ''),
-                    token_expiry=datetime.now(timezone.utc) + timedelta(
-                        seconds=token.get("expires_in", 3600)
-                    ),
-                    tenant_id=user_data['tenant_id'],
-                    created_at=datetime.now(timezone.utc)
-                )
-                db.add(powerbi_user)
-            
-            db.commit()
-            print("Database commit successful!")
-            
-            # Verify the record exists
-            verified_user = db.query(PowerBiUser).filter(
-                PowerBiUser.power_bi_user_id == user_data['id']
-            ).first()
-            print(f"Verification - User in DB: {verified_user is not None}")
-
-        except Exception as db_error:
-            db.rollback()
-            print(f"Database error: {str(db_error)}")
-            raise
-
-        return RedirectResponse(url="https://auditlyai.com/dashboard")
+        if existing_user:
+            print(f"Updating user {existing_user.id}")
+            existing_user.access_token = token['access_token']
+            existing_user.refresh_token = token.get('refresh_token', existing_user.refresh_token)
+        else:
+            print("Creating new user")
+            new_user = PowerBiUser(
+                power_bi_user_id=user_data['id'],
+                power_bi_email=user_data['email'],
+                power_bi_username=user_data['name'],
+                tenant_id=user_data['tenant_id'],
+                access_token=token['access_token'],
+                refresh_token=token.get('refresh_token', ''),
+                token_expiry=datetime.now(timezone.utc) + timedelta(seconds=3600)
+            )
+            db.add(new_user)
         
+        db.commit()
+        print("Data saved successfully!")
+        
+        return RedirectResponse(url="https://auditlyai.com/dashboard")
+
     except Exception as e:
-        print(f"\n!!! CALLBACK ERROR !!!")
-        print(f"Error type: {type(e)}")
-        print(f"Error details: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
+        db.rollback()
+        print(f"CALLBACK ERROR: {str(e)}")
         return RedirectResponse(url="https://auditlyai.com/error?message=auth_failed")
