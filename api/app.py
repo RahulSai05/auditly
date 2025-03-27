@@ -1972,10 +1972,6 @@ async def powerbi_auth_login(request: Request):
     # redirect_uri = str(request.url_for("powerbi_callback"))
     redirect_uri = "https://auditlyai.com/powerbi/callback"
 
-    
-    print("\n=== AUTH_LOGIN START ===")
-    print(f"Initial session keys: {list(request.session.keys())}")
-    print(f"Redirect URI: {redirect_uri} (type: {type(redirect_uri)})")
 
     # Generate state
     state = str(int(time.time()))
@@ -1990,10 +1986,6 @@ async def powerbi_auth_login(request: Request):
             prompt="select_account"
         )
     except Exception as e:
-        print("\n!!! AUTH INITIATION FAILURE !!!")
-        print(f"Error type: {type(e)}")
-        print(f"Error details: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=400,
             detail="Authentication initiation failed. Please check server logs."
