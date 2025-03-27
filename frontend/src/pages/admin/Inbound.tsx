@@ -266,7 +266,7 @@ const Inbound: React.FC = () => {
       setLoading(prev => ({ ...prev, [source.id]: true }));
       
       // Simply redirect to your backend endpoint
-      window.location.href = source.authEndpoint;
+      window.location.assign(source.authEndpoint);
       
     } catch (error) {
       console.error("Authentication error:", error);
