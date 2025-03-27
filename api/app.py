@@ -1963,121 +1963,133 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 
 @app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
-    """Initiate Power BI OAuth flow"""
-    try:
-        state = str(uuid.uuid4())
-        nonce = str(uuid.uuid4())
-        
-        request.session.update({
-            "oauth_state": state,
-            "oauth_nonce": nonce
-        })
+    # Convert URL object to string explicitly
+    redirect_uri = str(request.url_for("powerbi_callback"))
+    
+    print("\n=== AUTH_LOGIN START ===")
+    print(f"Initial session keys: {list(request.session.keys())}")
+    print(f"Redirect URI: {redirect_uri} (type: {type(redirect_uri)})")
 
-        auth_url = await oauth.microsoft.create_authorization_url(
-            redirect_uri=get_callback_url(),
+    # Generate state
+    state = str(int(time.time()))
+    request.session["oauth_state"] = state
+    
+    try:
+        # Use authorize_redirect instead of create_authorization_url
+        return await oauth.microsoft.authorize_redirect(
+            request,
+            redirect_uri,
             state=state,
-            nonce=nonce,
-            scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/.default"],
             prompt="select_account"
         )
-
-        return RedirectResponse(url=auth_url['url'], status_code=303)
-        
     except Exception as e:
-        logging.error("Auth initiation failed", exc_info=True)
-        return RedirectResponse(
-            url=urljoin(str(settings.base_url), "/error?message=auth_failed"),
-            status_code=303
+        print("\n!!! AUTH INITIATION FAILURE !!!")
+        print(f"Error type: {type(e)}")
+        print(f"Error details: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=400,
+            detail="Authentication initiation failed. Please check server logs."
         )
+
 
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
-    """Handle Power BI OAuth callback"""
+    print("\n=== POWERBI CALLBACK STARTED ===")
+    
     try:
-        # Verify state
+        # Debug incoming request
+        print(f"Query params: {dict(request.query_params)}")
+        
+        # Verify state parameter
         expected_state = request.session.pop("oauth_state", None)
         received_state = request.query_params.get("state")
         
         if not expected_state or expected_state != received_state:
-            return RedirectResponse(
-                url=urljoin(str(settings.base_url), "/error?message=invalid_state"),
-                status_code=303
-            )
+            print("State mismatch error")
+            raise OAuthError("Invalid state parameter")
 
-        # Exchange code for token
+        # Get tokens
         token = await oauth.microsoft.authorize_access_token(request)
-        if not token:
-            return RedirectResponse(
-                url=urljoin(str(settings.base_url), "/error?message=no_token"),
-                status_code=303
-            )
-
-        # Process ID token
+        print("Token received successfully")
+        
+        # Decode ID token
         id_token = token.get('id_token')
         if not id_token:
-            return RedirectResponse(
-                url=urljoin(str(settings.base_url), "/error?message=no_id_token"),
-                status_code=303
-            )
-
-        claims = jwt.decode(
-            id_token,
-            options={"verify_signature": False},
-            audience=settings.microsoft_client_id
-        )
-        
-        # Verify nonce
-        expected_nonce = request.session.pop("oauth_nonce", None)
-        if claims.get('nonce') != expected_nonce:
-            return RedirectResponse(
-                url=urljoin(str(settings.base_url), "/error?message=invalid_nonce"),
-                status_code=303
-            )
+            raise OAuthError("No ID token received")
+            
+        claims = jwt.decode(id_token, options={"verify_signature": False})
+        print(f"User claims decoded: {claims.keys()}")
 
         # Prepare user data
         user_data = {
             'id': claims.get('oid') or claims.get('sub'),
             'email': claims.get('email') or claims.get('preferred_username'),
             'name': claims.get('name', ''),
-            'tenant_id': claims.get('tid')
+            'tenant_id': claims.get('tid'),
+            'claims': claims
         }
 
-        # Database operations
+        # Calculate token expiry (1 hour default if not specified)
+        expires_in = token.get("expires_in", 3600)
+        token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+        # Check if user exists
         existing_user = db.query(PowerBiUser).filter(
             PowerBiUser.power_bi_user_id == user_data['id']
         ).first()
 
-        expires_in = token.get("expires_in", 3600)
-        token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-
         if existing_user:
+            print("Updating existing user")
+            # print(token['access_token'])
+            headers = {
+                "Authorization": f"Bearer {token['access_token']}"
+            }
+
+            # Get all workspaces
+            response = requests.get(
+                "https://api.powerbi.com/v1.0/myorg/groups",
+                headers=headers
+            )
+            print(response)
             existing_user.access_token = token['access_token']
-            existing_user.refresh_token = token.get('refresh_token', existing_user.refresh_token)
+            if 'refresh_token' in token:
+                existing_user.refresh_token = token['refresh_token']
             existing_user.token_expiry = token_expiry
+            existing_user.power_bi_response = user_data['claims']
         else:
-            new_user = PowerBiUser(
-                power_bi_user_id=user_data['id'],
+            print("Creating new user")
+            powerbi_user = PowerBiUser(
                 power_bi_email=user_data['email'],
                 power_bi_username=user_data['name'],
-                tenant_id=user_data['tenant_id'],
+                power_bi_user_id=user_data['id'],
+                power_bi_response=user_data['claims'],
                 access_token=token['access_token'],
                 refresh_token=token.get('refresh_token', ''),
                 token_expiry=token_expiry,
+                tenant_id=user_data['tenant_id'],
                 created_at=datetime.now(timezone.utc)
+
             )
-            db.add(new_user)
+            db.add(powerbi_user)
         
         db.commit()
+        print("Data successfully saved to database")
 
-        return RedirectResponse(
-            url=urljoin(str(settings.base_url), "/dashboard"),
-            status_code=303
-        )
+        # Store minimal session data
+        request.session.update({
+            "powerbi_user_id": user_data['id'],
+            "powerbi_user_email": user_data['email']
+        })
 
+        return RedirectResponse(url="https://auditlyai.com/dashboard")
+        
+    except OAuthError as e:
+        db.rollback()
+        print(f"OAuth error: {str(e)}")
+        return RedirectResponse(url=f"http://localhost:3000/error?message={str(e)}")
+        
     except Exception as e:
         db.rollback()
-        logging.error("Callback processing failed", exc_info=True)
-        return RedirectResponse(
-            url=urljoin(str(settings.base_url), "/error?message=auth_error"),
-            status_code=303
-        )
+        print(f"Unexpected error: {traceback.format_exc()}")
+        return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
