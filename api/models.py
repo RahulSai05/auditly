@@ -176,3 +176,29 @@ class SalesData(Base):
     Legacy = Column(String(255))
     Segment = Column(String(255))
     Subsegment = Column(String(255))
+
+
+
+class PowerBiUser(Base):
+    __tablename__ = 'power_bi_user'
+
+    power_bi_id = Column(Integer, primary_key=True, autoincrement=True)
+    power_bi_email = Column(String(255))
+    power_bi_username = Column(String(255))
+    power_bi_user_id = Column(String(255))
+    power_bi_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+    power_bi_response = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp())
+    access_token = Column(String)  # Added for OAuth token storage
+    refresh_token = Column(String)  # Added for refresh token
+    token_expiry = Column(DateTime)  # Added for token expiration
+    tenant_id = Column(String)      # Added for Azure tenant ID
+
+
+class PowerBiSqlMapping(Base):
+    __tablename__ = 'power_bi_sql_mapping'
+    
+    mapping_id = Column(Integer, primary_key=True, autoincrement=True)
+    table_name = Column(String(255), nullable=False)
+    mapping = Column(JSON, nullable=True)
+    power_bi_sql_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
