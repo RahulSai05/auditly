@@ -19,6 +19,7 @@ import jwt
 import json
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 from send_email import send_email
+from urllib.parse import urljoin 
 from settings import ENV
 from datetime import datetime, timedelta, timezone    
 from secret import get_secret
