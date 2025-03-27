@@ -21,6 +21,7 @@ from authlib.integrations.base_client.errors import MismatchingStateError, OAuth
 from send_email import send_email
 from urllib.parse import urljoin 
 from settings import ENV
+from config import settings
 from datetime import datetime, timedelta, timezone    
 from secret import get_secret
 from pydantic import BaseModel
