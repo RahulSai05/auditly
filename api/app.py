@@ -1841,11 +1841,6 @@ async def get_images_by_item_number_or_description(
     
 #     return receipt_data_list
 
-
-from fastapi import HTTPException
-from fastapi.responses import FileResponse
-import os
-
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
     if request.receipt_number is None:
@@ -1932,7 +1927,6 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
     
     return receipt_data_list
 
-# Add these new endpoints to serve images
 @app.get("/api/difference-images/{condition_id}/{image_type}")
 async def get_difference_image(condition_id: int, image_type: str, db: Session = Depends(get_db)):
     condition = db.query(CustomerItemCondition).filter(CustomerItemCondition.id == condition_id).first()
@@ -1966,80 +1960,78 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
     return FileResponse(image_path)
 
 
-
-@app.get("/api/powerbi/auth_login")
+@app.get(f"{/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
-    """Initiates Power BI OAuth2 flow"""
-    redirect_uri = "https://auditlyai.com/api/powerbi/callback"
-    
+    """Initiate Power BI OAuth flow"""
     try:
-        # Generate secure state and nonce
         state = str(uuid.uuid4())
         nonce = str(uuid.uuid4())
         
-        # Store in session
         request.session.update({
             "oauth_state": state,
-            "oauth_nonce": nonce,
-            "redirect_after_auth": str(request.url_for("powerbi_callback"))
+            "oauth_nonce": nonce
         })
 
-        # Generate authorization URL
         auth_url = await oauth.microsoft.create_authorization_url(
-            redirect_uri,
+            redirect_uri=get_callback_url(),
             state=state,
             nonce=nonce,
             scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/.default"],
             prompt="select_account"
         )
 
-        logging.info(f"Auth URL generated: {auth_url['url']}")
         return RedirectResponse(url=auth_url['url'], status_code=303)
         
     except Exception as e:
-        logging.error(f"Auth initiation failed: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=400,
-            detail="Failed to initiate authentication"
+        logging.error("Auth initiation failed", exc_info=True)
+        return RedirectResponse(
+            url=urljoin(str(settings.base_url), "/error?message=auth_failed"),
+            status_code=303
         )
 
-@app.get("/api/powerbi/callback")
-async def powerbi_callback(
-    request: Request,
-    db: Session = Depends(get_db)
-):
-    """Handles Power BI OAuth2 callback"""
+@app.get(/api/powerbi/callback")
+async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
+    """Handle Power BI OAuth callback"""
     try:
-        logging.info("Power BI callback initiated")
-        
-        # Verify state parameter
+        # Verify state
         expected_state = request.session.pop("oauth_state", None)
         received_state = request.query_params.get("state")
         
         if not expected_state or expected_state != received_state:
-            logging.error(f"State mismatch. Expected: {expected_state}, Got: {received_state}")
-            raise HTTPException(status_code=400, detail="Invalid state parameter")
+            return RedirectResponse(
+                url=urljoin(str(settings.base_url), "/error?message=invalid_state"),
+                status_code=303
+            )
 
-        # Exchange code for tokens
+        # Exchange code for token
         token = await oauth.microsoft.authorize_access_token(request)
         if not token:
-            raise HTTPException(status_code=400, detail="No token received")
+            return RedirectResponse(
+                url=urljoin(str(settings.base_url), "/error?message=no_token"),
+                status_code=303
+            )
 
-        # Verify and decode ID token
+        # Process ID token
         id_token = token.get('id_token')
         if not id_token:
-            raise HTTPException(status_code=400, detail="No ID token received")
+            return RedirectResponse(
+                url=urljoin(str(settings.base_url), "/error?message=no_id_token"),
+                status_code=303
+            )
 
         claims = jwt.decode(
             id_token,
             options={"verify_signature": False},
-            audience=settings.MICROSOFT_CLIENT_ID
+            audience=settings.microsoft_client_id
         )
         
         # Verify nonce
         expected_nonce = request.session.pop("oauth_nonce", None)
         if claims.get('nonce') != expected_nonce:
-            raise HTTPException(status_code=400, detail="Invalid nonce")
+            return RedirectResponse(
+                url=urljoin(str(settings.base_url), "/error?message=invalid_nonce"),
+                status_code=303
+            )
 
         # Prepare user data
         user_data = {
@@ -2076,20 +2068,15 @@ async def powerbi_callback(
         
         db.commit()
 
-        # Set user session
-        request.session.update({
-            "powerbi_user_id": user_data['id'],
-            "powerbi_user_email": user_data['email']
-        })
+        return RedirectResponse(
+            url=urljoin(str(settings.base_url), "/dashboard"),
+            status_code=303
+        )
 
-        return RedirectResponse(url="https://auditlyai.com/dashboard")
-
-    except HTTPException:
-        raise
     except Exception as e:
         db.rollback()
-        logging.error(f"Callback processing failed: {str(e)}", exc_info=True)
+        logging.error("Callback processing failed", exc_info=True)
         return RedirectResponse(
-            url="https://auditlyai.com/error?message=auth_failed",
+            url=urljoin(str(settings.base_url), "/error?message=auth_error"),
             status_code=303
         )
