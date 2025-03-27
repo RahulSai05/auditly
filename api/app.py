@@ -2093,3 +2093,30 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
         db.rollback()
         print(f"Unexpected error: {traceback.format_exc()}")
         return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
+
+@app.get("/powerbi/datasets")
+async def get_powerbi_datasets(db: Session = Depends(get_db)):
+    """
+    Fetch all datasets in a Power BI workspace.
+    """
+            # Hardcoded Workspace ID
+    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
+    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+
+
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
+
+    try:
+        response = requests.get(url, headers=headers)
+        print(f"API URL: {url}")
+        print(f"Response Status Code: {response.status_code}")
+        print(f"Response JSON: {response.json()}")  # Debugging output
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=str(e))
