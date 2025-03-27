@@ -8,29 +8,52 @@ import datetime
 import base64
 import hashlib
 import boto3
+import requests 
+import httpx
+import traceback
+import time     
+import httpx
+import jwt
+import json
+from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
 from send_email import send_email
 from settings import ENV
+from datetime import datetime, timedelta, timezone    
 from secret import get_secret
 from pydantic import BaseModel
+from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Optional
 from sqlalchemy import distinct, desc, or_
+from starlette.responses import RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
+from authlib.integrations.starlette_client import OAuth
+from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 from tensorflow.keras.models import Model
 from skimage.metrics import structural_similarity as ssim
+from fastapi import HTTPException
+from typing import List, Dict, Optional
 
 # Initialize the database tables if not already done
 Base.metadata.create_all(bind=engine)
 
 s3_bucket = "myauditlybucket"
+
+# sercet value = zmP8Q~nk07PYr1fBGpojD7hD7bCTt4SXuABErapM
+AZURE_CLIENT_ID="2146b62a-5753-4fd8-b359-6ad3e1e7b814"
+#AZURE_CLIENT_SECRET="1ef9af97-56cf-4be2-9533-c2e332e94d5a"
+AZURE_CLIENT_SECRET="zmP8Q~nk07PYr1fBGpojD7hD7bCTt4SXuABErapM"
+AZURE_TENANT_ID="fc09811c-498c-4e79-b20f-ba5cfa421942"
+REDIRECT_URI= "http://localhost:8000/callback"
 
 def get_db():
     """Provide a database session to the API endpoints."""
@@ -50,6 +73,15 @@ def verify_password_sha256(plain_password, hashed_password) -> bool:
 
 app = FastAPI()
 
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET_KEY", "a_random_secret_key"), 
+    session_cookie="pb_session",
+    same_site="Lax",  # Critical for OAuth flows
+    https_only=False,  
+    max_age=86400
+)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,6 +91,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+TENANT_ID = AZURE_TENANT_ID
+OAUTH_DISCOVERY_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well-known/openid-configuration"
+
+oauth = OAuth()
+oauth.register(
+    name="microsoft",
+    client_id=AZURE_CLIENT_ID,
+    client_secret=AZURE_CLIENT_SECRET,
+    client_kwargs={
+        "scope": "openid profile email https://analysis.windows.net/powerbi/api/.default",
+        "prompt": "select_account",  # Forces account selection
+        # "tenant": "common",  # Allow work/school accounts (use "common" for personal accounts too)
+        "response_type": "code",
+
+    },
+    server_metadata_url=f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0/.well-known/openid-configuration",
+    authorize_url=f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/oauth2/v2.0/authorize",
+    access_token_url=f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/oauth2/v2.0/token",
+)
 
 
 @app.get("/api/item_order_instance")
@@ -1911,3 +1962,140 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
         raise HTTPException(status_code=404, detail="Image file not found")
     
     return FileResponse(image_path)
+
+
+
+
+@app.get("/powerbi/auth_login")
+async def powerbi_auth_login(request: Request):
+    # Convert URL object to string explicitly
+    redirect_uri = str(request.url_for("powerbi_callback"))
+    
+    print("\n=== AUTH_LOGIN START ===")
+    print(f"Initial session keys: {list(request.session.keys())}")
+    print(f"Redirect URI: {redirect_uri} (type: {type(redirect_uri)})")
+
+    # Generate state
+    state = str(int(time.time()))
+    request.session["oauth_state"] = state
+    
+    try:
+        # Use authorize_redirect instead of create_authorization_url
+        return await oauth.microsoft.authorize_redirect(
+            request,
+            redirect_uri,
+            state=state,
+            prompt="select_account"
+        )
+    except Exception as e:
+        print("\n!!! AUTH INITIATION FAILURE !!!")
+        print(f"Error type: {type(e)}")
+        print(f"Error details: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=400,
+            detail="Authentication initiation failed. Please check server logs."
+        )
+
+
+@app.get("/powerbi/callback")
+async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
+    print("\n=== POWERBI CALLBACK STARTED ===")
+    
+    try:
+        # Debug incoming request
+        print(f"Query params: {dict(request.query_params)}")
+        
+        # Verify state parameter
+        expected_state = request.session.pop("oauth_state", None)
+        received_state = request.query_params.get("state")
+        
+        if not expected_state or expected_state != received_state:
+            print("State mismatch error")
+            raise OAuthError("Invalid state parameter")
+
+        # Get tokens
+        token = await oauth.microsoft.authorize_access_token(request)
+        print("Token received successfully")
+        
+        # Decode ID token
+        id_token = token.get('id_token')
+        if not id_token:
+            raise OAuthError("No ID token received")
+            
+        claims = jwt.decode(id_token, options={"verify_signature": False})
+        print(f"User claims decoded: {claims.keys()}")
+
+        # Prepare user data
+        user_data = {
+            'id': claims.get('oid') or claims.get('sub'),
+            'email': claims.get('email') or claims.get('preferred_username'),
+            'name': claims.get('name', ''),
+            'tenant_id': claims.get('tid'),
+            'claims': claims
+        }
+
+        # Calculate token expiry (1 hour default if not specified)
+        expires_in = token.get("expires_in", 3600)
+        token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+        # Check if user exists
+        existing_user = db.query(PowerBiUser).filter(
+            PowerBiUser.power_bi_user_id == user_data['id']
+        ).first()
+
+        if existing_user:
+            print("Updating existing user")
+            # print(token['access_token'])
+            headers = {
+                "Authorization": f"Bearer {token['access_token']}"
+            }
+
+            # Get all workspaces
+            response = requests.get(
+                "https://api.powerbi.com/v1.0/myorg/groups",
+                headers=headers
+            )
+            print(response)
+            existing_user.access_token = token['access_token']
+            if 'refresh_token' in token:
+                existing_user.refresh_token = token['refresh_token']
+            existing_user.token_expiry = token_expiry
+            existing_user.power_bi_response = user_data['claims']
+        else:
+            print("Creating new user")
+            powerbi_user = PowerBiUser(
+                power_bi_email=user_data['email'],
+                power_bi_username=user_data['name'],
+                power_bi_user_id=user_data['id'],
+                power_bi_response=user_data['claims'],
+                access_token=token['access_token'],
+                refresh_token=token.get('refresh_token', ''),
+                token_expiry=token_expiry,
+                tenant_id=user_data['tenant_id'],
+                created_at=datetime.now(timezone.utc)
+
+            )
+            db.add(powerbi_user)
+        
+        db.commit()
+        print("Data successfully saved to database")
+
+        # Store minimal session data
+        request.session.update({
+            "powerbi_user_id": user_data['id'],
+            "powerbi_user_email": user_data['email']
+        })
+
+        return RedirectResponse(url="http://localhost:3000/dashboard")
+        
+    except OAuthError as e:
+        db.rollback()
+        print(f"OAuth error: {str(e)}")
+        return RedirectResponse(url=f"http://localhost:3000/error?message={str(e)}")
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Unexpected error: {traceback.format_exc()}")
+        return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
+    
