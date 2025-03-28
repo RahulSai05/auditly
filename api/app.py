@@ -33,7 +33,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Re
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Optional
-from sqlalchemy import distinct, desc, or_
+from sqlalchemy import distinct, desc, or_, inspect, text, Table
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
@@ -2120,3 +2120,63 @@ async def get_powerbi_datasets(db: Session = Depends(get_db)):
         return response.json()
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/tables")
+async def get_all_tables(db: Session = Depends(get_db)):
+    """
+    Retrieve all table names in the database.
+    """
+    try:
+        inspector = inspect(db.bind)
+        tables = inspector.get_table_names()
+        return {"tables": tables}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving tables: {str(e)}")
+    
+@app.get("/api/columns/{table_name}")
+async def get_columns(table_name: str, exclude_auto_increment: bool = True, db: Session = Depends(get_db)):
+    """
+    Retrieve all column names for a given table, excluding auto-increment columns.
+
+    Args:
+        table_name (str): The name of the table to fetch columns for.
+        exclude_auto_increment (bool): If True, exclude auto-increment columns.
+
+    Returns:
+        dict: Contains the column names of the selected table.
+    """
+    try:
+        inspector = inspect(db.bind)
+        
+        if table_name not in inspector.get_table_names():
+            raise HTTPException(status_code=404, detail="Table not found")
+
+        # Get all columns
+        columns = inspector.get_columns(table_name)
+
+        # Query INFORMATION_SCHEMA to identify auto-increment columns
+        auto_increment_columns = set()
+        result = db.execute(text(f"""
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = :table_name 
+            AND EXTRA LIKE '%auto_increment%'
+        """), {"table_name": table_name})
+
+        for row in result:
+            auto_increment_columns.add(row[0])
+
+        # Filter columns
+        filtered_columns = [
+            col["name"] for col in columns 
+            if not (exclude_auto_increment and col["name"] in auto_increment_columns)
+        ]
+
+        return {
+            "table_name": table_name,
+            "columns": filtered_columns
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving columns: {str(e)}")
