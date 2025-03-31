@@ -2210,7 +2210,7 @@ async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depe
 
 
 
-@app.get("/powerbi/workspace-data")
+@app.get("/api/powerbi/workspace-data")
 async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
     """
     Fetch all datasets and their tables from a Power BI workspace.
