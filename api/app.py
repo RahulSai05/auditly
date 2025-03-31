@@ -33,7 +33,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Re
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Optional
-from sqlalchemy import distinct, desc, or_, inspect, text, Table
+from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
