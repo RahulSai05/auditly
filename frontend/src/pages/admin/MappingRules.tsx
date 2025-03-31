@@ -681,7 +681,7 @@ const MappingRules: React.FC = () => {
       if (response.data?.data === "Mapping Missmatch") {
         setNotification({ type: 'error', message: "Mapping mismatch detected. Please check your Power BI field mappings." });
       } else {
-        setNotification({ type: 'success', message: "Power BI data fetched and processed successfully!" });
+        setNotification({ type: 'success', message: "Power BI data Synced successfully!" });
       }
     } catch (error) {
       setNotification({ type: 'error', message: "Failed to Sync Power BI data. Please try again." });
