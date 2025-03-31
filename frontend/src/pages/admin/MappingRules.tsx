@@ -540,7 +540,7 @@ const MappingRules: React.FC = () => {
       }, {} as Record<string, string>);
 
       // Call your API endpoint with the required data
-      await axios.post("/power-bi-sql-mapping/", {
+      await axios.post("https://auditlyai.com/api/power-bi-sql-mapping/", {
         table_name: selectedTable,
         mapping: mappingObject,
         user_id: userId
