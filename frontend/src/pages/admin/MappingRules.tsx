@@ -385,7 +385,6 @@ interface PowerBIDataForm {
   workspace_id: string;
   dataset_id: string;
   table_name: string;
-  access_token?: string;
 }
 
 const MappingRules: React.FC = () => {
@@ -410,7 +409,6 @@ const MappingRules: React.FC = () => {
     workspace_id: "",
     dataset_id: "",
     table_name: "",
-    access_token: ""
   });
 
   // Get user ID from localStorage on component mount
@@ -649,20 +647,6 @@ const MappingRules: React.FC = () => {
                   onChange={handlePowerBIInputChange}
                   className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                   placeholder="Enter Power BI Table Name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Access Token (Optional)
-                </label>
-                <input
-                  type="text"
-                  name="access_token"
-                  value={powerBIData.access_token || ""}
-                  onChange={handlePowerBIInputChange}
-                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
-                  placeholder="Enter Access Token (if needed)"
                 />
               </div>
 
