@@ -2207,3 +2207,69 @@ async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depe
         "data": {
         }
     }
+
+
+
+class GetPowerBITableData(BaseModel):
+    workspace_id: str
+    dataset_id: str
+    table_name: str
+    user_id: int
+    access_token: Optional[str] = None
+
+
+@app.post("/api/powerbi/get-table-data")
+async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
+    """
+    Fetch table data from Power BI Dataset
+    """
+    table_name = request.table_name
+    user_id = request.user_id
+
+    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.table_name == table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
+    power_bi_user_mapping = power_bi_table_data.mapping
+    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+
+    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"  # Replace with your workspace ID
+    DATASET_ID = "440f9e10-6366-44b5-83df-bec2a7c24be7"  # Replace with your dataset ID
+     
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{DATASET_ID}/executeQueries"
+
+    dax_query = {
+        "queries": [
+            {
+                "query": "EVALUATE 'items_table'" 
+            }
+        ],
+        "serializerSettings": {
+            "includeNulls": True
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=dax_query)
+    response_table = response.json()["results"][0]["tables"][0]["rows"]
+    bi_response_mapping = response_table.pop(0)
+    availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
+    mapping_dict = {}
+    for key, value in bi_response_mapping.items():
+        if value not in availabe_column_name and value != "id":
+            return {"data": "Mapping Missmatch"}
+        elif value in availabe_column_name:
+            mapping_dict.update({key:power_bi_user_mapping[value]})
+    table = Table(table_name, metadata, autoload_with=engine)
+    transformed_data = []
+    for record in response_table:
+        formatted_entry = {}
+        for key, value in record.items():
+            if key in [k for k,v in mapping_dict.items()]:
+                formatted_entry[mapping_dict[key]] = value
+        transformed_data.append(formatted_entry)
+    db.execute(table.insert(), transformed_data)
+    db.commit()
+    return response.json()
+  
