@@ -435,10 +435,11 @@
 //   );
 // }
 
+
 import { Route, Routes, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useEffect, useState, ReactNode } from "react";
-import { CircularProgress, Backdrop } from "@mui/material";
+import { useEffect, useState, ReactNode, useCallback } from "react";
+import { Backdrop, CircularProgress } from "@mui/material";
 // Import all your page components
 import Home from "./pages/Home";
 import HelpCenter from "./pages/HelpCenter";
@@ -502,56 +503,7 @@ export default function App(): JSX.Element {
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
 
-  useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setAuthState({ isLoading: false, isAuthenticated: false, userData: null });
-          if (!authRoutes.includes(location.pathname)) {
-            navigate("/login");
-          }
-          return;
-        }
-
-        const userData = JSON.parse(token);
-        const res = await fetch("https://auditlyai.com/api/users");
-        const apiData = await res.json();
-
-        if (apiData.data) {
-          const userExists = apiData.data.some((user: any) => user?.user_name === userData["User Name"]);
-          if (!userExists) {
-            localStorage.removeItem("token");
-            setAuthState({ isLoading: false, isAuthenticated: false, userData: null });
-            navigate("/login");
-            return;
-          }
-
-          const isValidUser = validateUserPermissions(userData, apiData.data);
-          if (!isValidUser) {
-            localStorage.removeItem("token");
-            setAuthState({ isLoading: false, isAuthenticated: false, userData: null });
-            navigate("/login");
-            return;
-          }
-
-          setAuthState({ isLoading: false, isAuthenticated: true, userData });
-          if (authRoutes.includes(location.pathname)) {
-            navigate("/");
-          }
-        }
-      } catch (error) {
-        console.error("Auth verification failed:", error);
-        localStorage.removeItem("token");
-        setAuthState({ isLoading: false, isAuthenticated: false, userData: null });
-        navigate("/login");
-      }
-    };
-
-    verifyAuth();
-  }, [location.pathname]);
-
-  const validateUserPermissions = (userData: UserData, apiUsers: any[]): boolean => {
+  const validateUserPermissions = useCallback((userData: UserData, apiUsers: any[]): boolean => {
     const user = apiUsers.find(u => u.user_name === userData["User Name"]);
     if (!user) return false;
 
@@ -562,15 +514,53 @@ export default function App(): JSX.Element {
       if (type === "inpection_user") return user.is_inpection_user;
       return false;
     });
-  };
+  }, []);
 
-  if (authState.isLoading) {
-    return (
-      <Backdrop open={true} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-    );
-  }
+  const verifyAuth = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setAuthState(prev => ({ ...prev, isLoading: false, isAuthenticated: false }));
+        if (!authRoutes.includes(location.pathname)) {
+          navigate("/login");
+        }
+        return;
+      }
+
+      const userData = JSON.parse(token);
+      const res = await fetch("https://auditlyai.com/api/users");
+      const apiData = await res.json();
+
+      if (apiData.data) {
+        const isValid = validateUserPermissions(userData, apiData.data);
+        if (!isValid) {
+          localStorage.removeItem("token");
+          setAuthState(prev => ({ ...prev, isLoading: false, isAuthenticated: false }));
+          navigate("/login");
+          return;
+        }
+
+        setAuthState({
+          isLoading: false,
+          isAuthenticated: true,
+          userData
+        });
+
+        if (authRoutes.includes(location.pathname)) {
+          navigate("/");
+        }
+      }
+    } catch (error) {
+      console.error("Auth verification failed:", error);
+      localStorage.removeItem("token");
+      setAuthState(prev => ({ ...prev, isLoading: false, isAuthenticated: false }));
+      navigate("/login");
+    }
+  }, [location.pathname, navigate, validateUserPermissions]);
+
+  useEffect(() => {
+    verifyAuth();
+  }, [verifyAuth]);
 
   // Protected route components
   const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
@@ -597,6 +587,14 @@ export default function App(): JSX.Element {
     }
     return <>{children}</>;
   };
+
+  if (authState.isLoading) {
+    return (
+      <Backdrop open={true} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    );
+  }
 
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname) || !authState.isAuthenticated;
 
