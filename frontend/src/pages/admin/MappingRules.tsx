@@ -18,6 +18,12 @@
 //   destination: string;
 // }
 
+// interface PowerBIDataForm {
+//   workspace_id: string;
+//   dataset_id: string;
+//   table_name: string;
+// }
+
 // const MappingRules: React.FC = () => {
 //   const [tables, setTables] = useState<TableData[]>([
 //     { name: "item" },
@@ -30,10 +36,17 @@
 //   const [isLoading, setIsLoading] = useState({
 //     tables: false,
 //     columns: false,
-//     saving: false
+//     saving: false,
+//     fetchingPowerBI: false
 //   });
 //   const [editMode, setEditMode] = useState(false);
 //   const [userId, setUserId] = useState<number | null>(null);
+//   const [showPowerBIForm, setShowPowerBIForm] = useState(false);
+//   const [powerBIData, setPowerBIData] = useState<PowerBIDataForm>({
+//     workspace_id: "",
+//     dataset_id: "",
+//     table_name: "",
+//   });
 
 //   // Get user ID from localStorage on component mount
 //   useEffect(() => {
@@ -129,6 +142,46 @@
 //     setEditMode(true);
 //   };
 
+//   const handlePowerBIInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const { name, value } = e.target;
+//     setPowerBIData(prev => ({
+//       ...prev,
+//       [name]: value
+//     }));
+//   };
+
+//   const handleFetchPowerBIData = async () => {
+//     if (!userId) {
+//       setNotification({ type: 'error', message: "User not authenticated. Please login again." });
+//       return;
+//     }
+
+//     if (!powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name) {
+//       setNotification({ type: 'error', message: "Please fill all required fields." });
+//       return;
+//     }
+
+//     setIsLoading(prev => ({...prev, fetchingPowerBI: true}));
+//     setNotification({ type: '', message: '' });
+
+//     try {
+//       const response = await axios.post("https://auditlyai.com/api/powerbi/get-table-data", {
+//         ...powerBIData,
+//         user_id: userId
+//       });
+
+//       if (response.data?.data === "Mapping Missmatch") {
+//         setNotification({ type: 'error', message: "Mapping mismatch detected. Please check your Power BI field mappings." });
+//       } else {
+//         setNotification({ type: 'success', message: "Power BI data Synced successfully!" });
+//       }
+//     } catch (error) {
+//       setNotification({ type: 'error', message: "Failed to fetch Sync BI data. Please try again." });
+//     } finally {
+//       setIsLoading(prev => ({...prev, fetchingPowerBI: false}));
+//     }
+//   };
+
 //   return (
 //     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
 //       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -168,6 +221,97 @@
 //           </motion.p>
 //         </motion.div>
 
+//         {/* Power BI Data Fetch Section */}
+//         <motion.div
+//           initial={{ opacity: 0, y: 20 }}
+//           animate={{ opacity: 1, y: 0 }}
+//           transition={{ delay: 0.4 }}
+//           className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
+//         >
+//           <div className="flex items-center justify-between mb-6">
+//             <h2 className="text-xl font-bold text-gray-800">Sync Power BI Data</h2>
+//             <button
+//               onClick={() => setShowPowerBIForm(!showPowerBIForm)}
+//               className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+//             >
+//               {showPowerBIForm ? "Hide Form" : "Show Form"}
+//             </button>
+//           </div>
+
+//           {showPowerBIForm && (
+//             <motion.div
+//               initial={{ opacity: 0, height: 0 }}
+//               animate={{ opacity: 1, height: "auto" }}
+//               exit={{ opacity: 0, height: 0 }}
+//               className="space-y-4"
+//             >
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Workspace ID *
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="workspace_id"
+//                   value={powerBIData.workspace_id}
+//                   onChange={handlePowerBIInputChange}
+//                   className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+//                   placeholder="Enter Power BI Workspace ID"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Dataset ID *
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="dataset_id"
+//                   value={powerBIData.dataset_id}
+//                   onChange={handlePowerBIInputChange}
+//                   className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+//                   placeholder="Enter Power BI Dataset ID"
+//                 />
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Table Name *
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="table_name"
+//                   value={powerBIData.table_name}
+//                   onChange={handlePowerBIInputChange}
+//                   className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+//                   placeholder="Enter Power BI Table Name"
+//                 />
+//               </div>
+
+//               <div className="flex justify-end">
+//                 <motion.button
+//                   whileHover={{ scale: 1.02 }}
+//                   whileTap={{ scale: 0.98 }}
+//                   onClick={handleFetchPowerBIData}
+//                   disabled={isLoading.fetchingPowerBI}
+//                   className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
+//                     isLoading.fetchingPowerBI
+//                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+//                       : 'bg-green-600 text-white hover:bg-green-700'
+//                   }`}
+//                 >
+//                   {isLoading.fetchingPowerBI ? (
+//                     <Loader2 className="w-5 h-5 animate-spin" />
+//                   ) : (
+//                     <Save className="w-5 h-5" />
+//                   )}
+//                   Sync Power BI Data
+//                 </motion.button>
+//               </div>
+//             </motion.div>
+//           )}
+//         </motion.div>
+
+//         {/* Table Mapping Section */}
 //         <motion.div
 //           initial="hidden"
 //           animate="visible"
@@ -194,7 +338,7 @@
 //                   value={selectedTable}
 //                   onChange={(e) => {
 //                     setSelectedTable(e.target.value);
-//                     setEditMode(false); // Reset edit mode when table changes
+//                     setEditMode(false);
 //                   }}
 //                   className="w-full p-3 pr-10 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 appearance-none bg-white"
 //                   disabled={isLoading.tables || isLoading.columns}
@@ -408,7 +552,7 @@ const MappingRules: React.FC = () => {
   const [powerBIData, setPowerBIData] = useState<PowerBIDataForm>({
     workspace_id: "",
     dataset_id: "",
-    table_name: "",
+    table_name: ""
   });
 
   // Get user ID from localStorage on component mount
@@ -530,16 +674,17 @@ const MappingRules: React.FC = () => {
     try {
       const response = await axios.post("https://auditlyai.com/api/powerbi/get-table-data", {
         ...powerBIData,
-        user_id: userId
+        user_id: userId,
+        access_token: "" // Always sending empty string for access token
       });
 
       if (response.data?.data === "Mapping Missmatch") {
         setNotification({ type: 'error', message: "Mapping mismatch detected. Please check your Power BI field mappings." });
       } else {
-        setNotification({ type: 'success', message: "Power BI data Synced successfully!" });
+        setNotification({ type: 'success', message: "Power BI data fetched and processed successfully!" });
       }
     } catch (error) {
-      setNotification({ type: 'error', message: "Failed to fetch Sync BI data. Please try again." });
+      setNotification({ type: 'error', message: "Failed to fetch Power BI data. Please try again." });
     } finally {
       setIsLoading(prev => ({...prev, fetchingPowerBI: false}));
     }
@@ -584,97 +729,7 @@ const MappingRules: React.FC = () => {
           </motion.p>
         </motion.div>
 
-        {/* Power BI Data Fetch Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Sync Power BI Data</h2>
-            <button
-              onClick={() => setShowPowerBIForm(!showPowerBIForm)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-            >
-              {showPowerBIForm ? "Hide Form" : "Show Form"}
-            </button>
-          </div>
-
-          {showPowerBIForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Workspace ID *
-                </label>
-                <input
-                  type="text"
-                  name="workspace_id"
-                  value={powerBIData.workspace_id}
-                  onChange={handlePowerBIInputChange}
-                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
-                  placeholder="Enter Power BI Workspace ID"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dataset ID *
-                </label>
-                <input
-                  type="text"
-                  name="dataset_id"
-                  value={powerBIData.dataset_id}
-                  onChange={handlePowerBIInputChange}
-                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
-                  placeholder="Enter Power BI Dataset ID"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Table Name *
-                </label>
-                <input
-                  type="text"
-                  name="table_name"
-                  value={powerBIData.table_name}
-                  onChange={handlePowerBIInputChange}
-                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
-                  placeholder="Enter Power BI Table Name"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleFetchPowerBIData}
-                  disabled={isLoading.fetchingPowerBI}
-                  className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
-                    isLoading.fetchingPowerBI
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                >
-                  {isLoading.fetchingPowerBI ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Save className="w-5 h-5" />
-                  )}
-                  Sync Power BI Data
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Table Mapping Section */}
+        {/* Table Mapping Section (Moved to top) */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -835,6 +890,96 @@ const MappingRules: React.FC = () => {
               </div>
             )}
           </div>
+        </motion.div>
+
+        {/* Power BI Data Fetch Section (Moved below) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-800">Fetch Power BI Data</h2>
+            <button
+              onClick={() => setShowPowerBIForm(!showPowerBIForm)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              {showPowerBIForm ? "Hide Form" : "Show Form"}
+            </button>
+          </div>
+
+          {showPowerBIForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Workspace ID *
+                </label>
+                <input
+                  type="text"
+                  name="workspace_id"
+                  value={powerBIData.workspace_id}
+                  onChange={handlePowerBIInputChange}
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+                  placeholder="Enter Power BI Workspace ID"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dataset ID *
+                </label>
+                <input
+                  type="text"
+                  name="dataset_id"
+                  value={powerBIData.dataset_id}
+                  onChange={handlePowerBIInputChange}
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+                  placeholder="Enter Power BI Dataset ID"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Table Name *
+                </label>
+                <input
+                  type="text"
+                  name="table_name"
+                  value={powerBIData.table_name}
+                  onChange={handlePowerBIInputChange}
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+                  placeholder="Enter Power BI Table Name"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleFetchPowerBIData}
+                  disabled={isLoading.fetchingPowerBI}
+                  className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
+                    isLoading.fetchingPowerBI
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {isLoading.fetchingPowerBI ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5" />
+                  )}
+                  Fetch Power BI Data
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Notification */}
