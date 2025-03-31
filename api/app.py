@@ -76,6 +76,9 @@ def verify_password_sha256(plain_password, hashed_password) -> bool:
 
 app = FastAPI()
 
+metadata = MetaData()
+metadata.reflect(bind=engine) 
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "a_random_secret_key"), 
