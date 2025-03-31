@@ -436,11 +436,10 @@
 // }
 
 
-
-import { Route, Routes, useNavigate, useLocation, Navigate, Outlet } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useEffect, useState, ReactNode } from "react";
-// Import all your page components as before
+// Import all your page components
 import Home from "./pages/Home";
 import HelpCenter from "./pages/HelpCenter";
 import Options from "./pages/Options";
@@ -480,7 +479,7 @@ import EditProfile from "./components/auth/EditProfile";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import { RootState } from "./store/store";
-import LoadingSpinner from "./components/LoadingSpinner"; // Create this component for a better loading experience
+import LoadingSpinner from "./components/LoadingSpinner";
 
 // Type definitions
 interface UserData {
@@ -492,85 +491,16 @@ interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-// Protected route components
-const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
-  const isAdmin = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("admin");
-
-  return isAdmin ? <>{children}</> : <Navigate to="/unauthorized" />;
-};
-
-const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
-  const isReportUser = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("reports_user");
-
-  return isReportUser ? <>{children}</> : <Navigate to="/unauthorized" />;
-};
-
-const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
-  const isInspectionUser = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("inpection_user");
-
-  return isInspectionUser ? <>{children}</> : <Navigate to="/unauthorized" />;
-};
-
-// Auth verification component
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-  const isAuthRoute = authRoutes.includes(location.pathname);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
-      setIsLoading(false);
-    };
-
-    // Add a small delay to prevent flickering
-    const timer = setTimeout(checkAuth, 300);
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (!isLoggedIn && !isAuthRoute) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
-
 export default function App(): JSX.Element {
   const itemData = useSelector((state: RootState) => state.ids);
   const location = useLocation();
   const navigate = useNavigate();
+  const [isInitializing, setIsInitializing] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname) || isLoading;
+  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname) || isInitializing;
 
   useEffect(() => {
     const userDataString = localStorage.getItem("token");
@@ -579,7 +509,7 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     const checkUserValidity = async () => {
-      setIsLoading(true);
+      setIsInitializing(true);
       try {
         const res = await fetch("https://auditlyai.com/api/users");
         const data = await res.json();
@@ -637,20 +567,74 @@ export default function App(): JSX.Element {
       } catch (error) {
         console.error("Error checking user validity:", error);
       } finally {
-        setIsLoading(false);
+        // Minimum loading time of 500ms to prevent flickering
+        setTimeout(() => setIsInitializing(false), 500);
       }
     };
 
-    const timer = setTimeout(() => {
-      checkUserValidity();
-    }, 200);
-
-    return () => clearTimeout(timer);
+    checkUserValidity();
   }, [location.pathname, userData, navigate]);
 
-  if (isLoading) {
+  if (isInitializing) {
     return <LoadingSpinner />;
   }
+
+  // Protected route components
+  const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+    const [isChecking, setIsChecking] = useState(true);
+    
+    useEffect(() => {
+      const timer = setTimeout(() => setIsChecking(false), 100);
+      return () => clearTimeout(timer);
+    }, []);
+
+    if (isChecking) return <LoadingSpinner />;
+
+    const isAdmin = userData && Array.isArray(userData["User Type"]) && 
+                   userData["User Type"].includes("admin");
+    return isAdmin ? <>{children}</> : <Navigate to="/unauthorized" />;
+  };
+
+  const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+    const [isChecking, setIsChecking] = useState(true);
+    
+    useEffect(() => {
+      const timer = setTimeout(() => setIsChecking(false), 100);
+      return () => clearTimeout(timer);
+    }, []);
+
+    if (isChecking) return <LoadingSpinner />;
+
+    const isReportUser = userData && Array.isArray(userData["User Type"]) && 
+                       userData["User Type"].includes("reports_user");
+    return isReportUser ? <>{children}</> : <Navigate to="/unauthorized" />;
+  };
+
+  const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+    const [isChecking, setIsChecking] = useState(true);
+    
+    useEffect(() => {
+      const timer = setTimeout(() => setIsChecking(false), 100);
+      return () => clearTimeout(timer);
+    }, []);
+
+    if (isChecking) return <LoadingSpinner />;
+
+    const isInspectionUser = userData && Array.isArray(userData["User Type"]) && 
+                           userData["User Type"].includes("inpection_user");
+    return isInspectionUser ? <>{children}</> : <Navigate to="/unauthorized" />;
+  };
+
+  const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+    const isLoggedIn = localStorage.getItem("token") !== null;
+    const isAuthRoute = authRoutes.includes(location.pathname);
+
+    if (!isLoggedIn && !isAuthRoute) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    return <>{children}</>;
+  };
 
   return (
     <>
