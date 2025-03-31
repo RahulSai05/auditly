@@ -684,7 +684,7 @@ const MappingRules: React.FC = () => {
         setNotification({ type: 'success', message: "Power BI data fetched and processed successfully!" });
       }
     } catch (error) {
-      setNotification({ type: 'error', message: "Failed to fetch Power BI data. Please try again." });
+      setNotification({ type: 'error', message: "Failed to Sync Power BI data. Please try again." });
     } finally {
       setIsLoading(prev => ({...prev, fetchingPowerBI: false}));
     }
@@ -900,7 +900,7 @@ const MappingRules: React.FC = () => {
           className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Fetch Power BI Data</h2>
+            <h2 className="text-xl font-bold text-gray-800">Sync Power BI Data</h2>
             <button
               onClick={() => setShowPowerBIForm(!showPowerBIForm)}
               className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
@@ -975,7 +975,7 @@ const MappingRules: React.FC = () => {
                   ) : (
                     <Save className="w-5 h-5" />
                   )}
-                  Fetch Power BI Data
+                  Sync Power BI Data
                 </motion.button>
               </div>
             </motion.div>
