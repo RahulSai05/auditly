@@ -102,7 +102,8 @@ const Login = () => {
 
         if (data.message === "Login Successfull") {
           localStorage.setItem("token", JSON.stringify(data.data));
-          localStorage.setItem("userType", data.data.user_type); // Store user type
+          localStorage.setItem("userType", data.data.user_type); // Store user 
+          localStorage.setItem("userId", data.data["User ID"]);     // Store user ID
           setUserData(data.data)
           setMessage({
             text: "Login successful! Redirecting...",
