@@ -2180,3 +2180,30 @@ async def get_columns(table_name: str, exclude_auto_increment: bool = True, db: 
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving columns: {str(e)}")
+
+
+class PowerBiSqlMappingBase(BaseModel):
+    table_name: str
+    mapping: Optional[dict] = None
+    user_id: int
+
+@app.post("/api/power-bi-sql-mapping/")
+async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depends(get_db)):
+    """
+    Upload base front and back images and map them to an item based on item_number.
+    """
+    # Create a new BaseData entry
+    new_mapping_data = PowerBiSqlMapping(
+        table_name=request.table_name,
+        mapping=request.mapping,
+        power_bi_sql_user_mapping_id=request.user_id
+    ) 
+    db.add(new_mapping_data)
+    db.commit()
+    db.refresh(new_mapping_data)
+
+    return {
+        "message": "Mapping saved successfully.",
+        "data": {
+        }
+    }
