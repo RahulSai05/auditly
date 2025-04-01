@@ -1145,13 +1145,16 @@ const AuditlyInspection = () => {
     setSelectedRows(newSelection);
   };
 
-  const toggleAllRows = () => {
-    if (selectedRows.size === filteredData.length) {
-      setSelectedRows(new Set());
-    } else {
-      setSelectedRows(new Set(filteredData.map(item => item.receipt_number || '').filter(Boolean));
-    }
-  };
+  const toggleAllRows = (): void => {
+   if (selectedRows.size === filteredData.length && filteredData.length > 0) {
+     setSelectedRows(new Set());
+   } else {
+     const receiptNumbers = filteredData
+       .map(item => item.receipt_number || '')
+       .filter(Boolean);
+     setSelectedRows(new Set(receiptNumbers));
+   }
+ };
 
   const getSelectedRecords = () => {
     return filteredData.filter(item => selectedRows.has(item.receipt_number || ''));
