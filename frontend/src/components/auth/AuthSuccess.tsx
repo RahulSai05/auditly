@@ -9,7 +9,6 @@ const AuthSuccess = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        // Send message to opener window if it exists
         if (window.opener && !window.opener.closed) {
           window.opener.postMessage({
             type: error ? 'AUTH_ERROR' : 'AUTH_SUCCESS',
