@@ -2086,17 +2086,17 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             "powerbi_user_email": user_data['email']
         })
 
-        return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound")
+        return RedirectResponse(url="https://auditlyai.com/auth/success")
         
     except OAuthError as e:
         db.rollback()
         print(f"OAuth error: {str(e)}")
-        return RedirectResponse(url=f"https://auditlyai.com/admin/settings/connectors/inbound/error?message={str(e)}")
+        return RedirectResponse(url=f"https://auditlyai.com/auth/success/error?message={str(e)}")
         
     except Exception as e:
         db.rollback()
         print(f"Unexpected error: {traceback.format_exc()}")
-        return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
+        return RedirectResponse(url="https://auditlyai.com/auth/success/error?message=auth_failed")
 
 
 @app.get("/api/powerbi/datasets")
