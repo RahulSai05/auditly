@@ -35,6 +35,7 @@ import ApiConfigurations from "./pages/admin/ApiConfigurations";
 import Login from "./components/auth/Login";
 import Unauthorized from "./components/auth/Unauthorized";
 import Register from "./components/auth/Register";
+import AuthSuccess from "./components/auth/AuthSuccess";
 import ForgotPassword from "./components/auth/Forgot";
 import ResetPassword from "./components/auth/Reset";
 import EditProfile from "./components/auth/EditProfile";
@@ -255,6 +256,7 @@ export default function App(): JSX.Element {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/auth/success" element={<AuthSuccess />} /> 
 
         {/* Protected Routes with AdminLayout - Authentication Required */}
         <Route element={
