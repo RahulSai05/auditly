@@ -2199,28 +2199,54 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
 #         print(f"Unexpected error: {traceback.format_exc()}")
 #         return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
 
+# @app.get("/api/powerbi/auth_login")
+# async def powerbi_auth_login(request: Request):
+#     # Generate a random state parameter for CSRF protection
+#     state = str(uuid.uuid4())
+#     request.session["oauth_state"] = state
+    
+#     # Get the success_url from query params if provided
+#     success_url = request.query_params.get("success_url", "")
+    
+#     # Build the redirect URL with all necessary parameters
+#     redirect_uri = f"{request.base_url}api/powerbi/callback"
+#     if success_url:
+#         redirect_uri += f"?success_url={quote(success_url)}"
+    
+#     auth_url = oauth.microsoft.authorize_redirect(
+#         request,
+#         redirect_uri,
+#         scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/Report.Read.All"],
+#         state=state
+#     )
+    
+#     return auth_url
 @app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
-    # Generate a random state parameter for CSRF protection
-    state = str(uuid.uuid4())
-    request.session["oauth_state"] = state
-    
-    # Get the success_url from query params if provided
-    success_url = request.query_params.get("success_url", "")
-    
-    # Build the redirect URL with all necessary parameters
-    redirect_uri = f"{request.base_url}api/powerbi/callback"
-    if success_url:
-        redirect_uri += f"?success_url={quote(success_url)}"
-    
-    auth_url = oauth.microsoft.authorize_redirect(
-        request,
-        redirect_uri,
-        scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/Report.Read.All"],
-        state=state
-    )
-    
-    return auth_url
+    try:
+        # Generate a random state parameter for CSRF protection
+        state = str(uuid.uuid4())
+        request.session["oauth_state"] = state
+        
+        # Get the success_url from query params if provided
+        success_url = request.query_params.get("success_url", "")
+        
+        # Build the redirect URL with all necessary parameters
+        redirect_uri = f"{request.base_url}api/powerbi/callback"
+        if success_url:
+            redirect_uri += f"?success_url={quote(success_url)}"
+        
+        # Await the authorize_redirect coroutine
+        return await oauth.microsoft.authorize_redirect(
+            request,
+            redirect_uri,
+            scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/Report.Read.All"],
+            state=state
+        )
+    except Exception as e:
+        print(f"Error in auth login: {str(e)}")
+        return RedirectResponse(url=f"/auth/success?error={quote(str(e))}")
+
 
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
