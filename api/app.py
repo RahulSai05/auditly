@@ -1965,36 +1965,36 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
     return FileResponse(image_path)
 
 
-@app.get("/api/powerbi/auth_login")
-async def powerbi_auth_login(request: Request):
-    # Convert URL object to string explicitly
-    redirect_uri = str(request.url_for("powerbi_callback"))
+# @app.get("/api/powerbi/auth_login")
+# async def powerbi_auth_login(request: Request):
+#     # Convert URL object to string explicitly
+#     redirect_uri = str(request.url_for("powerbi_callback"))
     
-    print("\n=== AUTH_LOGIN START ===")
-    print(f"Initial session keys: {list(request.session.keys())}")
-    print(f"Redirect URI: {redirect_uri} (type: {type(redirect_uri)})")
+#     print("\n=== AUTH_LOGIN START ===")
+#     print(f"Initial session keys: {list(request.session.keys())}")
+#     print(f"Redirect URI: {redirect_uri} (type: {type(redirect_uri)})")
 
-    # Generate state
-    state = str(int(time.time()))
-    request.session["oauth_state"] = state
+#     # Generate state
+#     state = str(int(time.time()))
+#     request.session["oauth_state"] = state
     
-    try:
-        # Use authorize_redirect instead of create_authorization_url
-        return await oauth.microsoft.authorize_redirect(
-            request,
-            redirect_uri,
-            state=state,
-            prompt="select_account"
-        )
-    except Exception as e:
-        print("\n!!! AUTH INITIATION FAILURE !!!")
-        print(f"Error type: {type(e)}")
-        print(f"Error details: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(
-            status_code=400,
-            detail="Authentication initiation failed. Please check server logs."
-        )
+#     try:
+#         # Use authorize_redirect instead of create_authorization_url
+#         return await oauth.microsoft.authorize_redirect(
+#             request,
+#             redirect_uri,
+#             state=state,
+#             prompt="select_account"
+#         )
+#     except Exception as e:
+#         print("\n!!! AUTH INITIATION FAILURE !!!")
+#         print(f"Error type: {type(e)}")
+#         print(f"Error details: {str(e)}")
+#         print(f"Traceback: {traceback.format_exc()}")
+#         raise HTTPException(
+#             status_code=400,
+#             detail="Authentication initiation failed. Please check server logs."
+#         )
 
 
 # @app.get("/api/powerbi/callback")
@@ -2099,34 +2099,151 @@ async def powerbi_auth_login(request: Request):
 #         return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
 
 
+# @app.get("/api/powerbi/callback")
+# async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
+#     print("\n=== POWERBI CALLBACK STARTED ===")
+    
+#     try:
+#         # Debug incoming request
+#         print(f"Query params: {dict(request.query_params)}")
+        
+#         # Verify state parameter
+#         expected_state = request.session.pop("oauth_state", None)
+#         received_state = request.query_params.get("state")
+        
+#         if not expected_state or expected_state != received_state:
+#             print("State mismatch error")
+#             raise OAuthError("Invalid state parameter")
+
+#         # Get tokens
+#         token = await oauth.microsoft.authorize_access_token(request)
+#         print("Token received successfully")
+        
+#         # Decode ID token
+#         id_token = token.get('id_token')
+#         if not id_token:
+#             raise OAuthError("No ID token received")
+            
+#         claims = jwt.decode(id_token, options={"verify_signature": False})
+#         print(f"User claims decoded: {claims.keys()}")
+
+#         # Prepare user data
+#         user_data = {
+#             'id': claims.get('oid') or claims.get('sub'),
+#             'email': claims.get('email') or claims.get('preferred_username'),
+#             'name': claims.get('name', ''),
+#             'tenant_id': claims.get('tid'),
+#             'claims': claims
+#         }
+
+#         # Calculate token expiry (1 hour default if not specified)
+#         expires_in = token.get("expires_in", 3600)
+#         token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+#         # Check if user exists
+#         existing_user = db.query(PowerBiUser).filter(
+#             PowerBiUser.power_bi_user_id == user_data['id']
+#         ).first()
+
+#         if existing_user:
+#             print("Updating existing user")
+#             headers = {
+#                 "Authorization": f"Bearer {token['access_token']}"
+#             }
+
+#             # Get all workspaces
+#             response = requests.get(
+#                 "https://api.powerbi.com/v1.0/myorg/groups",
+#                 headers=headers
+#             )
+#             print(response)
+#             existing_user.access_token = token['access_token']
+#             if 'refresh_token' in token:
+#                 existing_user.refresh_token = token['refresh_token']
+#             existing_user.token_expiry = token_expiry
+#             existing_user.power_bi_response = user_data['claims']
+#         else:
+#             print("Creating new user")
+#             powerbi_user = PowerBiUser(
+#                 power_bi_email=user_data['email'],
+#                 power_bi_username=user_data['name'],
+#                 power_bi_user_id=user_data['id'],
+#                 power_bi_response=user_data['claims'],
+#                 access_token=token['access_token'],
+#                 refresh_token=token.get('refresh_token', ''),
+#                 token_expiry=token_expiry,
+#                 tenant_id=user_data['tenant_id'],
+#                 created_at=datetime.now(timezone.utc)
+#             )
+#             db.add(powerbi_user)
+        
+#         db.commit()
+#         print("Data successfully saved to database")
+
+#         # Store minimal session data
+#         request.session.update({
+#             "powerbi_user_id": user_data['id'],
+#             "powerbi_user_email": user_data['email']
+#         })
+
+#         # Add success message to redirect URL
+#         return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound?message=Authentication+successful")
+        
+#     except OAuthError as e:
+#         db.rollback()
+#         print(f"OAuth error: {str(e)}")
+#         return RedirectResponse(url=f"https://auditlyai.com/admin/settings/connectors/inbound/error?message={str(e)}")
+        
+#     except Exception as e:
+#         db.rollback()
+#         print(f"Unexpected error: {traceback.format_exc()}")
+#         return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
+
+@app.get("/api/powerbi/auth_login")
+async def powerbi_auth_login(request: Request):
+    # Generate a random state parameter for CSRF protection
+    state = str(uuid.uuid4())
+    request.session["oauth_state"] = state
+    
+    # Get the success_url from query params if provided
+    success_url = request.query_params.get("success_url", "")
+    
+    # Build the redirect URL with all necessary parameters
+    redirect_uri = f"{request.base_url}api/powerbi/callback"
+    if success_url:
+        redirect_uri += f"?success_url={quote(success_url)}"
+    
+    auth_url = oauth.microsoft.authorize_redirect(
+        request,
+        redirect_uri,
+        scope=["openid", "profile", "email", "https://analysis.windows.net/powerbi/api/Report.Read.All"],
+        state=state
+    )
+    
+    return auth_url
+
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
-    print("\n=== POWERBI CALLBACK STARTED ===")
-    
     try:
-        # Debug incoming request
-        print(f"Query params: {dict(request.query_params)}")
-        
         # Verify state parameter
         expected_state = request.session.pop("oauth_state", None)
         received_state = request.query_params.get("state")
         
         if not expected_state or expected_state != received_state:
-            print("State mismatch error")
-            raise OAuthError("Invalid state parameter")
+            raise HTTPException(status_code=400, detail="Invalid state parameter")
 
-        # Get tokens
+        # Exchange code for tokens
         token = await oauth.microsoft.authorize_access_token(request)
-        print("Token received successfully")
-        
-        # Decode ID token
+        if not token:
+            raise HTTPException(status_code=400, detail="Failed to obtain access token")
+
+        # Decode ID token to get user info
         id_token = token.get('id_token')
         if not id_token:
-            raise OAuthError("No ID token received")
+            raise HTTPException(status_code=400, detail="No ID token received")
             
         claims = jwt.decode(id_token, options={"verify_signature": False})
-        print(f"User claims decoded: {claims.keys()}")
-
+        
         # Prepare user data
         user_data = {
             'id': claims.get('oid') or claims.get('sub'),
@@ -2136,34 +2253,22 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             'claims': claims
         }
 
-        # Calculate token expiry (1 hour default if not specified)
+        # Calculate token expiry
         expires_in = token.get("expires_in", 3600)
         token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
-        # Check if user exists
+        # Check if user exists and update/create record
         existing_user = db.query(PowerBiUser).filter(
             PowerBiUser.power_bi_user_id == user_data['id']
         ).first()
 
         if existing_user:
-            print("Updating existing user")
-            headers = {
-                "Authorization": f"Bearer {token['access_token']}"
-            }
-
-            # Get all workspaces
-            response = requests.get(
-                "https://api.powerbi.com/v1.0/myorg/groups",
-                headers=headers
-            )
-            print(response)
             existing_user.access_token = token['access_token']
             if 'refresh_token' in token:
                 existing_user.refresh_token = token['refresh_token']
             existing_user.token_expiry = token_expiry
             existing_user.power_bi_response = user_data['claims']
         else:
-            print("Creating new user")
             powerbi_user = PowerBiUser(
                 power_bi_email=user_data['email'],
                 power_bi_username=user_data['name'],
@@ -2178,7 +2283,6 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             db.add(powerbi_user)
         
         db.commit()
-        print("Data successfully saved to database")
 
         # Store minimal session data
         request.session.update({
@@ -2186,19 +2290,36 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             "powerbi_user_email": user_data['email']
         })
 
-        # Add success message to redirect URL
-        return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound?message=Authentication+successful")
+        # Determine redirect URL
+        success_url = request.query_params.get('success_url', '')
+        if success_url:
+            decoded_url = unquote(success_url)
+            redirect_url = f"{decoded_url}?message=Authentication+successful"
+        else:
+            redirect_url = "https://auditlyai.com/auth/success?message=Authentication+successful"
         
-    except OAuthError as e:
+        return RedirectResponse(url=redirect_url)
+        
+    except HTTPException as he:
         db.rollback()
-        print(f"OAuth error: {str(e)}")
-        return RedirectResponse(url=f"https://auditlyai.com/admin/settings/connectors/inbound/error?message={str(e)}")
+        success_url = request.query_params.get('success_url', '')
+        if success_url:
+            decoded_url = unquote(success_url)
+            redirect_url = f"{decoded_url}?error={quote(he.detail)}"
+        else:
+            redirect_url = f"https://auditlyai.com/auth/success?error={quote(he.detail)}"
+        return RedirectResponse(url=redirect_url)
         
     except Exception as e:
         db.rollback()
         print(f"Unexpected error: {traceback.format_exc()}")
-        return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
-
+        success_url = request.query_params.get('success_url', '')
+        if success_url:
+            decoded_url = unquote(success_url)
+            redirect_url = f"{decoded_url}?error=Authentication+failed"
+        else:
+            redirect_url = "https://auditlyai.com/auth/success?error=Authentication+failed"
+        return RedirectResponse(url=redirect_url)
 
 
 @app.get("/api/powerbi/datasets")
