@@ -231,17 +231,18 @@
 // export default Inbound;
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 import {
   ArrowLeft,
-  Box,
   Database,
   Cloud,
   FileText,
-  FolderGit2,
   Server,
 } from "lucide-react";
+import "react-toastify/dist/ReactToastify.css";
 
 const dataSources = [
   {
@@ -305,6 +306,43 @@ const itemVariants = {
 
 const Inbound: React.FC = () => {
   const [loading, setLoading] = useState<Record<number, boolean>>({});
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle callback messages from authentication
+  useEffect(() => {
+    const message = searchParams.get('message');
+    const error = searchParams.get('error');
+    
+    if (message) {
+      const decodedMessage = decodeURIComponent(message.replace(/\+/g, ' '));
+      toast.success(decodedMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      
+      // Clean up URL
+      searchParams.delete('message');
+      setSearchParams(searchParams, { replace: true });
+    }
+    
+    if (error) {
+      const decodedError = decodeURIComponent(error.replace(/\+/g, ' '));
+      toast.error(decodedError, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      });
+      
+      // Clean up URL
+      searchParams.delete('error');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleAuthClick = async (source: any) => {
     if (!source.authEndpoint) return;
@@ -319,19 +357,18 @@ const Inbound: React.FC = () => {
         'width=600,height=700,top=100,left=100'
       );
       
-      // Optional: Add a listener to check if the window was closed
+      // Check if the window was closed
       const checkWindowClosed = setInterval(() => {
         if (authWindow?.closed) {
           clearInterval(checkWindowClosed);
-          // You could add logic here to check if auth was successful
-          // For example, refresh data or show a success message
           console.log('Auth window closed');
+          // You could add additional checks here if needed
         }
       }, 500);
       
     } catch (error) {
       console.error("Authentication error:", error);
-      alert("Failed to initiate Power BI authentication. Please try again.");
+      toast.error("Failed to initiate authentication. Please try again.");
     } finally {
       setLoading(prev => ({ ...prev, [source.id]: false }));
     }
