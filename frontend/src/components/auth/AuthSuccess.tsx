@@ -9,14 +9,17 @@ const AuthSuccess = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        window.opener.postMessage({
-          type: error ? 'AUTH_ERROR' : 'AUTH_SUCCESS',
-          message: error || message
-        }, window.location.origin);
+        // Send message to opener window if it exists
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({
+            type: error ? 'AUTH_ERROR' : 'AUTH_SUCCESS',
+            message: error || message
+          }, window.location.origin);
+        }
+        window.close();
       } catch (e) {
-        console.log("Couldn't send message to opener");
+        console.error("Error closing window:", e);
       }
-      window.close();
     }, 2000);
 
     return () => clearTimeout(timer);
