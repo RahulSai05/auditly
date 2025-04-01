@@ -7,7 +7,6 @@ const AuthSuccess = () => {
   const error = searchParams.get('error');
 
   useEffect(() => {
-    // Attempt to close the window after a short delay
     const timer = setTimeout(() => {
       try {
         window.opener.postMessage({
