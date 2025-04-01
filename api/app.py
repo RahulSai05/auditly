@@ -1997,6 +1997,108 @@ async def powerbi_auth_login(request: Request):
         )
 
 
+# @app.get("/api/powerbi/callback")
+# async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
+#     print("\n=== POWERBI CALLBACK STARTED ===")
+    
+#     try:
+#         # Debug incoming request
+#         print(f"Query params: {dict(request.query_params)}")
+        
+#         # Verify state parameter
+#         expected_state = request.session.pop("oauth_state", None)
+#         received_state = request.query_params.get("state")
+        
+#         if not expected_state or expected_state != received_state:
+#             print("State mismatch error")
+#             raise OAuthError("Invalid state parameter")
+
+#         # Get tokens
+#         token = await oauth.microsoft.authorize_access_token(request)
+#         print("Token received successfully")
+        
+#         # Decode ID token
+#         id_token = token.get('id_token')
+#         if not id_token:
+#             raise OAuthError("No ID token received")
+            
+#         claims = jwt.decode(id_token, options={"verify_signature": False})
+#         print(f"User claims decoded: {claims.keys()}")
+
+#         # Prepare user data
+#         user_data = {
+#             'id': claims.get('oid') or claims.get('sub'),
+#             'email': claims.get('email') or claims.get('preferred_username'),
+#             'name': claims.get('name', ''),
+#             'tenant_id': claims.get('tid'),
+#             'claims': claims
+#         }
+
+#         # Calculate token expiry (1 hour default if not specified)
+#         expires_in = token.get("expires_in", 3600)
+#         token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+#         # Check if user exists
+#         existing_user = db.query(PowerBiUser).filter(
+#             PowerBiUser.power_bi_user_id == user_data['id']
+#         ).first()
+
+#         if existing_user:
+#             print("Updating existing user")
+#             # print(token['access_token'])
+#             headers = {
+#                 "Authorization": f"Bearer {token['access_token']}"
+#             }
+
+#             # Get all workspaces
+#             response = requests.get(
+#                 "https://api.powerbi.com/v1.0/myorg/groups",
+#                 headers=headers
+#             )
+#             print(response)
+#             existing_user.access_token = token['access_token']
+#             if 'refresh_token' in token:
+#                 existing_user.refresh_token = token['refresh_token']
+#             existing_user.token_expiry = token_expiry
+#             existing_user.power_bi_response = user_data['claims']
+#         else:
+#             print("Creating new user")
+#             powerbi_user = PowerBiUser(
+#                 power_bi_email=user_data['email'],
+#                 power_bi_username=user_data['name'],
+#                 power_bi_user_id=user_data['id'],
+#                 power_bi_response=user_data['claims'],
+#                 access_token=token['access_token'],
+#                 refresh_token=token.get('refresh_token', ''),
+#                 token_expiry=token_expiry,
+#                 tenant_id=user_data['tenant_id'],
+#                 created_at=datetime.now(timezone.utc)
+
+#             )
+#             db.add(powerbi_user)
+        
+#         db.commit()
+#         print("Data successfully saved to database")
+
+#         # Store minimal session data
+#         request.session.update({
+#             "powerbi_user_id": user_data['id'],
+#             "powerbi_user_email": user_data['email']
+#         })
+
+#         return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound")
+        
+#     except OAuthError as e:
+#         db.rollback()
+#         print(f"OAuth error: {str(e)}")
+#         return RedirectResponse(url=f"https://auditlyai.com/admin/settings/connectors/inbound/error?message={str(e)}")
+        
+#     except Exception as e:
+#         db.rollback()
+#         print(f"Unexpected error: {traceback.format_exc()}")
+#         return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
+
+
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
     print("\n=== POWERBI CALLBACK STARTED ===")
@@ -2045,7 +2147,6 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
 
         if existing_user:
             print("Updating existing user")
-            # print(token['access_token'])
             headers = {
                 "Authorization": f"Bearer {token['access_token']}"
             }
@@ -2073,7 +2174,6 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
                 token_expiry=token_expiry,
                 tenant_id=user_data['tenant_id'],
                 created_at=datetime.now(timezone.utc)
-
             )
             db.add(powerbi_user)
         
@@ -2086,17 +2186,20 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
             "powerbi_user_email": user_data['email']
         })
 
-        return RedirectResponse(url="https://auditlyai.com/dashboard")
+        # Add success message to redirect URL
+        return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound?message=Authentication+successful")
         
     except OAuthError as e:
         db.rollback()
         print(f"OAuth error: {str(e)}")
-        return RedirectResponse(url=f"http://localhost:3000/error?message={str(e)}")
+        return RedirectResponse(url=f"https://auditlyai.com/admin/settings/connectors/inbound/error?message={str(e)}")
         
     except Exception as e:
         db.rollback()
         print(f"Unexpected error: {traceback.format_exc()}")
-        return RedirectResponse(url="http://localhost:3000/error?message=auth_failed")
+        return RedirectResponse(url="https://auditlyai.com/admin/settings/connectors/inbound/error?message=auth_failed")
+
+
 
 @app.get("/api/powerbi/datasets")
 async def get_powerbi_datasets(db: Session = Depends(get_db)):
