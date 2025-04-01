@@ -2005,7 +2005,7 @@ class TeamEmailUpdate(BaseModel):
     email: Optional[str] = None
     description: Optional[str] = None
 
-class TeamEmailResponse(TeamEmailBase):
+class TeamEmailResponse(BaseModel):
     id: int
     created_at: str
     updated_at: str
