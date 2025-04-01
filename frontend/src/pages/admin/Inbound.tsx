@@ -624,8 +624,41 @@ import {
 } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
-// ... (keep your existing dataSources, containerVariants, itemVariants constants)
-
+const dataSources = [
+  {
+    id: 1,
+    title: "CSV Import",
+    description: "Efficient and straightforward data import from structured CSV files.",
+    icon: FileText,
+    color: "#424242",
+    status: "Basic",
+  },
+  {
+    id: 2,
+    title: "Power BI",
+    description: "Business analytics tool for visualizing data and sharing insights across your organization.",
+    icon: Cloud,
+    color: "#00796B",
+    status: "Enterprise",
+    authEndpoint: "/api/powerbi/auth_login",
+  },
+  {
+    id: 3,
+    title: "D365",
+    description: "Microsoft's suite of enterprise resource planning (ERP) and customer relationship management (CRM) applications.",
+    icon: Database,
+    color: "#43A047",
+    status: "Enterprise",
+  },
+  {
+    id: 4,
+    title: "Inbound Automate",
+    description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
+    icon: Server,
+    color: "#FF9900",
+    status: "Enterprise",
+  }
+];
 const Inbound: React.FC = () => {
   const [loading, setLoading] = useState<Record<number, boolean>>({});
   const [searchParams, setSearchParams] = useSearchParams();
