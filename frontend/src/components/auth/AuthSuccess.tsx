@@ -111,7 +111,7 @@ const AuthSuccess = () => {
               className="text-sm text-gray-500 flex items-center justify-center gap-2"
             >
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-              This window will close automatically...
+              This window will close automatically. If it doesn't, please close it manually.
             </motion.div>
           </div>
         </motion.div>
