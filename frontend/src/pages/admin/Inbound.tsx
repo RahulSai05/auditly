@@ -1,4 +1,4 @@
-// import React from "react";
+// import React, { useState } from "react";
 // import { motion } from "framer-motion";
 // import {
 //   ArrowLeft,
@@ -26,6 +26,7 @@
 //     icon: Cloud,
 //     color: "#00796B",
 //     status: "Enterprise",
+//     authEndpoint: "/api/powerbi/auth_login",
 //   },
 //   {
 //     id: 3,
@@ -70,6 +71,25 @@
 // };
 
 // const Inbound: React.FC = () => {
+//   const [loading, setLoading] = useState<Record<number, boolean>>({});
+
+//   const handleAuthClick = async (source: any) => {
+//     if (!source.authEndpoint) return;
+  
+//     try {
+//       setLoading(prev => ({ ...prev, [source.id]: true }));
+      
+//       // Simply redirect to your backend endpoint
+//       window.location.assign(source.authEndpoint);
+      
+//     } catch (error) {
+//       console.error("Authentication error:", error);
+//       alert("Failed to initiate Power BI authentication. Please try again.");
+//     } finally {
+//       setLoading(prev => ({ ...prev, [source.id]: false }));
+//     }
+//   };
+
 //   return (
 //     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
 //       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
@@ -155,24 +175,50 @@
 //                   {source.description}
 //                 </p>
 
-//                 <motion.div
-//                   initial={{ x: -10, opacity: 0 }}
-//                   animate={{ x: 0, opacity: 1 }}
-//                   transition={{ delay: 0.2 }}
-//                   className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors"
-//                 >
-//                   <span className="text-sm font-medium">Learn more</span>
-//                   <motion.span
-//                     animate={{ x: [0, 5, 0] }}
-//                     transition={{
-//                       repeat: Infinity,
-//                       duration: 1.5,
-//                       ease: "easeInOut",
-//                     }}
+//                 <div className="flex justify-between items-center">
+//                   <motion.div
+//                     initial={{ x: -10, opacity: 0 }}
+//                     animate={{ x: 0, opacity: 1 }}
+//                     transition={{ delay: 0.2 }}
+//                     className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors"
 //                   >
-//                     →
-//                   </motion.span>
-//                 </motion.div>
+//                     <span className="text-sm font-medium">Learn more</span>
+//                     <motion.span
+//                       animate={{ x: [0, 5, 0] }}
+//                       transition={{
+//                         repeat: Infinity,
+//                         duration: 1.5,
+//                         ease: "easeInOut",
+//                       }}
+//                     >
+//                       →
+//                     </motion.span>
+//                   </motion.div>
+
+//                   {source.authEndpoint && (
+//                     <motion.button
+//                       whileHover={{ scale: 1.05 }}
+//                       whileTap={{ scale: 0.95 }}
+//                       onClick={() => handleAuthClick(source)}
+//                       disabled={loading[source.id]}
+//                       className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+//                         loading[source.id] ? 'opacity-75 cursor-not-allowed' : ''
+//                       }`}
+//                     >
+//                       {loading[source.id] ? (
+//                         <span className="flex items-center">
+//                           <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                           </svg>
+//                           Connecting...
+//                         </span>
+//                       ) : (
+//                         'Connect'
+//                       )}
+//                     </motion.button>
+//                   )}
+//                 </div>
 //               </div>
 //             </motion.div>
 //           ))}
@@ -183,6 +229,7 @@
 // };
 
 // export default Inbound;
+
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
@@ -265,8 +312,22 @@ const Inbound: React.FC = () => {
     try {
       setLoading(prev => ({ ...prev, [source.id]: true }));
       
-      // Simply redirect to your backend endpoint
-      window.location.assign(source.authEndpoint);
+      // Open authentication in a new window
+      const authWindow = window.open(
+        source.authEndpoint, 
+        '_blank',
+        'width=600,height=700,top=100,left=100'
+      );
+      
+      // Optional: Add a listener to check if the window was closed
+      const checkWindowClosed = setInterval(() => {
+        if (authWindow?.closed) {
+          clearInterval(checkWindowClosed);
+          // You could add logic here to check if auth was successful
+          // For example, refresh data or show a success message
+          console.log('Auth window closed');
+        }
+      }, 500);
       
     } catch (error) {
       console.error("Authentication error:", error);
