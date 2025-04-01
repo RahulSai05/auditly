@@ -527,47 +527,47 @@ const Inbound: React.FC = () => {
     };
   }, []);
 
-  const handleAuthClick = async (source: any) => {
-    if (!source.authEndpoint) return;
   
-    try {
-      setLoading(prev => ({ ...prev, [source.id]: true }));
-      setIsAuthWindowOpen(true);
-      
-      const width = 600;
-      const height = 700;
-      const left = (window.screen.width - width) / 2;
-      const top = (window.screen.height - height) / 2;
+  const handleAuthClick = async (source: any) => {
+  if (!source.authEndpoint) return;
 
-      const successUrl = encodeURIComponent(
-        `${window.location.origin}/auth/success?source=powerbi`
-      );
-      const authUrl = `${source.authEndpoint}?success_url=${successUrl}`;
-      
-      authWindowRef.current = window.open(
-        authUrl,
-        'AuthPopup',
-        `width=${width},height=${height},top=${top},left=${left}`
-      );
+  try {
+    setLoading(prev => ({ ...prev, [source.id]: true }));
+    setIsAuthWindowOpen(true);
+    
+    const width = 600;
+    const height = 700;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
 
-      if (!authWindowRef.current) {
-        throw new Error("Popup window blocked. Please allow popups for this site.");
-      }
+    // Encode the success URL
+    const successUrl = `${window.location.origin}/auth/success?source=powerbi`;
+    const authUrl = `${source.authEndpoint}?success_url=${encodeURIComponent(successUrl)}`;
+    
+    authWindowRef.current = window.open(
+      authUrl,
+      'AuthPopup',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
 
-      checkIntervalRef.current = setInterval(() => {
-        if (authWindowRef.current?.closed) {
-          clearInterval(checkIntervalRef.current as NodeJS.Timeout);
-          setIsAuthWindowOpen(false);
-          setLoading(prev => ({ ...prev, [source.id]: false }));
-        }
-      }, 500);
-      
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Authentication failed");
-      setIsAuthWindowOpen(false);
-      setLoading(prev => ({ ...prev, [source.id]: false }));
+    if (!authWindowRef.current) {
+      throw new Error("Popup window blocked. Please allow popups for this site.");
     }
-  };
+
+    const checkWindowClosed = setInterval(() => {
+      if (authWindowRef.current?.closed) {
+        clearInterval(checkIntervalRef.current as NodeJS.Timeout);
+        setIsAuthWindowOpen(false);
+        setLoading(prev => ({ ...prev, [source.id]: false }));
+      }
+    }, 500);
+    
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Authentication failed");
+    setIsAuthWindowOpen(false);
+    setLoading(prev => ({ ...prev, [source.id]: false }));
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 relative">
