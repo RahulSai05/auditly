@@ -230,10 +230,9 @@
 
 // export default Inbound;
 
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import {
   ArrowLeft,
@@ -307,6 +306,7 @@ const itemVariants = {
 const Inbound: React.FC = () => {
   const [loading, setLoading] = useState<Record<number, boolean>>({});
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isAuthWindowOpen, setIsAuthWindowOpen] = useState(false);
 
   // Handle callback messages from authentication
   useEffect(() => {
@@ -344,39 +344,86 @@ const Inbound: React.FC = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Handle message from popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'AUTH_SUCCESS') {
+        setIsAuthWindowOpen(false);
+        toast.success('Authentication successful!', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+        });
+      }
+      if (event.data.type === 'AUTH_ERROR') {
+        setIsAuthWindowOpen(false);
+        toast.error(event.data.message || 'Authentication failed', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+        });
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const handleAuthClick = async (source: any) => {
     if (!source.authEndpoint) return;
   
     try {
       setLoading(prev => ({ ...prev, [source.id]: true }));
+      setIsAuthWindowOpen(true);
+      
+      // Calculate center position for popup
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
       
       // Open authentication in a new window
       const authWindow = window.open(
         source.authEndpoint, 
-        '_blank',
-        'width=600,height=700,top=100,left=100'
+        'AuthPopup',
+        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
       );
       
-      // Check if the window was closed
+      // Check if the window was closed manually
       const checkWindowClosed = setInterval(() => {
         if (authWindow?.closed) {
           clearInterval(checkWindowClosed);
-          console.log('Auth window closed');
-          // You could add additional checks here if needed
+          setIsAuthWindowOpen(false);
+          setLoading(prev => ({ ...prev, [source.id]: false }));
         }
       }, 500);
       
     } catch (error) {
       console.error("Authentication error:", error);
       toast.error("Failed to initiate authentication. Please try again.");
-    } finally {
-      setLoading(prev => ({ ...prev, [source.id]: false }));
+      setIsAuthWindowOpen(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+    <div className={`min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 relative ${isAuthWindowOpen ? 'pointer-events-none' : ''}`}>
+      {/* Overlay when auth window is open */}
+      <AnimatePresence>
+        {isAuthWindowOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+          />
+        )}
+      </AnimatePresence>
+
+      <div className={`max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 transition-opacity duration-200 ${isAuthWindowOpen ? 'opacity-50' : 'opacity-100'}`}>
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -484,9 +531,9 @@ const Inbound: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleAuthClick(source)}
-                      disabled={loading[source.id]}
+                      disabled={loading[source.id] || isAuthWindowOpen}
                       className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-                        loading[source.id] ? 'opacity-75 cursor-not-allowed' : ''
+                        (loading[source.id] || isAuthWindowOpen) ? 'opacity-75 cursor-not-allowed' : ''
                       }`}
                     >
                       {loading[source.id] ? (
