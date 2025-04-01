@@ -28,7 +28,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -1964,50 +1964,6 @@ async def get_base_image(base_data_id: int, image_type: str, db: Session = Depen
     
     return FileResponse(image_path)
 
-class TeamEmailBase(BaseModel):
-    team_name: str
-    email: str
-    description: str | None = None
-
-class TeamEmailUpdate(BaseModel):
-    email: str | None = None
-    description: str | None = None
-
-class TeamEmailResponse(TeamEmailBase):
-    id: int
-    created_at: str
-    updated_at: str
-
-# Endpoint to fetch all team emails
-@app.get("/team-emails/", response_model=List[TeamEmailResponse])
-def get_all_team_emails(db: Session = Depends(get_db)):
-    team_emails = db.query(models.TeamEmail).all()
-    return team_emails
-
-# Endpoint to fetch a specific team email by ID
-@app.get("/team-emails/{team_id}", response_model=TeamEmailResponse)
-def get_team_email(team_id: int, db: Session = Depends(get_db)):
-    team_email = db.query(models.TeamEmail).filter(models.TeamEmail.id == team_id).first()
-    if not team_email:
-        raise HTTPException(status_code=404, detail="Team email not found")
-    return team_email
-
-# Endpoint to update a specific team email
-@app.put("/team-emails/{team_id}", response_model=TeamEmailResponse)
-def update_team_email(team_id: int, update_data: TeamEmailUpdate, db: Session = Depends(get_db)):
-    db_team_email = db.query(models.TeamEmail).filter(models.TeamEmail.id == team_id).first()
-    if not db_team_email:
-        raise HTTPException(status_code=404, detail="Team email not found")
-
-    # Updating fields if provided in the request
-    if update_data.email is not None:
-        db_team_email.email = update_data.email
-    if update_data.description is not None:
-        db_team_email.description = update_data.description
-    
-    db.commit()
-    db.refresh(db_team_email)
-    return db_team_email
 
 @app.get("/api/powerbi/auth_login")
 async def powerbi_auth_login(request: Request):
@@ -2039,6 +1995,50 @@ async def powerbi_auth_login(request: Request):
             status_code=400,
             detail="Authentication initiation failed. Please check server logs."
         )
+
+class TeamEmailBase(BaseModel):
+    team_name: str
+    email: str
+    description: Optional[str] = None
+
+class TeamEmailUpdate(BaseModel):
+    email: Optional[str] = None
+    description: Optional[str] = None
+
+class TeamEmailResponse(TeamEmailBase):
+    id: int
+    created_at: str
+    updated_at: str
+
+# Endpoint to fetch all team emails
+@app.get("/team-emails/", response_model=List[TeamEmailResponse])
+def get_all_team_emails(db: Session = Depends(get_db)):
+    team_emails = db.query(models.TeamEmail).all()
+    return team_emails
+
+# Endpoint to fetch a specific team email by ID
+@app.get("/team-emails/{team_id}", response_model=TeamEmailResponse)
+def get_team_email(team_id: int, db: Session = Depends(get_db)):
+    team_email = db.query(models.TeamEmail).filter(models.TeamEmail.id == team_id).first()
+    if not team_email:
+        raise HTTPException(status_code=404, detail="Team email not found")
+    return team_email
+
+# Endpoint to update a specific team email
+@app.put("/team-emails/{team_id}", response_model=TeamEmailResponse)
+def update_team_email(team_id: int, update_data: TeamEmailUpdate, db: Session = Depends(get_db)):
+    db_team_email = db.query(models.TeamEmail).filter(models.TeamEmail.id == team_id).first()
+    if not db_team_email:
+        raise HTTPException(status_code=404, detail="Team email not found")
+
+    if update_data.email is not None:
+        db_team_email.email = update_data.email
+    if update_data.description is not None:
+        db_team_email.description = update_data.description
+    
+    db.commit()
+    db.refresh(db_team_email)
+    return db_team_email
 
 
 @app.get("/api/powerbi/callback")
