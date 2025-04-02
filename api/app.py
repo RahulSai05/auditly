@@ -1996,10 +1996,10 @@ async def powerbi_auth_login(request: Request):
             detail="Authentication initiation failed. Please check server logs."
         )
 
-@app.get("/team-emails/", response_model=List[TeamEmailInfo])
+@app.get("/team-emails/")
 def get_email_descriptions(db: Session = Depends(get_db)):
     try:
-        # Select only the email and description fields
+        # Directly fetch only the email and description fields
         team_emails = db.query(TeamEmail.email, TeamEmail.description).all()
         return [{'email': email, 'description': desc} for email, desc in team_emails]
     except Exception as e:
