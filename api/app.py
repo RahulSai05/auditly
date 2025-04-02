@@ -1996,7 +1996,7 @@ async def powerbi_auth_login(request: Request):
             detail="Authentication initiation failed. Please check server logs."
         )
 
-@app.get("/team-emails/")
+@app.get("/api/team-emails/")
 def get_team_emails(db: Session = Depends(get_db)):
     team_emails = db.query(TeamEmail.id, TeamEmail.team_name, TeamEmail.email, TeamEmail.description).all()
     return [{"id": id, "team_name": team_name, "email": email, "description": description} for id, team_name, email, description in team_emails]
@@ -2006,7 +2006,7 @@ class TeamEmailUpdateRequest(BaseModel):
     description: Optional[str] = None
     team_name: Optional[str] = None
     
-@app.put("/team-emails/{team_id}")
+@app.put("/api/team-emails/{team_id}")
 def update_team_email(team_id: int, update_request: TeamEmailUpdateRequest, db: Session = Depends(get_db)):
     team_email = db.query(TeamEmail).filter(TeamEmail.id == team_id).first()
     if not team_email:
