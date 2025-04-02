@@ -2152,6 +2152,55 @@ async def get_powerbi_datasets(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class GetPowerBITableColumns(BaseModel):
+    workspace_id: str
+    dataset_id: str
+    power_bi_table_name: str
+
+@app.post("/powerbi/get-powerbi-table-column")
+async def get_powerbi_table_column(request: GetPowerBITableColumns, db: Session = Depends(get_db)):
+    workspace_id = request.workspace_id
+    dataset_id = request.dataset_id
+    power_bi_table_name = request.power_bi_table_name
+
+    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
+    dax_query = {
+        "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}],  # Ensure table name is quoted
+        "serializerSettings": {"includeNulls": True}
+    }
+
+    response = requests.post(url, headers=headers, json=dax_query)
+    if response.status_code != 200:
+        # Log response for debugging
+        print("Failed to fetch data:", response.text)
+        raise HTTPException(status_code=response.status_code, detail="API call failed")
+
+    try:
+        data = response.json()
+        response_table = data["results"][0]["tables"][0]["rows"]
+        bi_response_mapping = response_table.pop(0)
+        return bi_response_mapping
+    except KeyError as e:
+        # Log this exception along with the response data to debug
+        print("KeyError - Expected key not found:", e)
+        print("API Response:", response.text)
+        raise HTTPException(status_code=500, detail=f"Key {e} not found in response")
+
+    except IndexError as e:
+        # Handle cases where the lists are empty
+        print("IndexError - Data not found:", e)
+        raise HTTPException(status_code=404, detail="Data not found in API response")
+
+
+
+
 @app.get("/api/tables")
 async def get_all_tables(db: Session = Depends(get_db)):
     """
