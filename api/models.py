@@ -199,8 +199,12 @@ class PowerBiSqlMapping(Base):
     __tablename__ = 'power_bi_sql_mapping'
     
     mapping_id = Column(Integer, primary_key=True, autoincrement=True)
-    table_name = Column(String(255), nullable=False)
     mapping = Column(JSON, nullable=True)
+    sql_table_name = Column(String(255), nullable=False)
+    bi_table_name = Column(String(255), nullable=False)
+    mapping_name = Column(String(255), nullable=False)
+    date_filter_column_name = Column(String(255), nullable=False)
+    date_filter_value = Column((DateTime), nullable=True)
     power_bi_sql_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
 
 
