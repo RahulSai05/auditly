@@ -245,6 +245,7 @@ const EmailConfiguration = () => {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<UpdateTeamEmailRequest>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Fetch team emails on component mount
   useEffect(() => {
@@ -256,7 +257,7 @@ const EmailConfiguration = () => {
       } catch (err) {
         setError('Failed to fetch team emails');
         setLoading(false);
-        console.error(err);
+        console.error('Fetch error:', err.response?.data);
       }
     };
 
@@ -271,6 +272,8 @@ const EmailConfiguration = () => {
       description: teamEmail.description,
       team_name: teamEmail.team_name
     });
+    setError(null);
+    setSuccessMessage(null);
   };
 
   // Handle form input changes
@@ -285,7 +288,25 @@ const EmailConfiguration = () => {
   // Handle update submission
   const handleUpdate = async (id: number) => {
     try {
-      const response = await axios.put(`/api/team-emails/${id}`, editForm);
+      // Simple email validation if email is being updated
+      if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+
+      // Create payload with only defined fields
+      const payload: UpdateTeamEmailRequest = {};
+      if (editForm.email !== undefined) payload.email = editForm.email;
+      if (editForm.description !== undefined) payload.description = editForm.description;
+      if (editForm.team_name !== undefined) payload.team_name = editForm.team_name;
+
+      // Check if at least one field is being updated
+      if (Object.keys(payload).length === 0) {
+        setError('No changes detected');
+        return;
+      }
+
+      const response = await axios.put(`/api/team-emails/${id}`, payload);
       
       // Update the local state with the updated data
       setTeamEmails(prev => 
@@ -295,9 +316,13 @@ const EmailConfiguration = () => {
       );
       
       setEditingId(null);
+      setSuccessMessage('Team email updated successfully');
+      setError(null);
     } catch (err) {
-      setError('Failed to update team email');
-      console.error(err);
+      const errorMessage = err.response?.data?.detail || 'Failed to update team email';
+      setError(errorMessage);
+      setSuccessMessage(null);
+      console.error('Update error:', err.response?.data);
     }
   };
 
@@ -305,14 +330,22 @@ const EmailConfiguration = () => {
   const handleCancel = () => {
     setEditingId(null);
     setEditForm({});
+    setError(null);
+    setSuccessMessage(null);
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Team Email Configuration</h1>
+      
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+          {successMessage}
+        </div>
+      )}
       
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -358,13 +391,13 @@ const EmailConfiguration = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleUpdate(team.id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded mr-2"
                       >
                         Save
                       </button>
                       <button
                         onClick={handleCancel}
-                        className="bg-gray-500 text-white px-3 py-1 rounded"
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded"
                       >
                         Cancel
                       </button>
@@ -378,7 +411,7 @@ const EmailConfiguration = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleEdit(team)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
                       >
                         Edit
                       </button>
