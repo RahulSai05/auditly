@@ -23,7 +23,7 @@ from urllib.parse import urljoin, quote, unquote
 from settings import ENV
 from datetime import datetime, timedelta, timezone    
 from secret import get_secret
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
