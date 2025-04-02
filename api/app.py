@@ -1997,35 +1997,27 @@ async def powerbi_auth_login(request: Request):
         )
 
 @app.get("/team-emails/")
-def get_email_descriptions(db: Session = Depends(get_db)):
-    try:
-        # Directly fetch only the email and description fields
-        team_emails = db.query(TeamEmail.email, TeamEmail.description).all()
-        return [{'email': email, 'description': desc} for email, desc in team_emails]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve email and descriptions: {str(e)}")
+def get_team_emails(db: Session = Depends(get_db)):
+    team_emails = db.query(TeamEmail.id, TeamEmail.team_name, TeamEmail.email, TeamEmail.description).all()
+    return [{"id": id, "team_name": team_name, "email": email, "description": description} for id, team_name, email, description in team_emails]
 
 class TeamEmailUpdateRequest(BaseModel):
-    email: Optional[TeamEmail] = None
+    email: Optional[EmailStr] = None
     description: Optional[str] = None
 
-
-@app.put("/team-emails/{team_id}", response_model=dict)
+@app.put("/team-emails/{team_id}", response_model=TeamEmailResponse)
 def update_team_email(team_id: int, update_request: TeamEmailUpdateRequest, db: Session = Depends(get_db)):
-    # Fetch the existing team email
     team_email = db.query(TeamEmail).filter(TeamEmail.id == team_id).first()
     if not team_email:
         raise HTTPException(status_code=404, detail="Team email not found")
 
-    # Update the fields if provided
     if update_request.email is not None:
         team_email.email = update_request.email
     if update_request.description is not None:
         team_email.description = update_request.description
     
     db.commit()
-    return {"message": "Team email updated successfully"}
-
+    return team_email
 
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
