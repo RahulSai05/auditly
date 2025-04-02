@@ -2005,6 +2005,28 @@ def get_email_descriptions(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve email and descriptions: {str(e)}")
 
+class TeamEmailUpdateRequest(BaseModel):
+    email: Optional[EmailStr] = None
+    description: Optional[str] = None
+
+
+@app.put("/team-emails/{team_id}", response_model=dict)
+def update_team_email(team_id: int, update_request: TeamEmailUpdateRequest, db: Session = Depends(get_db)):
+    # Fetch the existing team email
+    team_email = db.query(TeamEmail).filter(TeamEmail.id == team_id).first()
+    if not team_email:
+        raise HTTPException(status_code=404, detail="Team email not found")
+
+    # Update the fields if provided
+    if update_request.email is not None:
+        team_email.email = update_request.email
+    if update_request.description is not None:
+        team_email.description = update_request.description
+    
+    db.commit()
+    return {"message": "Team email updated successfully"}
+
+
 @app.get("/api/powerbi/callback")
 async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
     print("\n=== POWERBI CALLBACK STARTED ===")
