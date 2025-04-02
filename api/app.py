@@ -2004,8 +2004,8 @@ def get_team_emails(db: Session = Depends(get_db)):
 class TeamEmailUpdateRequest(BaseModel):
     email: Optional[EmailStr] = None
     description: Optional[str] = None
-
-@app.put("/team-emails/{team_id}", response_model=TeamEmailResponse)
+    
+@app.put("/team-emails/{team_id}")
 def update_team_email(team_id: int, update_request: TeamEmailUpdateRequest, db: Session = Depends(get_db)):
     team_email = db.query(TeamEmail).filter(TeamEmail.id == team_id).first()
     if not team_email:
@@ -2015,7 +2015,7 @@ def update_team_email(team_id: int, update_request: TeamEmailUpdateRequest, db: 
         team_email.email = update_request.email
     if update_request.description is not None:
         team_email.description = update_request.description
-    
+
     db.commit()
     return team_email
 
