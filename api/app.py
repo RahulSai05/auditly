@@ -2006,7 +2006,7 @@ def get_email_descriptions(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to retrieve email and descriptions: {str(e)}")
 
 class TeamEmailUpdateRequest(BaseModel):
-    email: Optional[EmailStr] = None
+    email: Optional[TeamEmail] = None
     description: Optional[str] = None
 
 
