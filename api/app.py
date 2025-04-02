@@ -2261,29 +2261,56 @@ async def get_columns(table_name: str, exclude_auto_increment: bool = True, db: 
         raise HTTPException(status_code=500, detail=f"Error retrieving columns: {str(e)}")
 
 
+
 class PowerBiSqlMappingBase(BaseModel):
-    table_name: str
+    sql_table_name: str
+    bi_table_name: str
+    date_filter_column_name: str
     mapping: Optional[dict] = None
     user_id: int
+    date_filter_value: str
 
 @app.post("/api/power-bi-sql-mapping/")
 async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depends(get_db)):
     """
-    Upload base front and back images and map them to an item based on item_number.
+    Create or update a mapping based on mapping_name. If the mapping_name already exists, update the existing record,
+    otherwise create a new mapping record.
     """
-    # Create a new BaseData entry
-    new_mapping_data = PowerBiSqlMapping(
-        table_name=request.table_name,
-        mapping=request.mapping,
-        power_bi_sql_user_mapping_id=request.user_id
-    ) 
-    db.add(new_mapping_data)
-    db.commit()
-    db.refresh(new_mapping_data)
+    mapping_name = f"{request.user_id}-{request.bi_table_name}-{request.sql_table_name}"
+
+    # Check if the mapping already exists
+    existing_mapping = db.query(PowerBiSqlMapping).filter_by(mapping_name=mapping_name).first()
+    
+    if existing_mapping:
+        # Update existing mapping
+        existing_mapping.mapping = request.mapping
+        existing_mapping.sql_table_name = request.sql_table_name
+        existing_mapping.bi_table_name = request.bi_table_name
+        existing_mapping.date_filter_column_name = request.date_filter_column_name
+        existing_mapping.date_filter_value = datetime.strptime(request.date_filter_value, "%m-%d-%Y")
+        db.commit()
+        message = "Mapping updated successfully."
+    else:
+        # Create a new mapping
+        new_mapping_data = PowerBiSqlMapping(
+            mapping=request.mapping,
+            power_bi_sql_user_mapping_id=request.user_id,
+            sql_table_name=request.sql_table_name,
+            bi_table_name=request.bi_table_name,
+            mapping_name=mapping_name,
+            date_filter_column_name=request.date_filter_column_name,
+            date_filter_value = datetime.strptime(request.date_filter_value, "%m-%d-%Y")
+
+        )
+        db.add(new_mapping_data)
+        db.commit()
+        db.refresh(new_mapping_data)
+        message = "Mapping created successfully."
 
     return {
-        "message": "Mapping saved successfully.",
+        "message": message,
         "data": {
+            "mapping_name": mapping_name
         }
     }
 
@@ -2351,25 +2378,24 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     """
     table_name = request.table_name
     user_id = request.user_id
+    workspace_id = request.workspace_id
+    dataset_id = request.dataset_id
 
-    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.table_name == table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
+    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
     power_bi_user_mapping = power_bi_table_data.mapping
     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-
-    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"  # Replace with your workspace ID
-    DATASET_ID = "440f9e10-6366-44b5-83df-bec2a7c24be7"  # Replace with your dataset ID
      
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
 
-    url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{DATASET_ID}/executeQueries"
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
 
     dax_query = {
         "queries": [
             {
-                "query": "EVALUATE 'items_table'" 
+                "query": "EVALUATE 'Table'" 
             }
         ],
         "serializerSettings": {
@@ -2378,24 +2404,32 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     }
 
     response = requests.post(url, headers=headers, json=dax_query)
+    print(response)
     response_table = response.json()["results"][0]["tables"][0]["rows"]
     bi_response_mapping = response_table.pop(0)
     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
     mapping_dict = {}
     for key, value in bi_response_mapping.items():
-        if value not in availabe_column_name and value != "id":
+        if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
             return {"data": "Mapping Missmatch"}
+        elif value == power_bi_table_data.date_filter_column_name:
+            filter_column = key
         elif value in availabe_column_name:
             mapping_dict.update({key:power_bi_user_mapping[value]})
     table = Table(table_name, metadata, autoload_with=engine)
     transformed_data = []
     for record in response_table:
+        filter_check = None
         formatted_entry = {}
         for key, value in record.items():
+            if key == filter_column and datetime.strptime(value, "%m-%d-%Y") < power_bi_table_data.date_filter_value:
+                filter_check = True
+                continue
             if key in [k for k,v in mapping_dict.items()]:
                 formatted_entry[mapping_dict[key]] = value
-        transformed_data.append(formatted_entry)
+        if(not filter_check):
+            transformed_data.append(formatted_entry)
     db.execute(table.insert(), transformed_data)
     db.commit()
     return response.json()
-  
+    
