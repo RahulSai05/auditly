@@ -734,6 +734,8 @@
 
 // export default AuditlyInspection;
 
+
+
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { 
@@ -747,15 +749,14 @@ import {
   FilterX,
   MapPin,
   CheckCircle,
-  Image as ImageIcon,
-  FileText,
-  Download
+  Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import { createRoot } from 'react-dom/client';
 
 interface ShippingInfo {
   shipped_to_person: string;
@@ -803,6 +804,10 @@ interface AdvancedSearchProps {
   onClose: () => void;
   filters: SearchFilters;
   onFilterChange: (filters: SearchFilters) => void;
+}
+
+interface PDFContentProps {
+  item: ReceiptData;
 }
 
 const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
@@ -1028,19 +1033,80 @@ const ImageViewerModal = ({
   );
 };
 
+const PDFContent: React.FC<PDFContentProps> = ({ item }) => {
+  return (
+    <div className="pdf-content" style={{ padding: '20px', width: '800px' }}>
+      <h1 style={{ color: '#1e40af', marginBottom: '20px' }}>Auditly Inspection Report</h1>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Receipt #:</strong> {item.receipt_number || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Return Order #:</strong> {item.return_order_number || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Customer:</strong> {item.shipping_info?.shipped_to_person || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Item Description:</strong> {item.item_description || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Brand:</strong> {item.brand_name || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Condition:</strong> {item.overall_condition || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '15px' }}>
+        <strong>Quantity:</strong> {item.return_qty || 'N/A'}
+      </div>
+      <div style={{ marginBottom: '20px' }}>
+        <strong>Address:</strong> {item.shipping_info 
+          ? `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` 
+          : 'N/A'}
+      </div>
+      
+      {item.images?.difference_images?.front && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Front Difference Image</h3>
+          <img src={item.images.difference_images.front} alt="Front Difference" style={{ maxWidth: '100%' }} />
+          <p>Similarity Score: {item.images.similarity_scores.front}</p>
+        </div>
+      )}
+      {item.images?.difference_images?.back && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Back Difference Image</h3>
+          <img src={item.images.difference_images.back} alt="Back Difference" style={{ maxWidth: '100%' }} />
+          <p>Similarity Score: {item.images.similarity_scores.back}</p>
+        </div>
+      )}
+      {item.images?.base_images?.front && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Front Base Image</h3>
+          <img src={item.images.base_images.front} alt="Front Base" style={{ maxWidth: '100%' }} />
+        </div>
+      )}
+      {item.images?.base_images?.back && (
+        <div>
+          <h3>Back Base Image</h3>
+          <img src={item.images.base_images.back} alt="Back Base" style={{ maxWidth: '100%' }} />
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AuditlyInspection = () => {
   const [data, setData] = useState<ReceiptData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ReceiptData | null>(null);
-  const [selectedRecords, setSelectedRecords] = useState<Record<string, boolean>>({});
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     receiptNumber: "",
     returnOrderNumber: "",
     itemDescription: "",
     productCondition: "",
   });
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -1146,9 +1212,8 @@ const AuditlyInspection = () => {
     XLSX.utils.book_append_sheet(wb, ws, "Inspection Data");
     
     const colWidths = [
-      { wch: 15 },  { wch: 18 },  { wch: 20 },  
-      { wch: 30 },  { wch: 15 },  { wch: 15 },
-      { wch: 10 },  { wch: 40 },  { wch: 20 }
+      { wch: 15 }, { wch: 18 }, { wch: 20 }, { wch: 30 }, 
+      { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 40 }, { wch: 20 }
     ];
     ws['!cols'] = colWidths;
 
@@ -1157,148 +1222,49 @@ const AuditlyInspection = () => {
     saveAs(blob, "inspection_data.xlsx");
   };
 
-  const toggleRecordSelection = (receiptNumber: string) => {
-    setSelectedRecords(prev => ({
-      ...prev,
-      [receiptNumber]: !prev[receiptNumber]
-    }));
-  };
-
-  const exportSelectedToPDF = async (includeImages = false) => {
-    const selectedItems = data.filter(item => selectedRecords[item.receipt_number]);
-    
-    if (selectedItems.length === 0) {
-      alert('Please select at least one record to export');
+  const exportToPDF = async () => {
+    if (selectedItems.size === 0) {
+      alert('Please select at least one record to export as PDF');
       return;
     }
 
-    for (const item of selectedItems) {
-      const doc = new jsPDF();
+    const pdfPromises = Array.from(selectedItems).map(async (receiptNumber) => {
+      const item = data.find(d => d.receipt_number === receiptNumber);
+      if (!item) return;
+
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      document.body.appendChild(tempContainer);
+
+      const pdfContent = <PDFContent item={item} />;
+      const root = createRoot(tempContainer);
+      root.render(pdfContent);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const canvas = await html2canvas(tempContainer);
+      const imgData = canvas.toDataURL('image/png');
       
-      // Add basic info
-      doc.setFontSize(16);
-      doc.setTextColor(40, 40, 40);
-      doc.text(`Auditly Inspection Report - ${item.receipt_number}`, 14, 20);
-      
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-      
-      // Add inspection details
-      const details = [
-        ['Receipt Number:', item.receipt_number || 'N/A'],
-        ['Return Order:', item.return_order_number || 'N/A'],
-        ['Customer:', item.shipping_info?.shipped_to_person || 'N/A'],
-        ['Item Description:', item.item_description || 'N/A'],
-        ['Brand:', item.brand_name || 'N/A'],
-        ['Condition:', item.overall_condition || 'N/A'],
-        ['Quantity:', item.return_qty?.toString() || 'N/A'],
-        ['Address:', item.shipping_info ? 
-          `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` : 
-          'N/A']
-      ];
-      
-      (doc as any).autoTable({
-        startY: 40,
-        head: [['Field', 'Value']],
-        body: details,
-        theme: 'grid',
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3
-        }
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
       });
-
-      // Add images if requested and available
-      if (includeImages && item.images) {
-        let yPos = (doc as any).lastAutoTable.finalY + 15;
-        
-        // Add difference images
-        if (item.images.difference_images) {
-          doc.setFontSize(12);
-          doc.setTextColor(40, 40, 40);
-          doc.text('Difference Images:', 14, yPos);
-          yPos += 10;
-          
-          if (item.images.difference_images.front) {
-            try {
-              const imgData = await getImageData(item.images.difference_images.front);
-              doc.addImage(imgData, 'JPEG', 15, yPos, 80, 60);
-              doc.text('Front View', 15, yPos + 65);
-            } catch (e) {
-              console.error('Error loading front image:', e);
-            }
-          }
-          
-          if (item.images.difference_images.back) {
-            try {
-              const imgData = await getImageData(item.images.difference_images.back);
-              doc.addImage(imgData, 'JPEG', 105, yPos, 80, 60);
-              doc.text('Back View', 105, yPos + 65);
-              yPos += 80;
-            } catch (e) {
-              console.error('Error loading back image:', e);
-            }
-          }
-        }
-        
-        // Add base images if available
-        if (item.images.base_images) {
-          doc.setFontSize(12);
-          doc.setTextColor(40, 40, 40);
-          doc.text('Base Images:', 14, yPos);
-          yPos += 10;
-          
-          if (item.images.base_images.front) {
-            try {
-              const imgData = await getImageData(item.images.base_images.front);
-              doc.addImage(imgData, 'JPEG', 15, yPos, 80, 60);
-              doc.text('Front View', 15, yPos + 65);
-            } catch (e) {
-              console.error('Error loading front base image:', e);
-            }
-          }
-          
-          if (item.images.base_images.back) {
-            try {
-              const imgData = await getImageData(item.images.base_images.back);
-              doc.addImage(imgData, 'JPEG', 105, yPos, 80, 60);
-              doc.text('Back View', 105, yPos + 65);
-            } catch (e) {
-              console.error('Error loading back base image:', e);
-            }
-          }
-        }
-      }
       
-      // Save the PDF
-      doc.save(`Auditly_Report_${item.receipt_number || 'inspection'}.pdf`);
-    }
-  };
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      root.unmount();
+      document.body.removeChild(tempContainer);
 
-  const getImageData = (url: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL('image/jpeg'));
-        } else {
-          reject(new Error('Could not create canvas context'));
-        }
-      };
-      img.onerror = () => reject(new Error('Image loading failed'));
-      img.src = url;
+      pdf.save(`Auditly_Report_${item.receipt_number}.pdf`);
     });
+
+    await Promise.all(pdfPromises);
   };
 
   const clearFilters = () => {
@@ -1308,11 +1274,18 @@ const AuditlyInspection = () => {
       itemDescription: "",
       productCondition: "",
     });
-    setSelectedRecords({});
   };
 
-  const hasImages = (item: ReceiptData) => {
-    return item.images?.difference_images?.front || item.images?.difference_images?.back;
+  const toggleItemSelection = (receiptNumber: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(receiptNumber)) {
+        newSet.delete(receiptNumber);
+      } else {
+        newSet.add(receiptNumber);
+      }
+      return newSet;
+    });
   };
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
@@ -1320,6 +1293,10 @@ const AuditlyInspection = () => {
       {children}
     </th>
   );
+
+  const hasImages = (item: ReceiptData) => {
+    return item.images?.difference_images?.front || item.images?.difference_images?.back;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -1413,34 +1390,16 @@ const AuditlyInspection = () => {
                     </button>
                     <button
                       onClick={() => exportToXLSX(filteredData)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
                     >
-                      <FileText className="w-4 h-4" />
-                      Export to Excel
+                      Export to XLSX
                     </button>
                     <button
-                      onClick={() => exportSelectedToPDF(false)}
-                      disabled={Object.keys(selectedRecords).length === 0}
-                      className={`px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${
-                        Object.keys(selectedRecords).length === 0 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
-                      }`}
+                      onClick={exportToPDF}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      disabled={selectedItems.size === 0}
                     >
-                      <Download className="w-4 h-4" />
-                      Export PDF
-                    </button>
-                    <button
-                      onClick={() => exportSelectedToPDF(true)}
-                      disabled={Object.keys(selectedRecords).length === 0}
-                      className={`px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${
-                        Object.keys(selectedRecords).length === 0 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
-                      }`}
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      Export with Images
+                      Export to PDF
                     </button>
                   </div>
                 </div>
@@ -1507,19 +1466,16 @@ const AuditlyInspection = () => {
                         <thead className="sticky top-0 bg-white z-10">
                           <tr>
                             <TableHeader>
-                              <input 
-                                type="checkbox" 
-                                checked={Object.keys(selectedRecords).length > 0 && 
-                                         Object.keys(selectedRecords).length === filteredData.length}
+                              <input
+                                type="checkbox"
                                 onChange={(e) => {
-                                  const newSelection: Record<string, boolean> = {};
                                   if (e.target.checked) {
-                                    filteredData.forEach(item => {
-                                      newSelection[item.receipt_number] = true;
-                                    });
+                                    setSelectedItems(new Set(filteredData.map(item => item.receipt_number)));
+                                  } else {
+                                    setSelectedItems(new Set());
                                   }
-                                  setSelectedRecords(newSelection);
                                 }}
+                                checked={selectedItems.size === filteredData.length && filteredData.length > 0}
                               />
                             </TableHeader>
                             <TableHeader>Receipt #</TableHeader>
@@ -1569,15 +1525,16 @@ const AuditlyInspection = () => {
                                   initial="hidden"
                                   animate="visible"
                                   exit="hidden"
-                                  className="hover:bg-blue-50/50 transition-colors duration-200"
+                                  className={`hover:bg-blue-50/50 transition-colors duration-200 ${
+                                    selectedItems.has(item.receipt_number) ? 'bg-blue-50' : ''
+                                  }`}
                                   whileHover={{ scale: 1.002 }}
                                 >
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    <input 
-                                      type="checkbox" 
-                                      checked={!!selectedRecords[item.receipt_number]}
-                                      onChange={() => toggleRecordSelection(item.receipt_number)}
-                                      className="h-4 w-4 text-blue-600 rounded"
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedItems.has(item.receipt_number)}
+                                      onChange={() => toggleItemSelection(item.receipt_number)}
                                     />
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
@@ -1643,7 +1600,6 @@ const AuditlyInspection = () => {
         </AnimatePresence>
       </div>
 
-      {/* Image Viewer Modal */}
       {selectedItem && selectedItem.images && (
         <ImageViewerModal 
           images={selectedItem.images} 
