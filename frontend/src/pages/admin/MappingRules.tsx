@@ -504,6 +504,8 @@
 
 // export default MappingRules;
 
+
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -537,6 +539,10 @@ interface DatasetOption {
   name: string;
 }
 
+interface PowerBIColumnMapping {
+  [key: string]: string; // Format: {"Table[Column1]": "actual_column_name"}
+}
+
 const MappingRules: React.FC = () => {
   const [tables, setTables] = useState<TableData[]>([
     { name: "item" },
@@ -566,6 +572,7 @@ const MappingRules: React.FC = () => {
   });
   const [datasets, setDatasets] = useState<DatasetOption[]>([]);
   const [powerBIColumns, setPowerBIColumns] = useState<string[]>([]);
+  const [powerBIColumnMappings, setPowerBIColumnMappings] = useState<PowerBIColumnMapping>({});
 
   // Get user ID from localStorage on component mount
   useEffect(() => {
@@ -633,6 +640,7 @@ const MappingRules: React.FC = () => {
       // Create mapping in the format {"brand_id": "brand_id", "category": "category", ...}
       const mappingObject = mappingRows.reduce((acc, row) => {
         if (row.destination) {
+          // Use the actual column name from the mapping
           acc[row.source] = row.destination;
         }
         return acc;
@@ -712,23 +720,24 @@ const MappingRules: React.FC = () => {
         power_bi_table_name: powerBIData.table_name
       });
 
-      // The API returns the columns as an object where keys are column names
-      // and values are the first row's values for those columns
-      const columnData = response.data;
+      // The API returns column mappings in format {"Table[Column1]": "actual_column_name"}
+      const columnMappings = response.data;
+      setPowerBIColumnMappings(columnMappings);
       
-      // Extract column names from the response
-      const columnNames = Object.keys(columnData);
-      setPowerBIColumns(columnNames);
+      // Extract the actual column names from the values
+      const actualColumnNames = Object.values(columnMappings);
+      setPowerBIColumns(actualColumnNames);
       
-      // Auto-map columns where database column names match Power BI column names
+      // Auto-map columns where database column names match Power BI column names (case-insensitive)
       const autoMappedRows = mappingRows.map(row => {
-        const matchingColumnIndex = columnNames.findIndex(col => 
-          col.toLowerCase() === row.source.toLowerCase()
+        // Find matching Power BI column by actual name
+        const matchingEntry = Object.entries(columnMappings).find(([_, actualName]) => 
+          actualName.toLowerCase() === row.source.toLowerCase()
         );
         
         return {
           ...row,
-          destination: matchingColumnIndex >= 0 ? columnNames[matchingColumnIndex] : ""
+          destination: matchingEntry ? columnMappings[matchingEntry[0]] : ""
         };
       });
       
