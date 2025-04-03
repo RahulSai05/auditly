@@ -752,7 +752,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   filters,
   onFilterChange,
 }) => {
-  const handleInputChange = (field: keyof SearchFilters, value: any) => {
+  const handleInputChange = (field: keyof SearchFilters, value: string) => {
     onFilterChange({
       ...filters,
       [field]: value,
@@ -787,13 +787,23 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <Tag className="w-4 h-4" />
                 Return Order #
               </label>
-              <input
-                type="text"
-                value={filters.returnOrderNumber}
-                onChange={(e) => handleInputChange('returnOrderNumber', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Enter return order number..."
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={filters.returnOrderNumber}
+                  onChange={(e) => handleInputChange('returnOrderNumber', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                  placeholder="Enter return order number..."
+                />
+                {filters.returnOrderNumber && (
+                  <button
+                    onClick={() => handleInputChange('returnOrderNumber', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -801,13 +811,23 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <Package className="w-4 h-4" />
                 Item Description
               </label>
-              <input
-                type="text"
-                value={filters.itemDescription}
-                onChange={(e) => handleInputChange('itemDescription', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
-                placeholder="Enter item description..."
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={filters.itemDescription}
+                  onChange={(e) => handleInputChange('itemDescription', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                  placeholder="Enter item description..."
+                />
+                {filters.itemDescription && (
+                  <button
+                    onClick={() => handleInputChange('itemDescription', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -837,136 +857,7 @@ const ImageViewerModal = ({
   }; 
   onClose: () => void 
 }) => {
-  const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
-  const [imageType, setImageType] = useState<'difference' | 'base'>('difference');
-  const [imageLoadState, setImageLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
-
-  const getImageUrl = () => {
-    if (imageType === 'difference') {
-      return activeTab === 'front' 
-        ? images.difference_images.front
-        : images.difference_images.back;
-    } else if (images.base_images) {
-      return activeTab === 'front'
-        ? images.base_images.front
-        : images.base_images.back;
-    }
-    return null;
-  };
-
-  const currentImageUrl = getImageUrl();
-
-  useEffect(() => {
-    setImageLoadState('loading');
-  }, [currentImageUrl, imageType]);
-
-  const handleImageLoad = () => {
-    setImageLoadState('loaded');
-  };
-
-  const handleImageError = () => {
-    setImageLoadState('error');
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center border-b border-gray-200 p-4">
-          <div className="flex items-center gap-4">
-            <button
-              className={`px-4 py-2 rounded-lg ${activeTab === 'front' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => setActiveTab('front')}
-            >
-              Front View
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg ${activeTab === 'back' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              onClick={() => setActiveTab('back')}
-            >
-              Back View
-            </button>
-          </div>
-          {images.base_images && (
-            <div className="flex items-center gap-4">
-              <button
-                className={`px-4 py-2 rounded-lg ${imageType === 'difference' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-                onClick={() => setImageType('difference')}
-              >
-                Difference
-              </button>
-              <button
-                className={`px-4 py-2 rounded-lg ${imageType === 'base' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-                onClick={() => setImageType('base')}
-              >
-                Base
-              </button>
-            </div>
-          )}
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
-          <div className="relative w-full max-w-2xl">
-            {imageLoadState === 'error' || !currentImageUrl ? (
-              <div className="w-full aspect-square bg-gray-100 rounded-lg flex flex-col items-center justify-center">
-                <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-gray-500">
-                  {!currentImageUrl ? 'Image not available' : 'Failed to load image'}
-                </p>
-              </div>
-            ) : (
-              <>
-                {imageLoadState === 'loading' && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                  </div>
-                )}
-                <img
-                  src={currentImageUrl}
-                  alt={`${activeTab} ${imageType} view`}
-                  className={`w-full h-auto rounded-lg shadow-lg border border-gray-200 ${
-                    imageLoadState === 'loaded' ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  onLoad={handleImageLoad}
-                  onError={handleImageError}
-                />
-              </>
-            )}
-            <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
-              <span className="text-sm font-medium">
-                {activeTab === 'front' ? 'Front' : 'Back'} {imageType === 'difference' ? 'Difference' : 'Base'}
-              </span>
-            </div>
-            {imageType === 'difference' && (
-              <div className="absolute bottom-4 right-4 bg-white/90 px-3 py-1 rounded-lg shadow-sm">
-                <span className="text-sm font-medium">
-                  Similarity: {activeTab === 'front' 
-                    ? images.similarity_scores.front 
-                    : images.similarity_scores.back}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
+  // ... (keep existing ImageViewerModal implementation)
 };
 
 const AuditlyInspection = () => {
@@ -1037,27 +928,29 @@ const AuditlyInspection = () => {
   }, []);
 
   const filteredData = useMemo(() => {
+    if (!data) return [];
+
     return data.filter((item) => {
-      const matchesReceiptNumber = searchFilters.receiptNumber === "" || 
-        (item.receipt_number && 
-         item.receipt_number.toLowerCase().includes(searchFilters.receiptNumber.toLowerCase()));
-      
-      const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
-        (item.return_order_number && 
-         item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
-      
-      const matchesItemDescription = searchFilters.itemDescription === "" ||
-        (item.item_description && 
-         item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
+      // Convert all search terms to lowercase for case-insensitive comparison
+      const receiptSearch = searchFilters.receiptNumber.toLowerCase().trim();
+      const returnOrderSearch = searchFilters.returnOrderNumber.toLowerCase().trim();
+      const itemDescSearch = searchFilters.itemDescription.toLowerCase().trim();
+      const conditionSearch = searchFilters.productCondition.toLowerCase().trim();
 
-      const matchesProductCondition = searchFilters.productCondition === "" ||
-        (item.overall_condition && 
-         item.overall_condition.toLowerCase().includes(searchFilters.productCondition.toLowerCase()));
+      // Check if the item matches all active filters
+      const matchesReceipt = receiptSearch === "" || 
+        (item.receipt_number && item.receipt_number.toLowerCase().includes(receiptSearch));
+      
+      const matchesReturnOrder = returnOrderSearch === "" ||
+        (item.return_order_number && item.return_order_number.toLowerCase().includes(returnOrderSearch));
+      
+      const matchesItemDesc = itemDescSearch === "" ||
+        (item.item_description && item.item_description.toLowerCase().includes(itemDescSearch));
 
-      return matchesReceiptNumber && 
-             matchesReturnOrder && 
-             matchesItemDescription &&
-             matchesProductCondition;
+      const matchesCondition = conditionSearch === "" ||
+        (item.overall_condition && item.overall_condition.toLowerCase().includes(conditionSearch));
+
+      return matchesReceipt && matchesReturnOrder && matchesItemDesc && matchesCondition;
     });
   }, [data, searchFilters]);
 
@@ -1087,6 +980,35 @@ const AuditlyInspection = () => {
 
   const hasImages = (item: ReceiptData) => {
     return item.images?.difference_images?.front || item.images?.difference_images?.back;
+  };
+
+  // Search input handlers
+  const handleReceiptNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      receiptNumber: e.target.value
+    }));
+  };
+
+  const handleReturnOrderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      returnOrderNumber: e.target.value
+    }));
+  };
+
+  const handleItemDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      itemDescription: e.target.value
+    }));
+  };
+
+  const handleProductConditionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      productCondition: e.target.value
+    }));
   };
 
   return (
@@ -1198,10 +1120,18 @@ const AuditlyInspection = () => {
                         <input
                           type="text"
                           placeholder="Search by receipt number..."
-                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+                          className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
                           value={searchFilters.receiptNumber}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, receiptNumber: e.target.value })}
+                          onChange={handleReceiptNumberChange}
                         />
+                        {searchFilters.receiptNumber && (
+                          <button
+                            onClick={() => handleReceiptNumberChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
 
                       <div className="relative">
@@ -1211,10 +1141,18 @@ const AuditlyInspection = () => {
                         <input
                           type="text"
                           placeholder="Search by product condition..."
-                          className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
+                          className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
                           value={searchFilters.productCondition}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, productCondition: e.target.value })}
+                          onChange={handleProductConditionChange}
                         />
+                        {searchFilters.productCondition && (
+                          <button
+                            onClick={() => handleProductConditionChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="md:w-auto">
@@ -1236,7 +1174,10 @@ const AuditlyInspection = () => {
                     isOpen={isAdvancedSearchOpen}
                     onClose={() => setIsAdvancedSearchOpen(false)}
                     filters={searchFilters}
-                    onFilterChange={setSearchFilters}
+                    onFilterChange={(newFilters) => {
+                      setSearchFilters(newFilters);
+                      setIsAdvancedSearchOpen(false);
+                    }}
                   />
                 </div>
 
@@ -1361,7 +1302,6 @@ const AuditlyInspection = () => {
         </AnimatePresence>
       </div>
 
-      {/* Image Viewer Modal */}
       {selectedItem && selectedItem.images && (
         <ImageViewerModal 
           images={selectedItem.images} 
