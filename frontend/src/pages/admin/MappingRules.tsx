@@ -505,11 +505,10 @@
 // export default MappingRules;
 
 
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Table, Upload, Save, Edit, Loader2, CheckCircle2, AlertCircle, ArrowRight, X } from "lucide-react";
+import { Table, Upload, Save, Edit, Loader2, CheckCircle2, AlertCircle, ArrowRight, X, RefreshCw } from "lucide-react";
 
 interface TableData {
   name: string;
@@ -540,7 +539,7 @@ interface DatasetOption {
 }
 
 interface PowerBIColumnMapping {
-  [key: string]: string; // Format: {"Table[Column1]": "actual_column_name"}
+  [key: string]: string;
 }
 
 const MappingRules: React.FC = () => {
@@ -573,8 +572,8 @@ const MappingRules: React.FC = () => {
   const [datasets, setDatasets] = useState<DatasetOption[]>([]);
   const [powerBIColumns, setPowerBIColumns] = useState<string[]>([]);
   const [powerBIColumnMappings, setPowerBIColumnMappings] = useState<PowerBIColumnMapping>({});
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // Get user ID from localStorage on component mount
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
@@ -584,7 +583,6 @@ const MappingRules: React.FC = () => {
     }
   }, []);
 
-  // Fetch columns when a table is selected
   useEffect(() => {
     if (!selectedTable) return;
     
@@ -637,10 +635,8 @@ const MappingRules: React.FC = () => {
     setNotification({ type: '', message: '' });
 
     try {
-      // Create mapping in the format {"brand_id": "brand_id", "category": "category", ...}
       const mappingObject = mappingRows.reduce((acc, row) => {
         if (row.destination) {
-          // Use the actual column name from the mapping
           acc[row.source] = row.destination;
         }
         return acc;
@@ -720,17 +716,13 @@ const MappingRules: React.FC = () => {
         power_bi_table_name: powerBIData.table_name
       });
 
-      // The API returns column mappings in format {"Table[Column1]": "actual_column_name"}
       const columnMappings = response.data;
       setPowerBIColumnMappings(columnMappings);
       
-      // Extract the actual column names from the values
       const actualColumnNames = Object.values(columnMappings);
       setPowerBIColumns(actualColumnNames);
       
-      // Auto-map columns where database column names match Power BI column names (case-insensitive)
       const autoMappedRows = mappingRows.map(row => {
-        // Find matching Power BI column by actual name
         const matchingEntry = Object.entries(columnMappings).find(([_, actualName]) => 
           actualName.toLowerCase() === row.source.toLowerCase()
         );
@@ -751,10 +743,40 @@ const MappingRules: React.FC = () => {
     }
   };
 
+  const handleSyncToPowerBI = async () => {
+    if (!userId) {
+      setNotification({ type: 'error', message: "User not authenticated. Please login again." });
+      return;
+    }
+
+    if (!powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name || !selectedTable) {
+      setNotification({ type: 'error', message: "Please complete all Power BI configuration steps first." });
+      return;
+    }
+
+    setIsSyncing(true);
+    setNotification({ type: '', message: '' });
+
+    try {
+      const response = await axios.post("https://auditlyai.com/api/powerbi/get-table-data", {
+        workspace_id: powerBIData.workspace_id,
+        dataset_id: powerBIData.dataset_id,
+        sql_table_name: selectedTable,
+        user_id: userId,
+        power_bi_table_name: powerBIData.table_name
+      });
+
+      setNotification({ type: 'success', message: "Data synced to Power BI successfully!" });
+    } catch (error) {
+      setNotification({ type: 'error', message: "Failed to sync data to Power BI. Please try again." });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -790,24 +812,40 @@ const MappingRules: React.FC = () => {
           </motion.p>
         </motion.div>
 
-        {/* Table Mapping Section */}
         <motion.div
           initial="hidden"
           animate="visible"
           className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 10 }}
-              className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 10 }}
+                className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+              >
+                <Upload className="w-6 h-6 text-blue-600" />
+              </motion.div>
+              <h2 className="text-xl font-bold text-gray-800">Table Mapping</h2>
+            </div>
+            <button
+              onClick={handleSyncToPowerBI}
+              disabled={isSyncing || !powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name || !selectedTable}
+              className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
+                isSyncing || !powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name || !selectedTable
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              }`}
             >
-              <Upload className="w-6 h-6 text-blue-600" />
-            </motion.div>
-            <h2 className="text-xl font-bold text-gray-800">Table Mapping</h2>
+              {isSyncing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-5 h-5" />
+              )}
+              Sync Data to Power BI
+            </button>
           </div>
 
           <div className="space-y-6">
-            {/* Table Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Database Table
@@ -833,14 +871,12 @@ const MappingRules: React.FC = () => {
               </div>
             </div>
 
-            {/* Loading State */}
             {isLoading.columns && (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               </div>
             )}
 
-            {/* Mapping Table */}
             {columns.length > 0 && !isLoading.columns && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -902,7 +938,6 @@ const MappingRules: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Date Filter Section */}
                 {powerBIColumns.length > 0 && (
                   <div className="mt-6 space-y-4">
                     <div>
@@ -980,14 +1015,12 @@ const MappingRules: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Empty State */}
             {!isLoading.columns && !columns.length && selectedTable && (
               <div className="text-center py-8 text-gray-500">
                 No columns found for the selected table.
               </div>
             )}
 
-            {/* Initial State */}
             {!selectedTable && !isLoading.columns && (
               <div className="text-center py-8 text-gray-500">
                 Please select a table to view its columns and configure mappings.
@@ -996,7 +1029,6 @@ const MappingRules: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Power BI Data Fetch Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1106,7 +1138,6 @@ const MappingRules: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Notification */}
         <AnimatePresence mode="wait">
           {notification.message && (
             <motion.div
