@@ -904,7 +904,7 @@ def _gen_otp():
 
 # If you did not request this password reset, please contact our support team immediately at support@auditly.com or visit our Help Center: https://www.auditlyai.com/help-center.
 
-# Best regards,
+# Best regards,f
 # The Auditly Team
 # """
 #                 send_email(secret_data["from_email_address"], secret_data["from_email_password"], user_data.email, "Reset Your Auditly Password", email_body.format(otp=str(otp)))            
@@ -2124,33 +2124,6 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="https://auditlyai.com/auth/success/error?message=auth_failed")
 
 
-@app.get("/api/powerbi/datasets")
-async def get_powerbi_datasets(db: Session = Depends(get_db)):
-    """
-    Fetch all datasets in a Power BI workspace.
-    """
-            # Hardcoded Workspace ID
-    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
-    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-
-
-    headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
-
-    try:
-        response = requests.get(url, headers=headers)
-        print(f"API URL: {url}")
-        print(f"Response Status Code: {response.status_code}")
-        print(f"Response JSON: {response.json()}")  # Debugging output
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 class GetPowerBITableColumns(BaseModel):
     workspace_id: str
@@ -2315,52 +2288,29 @@ async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depe
     }
 
 
+@app.get("api/get-powerbi-dataset-ids")
+async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of the Power BI workspace to query."), db: Session = Depends(get_db)):
+    """
+    Fetch all dataset IDs in the specified Power BI workspace.
+    """
+    access_token = db.query(PowerBiUser).first().access_token  # Ensure you have a model to fetch this or adapt as needed
 
-@app.get("/api/powerbi/workspace-data")
-async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
-    """
-    Fetch all datasets and their tables from a Power BI workspace.
-    """
-    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
-    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-   
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
-
-    # Step 1: Get all datasets in the workspace
-    datasets_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
+    
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets"
+    
     try:
-        datasets_response = requests.get(datasets_url, headers=headers)
-        datasets_response.raise_for_status()
-        datasets_data = datasets_response.json().get("value", [])
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # This will raise an exception for HTTP error codes
+        datasets = response.json().get('value', [])
+        dataset_ids = [dataset['id'] for dataset in datasets]  # Extract only the IDs
+        return {"dataset_ids": dataset_ids}
     except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching datasets: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # Step 2: Get tables for each dataset
-    all_data = []
-    for dataset in datasets_data:
-        dataset_id = dataset["id"]
-        dataset_name = dataset["name"]
-
-        tables_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{dataset_id}/tables"
-        try:
-            tables_response = requests.get(tables_url, headers=headers)
-            tables_response.raise_for_status()
-            tables_data = tables_response.json().get("value", [])
-        except requests.exceptions.RequestException:
-            tables_data = []  # If tables API fails, return an empty list
-
-        # Step 3: Organize Data
-        dataset_info = {
-            "dataset_id": dataset_id,
-            "dataset_name": dataset_name,
-            "tables": [{"table_name": table["name"]} for table in tables_data]
-        }
-        all_data.append(dataset_info)
-
-    return {"workspace_id": WORKSPACE_ID, "datasets": all_data}
 
 
 class GetPowerBITableData(BaseModel):
