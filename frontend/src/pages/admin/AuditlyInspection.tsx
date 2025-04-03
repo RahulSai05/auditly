@@ -1026,27 +1026,29 @@ const AuditlyInspection = () => {
   }, []);
 
   const filteredData = useMemo(() => {
-  return data.filter((item) => {
-    // Exact match for receipt number (case sensitive)
-    const matchesReceiptNumber = searchFilters.receiptNumber === "" || 
-      item.receipt_number === searchFilters.receiptNumber;
-    
-    // Partial matching for other filters (case insensitive)
-    const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
-      (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
-    
-    const matchesItemDescription = searchFilters.itemDescription === "" ||
-      (item.item_description && item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
+    // If receipt number is specified, do exact matching only for that field
+    if (searchFilters.receiptNumber.trim() !== "") {
+      return data.filter(item => 
+        item.receipt_number === searchFilters.receiptNumber
+      );
+    }
 
-    const matchesProductCondition = searchFilters.productCondition === "" ||
-      (item.overall_condition && item.overall_condition.toLowerCase().includes(searchFilters.productCondition.toLowerCase()));
+    // Otherwise, apply the other filters with partial matching
+    return data.filter((item) => {
+      const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
+        (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
+      
+      const matchesItemDescription = searchFilters.itemDescription === "" ||
+        (item.item_description && item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
 
-    return matchesReceiptNumber && 
-           matchesReturnOrder && 
-           matchesItemDescription &&
-           matchesProductCondition;
-  });
-}, [data, searchFilters]);
+      const matchesProductCondition = searchFilters.productCondition === "" ||
+        (item.overall_condition && item.overall_condition.toLowerCase().includes(searchFilters.productCondition.toLowerCase()));
+
+      return matchesReturnOrder && 
+             matchesItemDescription &&
+             matchesProductCondition;
+    });
+  }, [data, searchFilters]);
 
   const exportToXLSX = (data: ReceiptData[]) => {
     const ws = XLSX.utils.json_to_sheet(data);
