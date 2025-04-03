@@ -1026,27 +1026,27 @@ const AuditlyInspection = () => {
   }, []);
 
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      // For receipt number, do an exact match instead of includes()
-      const matchesReceiptNumber = searchFilters.receiptNumber === "" || 
-        (item.receipt_number && item.receipt_number === searchFilters.receiptNumber);
-      
-      // For other filters, keep the partial matching
-      const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
-        (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
-      
-      const matchesItemDescription = searchFilters.itemDescription === "" ||
-        (item.item_description && item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
+  return data.filter((item) => {
+    // Exact match for receipt number (case sensitive)
+    const matchesReceiptNumber = searchFilters.receiptNumber === "" || 
+      item.receipt_number === searchFilters.receiptNumber;
+    
+    // Partial matching for other filters (case insensitive)
+    const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
+      (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
+    
+    const matchesItemDescription = searchFilters.itemDescription === "" ||
+      (item.item_description && item.item_description.toLowerCase().includes(searchFilters.itemDescription.toLowerCase()));
 
-      const matchesProductCondition = searchFilters.productCondition === "" ||
-        (item.overall_condition && item.overall_condition.toLowerCase().includes(searchFilters.productCondition.toLowerCase()));
+    const matchesProductCondition = searchFilters.productCondition === "" ||
+      (item.overall_condition && item.overall_condition.toLowerCase().includes(searchFilters.productCondition.toLowerCase()));
 
-      return matchesReceiptNumber && 
-             matchesReturnOrder && 
-             matchesItemDescription &&
-             matchesProductCondition;
-    });
-  }, [data, searchFilters]);
+    return matchesReceiptNumber && 
+           matchesReturnOrder && 
+           matchesItemDescription &&
+           matchesProductCondition;
+  });
+}, [data, searchFilters]);
 
   const exportToXLSX = (data: ReceiptData[]) => {
     const ws = XLSX.utils.json_to_sheet(data);
