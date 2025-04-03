@@ -678,7 +678,6 @@
 // export default AuditlyInspection;
 
 
-
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { 
@@ -746,6 +745,79 @@ interface AdvancedSearchProps {
   onFilterChange: (filters: SearchFilters) => void;
 }
 
+const ImageViewerModal = ({ 
+  images, 
+  onClose 
+}: { 
+  images: {
+    difference_images: {
+      front: string;
+      back: string;
+    };
+    similarity_scores: {
+      front: string;
+      back: string;
+      average: string;
+    };
+    base_images?: {
+      front: string;
+      back: string;
+    };
+  }; 
+  onClose: () => void 
+}) => {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-4xl w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold">Image Comparison</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Front Images */}
+          <div>
+            <h4 className="text-lg font-semibold mb-2">Front View</h4>
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src={images.difference_images.front}
+                alt="Front View"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <p className="mt-2 text-sm text-gray-600">
+              Similarity Score: {images.similarity_scores.front}
+            </p>
+          </div>
+          {/* Back Images */}
+          <div>
+            <h4 className="text-lg font-semibold mb-2">Back View</h4>
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src={images.difference_images.back}
+                alt="Back View"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <p className="mt-2 text-sm text-gray-600">
+              Similarity Score: {images.similarity_scores.back}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <p className="text-sm text-gray-600">
+            Average Similarity Score: {images.similarity_scores.average}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   isOpen,
   onClose,
@@ -753,10 +825,11 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   onFilterChange,
 }) => {
   const handleInputChange = (field: keyof SearchFilters, value: string) => {
-    onFilterChange({
+    const newFilters = {
       ...filters,
       [field]: value,
-    });
+    };
+    onFilterChange(newFilters);
   };
 
   return (
@@ -836,30 +909,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   );
 };
 
-const ImageViewerModal = ({ 
-  images, 
-  onClose 
-}: { 
-  images: {
-    difference_images: {
-      front: string;
-      back: string;
-    };
-    similarity_scores: {
-      front: string;
-      back: string;
-      average: string;
-    };
-    base_images?: {
-      front: string;
-      back: string;
-    };
-  }; 
-  onClose: () => void 
-}) => {
-  // ... (keep existing ImageViewerModal implementation)
-};
-
 const AuditlyInspection = () => {
   const [data, setData] = useState<ReceiptData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -937,19 +986,20 @@ const AuditlyInspection = () => {
       const itemDescSearch = searchFilters.itemDescription.toLowerCase().trim();
       const conditionSearch = searchFilters.productCondition.toLowerCase().trim();
 
-      // Check if the item matches all active filters
-      const matchesReceipt = receiptSearch === "" || 
-        (item.receipt_number && item.receipt_number.toLowerCase().includes(receiptSearch));
-      
-      const matchesReturnOrder = returnOrderSearch === "" ||
-        (item.return_order_number && item.return_order_number.toLowerCase().includes(returnOrderSearch));
-      
-      const matchesItemDesc = itemDescSearch === "" ||
-        (item.item_description && item.item_description.toLowerCase().includes(itemDescSearch));
+      // Helper function to safely check if a string includes a search term
+      const safeIncludes = (value: string | null | undefined, searchTerm: string) => {
+        if (!searchTerm) return true; // If no search term, include all
+        if (!value) return false; // If no value to search in, exclude
+        return value.toLowerCase().includes(searchTerm);
+      };
 
-      const matchesCondition = conditionSearch === "" ||
-        (item.overall_condition && item.overall_condition.toLowerCase().includes(conditionSearch));
+      // Check each filter condition
+      const matchesReceipt = safeIncludes(item.receipt_number, receiptSearch);
+      const matchesReturnOrder = safeIncludes(item.return_order_number, returnOrderSearch);
+      const matchesItemDesc = safeIncludes(item.item_description, itemDescSearch);
+      const matchesCondition = safeIncludes(item.overall_condition, conditionSearch);
 
+      // All conditions must be true for the item to be included
       return matchesReceipt && matchesReturnOrder && matchesItemDesc && matchesCondition;
     });
   }, [data, searchFilters]);
@@ -980,35 +1030,6 @@ const AuditlyInspection = () => {
 
   const hasImages = (item: ReceiptData) => {
     return item.images?.difference_images?.front || item.images?.difference_images?.back;
-  };
-
-  // Search input handlers
-  const handleReceiptNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      receiptNumber: e.target.value
-    }));
-  };
-
-  const handleReturnOrderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      returnOrderNumber: e.target.value
-    }));
-  };
-
-  const handleItemDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      itemDescription: e.target.value
-    }));
-  };
-
-  const handleProductConditionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      productCondition: e.target.value
-    }));
   };
 
   return (
@@ -1122,11 +1143,17 @@ const AuditlyInspection = () => {
                           placeholder="Search by receipt number..."
                           className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
                           value={searchFilters.receiptNumber}
-                          onChange={handleReceiptNumberChange}
+                          onChange={(e) => setSearchFilters(prev => ({
+                            ...prev,
+                            receiptNumber: e.target.value
+                          }))}
                         />
                         {searchFilters.receiptNumber && (
                           <button
-                            onClick={() => handleReceiptNumberChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                            onClick={() => setSearchFilters(prev => ({
+                              ...prev,
+                              receiptNumber: ''
+                            }))}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                           >
                             <X className="w-4 h-4" />
@@ -1143,11 +1170,17 @@ const AuditlyInspection = () => {
                           placeholder="Search by product condition..."
                           className="w-full pl-10 pr-10 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
                           value={searchFilters.productCondition}
-                          onChange={handleProductConditionChange}
+                          onChange={(e) => setSearchFilters(prev => ({
+                            ...prev,
+                            productCondition: e.target.value
+                          }))}
                         />
                         {searchFilters.productCondition && (
                           <button
-                            onClick={() => handleProductConditionChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                            onClick={() => setSearchFilters(prev => ({
+                              ...prev,
+                              productCondition: ''
+                            }))}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                           >
                             <X className="w-4 h-4" />
@@ -1174,10 +1207,7 @@ const AuditlyInspection = () => {
                     isOpen={isAdvancedSearchOpen}
                     onClose={() => setIsAdvancedSearchOpen(false)}
                     filters={searchFilters}
-                    onFilterChange={(newFilters) => {
-                      setSearchFilters(newFilters);
-                      setIsAdvancedSearchOpen(false);
-                    }}
+                    onFilterChange={setSearchFilters}
                   />
                 </div>
 
