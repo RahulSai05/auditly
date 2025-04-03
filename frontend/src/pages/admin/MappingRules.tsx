@@ -504,7 +504,6 @@
 
 // export default MappingRules;
 
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -631,10 +630,10 @@ const MappingRules: React.FC = () => {
     setNotification({ type: '', message: '' });
 
     try {
-      // REVERSED MAPPING: Now { "PowerBIField": "DatabaseColumn" }
+      // Create mapping in the format {"brand_id": "brand_id", "category": "category", ...}
       const mappingObject = mappingRows.reduce((acc, row) => {
         if (row.destination) {
-          acc[row.destination] = row.source; // Reversed key-value pair
+          acc[row.source] = row.destination;
         }
         return acc;
       }, {} as Record<string, string>);
@@ -688,7 +687,7 @@ const MappingRules: React.FC = () => {
 
     try {
       const response = await axios.get(`https://auditlyai.com/api/get-powerbi-dataset-ids?workspace_id=${powerBIData.workspace_id}`);
-      setDatasets(response.data.dataset_ids.map((id: string) => ({ id, name: id }))); // Using ID as name since the API only returns IDs
+      setDatasets(response.data.dataset_ids.map((id: string) => ({ id, name: id })));
       setNotification({ type: 'success', message: "Datasets fetched successfully!" });
     } catch (error) {
       setNotification({ type: 'error', message: "Failed to fetch datasets. Please check the workspace ID." });
@@ -697,103 +696,51 @@ const MappingRules: React.FC = () => {
     }
   };
 
-    const handleFetchPowerBIColumns = async () => {
-  if (!powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name) {
-    setNotification({ type: 'error', message: "Please fill all required fields." });
-    return;
-  }
+  const handleFetchPowerBIColumns = async () => {
+    if (!powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name) {
+      setNotification({ type: 'error', message: "Please fill all required fields." });
+      return;
+    }
 
-  setIsLoading(prev => ({...prev, fetchingPowerBIColumns: true}));
-  setNotification({ type: '', message: '' });
+    setIsLoading(prev => ({...prev, fetchingPowerBIColumns: true}));
+    setNotification({ type: '', message: '' });
 
-  try {
-    const response = await axios.post("https://auditlyai.com/api/powerbi/get-powerbi-table-columns", {
-      workspace_id: powerBIData.workspace_id,
-      dataset_id: powerBIData.dataset_id,
-      power_bi_table_name: powerBIData.table_name
-    });
+    try {
+      const response = await axios.post("https://auditlyai.com/api/powerbi/get-powerbi-table-columns", {
+        workspace_id: powerBIData.workspace_id,
+        dataset_id: powerBIData.dataset_id,
+        power_bi_table_name: powerBIData.table_name
+      });
 
-    // The API returns the columns as an object where keys are column names
-    // and values are the first row's values for those columns
-    const columnData = response.data;
-    
-    // Extract both keys and values from the response
-    const columnNames = Object.keys(columnData);
-    const firstRowValues = Object.values(columnData);
-    
-    setPowerBIColumns(columnNames);
-    
-    // Auto-map columns where database column names match Power BI column names
-    const autoMappedRows = mappingRows.map(row => {
-      const matchingColumnIndex = columnNames.findIndex(col => 
-        col.toLowerCase() === row.source.toLowerCase()
-      );
+      // The API returns the columns as an object where keys are column names
+      // and values are the first row's values for those columns
+      const columnData = response.data;
       
-      return {
-        ...row,
-        destination: matchingColumnIndex >= 0 ? columnNames[matchingColumnIndex] : ""
-      };
-    });
-    
-    setMappingRows(autoMappedRows);
-    
-    setNotification({ type: 'success', message: "Power BI columns fetched successfully!" });
-  } catch (error) {
-    setNotification({ type: 'error', message: "Failed to fetch Power BI columns. Please try again." });
-  } finally {
-    setIsLoading(prev => ({...prev, fetchingPowerBIColumns: false});
-  }
-};
-
-const handleSaveMapping = async () => {
-  if (!selectedTable) {
-    setNotification({ type: 'error', message: "Please select a table first." });
-    return;
-  }
-
-  if (!userId) {
-    setNotification({ type: 'error', message: "User not authenticated. Please login again." });
-    return;
-  }
-
-  if (!powerBIData.date_filter_column || !powerBIData.date_filter_value) {
-    setNotification({ type: 'error', message: "Please select a date filter column and value." });
-    return;
-  }
-
-  setIsLoading(prev => ({...prev, saving: true}));
-  setNotification({ type: '', message: '' });
-
-  try {
-    // Create mapping in the format {"brand_id": "brand_id", "category": "category", ...}
-    const mappingObject = mappingRows.reduce((acc, row) => {
-      if (row.destination) {
-        acc[row.source] = row.destination;
-      }
-      return acc;
-    }, {} as Record<string, string>);
-
-    await axios.post("https://auditlyai.com/api/power-bi-sql-mapping/", {
-      sql_table_name: selectedTable,
-      bi_table_name: powerBIData.table_name,
-      date_filter_column_name: powerBIData.date_filter_column,
-      mapping: mappingObject,  // Format: {"db_column": "powerbi_column"}
-      user_id: userId,
-      date_filter_value: powerBIData.date_filter_value
-    });
-
-    setNotification({ type: 'success', message: "Mapping saved successfully!" });
-    setEditMode(false);
-    
-    setTimeout(() => {
-      setNotification({ type: '', message: '' });
-    }, 3000);
-  } catch (error) {
-    setNotification({ type: 'error', message: "Failed to save mapping. Please try again." });
-  } finally {
-    setIsLoading(prev => ({...prev, saving: false});
-  }
-};
+      // Extract column names from the response
+      const columnNames = Object.keys(columnData);
+      setPowerBIColumns(columnNames);
+      
+      // Auto-map columns where database column names match Power BI column names
+      const autoMappedRows = mappingRows.map(row => {
+        const matchingColumnIndex = columnNames.findIndex(col => 
+          col.toLowerCase() === row.source.toLowerCase()
+        );
+        
+        return {
+          ...row,
+          destination: matchingColumnIndex >= 0 ? columnNames[matchingColumnIndex] : ""
+        };
+      });
+      
+      setMappingRows(autoMappedRows);
+      
+      setNotification({ type: 'success', message: "Power BI columns fetched successfully!" });
+    } catch (error) {
+      setNotification({ type: 'error', message: "Failed to fetch Power BI columns. Please try again." });
+    } finally {
+      setIsLoading(prev => ({...prev, fetchingPowerBIColumns: false}));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
