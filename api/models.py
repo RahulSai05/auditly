@@ -198,14 +198,24 @@ class PowerBiUser(Base):
 class PowerBiSqlMapping(Base):
     __tablename__ = 'power_bi_sql_mapping'
     
-    mapping_id = Column(Integer, primary_key=True, autoincrement=True)
+    mapping_id = Column(Integer, unique=True, autoincrement=True)
     mapping = Column(JSON, nullable=True)
     sql_table_name = Column(String(255), nullable=False)
     bi_table_name = Column(String(255), nullable=False)
-    mapping_name = Column(String(255), nullable=False)
+    mapping_name = Column(String(255), primary_key=True, nullable=False)
     date_filter_column_name = Column(String(255), nullable=False)
     date_filter_value = Column((DateTime), nullable=True)
     power_bi_sql_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+
+
+class CronJobTable(Base):
+    __tablename__ = 'cron_job_table'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cron_to_mapping_name = Column(String(255), ForeignKey('power_bi_sql_mapping.mapping_name'))
+    cron_expression = Column(String(255))
+    auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+
 
 
 class TeamEmail(Base):
