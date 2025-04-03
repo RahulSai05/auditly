@@ -2492,22 +2492,8 @@ def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expressio
     power_bi_table_name: name of the Power BI table
     """
     # Define the command to run by cron
-    command = f"""curl -X POST http://localhost:8000/powerbi/get-table-data \\
-      -H "accept: application/json" \\
-      -H "Content-Type: application/json" \\
-      -d "{{
-      \\"workspace_id\\": \\"313280a3-6d47-44c9-9c67-9cfaf97fb0b4\\",
-      \\"dataset_id\\": \\"2d7e8848-9215-431c-a1c4-8a26938be0f2\\",
-      \\"sql_table_name\\": \\"{sql_table_name}\\",
-      \\"user_id\\": {user_id},
-      \\"power_bi_table_name\\": \\"{power_bi_table_name}\\",
-      \\"access_token\\": \\"$(curl -s -X POST https://login.microsoftonline.com/{{TENANT_ID}}/oauth2/v2.0/token \\
-        -H 'Content-Type: application/x-www-form-urlencoded' \\
-        -d 'grant_type=client_credentials' \\
-        -d 'client_id=2146b62a-5753-4fd8-b359-6ad3e1e7b814' \\
-        -d 'client_secret=zmP8Q~nk07PYr1fBGpojD7hD7bCTt4SXuABErapM' \\
-        -d 'scope=https://graph.microsoft.com/.default' | jq -r .access_token)\\"
-    }}" """
+    command = f"""curl -X POST http://localhost:8000/powerbi/get-table-data -H "accept: application/json" -H "Content-Type: application/json" -d "{{\\"workspace_id\\": \\"313280a3-6d47-44c9-9c67-9cfaf97fb0b4\\", \\"dataset_id\\": \\"2d7e8848-9215-431c-a1c4-8a26938be0f2\\", \\"sql_table_name\\": \\"{sql_table_name}\\", \\"user_id\\": {user_id}, \\"power_bi_table_name\\": \\"{power_bi_table_name}\\", \\"access_token\\": \\"$(curl -s -X POST https://login.microsoftonline.com/fc09811c-498c-4e79-b20f-ba5cfa421942/oauth2/v2.0/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=client_credentials' -d 'client_id=2146b62a-5753-4fd8-b359-6ad3e1e7b814' -d 'client_secret=zmP8Q~nk07PYr1fBGpojD7hD7bCTt4SXuABErapM' -d 'scope=https://graph.microsoft.com/.default' | jq -r .access_token)\\"}}" """
+
 
     # Get current crontab
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
