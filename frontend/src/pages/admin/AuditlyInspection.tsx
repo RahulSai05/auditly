@@ -1020,6 +1020,7 @@ const AuditlyInspection = () => {
       itemDescription: "",
       productCondition: "",
     });
+    setIsAdvancedSearchOpen(false);
   };
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
@@ -1030,6 +1031,12 @@ const AuditlyInspection = () => {
 
   const hasImages = (item: ReceiptData) => {
     return item.images?.difference_images?.front || item.images?.difference_images?.back;
+  };
+
+  const generateUniqueKey = (item: ReceiptData) => {
+    return item.receipt_number || 
+           item.return_order_number || 
+           `${item.item_description}-${item.brand_name}-${Date.now()}`;
   };
 
   return (
@@ -1233,35 +1240,31 @@ const AuditlyInspection = () => {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-blue-50">
-                          <AnimatePresence>
-                            {filteredData.length === 0 ? (
-                              <motion.tr
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                          {filteredData.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={10}
+                                className="px-6 py-12 text-center text-gray-500 bg-gray-50/50"
                               >
-                                <td
-                                  colSpan={10}
-                                  className="px-6 py-12 text-center text-gray-500 bg-gray-50/50"
-                                >
-                                  <div className="flex flex-col items-center justify-center gap-2">
-                                    <ClipboardList className="w-10 h-10 text-gray-400" />
-                                    <p className="text-lg font-medium">No matching records found</p>
-                                    <p className="text-sm">Try adjusting your search filters</p>
-                                    <button
-                                      onClick={clearFilters}
-                                      className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
-                                    >
-                                      <FilterX className="w-4 h-4" />
-                                      Clear all filters
-                                    </button>
-                                  </div>
-                                </td>
-                              </motion.tr>
-                            ) : (
-                              filteredData.map((item) => (
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                  <ClipboardList className="w-10 h-10 text-gray-400" />
+                                  <p className="text-lg font-medium">No matching records found</p>
+                                  <p className="text-sm">Try adjusting your search filters</p>
+                                  <button
+                                    onClick={clearFilters}
+                                    className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+                                  >
+                                    <FilterX className="w-4 h-4" />
+                                    Clear all filters
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            <AnimatePresence mode="wait">
+                              {filteredData.map((item) => (
                                 <motion.tr
-                                  key={item.return_order_number || `${item.receipt_number}-${Math.random().toString(36).substr(2, 9)}`}
+                                  key={generateUniqueKey(item)}
                                   variants={itemVariants}
                                   initial="hidden"
                                   animate="visible"
@@ -1318,9 +1321,9 @@ const AuditlyInspection = () => {
                                     </span>
                                   </td>
                                 </motion.tr>
-                              ))
-                            )}
-                          </AnimatePresence>
+                              ))}
+                            </AnimatePresence>
+                          )}
                         </tbody>
                       </table>
                     </div>
