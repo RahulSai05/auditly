@@ -3,18 +3,18 @@ import numpy as np
 import csv
 import cv2
 import random
-import logging
 import io
 import datetime
 import base64
 import hashlib
 import boto3
-import requests 
 import httpx
 import traceback
-import uuid
 import time     
 import httpx
+import subprocess
+import requests
+import logging
 import jwt
 import json
 from authlib.integrations.base_client.errors import MismatchingStateError, OAuthError
@@ -28,7 +28,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -2432,4 +2432,115 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     db.execute(table.insert(), transformed_data)
     db.commit()
     return response.json()
+
+
+
+class CronJobCreate(BaseModel):
+    cron_to_mapping_name: str
+    cron_expression: str
+    auditly_user_id: int
+
+@app.post("/add-cronjobs")
+async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = Depends(get_db)):
+    """
+    Create a new cron job or update an existing one in the database.
+    """
+    # Check if there is already a cron job for the given user ID and mapping name
+    existing_cron_job = db.query(CronJobTable).filter(
+        CronJobTable.auditly_user_id == cron_job_data.auditly_user_id,
+        CronJobTable.cron_to_mapping_name == cron_job_data.cron_to_mapping_name
+    ).first()
+
+    if existing_cron_job:
+        # Update the existing cron job
+        existing_cron_job.cron_expression = cron_job_data.cron_expression
+        response_message = "Cron job updated successfully."
+    else:
+        # Create a new cron job if it doesn't exist
+        new_cron_job = CronJobTable(
+            cron_to_mapping_name=cron_job_data.cron_to_mapping_name,
+            cron_expression=cron_job_data.cron_expression,
+            auditly_user_id=cron_job_data.auditly_user_id
+        )
+        db.add(new_cron_job)
+        response_message = "Cron job created successfully."
+    mapping_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.mapping_name == cron_job_data.cron_to_mapping_name).first()
+
+    db.commit()  # Commit the transaction
     
+    manage_cron_job('add', cron_job_data.auditly_user_id, 
+                       cron_job_data.cron_to_mapping_name, cron_job_data.cron_expression, mapping_data.sql_table_name, mapping_data.bi_table_name)
+    response_message = "Cron job created successfully."
+    
+    return {
+        "message": response_message,
+        "cron_job_details": {
+            "cron_to_mapping_name": cron_job_data.cron_to_mapping_name,
+            "cron_expression": cron_job_data.cron_expression,
+            "auditly_user_id": cron_job_data.auditly_user_id
+        }
+    }
+
+
+
+def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expression: Optional[str] = None,
+                    sql_table_name: str = "default_sql_table", power_bi_table_name: str = "default_powerbi_table"):
+    """
+    Add, update, or remove a cron job on the local system
+    action: 'add', 'update', or 'remove'
+    sql_table_name: name of the SQL table
+    power_bi_table_name: name of the Power BI table
+    """
+    # Define the command to run by cron
+    command = f"""curl -X POST http://localhost:8000/powerbi/get-table-data \\
+      -H "accept: application/json" \\
+      -H "Content-Type: application/json" \\
+      -d "{{
+      \\"workspace_id\\": \\"313280a3-6d47-44c9-9c67-9cfaf97fb0b4\\",
+      \\"dataset_id\\": \\"2d7e8848-9215-431c-a1c4-8a26938be0f2\\",
+      \\"sql_table_name\\": \\"{sql_table_name}\\",
+      \\"user_id\\": {user_id},
+      \\"power_bi_table_name\\": \\"{power_bi_table_name}\\",
+      \\"access_token\\": \\"$(curl -s -X POST https://login.microsoftonline.com/{{TENANT_ID}}/oauth2/v2.0/token \\
+        -H 'Content-Type: application/x-www-form-urlencoded' \\
+        -d 'grant_type=client_credentials' \\
+        -d 'client_id=2146b62a-5753-4fd8-b359-6ad3e1e7b814' \\
+        -d 'client_secret=zmP8Q~nk07PYr1fBGpojD7hD7bCTt4SXuABErapM' \\
+        -d 'scope=https://graph.microsoft.com/.default' | jq -r .access_token)\\"
+    }}" """
+
+    # Get current crontab
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    current_crontab = result.stdout.strip()
+
+    # Initialize variables
+    new_crontab = ""
+    cron_entry = f"{cron_expression} {command}" if cron_expression else ""
+    entry_exists = cron_entry in current_crontab if cron_expression else False
+
+    # Process based on action
+    if action == 'add':
+        if entry_exists:
+            return "Cron job already exists"
+        new_crontab = current_crontab + "\n" + cron_entry if current_crontab else cron_entry
+    elif action == 'update':
+        # Remove existing entry if it exists
+        lines = [line for line in current_crontab.split('\n') 
+                if line.strip() and not line.strip().endswith(command)]
+        new_crontab = '\n'.join(lines) + "\n" + cron_entry if cron_expression else '\n'.join(lines)
+    elif action == 'remove':
+        # Remove all entries for this command
+        new_crontab = '\n'.join([line for line in current_crontab.split('\n') 
+                                if line.strip() and not line.strip().endswith(command)])
+    else:
+        raise ValueError("Invalid action")
+    
+    # Update crontab
+    process = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
+    process.communicate(input=new_crontab.encode())
+    
+    if process.returncode != 0:
+        raise Exception("Failed to update crontab")
+    
+    return f"Cron job {action} successful"
+
