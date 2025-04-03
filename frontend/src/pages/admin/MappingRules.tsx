@@ -1213,9 +1213,15 @@ interface LoadingState {
 interface Notification {
   type: 'success' | 'error';
   message: string;
+  show: boolean;
 }
 
 interface Table {
+  name: string;
+}
+
+interface Dataset {
+  id: string;
   name: string;
 }
 
@@ -1231,7 +1237,7 @@ const MappingRules: React.FC = () => {
   const [selectedTable, setSelectedTable] = useState('');
   const [columns, setColumns] = useState<string[]>([]);
   const [powerBIColumns, setPowerBIColumns] = useState<string[]>([]);
-  const [datasets, setDatasets] = useState<Array<{ id: string; name: string }>>([]);
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [mappingRows, setMappingRows] = useState<MappingRow[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState<LoadingState>({
@@ -1242,28 +1248,34 @@ const MappingRules: React.FC = () => {
     saving: false
   });
   const [isSyncing, setIsSyncing] = useState(false);
-  const [notification, setNotification] = useState<Notification>({ type: 'success', message: '' });
+  const [notification, setNotification] = useState<Notification>({ 
+    type: 'success', 
+    message: '',
+    show: false
+  });
 
   useEffect(() => {
     const fetchTables = async () => {
       setIsLoading(prev => ({ ...prev, tables: true }));
       try {
         const response = await axios.get('/api/tables');
-        // Ensure the response data is properly typed and formatted
-        const tableData: Table[] = Array.isArray(response.data) 
-          ? response.data 
-          : response.data.tables || [];
-        setTables(tableData);
+        setTables(response.data?.tables || []);
       } catch (error) {
-        setNotification({ type: 'error', message: 'Failed to fetch tables' });
-        // Initialize with empty array on error
-        setTables([]);
+        showNotification('error', 'Failed to fetch tables');
+      } finally {
+        setIsLoading(prev => ({ ...prev, tables: false }));
       }
-      setIsLoading(prev => ({ ...prev, tables: false }));
     };
 
     fetchTables();
   }, []);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message, show: true });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
 
   const handlePowerBIInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -1271,28 +1283,46 @@ const MappingRules: React.FC = () => {
   };
 
   const handleFetchDatasets = async () => {
+    if (!powerBIData.workspace_id) {
+      showNotification('error', 'Please enter a workspace ID');
+      return;
+    }
+
     setIsLoading(prev => ({ ...prev, fetchingDatasets: true }));
     try {
       const response = await axios.get(`/api/powerbi/datasets/${powerBIData.workspace_id}`);
-      setDatasets(response.data);
+      setDatasets(response.data?.datasets || []);
     } catch (error) {
-      setNotification({ type: 'error', message: 'Failed to fetch datasets' });
+      showNotification('error', 'Failed to fetch datasets');
+    } finally {
+      setIsLoading(prev => ({ ...prev, fetchingDatasets: false }));
     }
-    setIsLoading(prev => ({ ...prev, fetchingDatasets: false }));
   };
 
   const handleFetchPowerBIColumns = async () => {
+    if (!powerBIData.dataset_id || !powerBIData.table_name) {
+      showNotification('error', 'Please select dataset and enter table name');
+      return;
+    }
+
     setIsLoading(prev => ({ ...prev, fetchingPowerBIColumns: true }));
     try {
-      const response = await axios.get(`/api/powerbi/columns/${powerBIData.dataset_id}/${powerBIData.table_name}`);
-      setPowerBIColumns(response.data);
+      const response = await axios.get(
+        `/api/powerbi/columns/${powerBIData.dataset_id}/${powerBIData.table_name}`
+      );
+      setPowerBIColumns(response.data?.columns || []);
     } catch (error) {
-      setNotification({ type: 'error', message: 'Failed to fetch Power BI columns' });
+      showNotification('error', 'Failed to fetch Power BI columns');
+    } finally {
+      setIsLoading(prev => ({ ...prev, fetchingPowerBIColumns: false }));
     }
-    setIsLoading(prev => ({ ...prev, fetchingPowerBIColumns: false }));
   };
 
   const handleEdit = () => {
+    if (!selectedTable) {
+      showNotification('error', 'Please select a table first');
+      return;
+    }
     setEditMode(true);
   };
 
@@ -1303,6 +1333,11 @@ const MappingRules: React.FC = () => {
   };
 
   const handleSaveMapping = async () => {
+    if (!selectedTable) {
+      showNotification('error', 'Please select a table first');
+      return;
+    }
+
     setIsLoading(prev => ({ ...prev, saving: true }));
     try {
       await axios.post('/api/mapping/save', {
@@ -1310,26 +1345,33 @@ const MappingRules: React.FC = () => {
         mappings: mappingRows,
         powerBIConfig: powerBIData
       });
-      setNotification({ type: 'success', message: 'Mappings saved successfully' });
+      showNotification('success', 'Mappings saved successfully');
       setEditMode(false);
     } catch (error) {
-      setNotification({ type: 'error', message: 'Failed to save mappings' });
+      showNotification('error', 'Failed to save mappings');
+    } finally {
+      setIsLoading(prev => ({ ...prev, saving: false }));
     }
-    setIsLoading(prev => ({ ...prev, saving: false }));
   };
 
   const handleSyncToPowerBI = async () => {
+    if (!selectedTable || !powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name) {
+      showNotification('error', 'Please complete all configuration steps first');
+      return;
+    }
+
     setIsSyncing(true);
     try {
       await axios.post('/api/powerbi/sync', {
         table: selectedTable,
         powerBIConfig: powerBIData
       });
-      setNotification({ type: 'success', message: 'Data synced to Power BI successfully' });
+      showNotification('success', 'Data synced to Power BI successfully');
     } catch (error) {
-      setNotification({ type: 'error', message: 'Failed to sync data to Power BI' });
+      showNotification('error', 'Failed to sync data to Power BI');
+    } finally {
+      setIsSyncing(false);
     }
-    setIsSyncing(false);
   };
 
   useEffect(() => {
@@ -1339,29 +1381,21 @@ const MappingRules: React.FC = () => {
       setIsLoading(prev => ({ ...prev, columns: true }));
       try {
         const response = await axios.get(`/api/columns/${selectedTable}`);
-        setColumns(response.data);
-        setMappingRows(response.data.map((column: string) => ({
+        const columns = response.data?.columns || [];
+        setColumns(columns);
+        setMappingRows(columns.map((column: string) => ({
           id: Math.random().toString(36).substr(2, 9),
           source: column,
           destination: ''
         })));
       } catch (error) {
-        setNotification({ type: 'error', message: 'Failed to fetch columns' });
+        showNotification('error', 'Failed to fetch columns');
       }
       setIsLoading(prev => ({ ...prev, columns: false }));
     };
 
     fetchColumns();
   }, [selectedTable]);
-
-  useEffect(() => {
-    if (notification.message) {
-      const timer = setTimeout(() => {
-        setNotification({ type: 'success', message: '' });
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -1401,7 +1435,6 @@ const MappingRules: React.FC = () => {
           </motion.p>
         </motion.div>
 
-        {/* Power BI Configuration Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1435,7 +1468,7 @@ const MappingRules: React.FC = () => {
                   />
                   <button
                     onClick={handleFetchDatasets}
-                    disabled={isLoading.fetchingDatasets}
+                    disabled={isLoading.fetchingDatasets || !powerBIData.workspace_id}
                     className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
                       isLoading.fetchingDatasets
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -1489,7 +1522,7 @@ const MappingRules: React.FC = () => {
                   />
                   <button
                     onClick={handleFetchPowerBIColumns}
-                    disabled={isLoading.fetchingPowerBIColumns}
+                    disabled={isLoading.fetchingPowerBIColumns || !powerBIData.dataset_id || !powerBIData.table_name}
                     className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
                       isLoading.fetchingPowerBIColumns
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -1508,7 +1541,6 @@ const MappingRules: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Database Mapping Card */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -1708,7 +1740,6 @@ const MappingRules: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Sync Button */}
         {selectedTable && powerBIData.workspace_id && powerBIData.dataset_id && powerBIData.table_name && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1734,8 +1765,8 @@ const MappingRules: React.FC = () => {
           </motion.div>
         )}
 
-        <AnimatePresence mode="wait">
-          {notification.message && (
+        <AnimatePresence>
+          {notification.show && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
