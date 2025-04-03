@@ -2366,22 +2366,24 @@ async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
 class GetPowerBITableData(BaseModel):
     workspace_id: str
     dataset_id: str
-    table_name: str
+    sql_table_name: str
     user_id: int
+    power_bi_table_name: str
     access_token: Optional[str] = None
 
 
-@app.post("/api/powerbi/get-table-data")
+@app.post("/powerbi/get-table-data")
 async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
     """
     Fetch table data from Power BI Dataset
     """
-    table_name = request.table_name
+    sql_table_name = request.sql_table_name
     user_id = request.user_id
     workspace_id = request.workspace_id
     dataset_id = request.dataset_id
+    power_bi_table_name = request.power_bi_table_name
 
-    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
+    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
     power_bi_user_mapping = power_bi_table_data.mapping
     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
      
@@ -2392,15 +2394,10 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
 
     url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
 
+
     dax_query = {
-        "queries": [
-            {
-                "query": "EVALUATE 'Table'" 
-            }
-        ],
-        "serializerSettings": {
-            "includeNulls": True
-        }
+        "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}], #name of the table in powerbi we are getting it as an input
+        "serializerSettings": {"includeNulls": True}
     }
 
     response = requests.post(url, headers=headers, json=dax_query)
@@ -2416,7 +2413,7 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
             filter_column = key
         elif value in availabe_column_name:
             mapping_dict.update({key:power_bi_user_mapping[value]})
-    table = Table(table_name, metadata, autoload_with=engine)
+    table = Table(sql_table_name, metadata, autoload_with=engine)
     transformed_data = []
     for record in response_table:
         filter_check = None
@@ -2432,8 +2429,7 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     db.execute(table.insert(), transformed_data)
     db.commit()
     return response.json()
-
-
+    
 
 class CronJobCreate(BaseModel):
     cron_to_mapping_name: str
