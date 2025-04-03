@@ -678,7 +678,6 @@
 // export default AuditlyInspection;
 
 
-
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { 
@@ -1010,9 +1009,15 @@ const AuditlyInspection = () => {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.post<ReceiptData[]>("https://auditlyai.com/api/get-inspection-data", {
-          receipt_number: null,
-        });
+        // If we have a receipt number, use it in the API call
+        const payload = searchFilters.receiptNumber ? 
+          { receipt_number: searchFilters.receiptNumber } : 
+          { receipt_number: null };
+
+        const response = await axios.post<ReceiptData[]>(
+          "https://auditlyai.com/api/get-inspection-data",
+          payload
+        );
         setData(response.data);
       } catch (error) {
         console.error("Error fetching details:", error);
@@ -1023,18 +1028,13 @@ const AuditlyInspection = () => {
     };
 
     fetchAllData();
-  }, []);
+  }, [searchFilters.receiptNumber]); // Re-fetch when receipt number changes
 
   const filteredData = useMemo(() => {
-    // If receipt number is specified, do exact matching only for that field
-    if (searchFilters.receiptNumber.trim() !== "") {
-      return data.filter(item => 
-        item.receipt_number === searchFilters.receiptNumber
-      );
-    }
-
-    // Otherwise, apply the other filters with partial matching
     return data.filter((item) => {
+      // Skip receipt number filtering since we're handling it in the API call
+      if (searchFilters.receiptNumber) return true;
+      
       const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
         (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
       
