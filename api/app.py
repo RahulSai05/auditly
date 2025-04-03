@@ -2372,7 +2372,7 @@ class GetPowerBITableData(BaseModel):
     access_token: Optional[str] = None
 
 
-@app.post("/powerbi/get-table-data")
+@app.post("/api/powerbi/get-table-data")
 async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
     """
     Fetch table data from Power BI Dataset
