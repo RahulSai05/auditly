@@ -326,7 +326,7 @@
 //               className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
 //                 isSyncing || !powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name || !selectedTable
 //                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-//                   : 'bg-purple-600 text-white hover:bg-purple-700'
+//                   : 'bg-blue-600 text-white hover:bg-blue-700'
 //               }`}
 //             >
 //               {isSyncing ? (
@@ -1023,15 +1023,15 @@ const MappingRules: React.FC = () => {
             <div className="flex items-center gap-3">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 10 }}
-                className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center"
+                className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
               >
-                <Settings className="w-6 h-6 text-purple-600" />
+                <Settings className="w-6 h-6 text-blue-600" />
               </motion.div>
               <h2 className="text-xl font-bold text-gray-800">Power BI Configuration</h2>
             </div>
             <button
               onClick={() => setShowPowerBIForm(!showPowerBIForm)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               {showPowerBIForm ? (
                 <>
@@ -1066,7 +1066,7 @@ const MappingRules: React.FC = () => {
                         name="workspace_id"
                         value={powerBIData.workspace_id}
                         onChange={handlePowerBIInputChange}
-                        className="w-full p-3 border-2 border-purple-100 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-300 transition-all duration-200"
+                        className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                         placeholder="Enter Power BI Workspace ID"
                       />
                       <button
@@ -1075,7 +1075,7 @@ const MappingRules: React.FC = () => {
                         className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
                           isLoading.fetchingDatasets
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}
                       >
                         {isLoading.fetchingDatasets ? (
@@ -1096,7 +1096,7 @@ const MappingRules: React.FC = () => {
                         name="dataset_id"
                         value={powerBIData.dataset_id}
                         onChange={handlePowerBIInputChange}
-                        className="w-full p-3 border-2 border-purple-100 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-300 transition-all duration-200"
+                        className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                       >
                         <option value="">Select a Dataset</option>
                         {datasets.map((dataset) => (
@@ -1119,7 +1119,7 @@ const MappingRules: React.FC = () => {
                       name="table_name"
                       value={powerBIData.table_name}
                       onChange={handlePowerBIInputChange}
-                      className="w-full p-3 border-2 border-purple-100 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-300 transition-all duration-200"
+                      className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                       placeholder="Enter Power BI Table Name"
                     />
                     <button
@@ -1128,7 +1128,7 @@ const MappingRules: React.FC = () => {
                       className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
                         isLoading.fetchingPowerBIColumns
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-purple-600 text-white hover:bg-purple-700'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                     >
                       {isLoading.fetchingPowerBIColumns ? (
@@ -1202,7 +1202,7 @@ const MappingRules: React.FC = () => {
                 className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
                   isSyncing || !powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name || !selectedTable
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
                 {isSyncing ? (
