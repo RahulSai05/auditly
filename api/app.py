@@ -2130,7 +2130,7 @@ class GetPowerBITableColumns(BaseModel):
     dataset_id: str
     power_bi_table_name: str
 
-@app.post("/powerbi/get-powerbi-table-column")
+@app.post("/api/powerbi/get-powerbi-table-columns")
 async def get_powerbi_table_column(request: GetPowerBITableColumns, db: Session = Depends(get_db)):
     workspace_id = request.workspace_id
     dataset_id = request.dataset_id
