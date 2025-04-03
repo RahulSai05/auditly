@@ -1004,37 +1004,74 @@ const AuditlyInspection = () => {
     },
   };
 
+  const handleReceiptNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setSearchFilters({ ...searchFilters, receiptNumber: value });
+  };
+
   useEffect(() => {
-    const fetchAllData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError("");
       try {
-        // If we have a receipt number, use it in the API call
-        const payload = searchFilters.receiptNumber ? 
-          { receipt_number: searchFilters.receiptNumber } : 
-          { receipt_number: null };
+        let payload: any = { receipt_number: null };
+        
+        if (searchFilters.receiptNumber.trim() !== "") {
+          payload = { receipt_number: searchFilters.receiptNumber };
+        }
 
         const response = await axios.post<ReceiptData[]>(
           "https://auditlyai.com/api/get-inspection-data",
-          payload
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          }
         );
+
+        if (!response.data) {
+          throw new Error("No data received from server");
+        }
+
         setData(response.data);
       } catch (error) {
         console.error("Error fetching details:", error);
-        setError("Failed to fetch details. Please try again.");
+        let errorMessage = "Failed to fetch details. Please try again.";
+        
+        if (axios.isAxiosError(error)) {
+          if (error.response) {
+            errorMessage = error.response.data.message || `Server error: ${error.response.status}`;
+          } else if (error.request) {
+            errorMessage = "No response from server. Please check your connection.";
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        
+        setError(errorMessage);
+        setData([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllData();
-  }, [searchFilters.receiptNumber]); // Re-fetch when receipt number changes
+    if (searchFilters.receiptNumber.trim() !== "" || data.length === 0) {
+      const debounceTimer = setTimeout(() => {
+        fetchData();
+      }, 500);
+
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [searchFilters.receiptNumber]);
 
   const filteredData = useMemo(() => {
+    if (searchFilters.receiptNumber.trim() !== "") {
+      return data;
+    }
+
     return data.filter((item) => {
-      // Skip receipt number filtering since we're handling it in the API call
-      if (searchFilters.receiptNumber) return true;
-      
       const matchesReturnOrder = searchFilters.returnOrderNumber === "" ||
         (item.return_order_number && item.return_order_number.toLowerCase().includes(searchFilters.returnOrderNumber.toLowerCase()));
       
@@ -1186,10 +1223,11 @@ const AuditlyInspection = () => {
                         </div>
                         <input
                           type="text"
-                          placeholder="Search by receipt number..."
+                          placeholder="Search by receipt number (numbers only)..."
                           className="w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-base shadow-sm"
                           value={searchFilters.receiptNumber}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, receiptNumber: e.target.value })}
+                          onChange={handleReceiptNumberChange}
+                          inputMode="numeric"
                         />
                       </div>
 
@@ -1351,7 +1389,6 @@ const AuditlyInspection = () => {
         </AnimatePresence>
       </div>
 
-      {/* Image Viewer Modal */}
       {selectedItem && selectedItem.images && (
         <ImageViewerModal 
           images={selectedItem.images} 
