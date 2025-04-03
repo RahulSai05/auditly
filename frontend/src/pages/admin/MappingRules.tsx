@@ -1338,7 +1338,7 @@ const MappingRules: React.FC = () => {
                         name="date_filter_value"
                         value={powerBIData.date_filter_value}
                         onChange={handlePowerBIInputChange}
-                        placeholder="Enter date in dd-mm-yyyy format"
+                        placeholder="Enter date in mm-dd-yyyy format"
                         className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                       />
                     </div>
