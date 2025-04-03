@@ -1168,6 +1168,7 @@
 // export default MappingRules;
 
 
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1214,6 +1215,10 @@ interface Notification {
   message: string;
 }
 
+interface Table {
+  name: string;
+}
+
 const MappingRules: React.FC = () => {
   const [powerBIData, setPowerBIData] = useState<PowerBIData>({
     workspace_id: '',
@@ -1222,7 +1227,7 @@ const MappingRules: React.FC = () => {
     date_filter_column: '',
     date_filter_value: ''
   });
-  const [tables, setTables] = useState<Array<{ name: string }>>([]);
+  const [tables, setTables] = useState<Table[]>([]);
   const [selectedTable, setSelectedTable] = useState('');
   const [columns, setColumns] = useState<string[]>([]);
   const [powerBIColumns, setPowerBIColumns] = useState<string[]>([]);
@@ -1238,6 +1243,27 @@ const MappingRules: React.FC = () => {
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [notification, setNotification] = useState<Notification>({ type: 'success', message: '' });
+
+  useEffect(() => {
+    const fetchTables = async () => {
+      setIsLoading(prev => ({ ...prev, tables: true }));
+      try {
+        const response = await axios.get('/api/tables');
+        // Ensure the response data is properly typed and formatted
+        const tableData: Table[] = Array.isArray(response.data) 
+          ? response.data 
+          : response.data.tables || [];
+        setTables(tableData);
+      } catch (error) {
+        setNotification({ type: 'error', message: 'Failed to fetch tables' });
+        // Initialize with empty array on error
+        setTables([]);
+      }
+      setIsLoading(prev => ({ ...prev, tables: false }));
+    };
+
+    fetchTables();
+  }, []);
 
   const handlePowerBIInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -1305,21 +1331,6 @@ const MappingRules: React.FC = () => {
     }
     setIsSyncing(false);
   };
-
-  useEffect(() => {
-    const fetchTables = async () => {
-      setIsLoading(prev => ({ ...prev, tables: true }));
-      try {
-        const response = await axios.get('/api/tables');
-        setTables(response.data);
-      } catch (error) {
-        setNotification({ type: 'error', message: 'Failed to fetch tables' });
-      }
-      setIsLoading(prev => ({ ...prev, tables: false }));
-    };
-
-    fetchTables();
-  }, []);
 
   useEffect(() => {
     const fetchColumns = async () => {
