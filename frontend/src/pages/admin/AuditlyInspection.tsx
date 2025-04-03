@@ -748,13 +748,15 @@ import {
   FilterX,
   MapPin,
   CheckCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FileText,
+  Download
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from "xlsx";
-import { useReactToPrint } from 'react-to-print';
-import html2canvas from 'html2canvas';
 import { saveAs } from "file-saver";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface ShippingInfo {
   shipped_to_person: string;
@@ -898,8 +900,6 @@ const ImageViewerModal = ({
   const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
   const [imageType, setImageType] = useState<'difference' | 'base'>('difference');
   const [imageLoadState, setImageLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
-  const [selectedRecords, setSelectedRecords] = useState<Record<string, boolean>>({});
-
 
   const getImageUrl = () => {
     if (imageType === 'difference') {
@@ -1035,6 +1035,7 @@ const AuditlyInspection = () => {
   const [error, setError] = useState("");
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ReceiptData | null>(null);
+  const [selectedRecords, setSelectedRecords] = useState<Record<string, boolean>>({});
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     receiptNumber: "",
     returnOrderNumber: "",
@@ -1074,7 +1075,6 @@ const AuditlyInspection = () => {
           receipt_number: null,
         });
         
-        // Filter out duplicate records and ensure base images match the inspection
         const uniqueData = response.data.reduce((acc: ReceiptData[], current) => {
           const existingIndex = acc.findIndex(item => 
             item.receipt_number === current.receipt_number && 
@@ -1082,12 +1082,9 @@ const AuditlyInspection = () => {
           );
           
           if (existingIndex === -1) {
-            // If this is a new record, add it
             acc.push(current);
           } else {
-            // If this is a duplicate, only keep it if it has valid base images
             if (current.images?.base_images?.front && current.images?.base_images?.back) {
-              // Replace existing record if this one has better base images
               if (!acc[existingIndex].images?.base_images?.front || 
                   !acc[existingIndex].images?.base_images?.back) {
                 acc[existingIndex] = current;
@@ -1109,204 +1106,6 @@ const AuditlyInspection = () => {
     fetchAllData();
   }, []);
 
-  const toggleRecordSelection = (receiptNumber: string) => {
-  setSelectedRecords(prev => ({
-    ...prev,
-    [receiptNumber]: !prev[receiptNumber]
-  }));
-};
-
-const exportSelectedToPDF = async (includeImages = false) => {
-  const selectedItems = data.filter(item => selectedRecords[item.receipt_number]);
-  
-  if (selectedItems.length === 0) {
-    alert('Please select at least one record to export');
-    return;
-  }
-
-  for (const item of selectedItems) {
-    const doc = new jsPDF();
-    
-    // Add basic info
-    doc.setFontSize(16);
-    doc.setTextColor(40, 40, 40);
-    doc.text(`Auditly Inspection Report - ${item.receipt_number}`, 14, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-    
-    // Add inspection details
-    const details = [
-      ['Receipt Number:', item.receipt_number || 'N/A'],
-      ['Return Order:', item.return_order_number || 'N/A'],
-      ['Customer:', item.shipping_info?.shipped_to_person || 'N/A'],
-      ['Item Description:', item.item_description || 'N/A'],
-      ['Brand:', item.brand_name || 'N/A'],
-      ['Condition:', item.overall_condition || 'N/A'],
-      ['Quantity:', item.return_qty?.toString() || 'N/A'],
-      ['Address:', item.shipping_info ? 
-        `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` : 
-        'N/A']
-    ];
-    
-    (doc as any).autoTable({
-      startY: 40,
-      head: [['Field', 'Value']],
-      body: details,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontStyle: 'bold'
-      },
-      styles: {
-        fontSize: 10,
-        cellPadding: 3
-      }
-    });
-
-    // Add images if requested and available
-    if (includeImages && item.images) {
-      let yPos = (doc as any).lastAutoTable.finalY + 15;
-      
-      // Add difference images
-      if (item.images.difference_images) {
-        doc.setFontSize(12);
-        doc.setTextColor(40, 40, 40);
-        doc.text('Difference Images:', 14, yPos);
-        yPos += 10;
-        
-        if (item.images.difference_images.front) {
-          try {
-            const frontImg = await loadImageToDataURL(item.images.difference_images.front);
-            doc.addImage(frontImg, 'JPEG', 15, yPos, 80, 60, undefined, 'FAST');
-            doc.text('Front View', 15, yPos + 65);
-          } catch (e) {
-            console.error('Error loading front image:', e);
-          }
-        }
-        
-        if (item.images.difference_images.back) {
-          try {
-            const backImg = await loadImageToDataURL(item.images.difference_images.back);
-            doc.addImage(backImg, 'JPEG', 105, yPos, 80, 60, undefined, 'FAST');
-            doc.text('Back View', 105, yPos + 65);
-            yPos += 80;
-          } catch (e) {
-            console.error('Error loading back image:', e);
-          }
-        }
-      }
-      
-      // Add base images if available
-      if (item.images.base_images) {
-        doc.setFontSize(12);
-        doc.setTextColor(40, 40, 40);
-        doc.text('Base Images:', 14, yPos);
-        yPos += 10;
-        
-        if (item.images.base_images.front) {
-          try {
-            const frontImg = await loadImageToDataURL(item.images.base_images.front);
-            doc.addImage(frontImg, 'JPEG', 15, yPos, 80, 60, undefined, 'FAST');
-            doc.text('Front View', 15, yPos + 65);
-          } catch (e) {
-            console.error('Error loading front base image:', e);
-          }
-        }
-        
-        if (item.images.base_images.back) {
-          try {
-            const backImg = await loadImageToDataURL(item.images.base_images.back);
-            doc.addImage(backImg, 'JPEG', 105, yPos, 80, 60, undefined, 'FAST');
-            doc.text('Back View', 105, yPos + 65);
-          } catch (e) {
-            console.error('Error loading back base image:', e);
-          }
-        }
-      }
-    }
-    
-    // Save the PDF
-    doc.save(`Auditly_Report_${item.receipt_number || 'inspection'}.pdf`);
-  }
-};
-
-const loadImageToDataURL = (url: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-};
-
-// Add a checkbox column to your table header
-<TableHeader>
-  <input 
-    type="checkbox" 
-    checked={Object.keys(selectedRecords).length > 0 && 
-             Object.keys(selectedRecords).length === filteredData.length}
-    onChange={(e) => {
-      const newSelection: Record<string, boolean> = {};
-      if (e.target.checked) {
-        filteredData.forEach(item => {
-          newSelection[item.receipt_number] = true;
-        });
-      }
-      setSelectedRecords(newSelection);
-    }}
-  />
-</TableHeader>
-
-// Add a checkbox to each table row
-<td className="px-6 py-4 whitespace-nowrap">
-  <input 
-    type="checkbox" 
-    checked={!!selectedRecords[item.receipt_number]}
-    onChange={() => toggleRecordSelection(item.receipt_number)}
-    className="h-4 w-4 text-blue-600 rounded"
-  />
-</td>
-
-// Add export buttons to your UI (place this near your other export buttons)
-<div className="flex gap-2 ml-4">
-  <button
-    onClick={() => exportSelectedToPDF(false)}
-    disabled={Object.keys(selectedRecords).length === 0}
-    className={`px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${
-      Object.keys(selectedRecords).length === 0 
-        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-        : 'bg-blue-500 text-white hover:bg-blue-600'
-    }`}
-  >
-    <FileText className="w-4 h-4" />
-    Export Selected (PDF)
-  </button>
-  
-  <button
-    onClick={() => exportSelectedToPDF(true)}
-    disabled={Object.keys(selectedRecords).length === 0}
-    className={`px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${
-      Object.keys(selectedRecords).length === 0 
-        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-        : 'bg-blue-500 text-white hover:bg-blue-600'
-    }`}
-  >
-    <ImageIcon className="w-4 h-4" />
-    Export with Images
-  </button>
-</div>
-
-  
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchesReceiptNumber = searchFilters.receiptNumber === "" || 
@@ -1329,44 +1128,179 @@ const loadImageToDataURL = (url: string): Promise<string> => {
   }, [data, searchFilters]);
 
   const exportToXLSX = (data: ReceiptData[]) => {
-  // Transform the data to exclude images and properly format the address
-  const exportData = data.map(item => ({
-    'Receipt Number': item.receipt_number,
-    'Return Order Number': item.return_order_number,
-    'Customer': item.shipping_info?.shipped_to_person,
-    'Item Description': item.item_description,
-    'Brand': item.brand_name,
-    'Condition': item.overall_condition,
-    'Quantity': item.return_qty,
-    'Address': item.shipping_info ? 
-      `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` : 
-      'N/A',
-    'Original Sales Order': item.original_sales_order_number
-    // Images are intentionally excluded
-  }));
+    const exportData = data.map(item => ({
+      'Receipt Number': item.receipt_number,
+      'Return Order Number': item.return_order_number,
+      'Customer': item.shipping_info?.shipped_to_person,
+      'Item Description': item.item_description,
+      'Brand': item.brand_name,
+      'Condition': item.overall_condition,
+      'Quantity': item.return_qty,
+      'Address': item.shipping_info ? 
+        `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` : 
+        'N/A',
+      'Original Sales Order': item.original_sales_order_number
+    }));
 
-  const ws = XLSX.utils.json_to_sheet(exportData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Inspection Data");
-  
-  // Generate Excel file with proper column widths
-  const colWidths = [
-    { wch: 15 },  // Receipt Number
-    { wch: 18 },  // Return Order Number
-    { wch: 20 },  // Customer
-    { wch: 30 },  // Item Description
-    { wch: 15 },  // Brand
-    { wch: 15 },  // Condition
-    { wch: 10 },  // Quantity
-    { wch: 40 },  // Address
-    { wch: 20 }   // Original Sales Order
-  ];
-  ws['!cols'] = colWidths;
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inspection Data");
+    
+    const colWidths = [
+      { wch: 15 },  { wch: 18 },  { wch: 20 },  
+      { wch: 30 },  { wch: 15 },  { wch: 15 },
+      { wch: 10 },  { wch: 40 },  { wch: 20 }
+    ];
+    ws['!cols'] = colWidths;
 
-  const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([excelFile], { type: "application/octet-stream" });
-  saveAs(blob, "inspection_data.xlsx");
-};
+    const excelFile = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelFile], { type: "application/octet-stream" });
+    saveAs(blob, "inspection_data.xlsx");
+  };
+
+  const toggleRecordSelection = (receiptNumber: string) => {
+    setSelectedRecords(prev => ({
+      ...prev,
+      [receiptNumber]: !prev[receiptNumber]
+    }));
+  };
+
+  const exportSelectedToPDF = async (includeImages = false) => {
+    const selectedItems = data.filter(item => selectedRecords[item.receipt_number]);
+    
+    if (selectedItems.length === 0) {
+      alert('Please select at least one record to export');
+      return;
+    }
+
+    for (const item of selectedItems) {
+      const doc = new jsPDF();
+      
+      // Add basic info
+      doc.setFontSize(16);
+      doc.setTextColor(40, 40, 40);
+      doc.text(`Auditly Inspection Report - ${item.receipt_number}`, 14, 20);
+      
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+      
+      // Add inspection details
+      const details = [
+        ['Receipt Number:', item.receipt_number || 'N/A'],
+        ['Return Order:', item.return_order_number || 'N/A'],
+        ['Customer:', item.shipping_info?.shipped_to_person || 'N/A'],
+        ['Item Description:', item.item_description || 'N/A'],
+        ['Brand:', item.brand_name || 'N/A'],
+        ['Condition:', item.overall_condition || 'N/A'],
+        ['Quantity:', item.return_qty?.toString() || 'N/A'],
+        ['Address:', item.shipping_info ? 
+          `${item.shipping_info.address || ''}, ${item.shipping_info.city || ''}, ${item.shipping_info.state || ''}, ${item.shipping_info.country || ''}` : 
+          'N/A']
+      ];
+      
+      (doc as any).autoTable({
+        startY: 40,
+        head: [['Field', 'Value']],
+        body: details,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 3
+        }
+      });
+
+      // Add images if requested and available
+      if (includeImages && item.images) {
+        let yPos = (doc as any).lastAutoTable.finalY + 15;
+        
+        // Add difference images
+        if (item.images.difference_images) {
+          doc.setFontSize(12);
+          doc.setTextColor(40, 40, 40);
+          doc.text('Difference Images:', 14, yPos);
+          yPos += 10;
+          
+          if (item.images.difference_images.front) {
+            try {
+              const imgData = await getImageData(item.images.difference_images.front);
+              doc.addImage(imgData, 'JPEG', 15, yPos, 80, 60);
+              doc.text('Front View', 15, yPos + 65);
+            } catch (e) {
+              console.error('Error loading front image:', e);
+            }
+          }
+          
+          if (item.images.difference_images.back) {
+            try {
+              const imgData = await getImageData(item.images.difference_images.back);
+              doc.addImage(imgData, 'JPEG', 105, yPos, 80, 60);
+              doc.text('Back View', 105, yPos + 65);
+              yPos += 80;
+            } catch (e) {
+              console.error('Error loading back image:', e);
+            }
+          }
+        }
+        
+        // Add base images if available
+        if (item.images.base_images) {
+          doc.setFontSize(12);
+          doc.setTextColor(40, 40, 40);
+          doc.text('Base Images:', 14, yPos);
+          yPos += 10;
+          
+          if (item.images.base_images.front) {
+            try {
+              const imgData = await getImageData(item.images.base_images.front);
+              doc.addImage(imgData, 'JPEG', 15, yPos, 80, 60);
+              doc.text('Front View', 15, yPos + 65);
+            } catch (e) {
+              console.error('Error loading front base image:', e);
+            }
+          }
+          
+          if (item.images.base_images.back) {
+            try {
+              const imgData = await getImageData(item.images.base_images.back);
+              doc.addImage(imgData, 'JPEG', 105, yPos, 80, 60);
+              doc.text('Back View', 105, yPos + 65);
+            } catch (e) {
+              console.error('Error loading back base image:', e);
+            }
+          }
+        }
+      }
+      
+      // Save the PDF
+      doc.save(`Auditly_Report_${item.receipt_number || 'inspection'}.pdf`);
+    }
+  };
+
+  const getImageData = (url: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg'));
+        } else {
+          reject(new Error('Could not create canvas context'));
+        }
+      };
+      img.onerror = () => reject(new Error('Image loading failed'));
+      img.src = url;
+    });
+  };
 
   const clearFilters = () => {
     setSearchFilters({
@@ -1375,6 +1309,11 @@ const loadImageToDataURL = (url: string): Promise<string> => {
       itemDescription: "",
       productCondition: "",
     });
+    setSelectedRecords({});
+  };
+
+  const hasImages = (item: ReceiptData) => {
+    return item.images?.difference_images?.front || item.images?.difference_images?.back;
   };
 
   const TableHeader = ({ children }: { children: React.ReactNode }) => (
@@ -1382,10 +1321,6 @@ const loadImageToDataURL = (url: string): Promise<string> => {
       {children}
     </th>
   );
-
-  const hasImages = (item: ReceiptData) => {
-    return item.images?.difference_images?.front || item.images?.difference_images?.back;
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -1479,9 +1414,34 @@ const loadImageToDataURL = (url: string): Promise<string> => {
                     </button>
                     <button
                       onClick={() => exportToXLSX(filteredData)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+                      className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2"
                     >
-                      Export to XLSX
+                      <FileText className="w-4 h-4" />
+                      Export to Excel
+                    </button>
+                    <button
+                      onClick={() => exportSelectedToPDF(false)}
+                      disabled={Object.keys(selectedRecords).length === 0}
+                      className={`px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${
+                        Object.keys(selectedRecords).length === 0 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                      }`}
+                    >
+                      <Download className="w-4 h-4" />
+                      Export PDF
+                    </button>
+                    <button
+                      onClick={() => exportSelectedToPDF(true)}
+                      disabled={Object.keys(selectedRecords).length === 0}
+                      className={`px-4 py-2 rounded-xl transition-colors flex items-center gap-2 ${
+                        Object.keys(selectedRecords).length === 0 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                      }`}
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      Export with Images
                     </button>
                   </div>
                 </div>
@@ -1547,6 +1507,22 @@ const loadImageToDataURL = (url: string): Promise<string> => {
                       <table className="min-w-full divide-y divide-blue-100">
                         <thead className="sticky top-0 bg-white z-10">
                           <tr>
+                            <TableHeader>
+                              <input 
+                                type="checkbox" 
+                                checked={Object.keys(selectedRecords).length > 0 && 
+                                         Object.keys(selectedRecords).length === filteredData.length}
+                                onChange={(e) => {
+                                  const newSelection: Record<string, boolean> = {};
+                                  if (e.target.checked) {
+                                    filteredData.forEach(item => {
+                                      newSelection[item.receipt_number] = true;
+                                    });
+                                  }
+                                  setSelectedRecords(newSelection);
+                                }}
+                              />
+                            </TableHeader>
                             <TableHeader>Receipt #</TableHeader>
                             <TableHeader>Return Order #</TableHeader>
                             <TableHeader>Customer</TableHeader>
@@ -1568,7 +1544,7 @@ const loadImageToDataURL = (url: string): Promise<string> => {
                                 exit={{ opacity: 0 }}
                               >
                                 <td
-                                  colSpan={10}
+                                  colSpan={11}
                                   className="px-6 py-12 text-center text-gray-500 bg-gray-50/50"
                                 >
                                   <div className="flex flex-col items-center justify-center gap-2">
@@ -1597,6 +1573,14 @@ const loadImageToDataURL = (url: string): Promise<string> => {
                                   className="hover:bg-blue-50/50 transition-colors duration-200"
                                   whileHover={{ scale: 1.002 }}
                                 >
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={!!selectedRecords[item.receipt_number]}
+                                      onChange={() => toggleRecordSelection(item.receipt_number)}
+                                      className="h-4 w-4 text-blue-600 rounded"
+                                    />
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                     {item.receipt_number || 'N/A'}
                                   </td>
@@ -1672,7 +1656,3 @@ const loadImageToDataURL = (url: string): Promise<string> => {
 };
 
 export default AuditlyInspection;
-
-
-
-
