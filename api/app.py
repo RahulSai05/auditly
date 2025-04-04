@@ -2386,7 +2386,7 @@ class CronJobCreate(BaseModel):
     cron_expression: str
     auditly_user_id: int
 
-@app.post("/add-cronjobs")
+@app.post("/api/add-cronjobs")
 async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = Depends(get_db)):
     """
     Create a new cron job or update an existing one in the database.
