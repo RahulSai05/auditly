@@ -2470,7 +2470,7 @@ def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expressio
     
     # Update crontab
     process = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
-    process.communicate(input=new_crontab.encode())
+    process.communicate(input=new_crontab)
     
     if process.returncode != 0:
         raise Exception("Failed to update crontab")
