@@ -33,6 +33,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Re
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData
