@@ -2473,7 +2473,7 @@ def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expressio
     with open(cron_file_path, "w") as f:
             f.write(new_crontab)
         
-        subprocess.run(["chmod", "644", cron_file_path], check=True)
+    subprocess.run(["chmod", "644", cron_file_path], check=True)
     # Update crontab
     # process = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
     # process.communicate(input=new_crontab.encode())
