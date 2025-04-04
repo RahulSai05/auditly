@@ -21,7 +21,7 @@ from authlib.integrations.base_client.errors import MismatchingStateError, OAuth
 from send_email import send_email
 from urllib.parse import urljoin, quote, unquote
 from settings import ENV
-from datetime import datetime, timedelta, timezone    
+from datetime import datetime, timedelta, timezone, date
 from secret import get_secret
 from pydantic import BaseModel, EmailStr
 from jwt import decode as jwt_decode
@@ -32,6 +32,7 @@ from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnD
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Optional
 from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData
@@ -2482,3 +2483,40 @@ def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expressio
     #     raise Exception("Failed to update crontab")
     
     return f"Cron job {action} successful"
+
+
+
+@app.get("/export/customer-items")
+def export_customer_items():
+    query = """
+    SELECT 
+        cid.id AS customer_item_id,
+        cid.original_sales_order_number,
+        cid.return_order_number,
+        cid.serial_number,
+        cid.return_condition,
+        cid.return_warehouse,
+        cid.date_purchased,
+        cid.date_delivered,
+        i.item_number,
+        i.item_description,
+        b.brand_name
+    FROM customer_item_data cid
+    LEFT JOIN item i ON cid.item_id = i.id
+    LEFT JOIN brand b ON i.brand_id = b.id
+    LIMIT 1000
+    """
+
+    with engine.connect() as conn:
+        result = conn.execute(text(query)).fetchall()
+
+    # Convert datetime fields to strings
+    data = []
+    for row in result:
+        item = dict(row._mapping)
+        for key, value in item.items():
+            if isinstance(value, (datetime, date)):  # ✅ FIXED check
+                item[key] = value.isoformat()
+        data.append(item)
+
+    return JSONResponse(content=data)
