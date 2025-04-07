@@ -450,7 +450,6 @@ const apiEndpoints: ApiEndpoint[] = [
     category: "Authentication",
     icon: Lock,
   },
-  // Additional APIs can be added here...
 ];
 
 function ApiConfigurations() {
@@ -459,6 +458,7 @@ function ApiConfigurations() {
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const categories = [
     ...new Set(apiEndpoints.map((api) => api.category)),
@@ -506,37 +506,29 @@ function ApiConfigurations() {
 
     setUploadStatus("uploading");
     setUploadProgress(0);
+    setErrorMessage("");
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(interval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 300);
+      const response = await fetch(selectedEndpoint.path, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        // Note: Native fetch doesn't support onUploadProgress
+        // For real progress tracking, consider using axios or a custom solution
+      });
 
-      // In a real app, you would use fetch or axios to upload to your API
-      // const response = await fetch(selectedEndpoint.path, {
-      //   method: selectedEndpoint.method,
-      //   body: formData,
-      //   // Add headers if needed
-      // });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      clearInterval(interval);
+      const result = await response.json();
       setUploadProgress(100);
       setUploadStatus("success");
       
-      // Reset after success
       setTimeout(() => {
         setUploadStatus("idle");
         setUploadProgress(0);
@@ -544,14 +536,14 @@ function ApiConfigurations() {
       }, 3000);
     } catch (error) {
       setUploadStatus("error");
-      console.error("Upload failed:", error);
+      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
+      setUploadProgress(0);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -587,9 +579,7 @@ function ApiConfigurations() {
           </motion.p>
         </motion.div>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar with categories */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-md p-6 sticky top-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">API Categories</h2>
@@ -615,9 +605,7 @@ function ApiConfigurations() {
             </div>
           </div>
 
-          {/* Main content area */}
           <div className="lg:col-span-3">
-            {/* CSV Upload Section - shown when CSV Upload category is selected */}
             {selectedCategory === "CSV Upload" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -685,7 +673,6 @@ function ApiConfigurations() {
                   ))}
                 </div>
 
-                {/* File upload area - shown when an endpoint is selected */}
                 {selectedEndpoint && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -756,7 +743,7 @@ function ApiConfigurations() {
                             <div className="space-y-2">
                               <div className="w-full bg-gray-200 rounded-full h-2.5">
                                 <div
-                                  className="bg-blue-600 h-2.5 rounded-full"
+                                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                                   style={{ width: `${uploadProgress}%` }}
                                 ></div>
                               </div>
@@ -777,10 +764,13 @@ function ApiConfigurations() {
                           {uploadStatus === "error" && (
                             <div className="p-3 bg-red-50 text-red-700 rounded-lg">
                               <p className="text-sm font-medium">
-                                Upload failed. Please try again.
+                                Upload failed: {errorMessage}
                               </p>
                               <button
-                                onClick={() => setUploadStatus("idle")}
+                                onClick={() => {
+                                  setUploadStatus("idle");
+                                  setErrorMessage("");
+                                }}
                                 className="mt-2 px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200"
                               >
                                 Retry
@@ -800,7 +790,6 @@ function ApiConfigurations() {
               </motion.div>
             )}
 
-            {/* Other API Categories */}
             {selectedCategory !== "CSV Upload" && (
               <motion.div
                 variants={containerVariants}
@@ -878,7 +867,6 @@ function ApiConfigurations() {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
