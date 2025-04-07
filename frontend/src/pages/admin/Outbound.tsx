@@ -319,7 +319,7 @@ const Outbound: React.FC = () => {
   const handlePushToPowerBI = async (destinationId: number) => {
     setPushStatus({ loading: true, success: false, message: "", destinationId });
     try {
-      const response = await fetch("http://54.210.159.220:8000/push-to-powerbi", {
+      const response = await fetch("https://auditlyai.com/api/push-to-powerbi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
