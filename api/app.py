@@ -469,6 +469,45 @@ async def search_customer_item_data(query: str, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
+# @app.post("/api/upload-items-csv")
+# async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+#     """
+#     Upload a CSV file to add or update items in the database.
+#     """
+#     try:
+#         content = await file.read()
+#         decoded_content = content.decode("utf-8").splitlines()
+#         csv_reader = csv.DictReader(decoded_content)
+
+#         for row in csv_reader:
+#             item_number = int(row["item_number"])
+#             brand_id = int(row["brand_id"])
+
+#             # Check if the item already exists
+#             existing_item = db.query(Item).filter(Item.item_number == item_number).first()
+
+#             if existing_item:
+#                 # Update the existing item
+#                 existing_item.item_description = row["item_description"]
+#                 existing_item.brand_id = brand_id
+#                 existing_item.category = row["category"]
+#                 existing_item.configuration = row["configuration"]
+#             else:
+#                 # Create a new item
+#                 new_item = Item(
+#                     item_number=item_number,
+#                     item_description=row["item_description"],
+#                     brand_id=brand_id,
+#                     category=row["category"],
+#                     configuration=row["configuration"],
+#                 )
+#                 db.add(new_item)
+
+#         db.commit()
+#         return {"message": "CSV uploaded successfully and items added/updated."}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
 @app.post("/api/upload-items-csv")
 async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
@@ -476,37 +515,61 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
     """
     try:
         content = await file.read()
-        decoded_content = content.decode("utf-8").splitlines()
-        csv_reader = csv.DictReader(decoded_content)
+        decoded_content = content.decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(decoded_content))
+
+        # Normalize headers
+        csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
+        required_fields = {"item_number", "item_description", "brand_id", "category", "configuration"}
+        if not required_fields.issubset(set(csv_reader.fieldnames)):
+            raise HTTPException(status_code=400, detail="Missing required columns in CSV.")
+
+        added, updated = 0, 0
 
         for row in csv_reader:
-            item_number = int(row["item_number"])
-            brand_id = int(row["brand_id"])
+            try:
+                print("Processing row:", row)  # Debug log
+                item_number = int(row["item_number"])
+                brand_id = int(row["brand_id"])
 
-            # Check if the item already exists
-            existing_item = db.query(Item).filter(Item.item_number == item_number).first()
+                # Check if brand exists
+                brand_exists = db.query(Brand).filter(Brand.id == brand_id).first()
+                if not brand_exists:
+                    raise HTTPException(status_code=400, detail=f"Brand ID {brand_id} does not exist.")
 
-            if existing_item:
-                # Update the existing item
-                existing_item.item_description = row["item_description"]
-                existing_item.brand_id = brand_id
-                existing_item.category = row["category"]
-                existing_item.configuration = row["configuration"]
-            else:
-                # Create a new item
-                new_item = Item(
-                    item_number=item_number,
-                    item_description=row["item_description"],
-                    brand_id=brand_id,
-                    category=row["category"],
-                    configuration=row["configuration"],
-                )
-                db.add(new_item)
+                existing_item = db.query(Item).filter(Item.item_number == item_number).first()
+
+                if existing_item:
+                    existing_item.item_description = row["item_description"]
+                    existing_item.brand_id = brand_id
+                    existing_item.category = row["category"]
+                    existing_item.configuration = row["configuration"]
+                    updated += 1
+                else:
+                    new_item = Item(
+                        item_number=item_number,
+                        item_description=row["item_description"],
+                        brand_id=brand_id,
+                        category=row["category"],
+                        configuration=row["configuration"],
+                    )
+                    db.add(new_item)
+                    added += 1
+
+            except Exception as row_error:
+                print(f"Skipping row due to error: {row_error} | Row data: {row}")
+                continue  # Skip problematic row and continue with the rest
 
         db.commit()
-        return {"message": "CSV uploaded successfully and items added/updated."}
+        return {
+            "message": "CSV processed.",
+            "items_added": added,
+            "items_updated": updated
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
 
 @app.get("/api/search-items")
 async def search_items(query: str = "", db: Session = Depends(get_db)):
