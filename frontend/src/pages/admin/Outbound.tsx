@@ -265,6 +265,16 @@ const destinations = [
     status: "Popular",
   },
   {
+    id: 3,
+    title: "Power BI",
+    description:
+      "Push your customer item data directly to Power BI for advanced analytics and visualization.",
+    icon: BarChart2,
+    color: "#0078D4",
+    status: "Analytics",
+    action: "push-to-powerbi",
+  },
+  {
     id: 4,
     title: "Outbound Automate",
     description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
@@ -303,10 +313,11 @@ const Outbound: React.FC = () => {
     loading: boolean;
     success: boolean;
     message: string;
+    destinationId?: number;
   }>({ loading: false, success: false, message: "" });
 
-  const handlePushToPowerBI = async () => {
-    setPushStatus({ loading: true, success: false, message: "" });
+  const handlePushToPowerBI = async (destinationId: number) => {
+    setPushStatus({ loading: true, success: false, message: "", destinationId });
     try {
       const response = await fetch("http://54.210.159.220:8000/push-to-powerbi", {
         method: "POST",
@@ -317,16 +328,38 @@ const Outbound: React.FC = () => {
       
       const result = await response.json();
       if (response.ok) {
-        setPushStatus({ loading: false, success: true, message: result.message });
+        setPushStatus({ 
+          loading: false, 
+          success: true, 
+          message: result.message, 
+          destinationId 
+        });
+        
+        // Clear status after 3 seconds
+        setTimeout(() => {
+          setPushStatus({ loading: false, success: false, message: "" });
+        }, 3000);
       } else {
-        setPushStatus({ loading: false, success: false, message: result.message });
+        setPushStatus({ 
+          loading: false, 
+          success: false, 
+          message: result.message, 
+          destinationId 
+        });
       }
     } catch (error) {
       setPushStatus({ 
         loading: false, 
         success: false, 
-        message: "Failed to connect to the server" 
+        message: "Failed to connect to the server",
+        destinationId
       });
+    }
+  };
+
+  const handleDestinationAction = (destination: typeof destinations[0]) => {
+    if (destination.action === "push-to-powerbi") {
+      handlePushToPowerBI(destination.id);
     }
   };
 
@@ -424,79 +457,67 @@ const Outbound: React.FC = () => {
                   {destination.description}
                 </p>
 
-                <motion.div
-                  initial={{ x: -10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors"
-                >
-                  <span className="text-sm font-medium">Configure</span>
-                  <motion.span
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 1.5,
-                      ease: "easeInOut",
-                    }}
+                {destination.action === "push-to-powerbi" ? (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => handleDestinationAction(destination)}
+                      disabled={pushStatus.loading && pushStatus.destinationId === destination.id}
+                      className={`w-full px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                        pushStatus.loading && pushStatus.destinationId === destination.id
+                          ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
+                    >
+                      {pushStatus.loading && pushStatus.destinationId === destination.id ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Pushing Data...</span>
+                        </>
+                      ) : (
+                        "Push Data to Power BI"
+                      )}
+                    </button>
+
+                    {pushStatus.message && pushStatus.destinationId === destination.id && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`p-3 rounded-lg text-sm ${
+                          pushStatus.success 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {pushStatus.message}
+                      </motion.div>
+                    )}
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ x: -10, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors"
                   >
-                    →
-                  </motion.span>
-                </motion.div>
+                    <span className="text-sm font-medium">Configure</span>
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1.5,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      →
+                    </motion.span>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           ))}
-        </motion.div>
-
-        {/* Power BI Push Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 max-w-md mx-auto bg-white rounded-2xl shadow-md border border-blue-100 p-6"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <BarChart2 className="w-5 h-5 text-blue-600" />
-            </div>
-            <h2 className="text-xl font-bold text-blue-700">Push to Power BI</h2>
-          </div>
-          <p className="text-gray-700 mb-4">
-            Push your customer item data directly to Power BI with one click.
-          </p>
-          
-          <div className="mt-6 flex flex-col gap-4">
-            <button
-              onClick={handlePushToPowerBI}
-              disabled={pushStatus.loading}
-              className={`px-6 py-2 rounded-xl shadow transition flex items-center justify-center gap-2 ${
-                pushStatus.loading
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              } text-white`}
-            >
-              {pushStatus.loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Pushing Data...
-                </>
-              ) : (
-                "Push Data to Power BI"
-              )}
-            </button>
-
-            {pushStatus.message && (
-              <div className={`p-3 rounded-lg text-sm ${
-                pushStatus.success 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {pushStatus.message}
-              </div>
-            )}
-          </div>
         </motion.div>
 
         {/* Footer Info Section */}
