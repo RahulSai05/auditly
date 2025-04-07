@@ -437,9 +437,7 @@
 //   );
 // }
 
-
-
-import { Route, Routes, useNavigate, useLocation, Navigate, Outlet } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useEffect, useState, ReactNode } from "react";
 // Import all your page components as before
@@ -555,7 +553,7 @@ export default function App(): JSX.Element {
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [isLoading, setIsLoading] = useState(true); // Add loading state to prevent navbar flash
 
   useEffect(() => {
     const localUser = localStorage.getItem("token");
@@ -629,20 +627,24 @@ export default function App(): JSX.Element {
         }
       } catch (error) {
         console.error("Error checking user validity:", error);
+        // Optionally handle fetch failure gracefully (e.g., redirect to login)
+        localStorage.removeItem("token");
+        localStorage.removeItem("usertype");
+        navigate("/login");
       } finally {
         setIsLoading(false); // Set loading to false once check is complete
       }
     };
 
-    checkUserValidity(); // Run immediately, no timeout needed
+    checkUserValidity(); // Run immediately
   }, [location.pathname, userData, navigate]);
 
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
-  // Show a loading spinner or nothing while authentication is being checked
+  // Prevent rendering until authentication is resolved
   if (isLoading) {
-    return <div>Loading...</div>; // You can replace this with a proper loading spinner
+    return <div>Loading...</div>; // Replace with a spinner component if desired
   }
 
   return (
