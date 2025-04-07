@@ -2197,7 +2197,7 @@ def export_customer_items():
 
 POWERBI_PUSH_URL = f"https://api.powerbi.com/beta/fc09811c-498c-4e79-b20f-ba5cfa421942/datasets/49a05538-5cc7-4b32-9445-e728e550471e/rows?experience=power-bi&key=uGgdQLAY%2FiFyZD8mKOYQmahMUEf%2FEUJR8UnDnxyhwLD8XHvE%2BvXMWOwnVflnY%2FcqHIkDPJ88CWC5LF%2F5IbhOQQ%3D%3D"
 
-@app.post("/push-to-powerbi")
+@app.post("/api/push-to-powerbi")
 def push_to_powerbi(db: Session = Depends(get_db)):
     # Step 1: Get items from database
     items = db.query(Item).all()
