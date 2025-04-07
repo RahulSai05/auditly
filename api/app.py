@@ -2191,3 +2191,38 @@ def export_customer_items():
         data.append(item)
 
     return JSONResponse(content=data)
+
+
+
+
+POWERBI_PUSH_URL = f"https://api.powerbi.com/beta/fc09811c-498c-4e79-b20f-ba5cfa421942/datasets/49a05538-5cc7-4b32-9445-e728e550471e/rows?experience=power-bi&key=uGgdQLAY%2FiFyZD8mKOYQmahMUEf%2FEUJR8UnDnxyhwLD8XHvE%2BvXMWOwnVflnY%2FcqHIkDPJ88CWC5LF%2F5IbhOQQ%3D%3D"
+
+@app.post("/push-to-powerbi")
+def push_to_powerbi(db: Session = Depends(get_db)):
+    # Step 1: Get items from database
+    items = db.query(Item).all()
+
+    # Step 2: Format the data for Power BI
+    data = [
+        {
+            "brand_id": str(item.brand_id),
+            "item_number": int(item.item_number),  # cast to int if it contains numeric strings
+            "configuration": item.configuration or "USA",
+            "category": item.category or "Mattress",
+            "item_description": item.item_description
+        }
+        for item in items
+    ]
+
+    # Step 3: Push data to Power BI
+    response = requests.post(POWERBI_PUSH_URL, json=data)
+
+    if response.status_code == 200:
+        return {"status": "Success", "message": "Data pushed to Power BI"}
+    else:
+        return {
+            "status": "Failed",
+            "message": f"Power BI responded with {response.status_code}: {response.text}"
+        }
+
+
