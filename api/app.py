@@ -29,7 +29,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, NotificationTable
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
