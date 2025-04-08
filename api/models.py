@@ -232,3 +232,11 @@ class TeamEmail(Base):
         onupdate=func.current_timestamp()
     )
 
+class NotificationTable(Base):
+    __tablename__ = 'notification_table'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+    notification_message = Column(String(255))
+    read_at = Column(DateTime, default=None)
+    created_at = Column(DateTime, default=func.current_timestamp())
