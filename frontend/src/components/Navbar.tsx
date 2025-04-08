@@ -9,6 +9,7 @@
 //   X,
 //   FileText,
 //   Construction,
+//   Bell,
 // } from "lucide-react";
 // import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,12 +18,16 @@
 //   const router = useNavigate();
 //   const [userData, setUserData] = useState(() => {
 //     const userDataString = localStorage.getItem("token");
-//     return userDataString ? JSON.parse(userDataString) : null;
+//     const userId = localStorage.getItem("userId");
+//     return userDataString ? { ...JSON.parse(userDataString), id: userId } : null;
 //   });
 
 //   const [isAdmin, setIsAdmin] = useState(false);
 //   const [isReportUser, setIsReportUser] = useState(false);
 //   const [isInspectionUser, setIsInspectionUser] = useState(false);
+//   const [notifications, setNotifications] = useState([]);
+//   const [showNotifications, setShowNotifications] = useState(false);
+//   const [unreadCount, setUnreadCount] = useState(0);
 
 //   useEffect(() => {
 //     if (userData && Array.isArray(userData["User Type"])) {
@@ -32,8 +37,61 @@
 //     }
 //   }, [userData]);
 
+//   useEffect(() => {
+//     if (userData?.id) {
+//       fetchNotifications();
+//     }
+//   }, [userData]);
+
+//   const fetchNotifications = async () => {
+//     try {
+//       const response = await fetch(
+//         `https://auditlyai.com/api/get-notifications?user_id=${userData.id}`
+//       );
+//       if (!response.ok) throw new Error("Failed to fetch notifications");
+//       const data = await response.json();
+//       setNotifications(data);
+      
+//       const unread = data.filter(notif => !notif.read_at).length;
+//       setUnreadCount(unread);
+//     } catch (error) {
+//       console.error("Error fetching notifications:", error);
+//     }
+//   };
+
+//   const markAsRead = async (notificationId) => {
+//     try {
+//       const response = await fetch(
+//         `https://auditlyai.com/api/update-notification/${notificationId}`,
+//         {
+//           method: "PUT",
+//         }
+//       );
+//       if (!response.ok) throw new Error("Failed to mark as read");
+      
+//       setNotifications(notifications.map(notif => 
+//         notif.id === notificationId 
+//           ? { ...notif, read_at: new Date().toISOString() } 
+//           : notif
+//       ));
+      
+//       setUnreadCount(prev => prev - 1);
+//     } catch (error) {
+//       console.error("Error marking notification as read:", error);
+//     }
+//   };
+
 //   const toggleMenu = () => {
 //     setIsOpen(!isOpen);
+//   };
+
+//   const toggleNotifications = () => {
+//     setShowNotifications(!showNotifications);
+//   };
+
+//   const closeNotifications = (e) => {
+//     e.stopPropagation(); // Prevent event bubbling
+//     setShowNotifications(false);
 //   };
 
 //   const menuVariants = {
@@ -48,6 +106,21 @@
 //       },
 //     },
 //     exit: { opacity: 0, y: -20 },
+//   };
+
+//   const notificationVariants = {
+//     hidden: { opacity: 0, y: -20, scale: 0.95 },
+//     visible: {
+//       opacity: 1,
+//       y: 0,
+//       scale: 1,
+//       transition: {
+//         type: "spring",
+//         stiffness: 200,
+//         damping: 15,
+//       },
+//     },
+//     exit: { opacity: 0, y: -20, scale: 0.95 },
 //   };
 
 //   return (
@@ -92,7 +165,7 @@
 //           </div>
 //         </motion.div>
 
-//         {/* Hamburger Menu Button - Only visible on mobile/tablet */}
+//         {/* Hamburger Menu Button */}
 //         <motion.button
 //           onClick={toggleMenu}
 //           className="lg:hidden p-2 hover:bg-gray-100 rounded-md transition-colors"
@@ -111,8 +184,8 @@
 //               animate="visible"
 //               exit="exit"
 //               variants={menuVariants}
-//               className={`
-//                 lg:block
+//               className={
+//                 `lg:block
 //                 ${isOpen ? "block" : "hidden"}
 //                 lg:relative absolute top-full left-0 right-0
 //                 lg:bg-transparent bg-white
@@ -120,8 +193,8 @@
 //                 lg:p-0 p-4
 //                 lg:mt-0 mt-2
 //                 z-50
-//                 transition-all duration-300 ease-in-out
-//               `}
+//                 transition-all duration-300 ease-in-out`
+//               }
 //             >
 //               <ul
 //                 className="
@@ -130,8 +203,8 @@
 //                   lg:items-center
 //                 "
 //               >
-//                 {
-//                   isInspectionUser ? <motion.li
+//                 {isInspectionUser ? (
+//                   <motion.li
 //                     whileHover={{ scale: 1.05 }}
 //                     whileTap={{ scale: 0.95 }}
 //                   >
@@ -143,8 +216,10 @@
 //                       <Home className="w-5 h-5" />
 //                       Home
 //                     </Link>
-//                   </motion.li> : ""
-//                 }
+//                   </motion.li>
+//                 ) : (
+//                   ""
+//                 )}
 
 //                 {isAdmin ? (
 //                   <motion.li
@@ -212,12 +287,94 @@
 //                     Help Center
 //                   </Link>
 //                 </motion.li>
+
+//                 {/* Notification Bell */}
+//                 {userData && (
+//                   <motion.li
+//                     whileHover={{ scale: 1.05 }}
+//                     whileTap={{ scale: 0.95 }}
+//                     className="relative"
+//                   >
+//                     <button
+//                       onClick={toggleNotifications}
+//                       className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-3 text-sm md:text-base"
+//                       aria-label="Notifications"
+//                     >
+//                       <Bell className="w-5 h-5" />
+//                       {unreadCount > 0 && (
+//                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+//                           {unreadCount}
+//                         </span>
+//                       )}
+//                     </button>
+
+//                     <AnimatePresence>
+//                       {showNotifications && (
+//                         <motion.div
+//                           initial="hidden"
+//                           animate="visible"
+//                           exit="exit"
+//                           variants={notificationVariants}
+//                           className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200"
+//                           onClick={(e) => e.stopPropagation()} // Add this to prevent closing when clicking inside
+//                         >
+//                           <div className="py-1 max-h-96 overflow-y-auto">
+//                             <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+//                               <h3 className="text-sm font-medium text-gray-700">Notifications</h3>
+//                             </div>
+//                             {notifications.length === 0 ? (
+//                               <div className="px-4 py-3 text-sm text-gray-500">
+//                                 No notifications
+//                               </div>
+//                             ) : (
+//                               notifications.map((notification) => (
+//                                 <div
+//                                   key={notification.id}
+//                                   className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read_at ? 'bg-blue-50' : ''}`}
+//                                   onClick={() => {
+//                                     markAsRead(notification.id);
+//                                   }}
+//                                 >
+//                                   <div className="flex justify-between items-start">
+//                                     <p className="text-sm font-medium text-gray-800">
+//                                       {"Notification"}
+//                                     </p>
+//                                     {!notification.read_at && (
+//                                       <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+//                                     )}
+//                                   </div>
+//                                   <p className="text-xs text-gray-500 mt-1">
+//                                     {notification.notification_message || "No message"}
+//                                   </p>
+//                                   <p className="text-xs text-gray-400 mt-1">
+//                                     {new Date(notification.created_at).toLocaleString()}
+//                                   </p>
+//                                 </div>
+//                               ))
+//                             )}
+//                           </div>
+//                           <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-center">
+//                             <button
+//                               onClick={closeNotifications}
+//                               className="text-xs text-blue-600 hover:text-blue-800"
+//                             >
+//                               Close
+//                             </button>
+//                           </div>
+//                         </motion.div>
+//                       )}
+//                     </AnimatePresence>
+//                   </motion.li>
+//                 )}
+
+//                 {/* Profile */}
 //                 <motion.li
-//                   className="lg:ml-4"
 //                   whileHover={{ scale: 1.05 }}
 //                   whileTap={{ scale: 0.95 }}
 //                 >
-//                   <Profile />
+//                   <div className="flex items-center gap-x-3 text-sm md:text-base">
+//                     <Profile />
+//                   </div>
 //                 </motion.li>
 //               </ul>
 //             </motion.nav>
@@ -241,7 +398,8 @@
 //   );
 // }
 
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
 import {
@@ -259,6 +417,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useNavigate();
+  const notificationRef = useRef<HTMLDivElement>(null);
   const [userData, setUserData] = useState(() => {
     const userDataString = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
@@ -285,6 +444,18 @@ export function Navbar() {
       fetchNotifications();
     }
   }, [userData]);
+
+  // Close notifications when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -318,7 +489,7 @@ export function Navbar() {
           : notif
       ));
       
-      setUnreadCount(prev => prev - 1);
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -326,14 +497,15 @@ export function Navbar() {
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+    if (showNotifications) setShowNotifications(false);
   };
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
+    if (isOpen) setIsOpen(false);
   };
 
-  const closeNotifications = (e) => {
-    e.stopPropagation(); // Prevent event bubbling
+  const closeNotifications = () => {
     setShowNotifications(false);
   };
 
@@ -366,8 +538,21 @@ export function Navbar() {
     exit: { opacity: 0, y: -20, scale: 0.95 },
   };
 
+  const NavLink = ({ to, icon: Icon, children }) => (
+    <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <Link
+        to={to}
+        className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition px-3 py-2 rounded-lg hover:bg-gray-100"
+        onClick={() => setIsOpen(false)}
+      >
+        <Icon className="w-5 h-5" />
+        {children}
+      </Link>
+    </motion.li>
+  );
+
   return (
-    <header className="border-b py-4 px-6 shadow-md relative bg-white/90 backdrop-blur-lg">
+    <header className="sticky top-0 border-b py-4 px-6 shadow-sm relative bg-white/95 backdrop-blur-lg z-50">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
         <motion.div
@@ -376,35 +561,10 @@ export function Navbar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <div
-            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
-            style={{
-              fontFamily: "Prompt, sans-serif",
-              fontWeight: 400,
-              opacity: 0.9,
-            }}
-          >
-            <span style={{ fontSize: "1.7em" }}>a</span>uditly
-          </div>
-          <span
-            className="text-black"
-            style={{
-              fontFamily: "Prompt, sans-serif",
-              fontSize: "1.1em",
-              opacity: 0.8,
-            }}
-          >
-            .
-          </span>
-          <div
-            className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent"
-            style={{
-              fontFamily: "Prompt, sans-serif",
-              fontWeight: 400,
-              opacity: 0.9,
-            }}
-          >
-            <span style={{ fontSize: "1.2em" }}>a</span>i
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent font-['Prompt']">
+            <span className="text-[1.7em]">a</span>uditly
+            <span className="text-black opacity-80">.</span>
+            <span className="text-[1.2em]">a</span>i
           </div>
         </motion.div>
 
@@ -427,109 +587,30 @@ export function Navbar() {
               animate="visible"
               exit="exit"
               variants={menuVariants}
-              className={
-                `lg:block
-                ${isOpen ? "block" : "hidden"}
+              className={`
+                lg:block ${isOpen ? "block" : "hidden"}
                 lg:relative absolute top-full left-0 right-0
                 lg:bg-transparent bg-white
                 lg:shadow-none shadow-md
                 lg:p-0 p-4
                 lg:mt-0 mt-2
                 z-50
-                transition-all duration-300 ease-in-out`
-              }
+              `}
             >
-              <ul
-                className="
-                  lg:flex lg:space-x-6
-                  lg:space-y-0 space-y-4
-                  lg:items-center
-                "
-              >
-                {isInspectionUser ? (
-                  <motion.li
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link
-                      to="/"
-                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <Home className="w-5 h-5" />
-                      Home
-                    </Link>
-                  </motion.li>
-                ) : (
-                  ""
+              <ul className="lg:flex lg:space-x-2 lg:space-y-0 space-y-2 lg:items-center">
+                {isInspectionUser && (
+                  <NavLink to="/" icon={Home}>Home</NavLink>
                 )}
-
-                {isAdmin ? (
-                  <motion.li
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link
-                      to="/admin/settings/connectors/inbound"
-                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <Lock className="w-5 h-5" />
-                      Admin
-                    </Link>
-                  </motion.li>
-                ) : (
-                  ""
+                {isAdmin && (
+                  <NavLink to="/admin/settings/connectors/inbound" icon={Lock}>Admin</NavLink>
                 )}
-
-                {isReportUser ? (
-                  <motion.li
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link
-                      to="/admin/reports/items"
-                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <FileText className="w-5 h-5" />
-                      Reports
-                    </Link>
-                  </motion.li>
-                ) : (
-                  ""
+                {isReportUser && (
+                  <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
-                {isInspectionUser ? (
-                  <motion.li
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link
-                      to="/admin/settings/item-master-upload"
-                      className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <Construction className="w-5 h-5" />
-                      Maintenance
-                    </Link>
-                  </motion.li>
-                ) : (
-                  ""
+                {isInspectionUser && (
+                  <NavLink to="/admin/settings/item-master-upload" icon={Construction}>Maintenance</NavLink>
                 )}
-
-                <motion.li
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/help-center"
-                    className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <MessageCircleQuestion className="w-5 h-5" />
-                    Help Center
-                  </Link>
-                </motion.li>
+                <NavLink to="/help-center" icon={MessageCircleQuestion}>Help Center</NavLink>
 
                 {/* Notification Bell */}
                 {userData && (
@@ -537,10 +618,11 @@ export function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="relative"
+                    ref={notificationRef}
                   >
                     <button
                       onClick={toggleNotifications}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-3 text-sm md:text-base"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-3"
                       aria-label="Notifications"
                     >
                       <Bell className="w-5 h-5" />
@@ -558,25 +640,26 @@ export function Navbar() {
                           animate="visible"
                           exit="exit"
                           variants={notificationVariants}
-                          className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200"
-                          onClick={(e) => e.stopPropagation()} // Add this to prevent closing when clicking inside
+                          className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200"
                         >
                           <div className="py-1 max-h-96 overflow-y-auto">
-                            <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+                            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                               <h3 className="text-sm font-medium text-gray-700">Notifications</h3>
+                              <span className="text-xs text-gray-500">{unreadCount} unread</span>
                             </div>
                             {notifications.length === 0 ? (
-                              <div className="px-4 py-3 text-sm text-gray-500">
+                              <div className="px-4 py-6 text-sm text-gray-500 text-center">
                                 No notifications
                               </div>
                             ) : (
                               notifications.map((notification) => (
-                                <div
+                                <motion.div
                                   key={notification.id}
-                                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read_at ? 'bg-blue-50' : ''}`}
-                                  onClick={() => {
-                                    markAsRead(notification.id);
-                                  }}
+                                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                                    !notification.read_at ? 'bg-blue-50' : ''
+                                  }`}
+                                  onClick={() => markAsRead(notification.id)}
+                                  whileHover={{ backgroundColor: '#F3F4F6' }}
                                 >
                                   <div className="flex justify-between items-start">
                                     <p className="text-sm font-medium text-gray-800">
@@ -586,20 +669,20 @@ export function Navbar() {
                                       <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-gray-500 mt-1">
+                                  <p className="text-xs text-gray-600 mt-1">
                                     {notification.notification_message || "No message"}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-1">
                                     {new Date(notification.created_at).toLocaleString()}
                                   </p>
-                                </div>
+                                </motion.div>
                               ))
                             )}
                           </div>
-                          <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-center">
+                          <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
                             <button
                               onClick={closeNotifications}
-                              className="text-xs text-blue-600 hover:text-blue-800"
+                              className="w-full text-sm text-blue-600 hover:text-blue-800 py-1 px-3 rounded-md hover:bg-gray-100 transition-colors"
                             >
                               Close
                             </button>
@@ -611,10 +694,7 @@ export function Navbar() {
                 )}
 
                 {/* Profile */}
-                <motion.li
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <div className="flex items-center gap-x-3 text-sm md:text-base">
                     <Profile />
                   </div>
