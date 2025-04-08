@@ -241,7 +241,6 @@
 //   );
 // }
 
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -290,7 +289,7 @@ export function Navbar() {
   const fetchNotifications = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/get-notifications?user_id=${userData.id}`
+        `https://auditlyai.com/api/get-notifications?user_id=${userData.id}`
       );
       if (!response.ok) throw new Error("Failed to fetch notifications");
       const data = await response.json();
@@ -306,7 +305,7 @@ export function Navbar() {
   const markAsRead = async (notificationId) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/update-notification/${notificationId}`,
+        `https://auditlyai.com/api/update-notification/${notificationId}`,
         {
           method: "PUT",
         }
@@ -329,12 +328,14 @@ export function Navbar() {
     setIsOpen(!isOpen);
   };
 
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
+  const toggleNotifications = (e) => {
+    e.stopPropagation(); // Prevent bubbling to parent elements
+    setShowNotifications(prev => !prev);
   };
 
   const closeNotifications = (e) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation(); // Prevent bubbling
+    console.log("Close button clicked"); // Debug log
     setShowNotifications(false);
   };
 
@@ -554,57 +555,59 @@ export function Navbar() {
 
                     <AnimatePresence>
                       {showNotifications && (
-                        <motion.div
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          variants={notificationVariants}
-                          className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200"
-                        >
-                          <div className="py-1 max-h-96 overflow-y-auto">
-                            <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
-                              <h3 className="text-sm font-medium text-gray-700">Notifications</h3>
-                            </div>
-                            {notifications.length === 0 ? (
-                              <div className="px-4 py-3 text-sm text-gray-500">
-                                No notifications
+                        <div className="relative">
+                          <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            variants={notificationVariants}
+                            className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200"
+                          >
+                            <div className="py-1 max-h-96 overflow-y-auto">
+                              <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+                                <h3 className="text-sm font-medium text-gray-700">Notifications</h3>
                               </div>
-                            ) : (
-                              notifications.map((notification) => (
-                                <div
-                                  key={notification.id}
-                                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read_at ? 'bg-blue-50' : ''}`}
-                                  onClick={() => {
-                                    markAsRead(notification.id);
-                                  }}
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <p className="text-sm font-medium text-gray-800">
-                                      {notification.title || "Notification"}
-                                    </p>
-                                    {!notification.read_at && (
-                                      <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {notification.message || "No message"}
-                                  </p>
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    {new Date(notification.created_at).toLocaleString()}
-                                  </p>
+                              {notifications.length === 0 ? (
+                                <div className="px-4 py-3 text-sm text-gray-500">
+                                  No notifications
                                 </div>
-                              ))
-                            )}
-                          </div>
-                          <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-center">
-                            <button
-                              onClick={closeNotifications}
-                              className="text-xs text-blue-600 hover:text-blue-800"
-                            >
-                              Close
-                            </button>
-                          </div>
-                        </motion.div>
+                              ) : (
+                                notifications.map((notification) => (
+                                  <div
+                                    key={notification.id}
+                                    className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read_at ? 'bg-blue-50' : ''}`}
+                                    onClick={() => {
+                                      markAsRead(notification.id);
+                                    }}
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <p className="text-sm font-medium text-gray-800">
+                                        {notification.title || "Notification"}
+                                      </p>
+                                      {!notification.read_at && (
+                                        <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {notification.message || "No message"}
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                      {new Date(notification.created_at).toLocaleString()}
+                                    </p>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                            <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-center">
+                              <button
+                                onClick={closeNotifications}
+                                className="text-xs text-blue-600 hover:text-blue-800 focus:outline-none"
+                              >
+                                Close
+                              </button>
+                            </div>
+                          </motion.div>
+                        </div>
                       )}
                     </AnimatePresence>
                   </motion.li>
