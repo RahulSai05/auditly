@@ -580,14 +580,14 @@ export function Navbar() {
                                 >
                                   <div className="flex justify-between items-start">
                                     <p className="text-sm font-medium text-gray-800">
-                                      {notification.title || "Notification"}
+                                      {"Notification"}
                                     </p>
                                     {!notification.read_at && (
                                       <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
                                     )}
                                   </div>
                                   <p className="text-xs text-gray-500 mt-1">
-                                    {notification.message || "No message"}
+                                    {notification.notification_message || "No message"}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-1">
                                     {new Date(notification.created_at).toLocaleString()}
