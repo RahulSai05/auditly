@@ -2264,7 +2264,7 @@ def export_customer_items():
 
 
 
-@app.get("/get-notifications")
+@app.get("/api/get-notifications")
 def get_notifications(user_id: int, db: Session = Depends(get_db)):
     notifications = db.query(NotificationTable).filter(NotificationTable.auditly_user_id == user_id).all()
     
@@ -2274,7 +2274,7 @@ def get_notifications(user_id: int, db: Session = Depends(get_db)):
 ]
 
 
-@app.put("/update-notification/{notification_id}")
+@app.put("/api/update-notification/{notification_id}")
 def update_notification(notification_id: int, db: Session = Depends(get_db)):
     # Retrieve the notification by ID
     notification = db.query(NotificationTable).filter(NotificationTable.id == notification_id).first()
