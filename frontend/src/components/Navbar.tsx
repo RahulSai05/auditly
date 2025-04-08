@@ -241,6 +241,7 @@
 //   );
 // }
 
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
@@ -330,6 +331,11 @@ export function Navbar() {
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
+  };
+
+  const closeNotifications = (e) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setShowNotifications(false);
   };
 
   const menuVariants = {
@@ -592,7 +598,7 @@ export function Navbar() {
                           </div>
                           <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-center">
                             <button
-                              onClick={() => setShowNotifications(false)}
+                              onClick={closeNotifications}
                               className="text-xs text-blue-600 hover:text-blue-800"
                             >
                               Close
