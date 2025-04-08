@@ -775,8 +775,10 @@ interface LoadingState {
 }
 
 interface Notification {
+  id: string;
   type: 'success' | 'error';
   message: string;
+  dismissable: boolean;
 }
 
 interface TableData {
@@ -811,6 +813,43 @@ interface PowerBIColumnMapping {
   [key: string]: string;
 }
 
+const NotificationToast: React.FC<{
+  notification: Notification;
+  onDismiss: (id: string) => void;
+}> = ({ notification, onDismiss }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      className={`
+        rounded-xl p-4 flex items-start gap-3 max-w-2xl mx-auto relative mb-4
+        ${notification.type === 'success' 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-red-100 text-red-800'}
+      `}
+    >
+      {notification.type === 'success' ? (
+        <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+      ) : (
+        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+      )}
+      <div className="flex-1">
+        <p>{notification.message}</p>
+      </div>
+      {notification.dismissable && (
+        <button
+          onClick={() => onDismiss(notification.id)}
+          className="text-gray-500 hover:text-gray-700 ml-2"
+          aria-label="Dismiss notification"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+    </motion.div>
+  );
+};
+
 const MappingRules: React.FC = () => {
   const [powerBIData, setPowerBIData] = useState<PowerBIData>({
     workspace_id: '',
@@ -836,7 +875,7 @@ const MappingRules: React.FC = () => {
     columns: false,
     saving: false
   });
-  const [notification, setNotification] = useState<Notification>({ type: 'success', message: '' });
+  const [notification, setNotification] = useState<Notification | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [showPowerBIForm, setShowPowerBIForm] = useState(false);
@@ -849,7 +888,12 @@ const MappingRules: React.FC = () => {
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
     } else {
-      setNotification({ type: 'error', message: "User not authenticated. Please login again." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "User not authenticated. Please login again.",
+        dismissable: true
+      });
     }
   }, []);
 
@@ -858,7 +902,7 @@ const MappingRules: React.FC = () => {
     
     const fetchColumns = async () => {
       setIsLoading(prev => ({...prev, columns: true}));
-      setNotification({ type: 'success', message: '' });
+      setNotification(null);
       try {
         const response = await axios.get(`https://auditlyai.com/api/columns/${selectedTable}`);
         const data: ColumnData = response.data;
@@ -870,7 +914,12 @@ const MappingRules: React.FC = () => {
           destination: ""
         })));
       } catch (error) {
-        setNotification({ type: 'error', message: "Failed to fetch columns for the selected table." });
+        setNotification({
+          id: Date.now().toString(),
+          type: 'error',
+          message: "Failed to fetch columns for the selected table.",
+          dismissable: true
+        });
       } finally {
         setIsLoading(prev => ({...prev, columns: false}));
       }
@@ -912,19 +961,34 @@ const MappingRules: React.FC = () => {
 
   const handleFetchDatasets = async () => {
     if (!powerBIData.workspace_id) {
-      setNotification({ type: 'error', message: "Please enter a workspace ID." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Please enter a workspace ID.",
+        dismissable: true
+      });
       return;
     }
 
     setIsLoading(prev => ({...prev, fetchingDatasets: true}));
-    setNotification({ type: 'success', message: '' });
+    setNotification(null);
 
     try {
       const response = await axios.get(`https://auditlyai.com/api/get-powerbi-dataset-ids?workspace_id=${powerBIData.workspace_id}`);
       setDatasets(response.data.dataset_ids.map((id: string) => ({ id, name: id })));
-      setNotification({ type: 'success', message: "Datasets fetched successfully!" });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'success',
+        message: "Datasets fetched successfully!",
+        dismissable: true
+      });
     } catch (error) {
-      setNotification({ type: 'error', message: "Failed to fetch datasets. Please check the workspace ID." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Failed to fetch datasets. Please check the workspace ID.",
+        dismissable: true
+      });
     } finally {
       setIsLoading(prev => ({...prev, fetchingDatasets: false}));
     }
@@ -932,12 +996,17 @@ const MappingRules: React.FC = () => {
 
   const handleFetchPowerBIColumns = async () => {
     if (!powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name) {
-      setNotification({ type: 'error', message: "Please fill all required fields." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Please fill all required fields.",
+        dismissable: true
+      });
       return;
     }
 
     setIsLoading(prev => ({...prev, fetchingPowerBIColumns: true}));
-    setNotification({ type: 'success', message: '' });
+    setNotification(null);
 
     try {
       const response = await axios.post("https://auditlyai.com/api/powerbi/get-powerbi-table-columns", {
@@ -965,9 +1034,19 @@ const MappingRules: React.FC = () => {
       
       setMappingRows(autoMappedRows);
       
-      setNotification({ type: 'success', message: "Power BI columns fetched successfully!" });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'success',
+        message: "Power BI columns fetched successfully!",
+        dismissable: true
+      });
     } catch (error) {
-      setNotification({ type: 'error', message: "Failed to fetch Power BI columns. Please try again." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Failed to fetch Power BI columns. Please try again.",
+        dismissable: true
+      });
     } finally {
       setIsLoading(prev => ({...prev, fetchingPowerBIColumns: false}));
     }
@@ -975,7 +1054,12 @@ const MappingRules: React.FC = () => {
 
   const handleEdit = () => {
     if (!selectedTable) {
-      setNotification({ type: 'error', message: "Please select a table first." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Please select a table first.",
+        dismissable: true
+      });
       return;
     }
     setEditMode(true);
@@ -983,22 +1067,37 @@ const MappingRules: React.FC = () => {
 
   const handleSaveMapping = async () => {
     if (!selectedTable) {
-      setNotification({ type: 'error', message: "Please select a table first." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Please select a table first.",
+        dismissable: true
+      });
       return;
     }
 
     if (!userId) {
-      setNotification({ type: 'error', message: "User not authenticated. Please login again." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "User not authenticated. Please login again.",
+        dismissable: true
+      });
       return;
     }
 
     if (!powerBIData.date_filter_column || !powerBIData.date_filter_value) {
-      setNotification({ type: 'error', message: "Please select a date filter column and value." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Please select a date filter column and value.",
+        dismissable: true
+      });
       return;
     }
 
     setIsLoading(prev => ({...prev, saving: true}));
-    setNotification({ type: 'success', message: '' });
+    setNotification(null);
 
     try {
       const mappingObject = mappingRows.reduce((acc, row) => {
@@ -1018,17 +1117,20 @@ const MappingRules: React.FC = () => {
       });
 
       setMappingName(response.data.data.mapping_name);
-      setNotification({ 
-        type: 'success', 
-        message: `Mapping saved successfully! Mapping name: ${response.data.data.mapping_name}` 
+      setNotification({
+        id: Date.now().toString(),
+        type: 'success',
+        message: `Mapping saved successfully! Mapping name: ${response.data.data.mapping_name}`,
+        dismissable: true
       });
       setEditMode(false);
-      
-      setTimeout(() => {
-        setNotification({ type: 'success', message: '' });
-      }, 5000);
     } catch (error) {
-      setNotification({ type: 'error', message: "Failed to save mapping. Please try again." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Failed to save mapping. Please try again.",
+        dismissable: true
+      });
     } finally {
       setIsLoading(prev => ({...prev, saving: false}));
     }
@@ -1036,17 +1138,27 @@ const MappingRules: React.FC = () => {
 
   const handleSyncToPowerBI = async () => {
     if (!userId) {
-      setNotification({ type: 'error', message: "User not authenticated. Please login again." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "User not authenticated. Please login again.",
+        dismissable: true
+      });
       return;
     }
 
     if (!powerBIData.workspace_id || !powerBIData.dataset_id || !powerBIData.table_name || !selectedTable) {
-      setNotification({ type: 'error', message: "Please complete all Power BI configuration steps first." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Please complete all Power BI configuration steps first.",
+        dismissable: true
+      });
       return;
     }
 
     setIsSyncing(true);
-    setNotification({ type: 'success', message: '' });
+    setNotification(null);
 
     try {
       const response = await axios.post("https://auditlyai.com/api/powerbi/get-table-data", {
@@ -1057,9 +1169,19 @@ const MappingRules: React.FC = () => {
         power_bi_table_name: powerBIData.table_name
       });
 
-      setNotification({ type: 'success', message: "Data synced to Power BI successfully!" });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'success',
+        message: "Data synced to Power BI successfully!",
+        dismissable: true
+      });
     } catch (error) {
-      setNotification({ type: 'error', message: "Failed to sync data to Power BI. Please try again." });
+      setNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        message: "Failed to sync data to Power BI. Please try again.",
+        dismissable: true
+      });
     } finally {
       setIsSyncing(false);
     }
@@ -1109,6 +1231,20 @@ const MappingRules: React.FC = () => {
             Configure Power BI integration and manage column mappings
           </motion.p>
         </motion.div>
+
+        {/* Notification Section */}
+        <AnimatePresence mode="wait">
+          {notification && (
+            <NotificationToast
+              notification={notification}
+              onDismiss={(id) => {
+                if (notification.id === id) {
+                  setNotification(null);
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Power BI Configuration Section */}
         <motion.div
@@ -1515,30 +1651,6 @@ const MappingRules: React.FC = () => {
             )}
           </div>
         </motion.div>
-
-        {/* Notification Section */}
-        <AnimatePresence mode="wait">
-          {notification.message && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className={`
-                rounded-xl p-4 flex items-center gap-3 max-w-2xl mx-auto
-                ${notification.type === 'success' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'}
-              `}
-            >
-              {notification.type === 'success' ? (
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              )}
-              <p>{notification.message}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
