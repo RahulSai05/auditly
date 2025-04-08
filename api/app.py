@@ -1994,66 +1994,7 @@ class GetPowerBITableData(BaseModel):
     access_token: Optional[str] = None
 
 
-# @app.post("/api/powerbi/get-table-data")
-# async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
-#     """
-#     Fetch table data from Power BI Dataset
-#     """
-#     sql_table_name = request.sql_table_name
-#     user_id = request.user_id
-#     workspace_id = request.workspace_id
-#     dataset_id = request.dataset_id
-#     power_bi_table_name = request.power_bi_table_name
-
-#     power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
-#     power_bi_user_mapping = power_bi_table_data.mapping
-#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-     
-#     headers = {
-#         "Authorization": f"Bearer {ACCESS_TOKEN}",
-#         "Content-Type": "application/json"
-#     }
-
-#     url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
-
-
-#     dax_query = {
-#         "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}], #name of the table in powerbi we are getting it as an input
-#         "serializerSettings": {"includeNulls": True}
-#     }
-
-#     response = requests.post(url, headers=headers, json=dax_query)
-#     print(response)
-#     response_table = response.json()["results"][0]["tables"][0]["rows"]
-#     bi_response_mapping = response_table.pop(0)
-#     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
-#     mapping_dict = {}
-#     for key, value in bi_response_mapping.items():
-#         if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
-#             return {"data": "Mapping Missmatch"}
-#         elif value == power_bi_table_data.date_filter_column_name:
-#             filter_column = key
-#         elif value in availabe_column_name:
-#             mapping_dict.update({key:power_bi_user_mapping[value]})
-#     table = Table(sql_table_name, metadata, autoload_with=engine)
-#     transformed_data = []
-#     for record in response_table:
-#         filter_check = None
-#         formatted_entry = {}
-#         for key, value in record.items():
-#             if key == filter_column and datetime.strptime(value, "%m-%d-%Y") < power_bi_table_data.date_filter_value:
-#                 filter_check = True
-#                 continue
-#             if key in [k for k,v in mapping_dict.items()]:
-#                 formatted_entry[mapping_dict[key]] = value
-#         if(not filter_check):
-#             transformed_data.append(formatted_entry)
-#     db.execute(table.insert(), transformed_data)
-#     db.commit()
-#     return response.json()
-    
-
-@app.post("/powerbi/get-table-data")
+@app.post("/api/powerbi/get-table-data")
 async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
     """
     Fetch table data from Power BI Dataset
@@ -2089,17 +2030,6 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     mapping_dict = {}
     for key, value in bi_response_mapping.items():
         if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
-            # notification = db.query(NotificationTable).filter(NotificationTable.auditly_user_id == user_id).first()
-            # # Update the read_at field
-            # if notification:
-            #     notification.notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}"
-            # else:
-            notification_new = NotificationTable(
-                auditly_user_id = user_id,
-                notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}",        
-            )
-            db.add(notification_new)   
-            db.commit()
             return {"data": "Mapping Missmatch"}
         elif value == power_bi_table_data.date_filter_column_name:
             filter_column = key
@@ -2121,6 +2051,76 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     db.execute(table.insert(), transformed_data)
     db.commit()
     return response.json()
+    
+
+# @app.post("/powerbi/get-table-data")
+# async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
+#     """
+#     Fetch table data from Power BI Dataset
+#     """
+#     sql_table_name = request.sql_table_name
+#     user_id = request.user_id
+#     workspace_id = request.workspace_id
+#     dataset_id = request.dataset_id
+#     power_bi_table_name = request.power_bi_table_name
+
+#     power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
+#     power_bi_user_mapping = power_bi_table_data.mapping
+#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+     
+#     headers = {
+#         "Authorization": f"Bearer {ACCESS_TOKEN}",
+#         "Content-Type": "application/json"
+#     }
+
+#     url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
+
+
+#     dax_query = {
+#         "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}], #name of the table in powerbi we are getting it as an input
+#         "serializerSettings": {"includeNulls": True}
+#     }
+
+#     response = requests.post(url, headers=headers, json=dax_query)
+#     print(response)
+#     response_table = response.json()["results"][0]["tables"][0]["rows"]
+#     bi_response_mapping = response_table.pop(0)
+#     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
+#     mapping_dict = {}
+#     for key, value in bi_response_mapping.items():
+#         if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
+#             # notification = db.query(NotificationTable).filter(NotificationTable.auditly_user_id == user_id).first()
+#             # # Update the read_at field
+#             # if notification:
+#             #     notification.notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}"
+#             # else:
+#             notification_new = NotificationTable(
+#                 auditly_user_id = user_id,
+#                 notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}",        
+#             )
+#             db.add(notification_new)   
+#             db.commit()
+#             return {"data": "Mapping Missmatch"}
+#         elif value == power_bi_table_data.date_filter_column_name:
+#             filter_column = key
+#         elif value in availabe_column_name:
+#             mapping_dict.update({key:power_bi_user_mapping[value]})
+#     table = Table(sql_table_name, metadata, autoload_with=engine)
+#     transformed_data = []
+#     for record in response_table:
+#         filter_check = None
+#         formatted_entry = {}
+#         for key, value in record.items():
+#             if key == filter_column and datetime.strptime(value, "%m-%d-%Y") < power_bi_table_data.date_filter_value:
+#                 filter_check = True
+#                 continue
+#             if key in [k for k,v in mapping_dict.items()]:
+#                 formatted_entry[mapping_dict[key]] = value
+#         if(not filter_check):
+#             transformed_data.append(formatted_entry)
+#     db.execute(table.insert(), transformed_data)
+#     db.commit()
+#     return response.json()
 
 
 class CronJobCreate(BaseModel):
