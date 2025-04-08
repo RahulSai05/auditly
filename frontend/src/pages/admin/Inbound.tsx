@@ -8,6 +8,9 @@
 //   Cloud,
 //   FileText,
 //   Server,
+//   Clock,
+//   X,
+//   Check,
 // } from "lucide-react";
 // import "react-toastify/dist/ReactToastify.css";
 
@@ -76,6 +79,21 @@
 //   const [searchParams, setSearchParams] = useSearchParams();
 //   const [isAuthWindowOpen, setIsAuthWindowOpen] = useState(false);
 //   const [activeAuthWindow, setActiveAuthWindow] = useState<Window | null>(null);
+//   const [showScheduleForm, setShowScheduleForm] = useState(false);
+//   const [scheduleData, setScheduleData] = useState({
+//     cron_to_mapping_name: "",
+//     cron_expression: "",
+//   });
+//   const [userId, setUserId] = useState<number | null>(null);
+//   const [isScheduling, setIsScheduling] = useState(false);
+
+//   // Get user ID from local storage
+//   useEffect(() => {
+//     const storedUserId = localStorage.getItem("userId");
+//     if (storedUserId) {
+//       setUserId(parseInt(storedUserId));
+//     }
+//   }, []);
 
 //   // Handle callback messages from authentication
 //   useEffect(() => {
@@ -225,6 +243,72 @@
 //     }
 //   };
 
+//   const handleScheduleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+    
+//     if (!userId) {
+//       toast.error("User not authenticated. Please login again.");
+//       return;
+//     }
+
+//     if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression) {
+//       toast.error("Please fill all required fields.");
+//       return;
+//     }
+
+//     setIsScheduling(true);
+
+//     try {
+//       const response = await fetch("/api/add-cronjobs", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           ...scheduleData,
+//           auditly_user_id: userId,
+//         }),
+//       });
+
+//       const data = await response.json();
+
+//       if (response.ok) {
+//         toast.success(data.message, {
+//           position: "top-right",
+//           autoClose: 5000,
+//           hideProgressBar: false,
+//           closeOnClick: true,
+//           pauseOnHover: true,
+//         });
+//         setShowScheduleForm(false);
+//         setScheduleData({
+//           cron_to_mapping_name: "",
+//           cron_expression: "",
+//         });
+//       } else {
+//         throw new Error(data.message || "Failed to create cron job");
+//       }
+//     } catch (error: any) {
+//       toast.error(error.message || "Failed to create cron job", {
+//         position: "top-right",
+//         autoClose: 5000,
+//         hideProgressBar: false,
+//         closeOnClick: true,
+//         pauseOnHover: true,
+//       });
+//     } finally {
+//       setIsScheduling(false);
+//     }
+//   };
+
+//   const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const { name, value } = e.target;
+//     setScheduleData((prev) => ({
+//       ...prev,
+//       [name]: value,
+//     }));
+//   };
+
 //   return (
 //     <div className={`min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 relative ${isAuthWindowOpen ? 'pointer-events-none' : ''}`}>
 //       {/* Overlay when auth window is open */}
@@ -236,6 +320,113 @@
 //             exit={{ opacity: 0 }}
 //             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
 //           />
+//         )}
+//       </AnimatePresence>
+
+//       {/* Schedule Form Modal */}
+//       <AnimatePresence>
+//         {showScheduleForm && (
+//           <motion.div
+//             initial={{ opacity: 0 }}
+//             animate={{ opacity: 1 }}
+//             exit={{ opacity: 0 }}
+//             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+//             onClick={() => setShowScheduleForm(false)}
+//           >
+//             <motion.div
+//               initial={{ y: 20, opacity: 0 }}
+//               animate={{ y: 0, opacity: 1 }}
+//               exit={{ y: 20, opacity: 0 }}
+//               transition={{ type: "spring", damping: 25 }}
+//               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               <div className="p-6">
+//                 <div className="flex justify-between items-center mb-4">
+//                   <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+//                     <Clock className="w-5 h-5 text-blue-600" />
+//                     Schedule Automation
+//                   </h3>
+//                   <button
+//                     onClick={() => setShowScheduleForm(false)}
+//                     className="text-gray-400 hover:text-gray-500"
+//                   >
+//                     <X className="w-5 h-5" />
+//                   </button>
+//                 </div>
+
+//                 <form onSubmit={handleScheduleSubmit}>
+//                   <div className="space-y-4">
+//                     <div>
+//                       <label htmlFor="cron_to_mapping_name" className="block text-sm font-medium text-gray-700 mb-1">
+//                         Mapping Name *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         id="cron_to_mapping_name"
+//                         name="cron_to_mapping_name"
+//                         value={scheduleData.cron_to_mapping_name}
+//                         onChange={handleScheduleChange}
+//                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+//                         placeholder="Enter mapping name"
+//                         required
+//                       />
+//                     </div>
+
+//                     <div>
+//                       <label htmlFor="cron_expression" className="block text-sm font-medium text-gray-700 mb-1">
+//                         Cron Expression *
+//                       </label>
+//                       <input
+//                         type="text"
+//                         id="cron_expression"
+//                         name="cron_expression"
+//                         value={scheduleData.cron_expression}
+//                         onChange={handleScheduleChange}
+//                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+//                         placeholder="e.g., 0 9 * * * (9 AM daily)"
+//                         required
+//                       />
+//                       <div className="mt-2">
+//                         <p className="text-xs text-gray-500 font-medium mb-1">Common examples:</p>
+//                         <ul className="text-xs text-gray-500 space-y-1">
+//                           <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * *</code> - 9 AM daily</li>
+//                           <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * 1-5</code> - 9 AM weekdays</li>
+//                           <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 1 * *</code> - 9 AM on 1st of month</li>
+//                           <li><code className="bg-gray-100 px-1 py-0.5 rounded">*/15 * * * *</code> - Every 15 minutes</li>
+//                         </ul>
+//                       </div>
+//                     </div>
+
+//                     <div className="pt-2">
+//                       <button
+//                         type="submit"
+//                         disabled={isScheduling}
+//                         className={`w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all ${
+//                           isScheduling ? 'opacity-75 cursor-not-allowed' : ''
+//                         }`}
+//                       >
+//                         {isScheduling ? (
+//                           <>
+//                             <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                             </svg>
+//                             Scheduling...
+//                           </>
+//                         ) : (
+//                           <>
+//                             <Check className="w-5 h-5 mr-2" />
+//                             Schedule Automation
+//                           </>
+//                         )}
+//                       </button>
+//                     </div>
+//                   </div>
+//                 </form>
+//               </div>
+//             </motion.div>
+//           </motion.div>
 //         )}
 //       </AnimatePresence>
 
@@ -342,28 +533,65 @@
 //                     </motion.span>
 //                   </motion.div>
 
-//                   {source.authEndpoint && (
-//                     <motion.button
-//                       whileHover={{ scale: 1.05 }}
-//                       whileTap={{ scale: 0.95 }}
-//                       onClick={() => handleAuthClick(source)}
-//                       disabled={loading[source.id] || isAuthWindowOpen}
-//                       className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-//                         (loading[source.id] || isAuthWindowOpen) ? 'opacity-75 cursor-not-allowed' : ''
-//                       }`}
-//                     >
-//                       {loading[source.id] ? (
-//                         <span className="flex items-center">
-//                           <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-//                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-//                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-//                           </svg>
-//                           Connecting...
-//                         </span>
-//                       ) : (
-//                         'Connect'
+//                   {source.id === 4 ? ( // Inbound Automate
+//                     <div className="flex gap-2">
+//                       <motion.button
+//                         whileHover={{ scale: 1.05 }}
+//                         whileTap={{ scale: 0.95 }}
+//                         onClick={() => setShowScheduleForm(true)}
+//                         className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+//                       >
+//                         <Clock className="w-4 h-4 inline mr-2" />
+//                         Schedule
+//                       </motion.button>
+//                       {source.authEndpoint && (
+//                         <motion.button
+//                           whileHover={{ scale: 1.05 }}
+//                           whileTap={{ scale: 0.95 }}
+//                           onClick={() => handleAuthClick(source)}
+//                           disabled={loading[source.id] || isAuthWindowOpen}
+//                           className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+//                             (loading[source.id] || isAuthWindowOpen) ? 'opacity-75 cursor-not-allowed' : ''
+//                           }`}
+//                         >
+//                           {loading[source.id] ? (
+//                             <span className="flex items-center">
+//                               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                               </svg>
+//                               Connecting...
+//                             </span>
+//                           ) : (
+//                             'Connect'
+//                           )}
+//                         </motion.button>
 //                       )}
-//                     </motion.button>
+//                     </div>
+//                   ) : (
+//                     source.authEndpoint && (
+//                       <motion.button
+//                         whileHover={{ scale: 1.05 }}
+//                         whileTap={{ scale: 0.95 }}
+//                         onClick={() => handleAuthClick(source)}
+//                         disabled={loading[source.id] || isAuthWindowOpen}
+//                         className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+//                           (loading[source.id] || isAuthWindowOpen) ? 'opacity-75 cursor-not-allowed' : ''
+//                         }`}
+//                       >
+//                         {loading[source.id] ? (
+//                           <span className="flex items-center">
+//                             <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                             </svg>
+//                             Connecting...
+//                           </span>
+//                         ) : (
+//                           'Connect'
+//                         )}
+//                       </motion.button>
+//                     )
 //                   )}
 //                 </div>
 //               </div>
@@ -391,6 +619,7 @@ import {
   Clock,
   X,
   Check,
+  Bell,
 } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -467,7 +696,6 @@ const Inbound: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
 
-  // Get user ID from local storage
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
@@ -475,7 +703,6 @@ const Inbound: React.FC = () => {
     }
   }, []);
 
-  // Handle callback messages from authentication
   useEffect(() => {
     const message = searchParams.get('message');
     const error = searchParams.get('error');
@@ -485,12 +712,8 @@ const Inbound: React.FC = () => {
       toast.success(decodedMessage, {
         position: "top-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
       });
       
-      // Clean up URL
       searchParams.delete('message');
       setSearchParams(searchParams, { replace: true });
     }
@@ -500,63 +723,47 @@ const Inbound: React.FC = () => {
       toast.error(decodedError, {
         position: "top-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
       });
       
-      // Clean up URL
       searchParams.delete('error');
       setSearchParams(searchParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
-  // Handle message from popup window
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Verify the origin of the message
       const trustedOrigins = ['https://auditlyai.com'];
       if (!trustedOrigins.includes(event.origin)) return;
 
       if (event.data.type === 'AUTH_SUCCESS') {
-        // Close the popup window if it's still open
         if (activeAuthWindow && !activeAuthWindow.closed) {
           activeAuthWindow.close();
         }
         
         setIsAuthWindowOpen(false);
         setActiveAuthWindow(null);
-        
-        // Clear loading state for all sources
         setLoading({});
         
         toast.success('Authentication successful!', {
+          icon: '🔐',
           position: "top-right",
           autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
         });
       }
       
       if (event.data.type === 'AUTH_ERROR') {
-        // Close the popup window if it's still open
         if (activeAuthWindow && !activeAuthWindow.closed) {
           activeAuthWindow.close();
         }
         
         setIsAuthWindowOpen(false);
         setActiveAuthWindow(null);
-        
-        // Clear loading state for all sources
         setLoading({});
         
         toast.error(event.data.message || 'Authentication failed', {
+          icon: '❌',
           position: "top-right",
           autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
         });
       }
     };
@@ -565,7 +772,6 @@ const Inbound: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [activeAuthWindow]);
 
-  // Cleanup effect for auth window
   useEffect(() => {
     return () => {
       if (activeAuthWindow && !activeAuthWindow.closed) {
@@ -581,17 +787,14 @@ const Inbound: React.FC = () => {
       setLoading(prev => ({ ...prev, [source.id]: true }));
       setIsAuthWindowOpen(true);
       
-      // Calculate center position for popup
       const width = 600;
       const height = 700;
       const left = window.screen.width / 2 - width / 2;
       const top = window.screen.height / 2 - height / 2;
 
-      // Add return URL parameter to the auth endpoint
       const returnUrl = encodeURIComponent(window.location.origin);
       const authUrl = `${source.authEndpoint}?returnUrl=${returnUrl}`;
       
-      // Open authentication in a new window
       const authWindow = window.open(
         authUrl,
         'AuthPopup',
@@ -601,7 +804,6 @@ const Inbound: React.FC = () => {
       if (authWindow) {
         setActiveAuthWindow(authWindow);
         
-        // Check if the window was closed manually
         const checkWindowClosed = setInterval(() => {
           if (authWindow.closed) {
             clearInterval(checkWindowClosed);
@@ -616,7 +818,11 @@ const Inbound: React.FC = () => {
       
     } catch (error) {
       console.error("Authentication error:", error);
-      toast.error("Failed to initiate authentication. Please try again.");
+      toast.error("Failed to initiate authentication. Please try again.", {
+        icon: '❌',
+        position: "top-right",
+        autoClose: 5000,
+      });
       setIsAuthWindowOpen(false);
       setActiveAuthWindow(null);
       setLoading(prev => ({ ...prev, [source.id]: false }));
@@ -627,12 +833,20 @@ const Inbound: React.FC = () => {
     e.preventDefault();
     
     if (!userId) {
-      toast.error("User not authenticated. Please login again.");
+      toast.error("User not authenticated. Please login again.", {
+        icon: '🔒',
+        position: "top-right",
+        autoClose: 5000,
+      });
       return;
     }
 
     if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression) {
-      toast.error("Please fill all required fields.");
+      toast.error("Please fill all required fields.", {
+        icon: '⚠️',
+        position: "top-right",
+        autoClose: 5000,
+      });
       return;
     }
 
@@ -653,13 +867,43 @@ const Inbound: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(data.message, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-        });
+        toast.success(
+          <div>
+            <p className="font-medium">Automation scheduled successfully! 🎉</p>
+            <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
+            <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
+          </div>,
+          {
+            icon: '📅',
+            position: "top-right",
+            autoClose: 5000,
+          }
+        );
+
+        setTimeout(() => {
+          toast.info(
+            <div className="flex items-start">
+              <Bell className="w-5 h-5 mr-2 text-blue-500 flex-shrink-0 mt-1" />
+              <div>
+                <p className="font-medium">Automation Notifications Enabled</p>
+                <p className="text-sm mt-1">
+                  You'll receive notifications for:
+                </p>
+                <ul className="text-sm list-disc ml-4 mt-1">
+                  <li>Successful runs</li>
+                  <li>Failed executions</li>
+                  <li>Schedule changes</li>
+                </ul>
+              </div>
+            </div>,
+            {
+              autoClose: 8000,
+              icon: false,
+              position: "top-right",
+            }
+          );
+        }, 1000);
+
         setShowScheduleForm(false);
         setScheduleData({
           cron_to_mapping_name: "",
@@ -670,11 +914,9 @@ const Inbound: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to create cron job", {
+        icon: '❌',
         position: "top-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
       });
     } finally {
       setIsScheduling(false);
@@ -729,7 +971,7 @@ const Inbound: React.FC = () => {
                   </h3>
                   <button
                     onClick={() => setShowScheduleForm(false)}
-                    className="text-gray-400 hover:text-gray-500"
+                    className="text-gray-400 hover:text-gray-500 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -747,7 +989,7 @@ const Inbound: React.FC = () => {
                         name="cron_to_mapping_name"
                         value={scheduleData.cron_to_mapping_name}
                         onChange={handleScheduleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         placeholder="Enter mapping name"
                         required
                       />
@@ -763,7 +1005,7 @@ const Inbound: React.FC = () => {
                         name="cron_expression"
                         value={scheduleData.cron_expression}
                         onChange={handleScheduleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         placeholder="e.g., 0 9 * * * (9 AM daily)"
                         required
                       />
@@ -913,7 +1155,7 @@ const Inbound: React.FC = () => {
                     </motion.span>
                   </motion.div>
 
-                  {source.id === 4 ? ( // Inbound Automate
+                  {source.id === 4 ? (
                     <div className="flex gap-2">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
