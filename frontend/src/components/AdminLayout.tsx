@@ -1181,7 +1181,7 @@ const AdminLayout = () => {
                                 >
                                   <Code className="w-5 h-5 mr-2" />
                                 </motion.div>
-                                General
+                                API Token
                               </NavLink>
                             </motion.li>
                             <motion.li variants={itemVariants}>
