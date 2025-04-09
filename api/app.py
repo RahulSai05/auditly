@@ -2359,5 +2359,5 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
     db.commit()
     
     # Return a success message
-    return {"message": "Update successfully"}
+    return {"message": "Data has been inserted successfully!"}
 
