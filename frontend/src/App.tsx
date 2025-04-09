@@ -32,6 +32,7 @@ import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
+import ApiEndpoint from "./pages/admin/ApiEndpoint";
 import Login from "./components/auth/Login";
 import Unauthorized from "./components/auth/Unauthorized";
 import Register from "./components/auth/Register";
@@ -283,6 +284,11 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/api-configurations" element={
             <AdminRoute>
               <ApiConfigurations />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/api-endpoint" element={
+            <AdminRoute>
+              <ApiEndpoint />
             </AdminRoute>
           } />
           <Route path="/admin/settings/email-configurations" element={
