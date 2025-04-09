@@ -1169,7 +1169,7 @@ const AdminLayout = () => {
                           >
                             <motion.li variants={itemVariants}>
                               <NavLink
-                                to="/admin/settings/api-configurations/general"
+                                to="/admin/settings/api-configurations"
                                 className={({ isActive }) =>
                                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                                 }
