@@ -2331,7 +2331,6 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
     onboard_token = data_base_json_item.onboard_token
     onboard_user_id = data_base_json_item.onboard_user_id
     json_data = data_base_json_item.json_data
-    auditly_user_id = data_base_json_item.auditly_user_id
    
     # Retrieve the user from the database
     onboard_user = db.query(OnboardUser).filter(
