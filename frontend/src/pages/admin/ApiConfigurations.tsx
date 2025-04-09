@@ -27,7 +27,6 @@ const apiEndpoints: ApiEndpoint[] = [
     method: "POST",
     description: "Update or add item data to the database using JSON",
     sampleRequest: {
-      auditly_user_id: "",
       onboard_token: "693891674636CUST354241874921",
       onboard_user_id: "CUST354241",
       json_data: [
