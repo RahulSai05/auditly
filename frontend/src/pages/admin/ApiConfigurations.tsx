@@ -88,7 +88,7 @@ function ApiConfigurations() {
     setError("");
 
     try {
-      const response = await fetch("/onboard", {
+      const response = await fetch("/api/onboard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
