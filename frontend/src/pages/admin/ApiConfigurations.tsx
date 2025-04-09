@@ -81,6 +81,10 @@ function ApiConfigurations() {
   const handleGenerateToken = async () => {
     if (!onboardData.onboard_name || !onboardData.onboard_email) {
       setError("Please fill all fields");
+      setNotification({
+        type: "error",
+        message: "Please fill all fields"
+      });
       return;
     }
 
@@ -117,20 +121,24 @@ function ApiConfigurations() {
         message: "Token generated successfully! Check your email for details."
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate token. Please try again.");
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate token. Please try again.";
+      setError(errorMessage);
       setNotification({
         type: "error",
-        message: "Failed to generate token"
+        message: errorMessage
       });
     } finally {
       setLoading(false);
-      setTimeout(() => setNotification({ type: "", message: "" }), 3000);
     }
   };
 
   const handleExistingToken = () => {
     if (!onboardData.existing_token) {
       setError("Please enter your token");
+      setNotification({
+        type: "error",
+        message: "Please enter your token"
+      });
       return;
     }
     setTokenData({
@@ -138,19 +146,21 @@ function ApiConfigurations() {
       token: onboardData.existing_token
     });
     setShowTokenForm(false);
+    setNotification({
+      type: "success",
+      message: "Using existing token"
+    });
   };
 
   const handleCopy = async (text: string, message: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setNotification({ type: "success", message });
-      setTimeout(() => setNotification({ type: "", message: "" }), 3000);
     } catch (err) {
       setNotification({ 
         type: "error", 
         message: "Failed to copy to clipboard" 
       });
-      setTimeout(() => setNotification({ type: "", message: "" }), 3000);
     }
   };
 
@@ -188,7 +198,7 @@ function ApiConfigurations() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`fixed top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg ${
+              className={`fixed top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg z-50 ${
                 notification.type === "success"
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
@@ -399,6 +409,16 @@ function ApiConfigurations() {
                               {endpoint.method}
                             </span>
                             <code className="text-sm text-gray-600">{endpoint.path}</code>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopy(endpoint.path, "API URL copied to clipboard!");
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded"
+                              title="Copy URL"
+                            >
+                              <Clipboard className="w-3 h-3 text-gray-500" />
+                            </button>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -408,6 +428,7 @@ function ApiConfigurations() {
                               handleCopy(JSON.stringify(endpoint.sampleRequest, null, 2), "Request copied to clipboard!");
                             }}
                             className="p-2 hover:bg-gray-100 rounded-full"
+                            title="Copy sample request"
                           >
                             <Clipboard className="w-4 h-4 text-gray-600" />
                           </button>
