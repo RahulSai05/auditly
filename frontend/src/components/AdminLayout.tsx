@@ -1186,7 +1186,7 @@ const AdminLayout = () => {
                             </motion.li>
                             <motion.li variants={itemVariants}>
                               <NavLink
-                                to="/admin/settings/api-configurations/endpoints"
+                                to="/admin/settings/api-endpoints"
                                 className={({ isActive }) =>
                                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                                 }
@@ -1198,7 +1198,7 @@ const AdminLayout = () => {
                                 >
                                   <ExternalLink className="w-5 h-5 mr-2" />
                                 </motion.div>
-                                Endpoints
+                                API Endpoints
                               </NavLink>
                             </motion.li>
                           </motion.div>
