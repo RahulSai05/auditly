@@ -2321,4 +2321,44 @@ def push_to_powerbi(db: Session = Depends(get_db)):
             "message": f"Power BI responded with {response.status_code}: {response.text}"
         }
 
+class DatabaseJsonItem(BaseModel):
+    onboard_token: str
+    onboard_user_id: str
+    json_data: List
+    
+@app.post("/api/update-database-json-item")
+def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session = Depends(get_db)):
+    onboard_token = data_base_json_item.onboard_token
+    onboard_user_id = data_base_json_item.onboard_user_id
+    json_data = data_base_json_item.json_data
+    auditly_user_id = data_base_json_item.auditly_user_id
+   
+    # Retrieve the user from the database
+    onboard_user = db.query(OnboardUser).filter(
+        OnboardUser.customer_user_id == onboard_user_id,
+        OnboardUser.token == onboard_token
+    ).first()
+
+    # Check if the user exists
+    if not onboard_user:
+        raise HTTPException(status_code=404, detail="Invalid user or token.")
+
+    # Define a list of valid column names
+    valid_column_names = ["item_number", "item_description", "brand_id", "category", "configuration"]
+    
+    # Process each item in the provided JSON data
+    for row in json_data:
+        # Check each key in the row against the list of valid column names
+        if any(key not in valid_column_names for key in row.keys()):
+            raise HTTPException(status_code=400, detail="Invalid JSON: contains invalid keys.")
+        
+        # If valid, create a new item and add to the session
+        new_item = Item(**row)
+        db.add(new_item)
+    
+    # Commit all additions to the database
+    db.commit()
+    
+    # Return a success message
+    return {"message": "Update successfully"}
 
