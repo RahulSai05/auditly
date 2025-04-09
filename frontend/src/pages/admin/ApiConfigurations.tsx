@@ -43,6 +43,14 @@ const apiEndpoints: ApiEndpoint[] = [
   }
 ];
 
+interface OnboardResponse {
+  message: string;
+  data: {
+    "Customer User Id": string;
+    "Customer Token": string;
+  };
+}
+
 function ApiConfigurations() {
   const [showTokenForm, setShowTokenForm] = useState(true);
   const [onboardData, setOnboardData] = useState({
@@ -80,22 +88,40 @@ function ApiConfigurations() {
     setError("");
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockResponse = {
-        customer_user_id: `CUST${Math.floor(1000 + Math.random() * 9000)}`,
-        token: `${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`
-      };
+      const response = await fetch("/onboard", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          onboard_name: onboardData.onboard_name,
+          onboard_email: onboardData.onboard_email
+        }),
+      });
 
-      setTokenData(mockResponse);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to generate token");
+      }
+
+      const data: OnboardResponse = await response.json();
+      
+      setTokenData({
+        customer_user_id: data.data["Customer User Id"],
+        token: data.data["Customer Token"]
+      });
       setShowTokenForm(false);
 
       setNotification({
         type: "success",
-        message: "Token generated successfully!"
+        message: "Token generated successfully! Check your email for details."
       });
     } catch (err) {
-      setError("Failed to generate token. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to generate token. Please try again.");
+      setNotification({
+        type: "error",
+        message: "Failed to generate token"
+      });
     } finally {
       setLoading(false);
       setTimeout(() => setNotification({ type: "", message: "" }), 3000);
