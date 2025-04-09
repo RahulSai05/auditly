@@ -2361,3 +2361,18 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
     # Return a success message
     return {"message": "Data has been inserted successfully!"}
 
+@app.get("/api/onboard-users")
+def read_users(db: Session = Depends(get_db)):
+    users = db.query(OnboardUser).all()
+    return [{"onboard_name": user.onboard_name, "onboard_email": user.onboard_email, "token": user.token, "customer_user_id": user.customer_user_id} for user in users]
+
+
+@app.delete("/api/delete-onboard-user/{customer_id}", status_code=200)
+def delete_user_by_customer_id(customer_id: str, db: Session = Depends(get_db)):
+    user_to_delete = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_id).first()
+    if not user_to_delete:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db.delete(user_to_delete)
+    db.commit()
+    return {"message": "User deleted successfully"}
