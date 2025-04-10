@@ -786,6 +786,7 @@ import {
   UserCircle,
   RefreshCw,
   Menu,
+  UserCog,
   X,
   Construction,
   Asterisk,
@@ -1385,7 +1386,7 @@ const AdminLayout = () => {
                   whileHover={{ rotate: [0, -10, 10, -5, 0] }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Construction className="w-6 h-6 mr-3" />
+                  <UserCog className="w-6 h-6 mr-3" />
                 </motion.div>
                 <span className="flex-1 text-left">Maintenance</span>
                 <motion.div
