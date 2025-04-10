@@ -416,6 +416,7 @@ import {
   Users,
   Plus,
   Loader2,
+  Trash2,
 } from "lucide-react";
 
 interface OnboardUser {
@@ -449,6 +450,10 @@ function ApiConfigurations() {
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "info" | "";
     message: string;
+    details?: {
+      token?: string;
+      customerId?: string;
+    };
   }>({ type: "", message: "" });
 
   useEffect(() => {
@@ -472,9 +477,16 @@ function ApiConfigurations() {
     }
   };
 
-  const showNotification = (type: "success" | "error" | "info", message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification({ type: "", message: "" }), 5000);
+  const showNotification = (
+    type: "success" | "error" | "info",
+    message: string,
+    details?: { token?: string; customerId?: string }
+  ) => {
+    setNotification({ type, message, details });
+    // Don't auto-hide notifications with details
+    if (!details) {
+      setTimeout(() => setNotification({ type: "", message: "" }), 5000);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -513,9 +525,23 @@ function ApiConfigurations() {
       const data: OnboardResponse = await response.json();
       
       if (data.exists) {
-        showNotification("info", "User already exists. Retrieved existing token.");
+        showNotification(
+          "info",
+          "User already exists. Retrieved existing token.",
+          {
+            token: data.data["Customer Token"],
+            customerId: data.data["Customer User Id"],
+          }
+        );
       } else {
-        showNotification("success", "Token generated successfully!");
+        showNotification(
+          "success",
+          "Token generated successfully!",
+          {
+            token: data.data["Customer Token"],
+            customerId: data.data["Customer User Id"],
+          }
+        );
       }
       
       setOnboardData({ onboard_name: "", onboard_email: "" });
@@ -526,6 +552,27 @@ function ApiConfigurations() {
       showNotification("error", errorMessage);
     } finally {
       setLoading(prev => ({ ...prev, generate: false }));
+    }
+  };
+
+  const handleDeleteUser = async (customerId: string) => {
+    try {
+      setLoading(prev => ({ ...prev, delete: true }));
+      const response = await fetch(`/api/users/delete-by-customer-id/${customerId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete user");
+      }
+
+      showNotification("success", "User deleted successfully");
+      fetchUsers();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete user";
+      showNotification("error", errorMessage);
+    } finally {
+      setLoading(prev => ({ ...prev, delete: false }));
     }
   };
 
@@ -548,7 +595,7 @@ function ApiConfigurations() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg ${
+              className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 px-6 py-3 rounded-lg shadow-lg ${
                 notification.type === "success"
                   ? "bg-green-100 text-green-800"
                   : notification.type === "info"
@@ -556,20 +603,48 @@ function ApiConfigurations() {
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {notification.type === "success" ? (
-                <Check className="w-5 h-5" />
-              ) : notification.type === "info" ? (
-                <AlertCircle className="w-5 h-5" />
-              ) : (
-                <AlertCircle className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                {notification.type === "success" ? (
+                  <Check className="w-5 h-5" />
+                ) : notification.type === "info" ? (
+                  <AlertCircle className="w-5 h-5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5" />
+                )}
+                <span className="font-medium">{notification.message}</span>
+                <button
+                  onClick={() => setNotification({ type: "", message: "" })}
+                  className="ml-2 hover:bg-white/20 rounded-full p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {notification.details && (
+                <div className="space-y-2 mt-2 text-sm">
+                  {notification.details.customerId && (
+                    <div className="bg-white/50 p-2 rounded flex items-center justify-between">
+                      <span>Customer ID: {notification.details.customerId}</span>
+                      <button
+                        onClick={() => handleCopy(notification.details.customerId!, "Customer ID copied!")}
+                        className="hover:bg-white/50 p-1 rounded"
+                      >
+                        <Clipboard className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {notification.details.token && (
+                    <div className="bg-white/50 p-2 rounded flex items-center justify-between">
+                      <span>Token: {notification.details.token}</span>
+                      <button
+                        onClick={() => handleCopy(notification.details.token!, "Token copied!")}
+                        className="hover:bg-white/50 p-1 rounded"
+                      >
+                        <Clipboard className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
-              <span className="font-medium">{notification.message}</span>
-              <button
-                onClick={() => setNotification({ type: "", message: "" })}
-                className="ml-2 hover:bg-white/20 rounded-full p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -716,6 +791,13 @@ function ApiConfigurations() {
                         <h3 className="font-medium text-gray-900">{user.onboard_name}</h3>
                         <p className="text-sm text-gray-600">{user.onboard_email}</p>
                       </div>
+                      <button
+                        onClick={() => handleDeleteUser(user.customer_user_id)}
+                        disabled={loading.delete}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
