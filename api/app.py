@@ -1342,63 +1342,129 @@ async def get_users(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
 
+# @app.post("/api/onboard")
+# async def onboard(request: Onboard, db: Session = Depends(get_db)):   
+#     """
+#     API to onboard an third party to use api
+#     """ 
+#     try:  
+#         onboard_name = request.onboard_name
+#         onboard_email = request.onboard_email
+        
+#         customer_user_id = f'CUST{_gen_otp()}'
+#         token = f'{_gen_otp()}{_gen_otp()}{customer_user_id}{_gen_otp()}'
+
+#         new_user = OnboardUser(
+#         onboard_name = onboard_name,
+#         onboard_email = onboard_email,
+#         token = token,
+#         customer_user_id = customer_user_id,
+#         )
+#         db.add(new_user)
+#         db.commit()
+#         db.refresh(new_user)
+
+
+#         customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_user_id).first()
+
+#         subject = """Onboarding Details: Auditly"""
+        
+#         body = """
+# Hello """+onboard_name+""",
+
+# You are now Onboarded!
+
+# Below are the details:
+
+# Customer User ID -  """+customer_data.customer_user_id+"""
+# Authorization Token – """+token+"""
+
+# Thanks,
+# Audit team
+# """
+#        # send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+#         if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+#         elif ENV == "TEST":
+#             secret_data = get_secret("test/auditly/secrets")
+#             send_email(secret_data["from_email_address"], secret_data["from_email_password"], onboard_email, subject, body)
+        
+
+
+#         return {
+#             "message": "Onboarded Successfully.",
+#             "data": {
+#                 "Customer User Id": customer_data.customer_user_id,
+#                 "Customer Token": customer_data.token
+#             }
+#         }
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
+
 @app.post("/api/onboard")
 async def onboard(request: Onboard, db: Session = Depends(get_db)):   
     """
-    API to onboard an third party to use api
-    """ 
+    API to onboard a third party to use the API
+    """
     try:  
         onboard_name = request.onboard_name
         onboard_email = request.onboard_email
-        
+
+        # Check if the user already exists
+        existing_user = db.query(OnboardUser).filter(OnboardUser.onboard_name == onboard_name, OnboardUser.onboard_email == onboard_email).first()
+        if existing_user:
+            return {
+                "message": "User already onboarded.",
+                "data": {
+                    "Customer User Id": existing_user.customer_user_id,
+                    "Customer Token": existing_user.token
+                }
+            }
+
+        # Generate new customer ID and token
         customer_user_id = f'CUST{_gen_otp()}'
         token = f'{_gen_otp()}{_gen_otp()}{customer_user_id}{_gen_otp()}'
 
         new_user = OnboardUser(
-        onboard_name = onboard_name,
-        onboard_email = onboard_email,
-        token = token,
-        customer_user_id = customer_user_id,
+            onboard_name = onboard_name,
+            onboard_email = onboard_email,
+            token = token,
+            customer_user_id = customer_user_id,
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
-
-        customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_user_id).first()
-
-        subject = """Onboarding Details: Auditly"""
+        subject = "Onboarding Details: Auditly"
         
-        body = """
-Hello """+onboard_name+""",
+        body = f"""
+Hello {onboard_name},
 
 You are now Onboarded!
 
 Below are the details:
 
-Customer User ID -  """+customer_data.customer_user_id+"""
-Authorization Token – """+token+"""
+Customer User ID - {new_user.customer_user_id}
+Authorization Token – {token}
 
 Thanks,
 Audit team
 """
-       # send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
-        if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
+        if ENV == "DEV":
+            send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
         elif ENV == "TEST":
             secret_data = get_secret("test/auditly/secrets")
             send_email(secret_data["from_email_address"], secret_data["from_email_password"], onboard_email, subject, body)
-        
-
 
         return {
             "message": "Onboarded Successfully.",
             "data": {
-                "Customer User Id": customer_data.customer_user_id,
-                "Customer Token": customer_data.token
+                "Customer User Id": new_user.customer_user_id,
+                "Customer Token": new_user.token
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
    
 @app.post("/api/update-user-type")
