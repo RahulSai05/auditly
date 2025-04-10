@@ -455,6 +455,11 @@ function ApiConfigurations() {
       customerId?: string;
     };
   }>({ type: "", message: "" });
+  const [newUser, setNewUser] = useState<{
+    token: string;
+    customerId: string;
+    exists: boolean;
+  } | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -483,7 +488,6 @@ function ApiConfigurations() {
     details?: { token?: string; customerId?: string }
   ) => {
     setNotification({ type, message, details });
-    // Don't auto-hide notifications with details
     if (!details) {
       setTimeout(() => setNotification({ type: "", message: "" }), 5000);
     }
@@ -496,6 +500,7 @@ function ApiConfigurations() {
       [name]: value
     }));
     setError("");
+    setNewUser(null); // Clear new user when input changes
   };
 
   const handleGenerateToken = async () => {
@@ -507,6 +512,7 @@ function ApiConfigurations() {
 
     setLoading(prev => ({ ...prev, generate: true }));
     setError("");
+    setNewUser(null);
 
     try {
       const response = await fetch("/api/onboard", {
@@ -524,10 +530,16 @@ function ApiConfigurations() {
 
       const data: OnboardResponse = await response.json();
       
+      setNewUser({
+        token: data.data["Customer Token"],
+        customerId: data.data["Customer User Id"],
+        exists: !!data.exists
+      });
+      
       if (data.exists) {
         showNotification(
           "info",
-          "User already exists. Retrieved existing token.",
+          `User with email ${onboardData.onboard_email} already exists. Retrieved existing token.`,
           {
             token: data.data["Customer Token"],
             customerId: data.data["Customer User Id"],
@@ -567,6 +579,7 @@ function ApiConfigurations() {
       }
 
       showNotification("success", "User deleted successfully");
+      setNewUser(null);
       fetchUsers();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to delete user";
@@ -750,6 +763,57 @@ function ApiConfigurations() {
                   </>
                 )}
               </motion.button>
+
+              {/* Display New User Information */}
+              {newUser && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className={`mt-4 p-4 rounded-xl ${
+                    newUser.exists ? "bg-blue-50" : "bg-green-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    {newUser.exists ? (
+                      <AlertCircle className="w-5 h-5 text-blue-600" />
+                    ) : (
+                      <Check className="w-5 h-5 text-green-600" />
+                    )}
+                    <span className="font-medium text-sm">
+                      {newUser.exists
+                        ? "Existing User Retrieved"
+                        : "New User Created"}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between bg-white/50 p-2 rounded">
+                      <span className="text-gray-700">Customer ID:</span>
+                      <div className="flex items-center gap-2">
+                        <code className="text-gray-600">{newUser.customerId}</code>
+                        <button
+                          onClick={() => handleCopy(newUser.customerId, "Customer ID copied!")}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <Clipboard className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between bg-white/50 p-2 rounded">
+                      <span className="text-gray-700">Token:</span>
+                      <div className="flex items-center gap-2">
+                        <code className="text-gray-600">{newUser.token}</code>
+                        <button
+                          onClick={() => handleCopy(newUser.token, "Token copied!")}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <Clipboard className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </motion.div>
 
