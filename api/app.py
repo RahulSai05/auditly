@@ -2433,7 +2433,7 @@ def read_users(db: Session = Depends(get_db)):
     return [{"onboard_name": user.onboard_name, "onboard_email": user.onboard_email, "token": user.token, "customer_user_id": user.customer_user_id} for user in users]
 
 
-@app.delete("/api/delete-onboard-user/{customer_id}", status_code=200)
+@app.delete("/api/users/delete-by-customer-id/{customer_id}", status_code=200)
 def delete_user_by_customer_id(customer_id: str, db: Session = Depends(get_db)):
     user_to_delete = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_id).first()
     if not user_to_delete:
