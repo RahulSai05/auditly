@@ -1136,7 +1136,7 @@ const Inbound: React.FC = () => {
                         htmlFor="cron_expression"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Cron Expression *
+                        Automation Expression *
                       </label>
                       <input
                         type="text"
