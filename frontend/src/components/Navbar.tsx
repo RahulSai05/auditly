@@ -9,6 +9,7 @@ import {
   X,
   FileText,
   Construction,
+  UserCog,
   Shield,
   ShieldUser,
   FileUp,
@@ -204,7 +205,7 @@ export function Navbar() {
                   <NavLink to="/" icon={Home}>Home</NavLink>
                 )}
                 {isAdmin && (
-                  <NavLink to="/admin/settings/connectors/inbound" icon={ShieldUser}>Admin</NavLink>
+                  <NavLink to="/admin/settings/connectors/inbound" icon={UserCog}>Admin</NavLink>
                 )}
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
