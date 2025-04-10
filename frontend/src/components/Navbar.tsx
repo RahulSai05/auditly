@@ -145,7 +145,7 @@ export function Navbar() {
     <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
       <Link
         to={to}
-        className="hover:text-blue-600 flex items-center gap-x-3 text-sm md:text-base transition px-3 py-2 rounded-lg hover:bg-gray-100"
+        className="hover:text-blue-600 flex items-center gap-x-2 text-sm md:text-base transition px-3 py-2 rounded-lg hover:bg-gray-100"
         onClick={() => setIsOpen(false)}
       >
         <Icon className="w-5 h-5" />
@@ -225,7 +225,7 @@ export function Navbar() {
                   >
                     <button
                       onClick={toggleNotifications}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-1.5"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-3"
                       aria-label="Notifications"
                     >
                       <Bell className="w-5 h-5" />
