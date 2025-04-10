@@ -225,7 +225,7 @@ export function Navbar() {
                   >
                     <button
                       onClick={toggleNotifications}
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-3"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors relative flex items-center gap-x-2"
                       aria-label="Notifications"
                     >
                       <Bell className="w-5 h-5" />
