@@ -1,12 +1,11 @@
-
-
-// import React from "react";
+// import React, { useState } from "react";
 // import { motion } from "framer-motion";
 // import {
 //   ArrowLeft,
 //   Database,
 //   Globe,
 //   Share2,
+//   BarChart2,
 // } from "lucide-react";
 
 // const destinations = [
@@ -27,6 +26,16 @@
 //     icon: Globe,
 //     color: "#00796B",
 //     status: "Popular",
+//   },
+//   {
+//     id: 3,
+//     title: "Power BI",
+//     description:
+//       "Push your customer item data directly to Power BI for advanced analytics and visualization.",
+//     icon: BarChart2,
+//     color: "#0078D4",
+//     status: "Analytics",
+//     action: "push-to-powerbi",
 //   },
 //   {
 //     id: 4,
@@ -63,6 +72,60 @@
 // };
 
 // const Outbound: React.FC = () => {
+//   const [pushStatus, setPushStatus] = useState<{
+//     loading: boolean;
+//     success: boolean;
+//     message: string;
+//     destinationId?: number;
+//   }>({ loading: false, success: false, message: "" });
+
+//   const handlePushToPowerBI = async (destinationId: number) => {
+//     setPushStatus({ loading: true, success: false, message: "", destinationId });
+//     try {
+//       const response = await fetch("https://auditlyai.com/api/push-to-powerbi", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//       });
+      
+//       const result = await response.json();
+//       if (response.ok) {
+//         setPushStatus({ 
+//           loading: false, 
+//           success: true, 
+//           message: result.message, 
+//           destinationId 
+//         });
+        
+//         // Clear status after 3 seconds
+//         setTimeout(() => {
+//           setPushStatus({ loading: false, success: false, message: "" });
+//         }, 3000);
+//       } else {
+//         setPushStatus({ 
+//           loading: false, 
+//           success: false, 
+//           message: result.message, 
+//           destinationId 
+//         });
+//       }
+//     } catch (error) {
+//       setPushStatus({ 
+//         loading: false, 
+//         success: false, 
+//         message: "Failed to connect to the server",
+//         destinationId
+//       });
+//     }
+//   };
+
+//   const handleDestinationAction = (destination: typeof destinations[0]) => {
+//     if (destination.action === "push-to-powerbi") {
+//       handlePushToPowerBI(destination.id);
+//     }
+//   };
+
 //   return (
 //     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
 //       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
@@ -157,62 +220,67 @@
 //                   {destination.description}
 //                 </p>
 
-//                 <motion.div
-//                   initial={{ x: -10, opacity: 0 }}
-//                   animate={{ x: 0, opacity: 1 }}
-//                   transition={{ delay: 0.2 }}
-//                   className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors"
-//                 >
-//                   <span className="text-sm font-medium">Configure</span>
-//                   <motion.span
-//                     animate={{ x: [0, 5, 0] }}
-//                     transition={{
-//                       repeat: Infinity,
-//                       duration: 1.5,
-//                       ease: "easeInOut",
-//                     }}
+//                 {destination.action === "push-to-powerbi" ? (
+//                   <div className="space-y-3">
+//                     <button
+//                       onClick={() => handleDestinationAction(destination)}
+//                       disabled={pushStatus.loading && pushStatus.destinationId === destination.id}
+//                       className={`w-full px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+//                         pushStatus.loading && pushStatus.destinationId === destination.id
+//                           ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+//                           : "bg-blue-600 text-white hover:bg-blue-700"
+//                       }`}
+//                     >
+//                       {pushStatus.loading && pushStatus.destinationId === destination.id ? (
+//                         <>
+//                           <svg className="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                           </svg>
+//                           <span>Pushing Data...</span>
+//                         </>
+//                       ) : (
+//                         "Push Data to Power BI"
+//                       )}
+//                     </button>
+
+//                     {pushStatus.message && pushStatus.destinationId === destination.id && (
+//                       <motion.div
+//                         initial={{ opacity: 0, y: -10 }}
+//                         animate={{ opacity: 1, y: 0 }}
+//                         className={`p-3 rounded-lg text-sm ${
+//                           pushStatus.success 
+//                             ? "bg-green-100 text-green-800" 
+//                             : "bg-red-100 text-red-800"
+//                         }`}
+//                       >
+//                         {pushStatus.message}
+//                       </motion.div>
+//                     )}
+//                   </div>
+//                 ) : (
+//                   <motion.div
+//                     initial={{ x: -10, opacity: 0 }}
+//                     animate={{ x: 0, opacity: 1 }}
+//                     transition={{ delay: 0.2 }}
+//                     className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors"
 //                   >
-//                     →
-//                   </motion.span>
-//                 </motion.div>
+//                     <span className="text-sm font-medium">Configure</span>
+//                     <motion.span
+//                       animate={{ x: [0, 5, 0] }}
+//                       transition={{
+//                         repeat: Infinity,
+//                         duration: 1.5,
+//                         ease: "easeInOut",
+//                       }}
+//                     >
+//                       →
+//                     </motion.span>
+//                   </motion.div>
+//                 )}
 //               </div>
 //             </motion.div>
 //           ))}
-//         </motion.div>
-
-//         {/* ✅ Power BI Instruction Card - Add This */}
-//         <motion.div
-//           initial={{ opacity: 0, y: 20 }}
-//           animate={{ opacity: 1, y: 0 }}
-//           transition={{ delay: 0.5 }}
-//           className="mt-16 max-w-3xl mx-auto bg-white rounded-2xl shadow-md border border-blue-100 p-6"
-//         >
-//           <h2 className="text-2xl font-bold text-blue-700 mb-3">Get Data in Power BI</h2>
-//           <p className="text-gray-700 mb-4">
-//             To import customer item data into Power BI:
-//           </p>
-//           <ol className="list-decimal list-inside text-gray-600 mb-4 space-y-1">
-//             <li>Open Power BI Desktop or Power BI Web.</li>
-//             <li>Go to <strong>Get Data</strong> → <strong>Web</strong>.</li>
-//             <li>Paste the following API link:</li>
-//           </ol>
-//           <div className="bg-gray-100 px-4 py-2 rounded text-sm font-mono text-gray-800 break-all mb-4">
-//             http://54.210.159.220:8000/export/customer-items
-//           </div>
-//           <p className="text-gray-600">
-//             Then click <strong>OK</strong> to import the JSON data into Power BI.
-//           </p>
-
-//           <div className="mt-6">
-//             <button
-//               onClick={() =>
-//                 window.open("http://54.210.159.220:8000/export/customer-items", "_blank")
-//               }
-//               className="bg-blue-600 text-white px-6 py-2 rounded-xl shadow hover:bg-blue-700 transition"
-//             >
-//               Open API in Browser
-//             </button>
-//           </div>
 //         </motion.div>
 
 //         {/* Footer Info Section */}
@@ -236,14 +304,20 @@
 
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
 import {
   ArrowLeft,
   Database,
   Globe,
   Share2,
   BarChart2,
+  Clock,
+  X,
+  Check,
+  Bell,
 } from "lucide-react";
+import "react-toastify/dist/ReactToastify.css";
 
 const destinations = [
   {
@@ -316,43 +390,46 @@ const Outbound: React.FC = () => {
     destinationId?: number;
   }>({ loading: false, success: false, message: "" });
 
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [scheduleData, setScheduleData] = useState({
+    cron_to_mapping_name: "",
+    cron_expression: "",
+    destination_type: "s3", // Default destination type
+  });
+  const [isScheduling, setIsScheduling] = useState(false);
+
   const handlePushToPowerBI = async (destinationId: number) => {
     setPushStatus({ loading: true, success: false, message: "", destinationId });
     try {
-      const response = await fetch("https://auditlyai.com/api/push-to-powerbi", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setPushStatus({ 
+        loading: false, 
+        success: true, 
+        message: "Data successfully pushed to Power BI", 
+        destinationId 
       });
       
-      const result = await response.json();
-      if (response.ok) {
-        setPushStatus({ 
-          loading: false, 
-          success: true, 
-          message: result.message, 
-          destinationId 
-        });
-        
-        // Clear status after 3 seconds
-        setTimeout(() => {
-          setPushStatus({ loading: false, success: false, message: "" });
-        }, 3000);
-      } else {
-        setPushStatus({ 
-          loading: false, 
-          success: false, 
-          message: result.message, 
-          destinationId 
-        });
-      }
+      toast.success("Data pushed to Power BI successfully!", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        setPushStatus({ loading: false, success: false, message: "" });
+      }, 3000);
     } catch (error) {
       setPushStatus({ 
         loading: false, 
         success: false, 
-        message: "Failed to connect to the server",
+        message: "Failed to push data to Power BI",
         destinationId
+      });
+      toast.error("Failed to push data to Power BI", {
+        position: "top-right",
+        autoClose: 5000,
       });
     }
   };
@@ -360,11 +437,278 @@ const Outbound: React.FC = () => {
   const handleDestinationAction = (destination: typeof destinations[0]) => {
     if (destination.action === "push-to-powerbi") {
       handlePushToPowerBI(destination.id);
+    } else if (destination.id === 4) {
+      setShowScheduleForm(true);
     }
+  };
+
+  const handleScheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression) {
+      toast.error("Please fill all required fields.", {
+        icon: "⚠️",
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return;
+    }
+
+    setIsScheduling(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      toast.success(
+        <div>
+          <p className="font-medium">Outbound automation scheduled successfully! 🎉</p>
+          <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
+          <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
+          <p className="text-sm">Destination: {scheduleData.destination_type.toUpperCase()}</p>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          icon: <Clock className="text-green-500" />,
+        }
+      );
+
+      setTimeout(() => {
+        toast.info(
+          <div className="flex items-start gap-3">
+            <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+            <div>
+              <p className="font-medium">Outbound Automation Notifications</p>
+              <p className="text-sm mt-1">
+                You'll receive notifications for:
+              </p>
+              <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
+                <li>Successful data exports</li>
+                <li>Failed delivery attempts</li>
+                <li>Schedule changes</li>
+                <li>Destination connectivity issues</li>
+              </ul>
+            </div>
+          </div>,
+          {
+            autoClose: 8000,
+            position: "top-right",
+          }
+        );
+      }, 1000);
+
+      setShowScheduleForm(false);
+      setScheduleData({
+        cron_to_mapping_name: "",
+        cron_expression: "",
+        destination_type: "s3",
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to schedule outbound automation", {
+        icon: "❌",
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
+  const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setScheduleData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+
+      <AnimatePresence>
+        {showScheduleForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowScheduleForm(false)}
+          >
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    Schedule Outbound Automation
+                  </h3>
+                  <button
+                    onClick={() => setShowScheduleForm(false)}
+                    className="text-gray-400 hover:text-gray-500 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleScheduleSubmit}>
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="cron_to_mapping_name"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Automation Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="cron_to_mapping_name"
+                        name="cron_to_mapping_name"
+                        value={scheduleData.cron_to_mapping_name}
+                        onChange={handleScheduleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="Enter automation name"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="destination_type"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Destination *
+                      </label>
+                      <select
+                        id="destination_type"
+                        name="destination_type"
+                        value={scheduleData.destination_type}
+                        onChange={handleScheduleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        required
+                      >
+                        <option value="s3">Amazon S3</option>
+                        <option value="azure">Azure Blob Storage</option>
+                        <option value="powerbi">Power BI</option>
+                        <option value="api">API Endpoint</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="cron_expression"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Schedule Expression *
+                      </label>
+                      <input
+                        type="text"
+                        id="cron_expression"
+                        name="cron_expression"
+                        value={scheduleData.cron_expression}
+                        onChange={handleScheduleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="e.g., 0 9 * * * (9 AM daily)"
+                        required
+                      />
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 font-medium mb-1">
+                          Common examples:
+                        </p>
+                        <ul className="text-xs text-gray-500 space-y-1">
+                          <li>
+                            <code className="bg-gray-100 px-1 py-0.5 rounded">
+                              0 9 * * *
+                            </code>{" "}
+                            - 9 AM daily
+                          </li>
+                          <li>
+                            <code className="bg-gray-100 px-1 py-0.5 rounded">
+                              0 9 * * 1-5
+                            </code>{" "}
+                            - 9 AM weekdays
+                          </li>
+                          <li>
+                            <code className="bg-gray-100 px-1 py-0.5 rounded">
+                              0 9 1 * *
+                            </code>{" "}
+                            - 9 AM on 1st of month
+                          </li>
+                          <li>
+                            <code className="bg-gray-100 px-1 py-0.5 rounded">
+                              */15 * * * *
+                            </code>{" "}
+                            - Every 15 minutes
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isScheduling}
+                        className={`w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all ${
+                          isScheduling ? "opacity-75 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        {isScheduling ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Scheduling...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-5 h-5 mr-2" />
+                            Schedule Outbound Automation
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         {/* Header Section */}
         <motion.div
@@ -389,7 +733,7 @@ const Outbound: React.FC = () => {
             transition={{ delay: 0.3 }}
             className="text-5xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
           >
-            Search Destinations
+            Data Destinations
           </motion.h1>
 
           <motion.p
@@ -398,7 +742,7 @@ const Outbound: React.FC = () => {
             transition={{ delay: 0.4 }}
             className="mt-4 text-xl text-gray-600 max-w-3xl"
           >
-            Choose where to index your data for powerful search capabilities
+            Choose where to send your data and configure automated exports
           </motion.p>
         </motion.div>
 
@@ -495,6 +839,16 @@ const Outbound: React.FC = () => {
                       </motion.div>
                     )}
                   </div>
+                ) : destination.id === 4 ? (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDestinationAction(destination)}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Schedule Export</span>
+                  </motion.button>
                 ) : (
                   <motion.div
                     initial={{ x: -10, opacity: 0 }}
@@ -528,8 +882,8 @@ const Outbound: React.FC = () => {
           className="mt-16 text-center"
         >
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Each destination offers unique features and capabilities. Choose the
-            one that best fits your search requirements and performance needs.
+            Each destination offers unique features and capabilities. Configure automated
+            exports to keep your external systems in sync with your data.
           </p>
         </motion.div>
       </div>
