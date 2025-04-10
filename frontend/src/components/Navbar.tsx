@@ -410,6 +410,8 @@ import {
   X,
   FileText,
   Construction,
+  file-up,  // New icon for Maintenance
+  shield-user,
   Bell,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -602,13 +604,13 @@ export function Navbar() {
                   <NavLink to="/" icon={Home}>Home</NavLink>
                 )}
                 {isAdmin && (
-                  <NavLink to="/admin/settings/connectors/inbound" icon={Lock}>Admin</NavLink>
+                  <NavLink to="/admin/settings/connectors/inbound" icon={shield-user}>Admin</NavLink>
                 )}
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
                 {isInspectionUser && (
-                  <NavLink to="/admin/settings/item-master-upload" icon={Construction}>Maintenance</NavLink>
+                  <NavLink to="/admin/settings/item-master-upload" icon={file-up}>Maintenance</NavLink>
                 )}
                 <NavLink to="/help-center" icon={MessageCircleQuestion}>Help Center</NavLink>
 
