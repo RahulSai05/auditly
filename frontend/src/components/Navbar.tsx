@@ -10,9 +10,12 @@ import {
   FileText,
   Construction,
   Shield,
+  
   FileUp,
   Bell,
 } from "lucide-react";
+import { Shield, User } from "lucide-react";
+import { ShieldUser } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Navbar() {
