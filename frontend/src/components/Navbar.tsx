@@ -203,7 +203,7 @@ export function Navbar() {
                   <NavLink to="/" icon={Home}>Home</NavLink>
                 )}
                 {isAdmin && (
-                  <NavLink to="/admin/settings/connectors/inbound" icon={Shield}>Admin</NavLink>
+                  <NavLink to="/admin/settings/connectors/inbound" icon={shield-user}>Admin</NavLink>
                 )}
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
