@@ -2133,7 +2133,57 @@ class GetPowerBITableData(BaseModel):
 #     db.execute(table.insert(), transformed_data)
 #     db.commit()
 #     return response.json()
-    
+
+
+
+
+@app.get("/api/powerbi/workspace-data")
+async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
+    """
+    Fetch all datasets and their tables from a Power BI workspace.
+    """
+    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
+    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+   
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    # Step 1: Get all datasets in the workspace
+    datasets_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
+    try:
+        datasets_response = requests.get(datasets_url, headers=headers)
+        datasets_response.raise_for_status()
+        datasets_data = datasets_response.json().get("value", [])
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching datasets: {str(e)}")
+
+    # Step 2: Get tables for each dataset
+    all_data = []
+    for dataset in datasets_data:
+        dataset_id = dataset["id"]
+        dataset_name = dataset["name"]
+
+        tables_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{dataset_id}/tables"
+        try:
+            tables_response = requests.get(tables_url, headers=headers)
+            tables_response.raise_for_status()
+            tables_data = tables_response.json().get("value", [])
+        except requests.exceptions.RequestException:
+            tables_data = []  # If tables API fails, return an empty list
+
+        # Step 3: Organize Data
+        dataset_info = {
+            "dataset_id": dataset_id,
+            "dataset_name": dataset_name,
+            "tables": [{"table_name": table["name"]} for table in tables_data]
+        }
+        all_data.append(dataset_info)
+
+    return {"workspace_id": WORKSPACE_ID, "datasets": all_data}
+
+
 
 @app.post("/api/powerbi/get-table-data")
 async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
