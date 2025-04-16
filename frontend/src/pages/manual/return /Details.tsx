@@ -100,7 +100,7 @@ export default function Details() {
         >
           <div className="flex items-center justify-center mb-4">
             <Truck className="w-8 h-8 text-purple-600 mr-2" />
-            <h3 className="font-bold text-xl text-gray-800">Shipping Information</h3>
+            <h3 className="font-bold text-xl text-gray-800">Product Information</h3>
           </div>
           <div className="space-y-4">
             <InfoRow label="Serial Number" value={Item.serial_number} />
