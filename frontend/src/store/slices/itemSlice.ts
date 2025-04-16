@@ -62,7 +62,6 @@
 
 // export default ItemSlice.reducer;
 
-
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface InspectionData {
@@ -116,7 +115,16 @@ const ItemSlice = createSlice({
     },
     setinspectionData: (state, action: PayloadAction<Partial<InspectionData>>) => {
       state.inspectionData = {
-        ...(state.inspectionData || {}),
+        ...(state.inspectionData || {
+          factory_seal: false,
+          no_factory_seal: false,
+          minimal_tear: false,
+          no_package: false,
+          new_conditiono: false,
+          not_new_condition: false,
+          bio_stains: false,
+          package_stains: false,
+        }),
         ...action.payload,
       } as InspectionData;
     },
@@ -131,7 +139,7 @@ const ItemSlice = createSlice({
 });
 
 // Export selectors
-export const selectInspectionData = (state: { item: ItemState }) => state.item.inspectionData;
+export const selectInspectionData = (state: { item?: ItemState }) => state.item?.inspectionData ?? null;
 
 // Export all actions
 export const {
