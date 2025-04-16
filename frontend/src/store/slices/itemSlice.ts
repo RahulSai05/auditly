@@ -70,7 +70,7 @@ interface InspectionData {
   no_factory_seal: boolean;
   minimal_tear: boolean;
   no_package: boolean;
-  new_condition: boolean;
+  new_conditiono: boolean;
   not_new_condition: boolean;
   bio_stains: boolean;
   package_stains: boolean;
