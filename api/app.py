@@ -137,19 +137,17 @@ OAUTH_DISCOVERY_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well
 # )
 
 oauth = OAuth()
-
 oauth.register(
     name="microsoft",
     client_id=AZURE_CLIENT_ID,
     client_secret=AZURE_CLIENT_SECRET,
+    server_metadata_url="https://login.microsoftonline.com/fc09811c-498c-4e79-b20f-ba5cfa421942/v2.0/.well-known/openid-configuration",
     client_kwargs={
         "scope": "openid profile email https://analysis.windows.net/powerbi/api/.default",
         "prompt": "select_account",
         "response_type": "code",
-    },
-    server_metadata_url="https://login.microsoftonline.com/AZURE_TENANT_ID/v2.0/.well-known/openid-configuration"
+    }
 )
-
 
 
 @app.get("/api/item_order_instance")
