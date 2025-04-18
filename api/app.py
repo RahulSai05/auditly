@@ -2508,3 +2508,19 @@ def delete_user_by_customer_id(customer_id: str, db: Session = Depends(get_db)):
     db.delete(user_to_delete)
     db.commit()
     return {"message": "User deleted successfully"}
+
+
+@app.get("/api/power-bi-users")
+def get_power_bi_users(db: Session = Depends(get_db)):
+    try:
+        users = db.query(PowerBiUser).all()
+        return [
+            {
+                "power_bi_email": user.power_bi_email,
+                "power_bi_username": user.power_bi_username,
+            }
+            for user in users
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching Power BI users: {str(e)}")
+
