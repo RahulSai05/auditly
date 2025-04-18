@@ -1468,14 +1468,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 const dataSources = [
   {
-    id: 1,
-    title: "CSV Import",
-    description: "Efficient and straightforward data import from structured CSV files.",
-    icon: FileText,
-    color: "#424242",
-    status: "Basic",
-  },
-  {
     id: 2,
     title: "Power BI",
     description: "Business analytics tool for visualizing data and sharing insights across your organization.",
