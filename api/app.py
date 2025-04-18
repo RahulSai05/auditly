@@ -121,7 +121,23 @@ OAUTH_DISCOVERY_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well
 #     access_token_url=f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/oauth2/v2.0/token",
 # )
 
+# oauth = OAuth()
+# oauth.register(
+#     name="microsoft",
+#     client_id=AZURE_CLIENT_ID,
+#     client_secret=AZURE_CLIENT_SECRET,
+#     client_kwargs={
+#         "scope": "openid profile email https://analysis.windows.net/powerbi/api/.default",
+#         "prompt": "select_account",
+#         "response_type": "code",
+#     },
+#     server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+#     authorize_url="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+#     access_token_url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
+# )
+
 oauth = OAuth()
+
 oauth.register(
     name="microsoft",
     client_id=AZURE_CLIENT_ID,
@@ -131,11 +147,9 @@ oauth.register(
         "prompt": "select_account",
         "response_type": "code",
     },
+    # ✅ Let Authlib discover these from metadata
     server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
-    authorize_url="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-    access_token_url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
 )
-
 
 
 @app.get("/api/item_order_instance")
