@@ -428,7 +428,7 @@ export default function Inspection() {
     const conditions = [
         { id: "sealed", label: "factory_seal", icon: <Shield className="w-5 h-5" /> },
         { id: "mistake", label: "no_factory_seal", icon: <AlertCircle className="w-5 h-5" /> },
-        { id: "defective", label: "minimal_tear", icon: <Package className="w-5 h-5" /> },
+        { id: "defective", label: "slight_tear", icon: <Package className="w-5 h-5" /> },
         { id: "unsealed", label: "no_package", icon: <Package className="w-5 h-5" /> },
     ];
 
