@@ -12,6 +12,7 @@ import {
   UserCog,
   Shield,
   ShieldUser,
+  Cog,
   FileUp,
   Bell,
 } from "lucide-react";
@@ -205,7 +206,7 @@ export function Navbar() {
                   <NavLink to="/" icon={Home}>Home</NavLink>
                 )}
                 {isAdmin && (
-                  <NavLink to="/admin/settings/connectors/inbound" icon={UserCog}>Admin</NavLink>
+                  <NavLink to="/admin/settings/connectors/inbound" icon={Cog}>Admin</NavLink>
                 )}
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
