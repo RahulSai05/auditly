@@ -1,7 +1,7 @@
 // import React, { useState, useEffect } from "react";
 // import { useSearchParams } from "react-router-dom";
 // import { motion, AnimatePresence } from "framer-motion";
-// import { toast, ToastContainer } from "react-toastify"; // Added ToastContainer import
+// import { toast, ToastContainer } from "react-toastify";
 // import {
 //   ArrowLeft,
 //   Database,
@@ -327,7 +327,6 @@
 //         isAuthWindowOpen ? "pointer-events-none" : ""
 //       }`}
 //     >
-//       {/* Added ToastContainer to render notifications */}
 //       <ToastContainer
 //         position="top-right"
 //         autoClose={5000}
@@ -338,7 +337,7 @@
 //         pauseOnFocusLoss
 //         draggable
 //         pauseOnHover
-//         style={{ zIndex: 9999 }} // Ensure it appears above the overlay (z-50)
+//         style={{ zIndex: 9999 }}
 //       />
 
 //       <AnimatePresence>
@@ -409,7 +408,7 @@
 //                         htmlFor="cron_expression"
 //                         className="block text-sm font-medium text-gray-700 mb-1"
 //                       >
-//                         Cron Expression *
+//                         Automation Expression *
 //                       </label>
 //                       <input
 //                         type="text"
@@ -532,14 +531,6 @@
 //           >
 //             Data Sources
 //           </motion.h1>
-
-//           {/* Added Test Button to verify notifications */}
-//           <button
-//             onClick={() => toast.success("Test notification works!")}
-//             className="px-4 py-2 bg-blue-500 text-white rounded mt-4"
-//           >
-//             Test Toast
-//           </button>
 //         </motion.div>
 
 //         {/* Cards Grid */}
@@ -815,13 +806,20 @@ const Inbound: React.FC = () => {
   });
   const [userId, setUserId] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [mappingId, setMappingId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
     }
-  }, []);
+
+    // Get mapping_id from URL params if present
+    const urlMappingId = searchParams.get("mapping_id");
+    if (urlMappingId) {
+      setMappingId(urlMappingId);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const message = searchParams.get("message");
@@ -913,7 +911,12 @@ const Inbound: React.FC = () => {
       const top = window.screen.height / 2 - height / 2;
 
       const returnUrl = encodeURIComponent(window.location.origin);
-      const authUrl = `${source.authEndpoint}?returnUrl=${returnUrl}`;
+      
+      // Include mapping_id in the auth URL if available
+      let authUrl = `${source.authEndpoint}?returnUrl=${returnUrl}`;
+      if (mappingId) {
+        authUrl += `&mapping_id=${mappingId}`;
+      }
 
       const authWindow = window.open(
         authUrl,
@@ -948,6 +951,7 @@ const Inbound: React.FC = () => {
     }
   };
 
+  // ... rest of the component remains the same ...
   const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
