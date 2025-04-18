@@ -147,9 +147,9 @@ oauth.register(
         "prompt": "select_account",
         "response_type": "code",
     },
-    # ✅ Let Authlib discover these from metadata
-    server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+    server_metadata_url="https://login.microsoftonline.com/AZURE_TENANT_ID/v2.0/.well-known/openid-configuration"
 )
+
 
 
 @app.get("/api/item_order_instance")
