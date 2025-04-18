@@ -1389,7 +1389,7 @@ const AdminLayout = () => {
                 >
                   <FileUp className="w-6 h-6 mr-3" />
                 </motion.div>
-                <span className="flex-1 text-left">Maintenance</span>
+                <span className="flex-1 text-left">Manual Data Ingestion</span>
                 <motion.div
                   animate={{ rotate: maintenanceOpen ? 90 : 0 }}
                   transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
