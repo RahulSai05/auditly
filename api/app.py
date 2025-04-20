@@ -2674,3 +2674,91 @@ def get_power_bi_users(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching Power BI users: {str(e)}")
 
+
+def generate_dataset_schema(dataset_name="AuditlyItemsDataset"):
+    return {
+        "name": dataset_name,
+        "defaultMode": "Push",  # This is required for real-time datasets
+        "tables": [
+            {
+                "name": "Items",
+                "columns": [
+                    {"name": "brand_id", "dataType": "string"},
+                    {"name": "item_number", "dataType": "Int64"},
+                    {"name": "configuration", "dataType": "string"},
+                    {"name": "category", "dataType": "string"},
+                    {"name": "item_description", "dataType": "string"},
+                ]
+            }
+        ]
+    }
+
+def get_powerbi_headers(access_token: str):
+    return {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+
+def create_powerbi_dataset(access_token: str) -> str:
+    url = "https://api.powerbi.com/v1.0/myorg/datasets"
+    schema = generate_dataset_schema()
+    headers = get_powerbi_headers(access_token)
+
+    response = requests.post(url, json=schema, headers=headers)
+
+    if response.status_code == 201:
+        dataset_id = response.json().get("id")
+        print(f"Dataset created successfully: {dataset_id}")
+        return dataset_id
+    else:
+        raise Exception(f"Failed to create dataset: {response.status_code} - {response.text}")
+
+def get_push_url(dataset_id: str):
+    return f"https://api.powerbi.com/v1.0/myorg/datasets/{dataset_id}/tables/Items/rows"
+
+def prepare_item_data(db: Session):
+    items = db.query(Item).all()
+    return [
+        {
+            "brand_id": str(item.brand_id),
+            "item_number": int(item.item_number),
+            "configuration": item.configuration or "USA",
+            "category": item.category or "Mattress",
+            "item_description": item.item_description
+        }
+        for item in items
+    ]
+def push_to_powerbi(access_token: str, push_url: str, data: list):
+    headers = get_powerbi_headers(access_token)
+    payload = {"rows": data}
+
+    response = requests.post(push_url, headers=headers, json=payload)
+
+    if response.status_code == 200:
+        print("✅ Data pushed successfully")
+        return {"status": "Success"}
+    else:
+        print(f"❌ Failed to push: {response.status_code}, {response.text}")
+        return {
+            "status": "Failed",
+            "message": f"Power BI responded with {response.status_code}: {response.text}"
+        }
+
+@app.post("/api/powerbi/create-and-push")
+def create_and_push(access_token: str, db: Session = Depends(get_db)):
+    try:
+        # Step 1: Create dataset
+        dataset_id = create_powerbi_dataset(access_token)
+
+        # Step 2: Build push URL
+        push_url = get_push_url(dataset_id)
+
+        # Step 3: Prepare your data
+        data = prepare_item_data(db)
+
+        # Step 4: Push to Power BI
+        return push_to_powerbi(access_token, push_url, data)
+
+    except Exception as e:
+        return {"status": "Error", "message": str(e)}
