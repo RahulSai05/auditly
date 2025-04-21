@@ -1885,6 +1885,13 @@ async def powerbi_auth_login(request: Request):
     request.session["power_bi_user_mapping_id"] = mapping_id
     print(f"Stored mapping_id in session: {mapping_id}")
     
+    connection_type = request.query_params.get("connection_type")
+    if not connection_type:
+        raise HTTPException(status_code=400, detail="Missing 'connection_type' in query parameters")
+    
+    request.session["connection_type"] = connection_type
+    print(f"Stored connection_type in session: {connection_type}")
+
     try:
         # Use authorize_redirect instead of create_authorization_url
         return await oauth.microsoft.authorize_redirect(
@@ -1925,6 +1932,12 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
         
         print(f"Retrieved mapping_id from session: {mapping_id}")
 
+        connection_type = request.session.pop("connection_type", None)
+        if not connection_type:
+            raise HTTPException(status_code=400, detail="connection_type missing 'connection_type'")
+        
+        print(f"Retrieved connection_type from session: {connection_type}")
+
         # Exchange auth code for token
         token = await oauth.microsoft.authorize_access_token(request)
         print("Token received successfully")
@@ -1964,6 +1977,7 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
 
             # ✅ ADD THIS LINE TO UPDATE THE MAPPING ID
             existing_user.power_bi_user_mapping_id = mapping_id
+            existing_user.connection_type = connection_type
 
         else:
             print("Creating new Power BI user...")
@@ -1975,6 +1989,7 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
                 access_token=token['access_token'],
                 refresh_token=token.get('refresh_token', ''),
                 token_expiry=token_expiry,
+                existing_user=existing_user,
                 tenant_id=user_data['tenant_id'],
                 created_at=datetime.now(timezone.utc),
                 power_bi_user_mapping_id=mapping_id  # ✅ Save mapping ID for new user
@@ -2660,19 +2675,50 @@ def delete_user_by_customer_id(customer_id: str, db: Session = Depends(get_db)):
     return {"message": "User deleted successfully"}
 
 
-@app.get("/api/power-bi-users")
-def get_power_bi_users(db: Session = Depends(get_db)):
+
+class GetPowerBiUsers(BaseModel):
+    auditly_user_id: int
+    connection_type: str
+
+@app.post("/api/power-bi-users")
+def get_power_bi_users(request: GetPowerBiUsers, db: Session = Depends(get_db)):
     try:
-        users = db.query(PowerBiUser).all()
+        users = db.query(PowerBiUser).filter(PowerBiUser.power_bi_user_mapping_id == request.auditly_user_id).filter(PowerBiUser.connection_type == request.connection_type)
         return [
             {
                 "power_bi_email": user.power_bi_email,
                 "power_bi_username": user.power_bi_username,
+                "connection_type": user.connection_type,
+                "connection_status": _check_connection_status(user.access_token)
             }
             for user in users
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching Power BI users: {str(e)}")
+
+
+def _check_connection_status(access_token):
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    # Using a lightweight endpoint to validate the token
+    # url = "https://api.powerbi.com/v1.0/myorg/groups"
+
+    # async with httpx.AsyncClient() as client:
+    # response = await client.get(url, headers=headers)
+
+    response = requests.get(
+    "https://api.powerbi.com/v1.0/myorg/groups",
+    headers=headers
+    )
+    print(response)
+    if response.status_code == 200:
+        return "Active"
+    elif response.status_code == 401 or response.status_code == 403:
+        return "Inactive"  
+    
 
 
 def generate_dataset_schema(dataset_name="AuditlyItemsDataset"):
