@@ -883,7 +883,6 @@
 
 // export default Inbound;
 
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1549,37 +1548,61 @@ const Inbound: React.FC = () => {
                     style={{ background: `linear-gradient(to right, ${source.color}40, ${source.color}60)` }}
                   />
                   <div className="p-4">
-                    <div className="flex items-center gap-4 mb-4">
-                      <motion.div
-                        whileHover={{ scale: 1.1, rotate: 10 }}
-                        className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
-                      >
-                        {React.createElement(source.icon, { className: "w-6 h-6 text-blue-600" })}
-                      </motion.div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 text-lg">{source.title}</h3>
-                        <motion.span
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                          style={{
-                            background: `linear-gradient(to right, ${source.color}20, ${source.color}40)`,
-                            color: source.color,
-                          }}
+                    {/* Fixed: Completely separate header layouts */}
+                    {source.id === 1 ? (
+                      <div className="flex items-center gap-4 mb-4">
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 10 }}
+                          className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
                         >
-                          {source.status}
-                        </motion.span>
-                      </div>
-                      {/* Fixed: Only show expand button for Power BI */}
-                      {source.id === 1 && (
+                          {React.createElement(source.icon, { className: "w-6 h-6 text-blue-600" })}
+                        </motion.div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-lg">{source.title}</h3>
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              background: `linear-gradient(to right, ${source.color}20, ${source.color}40)`,
+                              color: source.color,
+                            }}
+                          >
+                            {source.status}
+                          </motion.span>
+                        </div>
                         <button
                           onClick={togglePowerBiExpand}
                           className="text-gray-500 hover:text-gray-700 transition-colors"
                         >
                           {expandedPowerBi ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4 mb-4">
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 10 }}
+                          className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+                        >
+                          {React.createElement(source.icon, { className: "w-6 h-6 text-blue-600" })}
+                        </motion.div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-lg">{source.title}</h3>
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              background: `linear-gradient(to right, ${source.color}20, ${source.color}40)`,
+                              color: source.color,
+                            }}
+                          >
+                            {source.status}
+                          </motion.span>
+                        </div>
+                      </div>
+                    )}
+
                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
                     
                     {/* Properly scoped expansion section */}
