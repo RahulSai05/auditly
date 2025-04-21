@@ -914,7 +914,7 @@ const dataSources = [
   {
     id: 2,
     title: "D365",
-    description: "Microsoft's enterprise resource planning (ERP) & customer relationship management (CRM) applications.",
+    description: "Microsoft's enterprise resource planning & customer relationship management applications.",
     icon: Database,
     color: "#43A047",
     status: "Enterprise",
