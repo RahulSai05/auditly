@@ -1,4 +1,3 @@
-
 // import React, { useState, useEffect } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
 // import { toast, ToastContainer } from "react-toastify";
@@ -31,14 +30,6 @@
 //     status: "Enterprise",
 //   },
 //   {
-//     id: 2,
-//     title: "Amazon S3",
-//     description: "Secure cloud storage with unlimited scalability and high availability.",
-//     icon: Globe,
-//     color: "#00796B",
-//     status: "Popular",
-//   },
-//   {
 //     id: 3,
 //     title: "Power BI",
 //     description: "Push your customer item data directly to Power BI for advanced analytics and visualization.",
@@ -55,6 +46,14 @@
 //     color: "#FF9900",
 //     status: "Enterprise",
 //   },
+// ];
+
+// // Cron expression examples for dropdown
+// const cronExamples = [
+//   { value: "0 9 * * *", label: "9 AM daily" },
+//   { value: "0 9 * * 1-5", label: "9 AM weekdays" },
+//   { value: "0 9 1 * *", label: "9 AM on 1st of month" },
+//   { value: "*/15 * * * *", label: "Every 15 minutes" },
 // ];
 
 // const containerVariants = {
@@ -390,6 +389,11 @@
 //     setScheduleData((prev) => ({ ...prev, [name]: value }));
 //   };
 
+//   const handleCronExampleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+//     const value = e.target.value;
+//     setScheduleData((prev) => ({ ...prev, cron_expression: value }));
+//   };
+
 //   const handleDeleteConnection = async (email: string) => {
 //     if (!userId) {
 //       toast.error("User not authenticated. Please login again.", {
@@ -444,8 +448,8 @@
 //     setExpandedSource(expandedSource === sourceId ? null : sourceId);
 //   };
 
-//   const activeConnections = powerBiUsers.filter(user => user.connection_type === 'Active');
-//   const inactiveConnections = powerBiUsers.filter(user => user.connection_type !== 'Active');
+//   const activeConnections = powerBiUsers.filter(user => user.connection_status === 'Active');
+//   const inactiveConnections = powerBiUsers.filter(user => user.connection_status !== 'Active');
 
 //   return (
 //     <ErrorBoundary>
@@ -563,13 +567,24 @@
 //                           required
 //                         />
 //                         <div className="mt-2">
-//                           <p className="text-xs text-gray-500 font-medium mb-1">Common examples:</p>
-//                           <ul className="text-xs text-gray-500 space-y-1">
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * *</code> - 9 AM daily</li>
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * 1-5</code> - 9 AM weekdays</li>
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 1 * *</code> - 9 AM on 1st of month</li>
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">*/15 * * * *</code> - Every 15 minutes</li>
-//                           </ul>
+//                           <label
+//                             htmlFor="cron_example"
+//                             className="block text-xs font-medium text-gray-500 mb-1"
+//                           >
+//                             Select a common schedule:
+//                           </label>
+//                           <select
+//                             id="cron_example"
+//                             onChange={handleCronExampleSelect}
+//                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+//                           >
+//                             <option value="">Select an example</option>
+//                             {cronExamples.map((example) => (
+//                               <option key={example.value} value={example.value}>
+//                                 {example.label} ({example.value})
+//                               </option>
+//                             ))}
+//                           </select>
 //                         </div>
 //                       </div>
 //                       <div className="pt-2">
@@ -675,7 +690,7 @@
 //                     className="h-2"
 //                     style={{ background: `linear-gradient(to right, ${destination.color}40, ${destination.color}60)` }}
 //                   />
-//                   <div className="p-6">
+//                   <div className="p-4">
 //                     <div className="flex items-center gap-4 mb-4">
 //                       <motion.div
 //                         whileHover={{ scale: 1.1, rotate: 10 }}
@@ -714,7 +729,7 @@
 //                           animate={{ opacity: 1, height: "auto" }}
 //                           exit={{ opacity: 0, height: 0 }}
 //                           transition={{ duration: 0.3 }}
-//                           className="border-t border-gray-200 pt-4 mb-4"
+//                           className="border-t border-gray-200 pt-4"
 //                         >
 //                           <div className="flex items-center justify-between mb-3">
 //                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
@@ -804,7 +819,7 @@
 //                           )}
 //                         </motion.div>
 //                       )}
-//                       <div className="flex justify-between items-center">
+//                       <div className="flex justify-between items-center mt-2">
 //                         <motion.div
 //                           initial={{ x: -10, opacity: 0 }}
 //                           animate={{ x: 0, opacity: 1 }}
@@ -912,7 +927,6 @@
 // export default Outbound;
 
 
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
@@ -963,7 +977,6 @@ const destinations = [
   },
 ];
 
-// Cron expression examples for dropdown
 const cronExamples = [
   { value: "0 9 * * *", label: "9 AM daily" },
   { value: "0 9 * * 1-5", label: "9 AM weekdays" },
@@ -995,7 +1008,6 @@ const itemVariants = {
   },
 };
 
-// Error Boundary Component
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
 
@@ -1029,20 +1041,15 @@ const Outbound: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   useEffect(() => {
-    console.log("Destinations:", destinations);
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
-    } else {
-      console.warn("No userId found in localStorage");
     }
   }, []);
 
   useEffect(() => {
     if (userId) {
       fetchPowerBiUsers();
-    } else {
-      console.warn("userId is null, skipping fetchPowerBiUsers");
     }
   }, [userId]);
 
@@ -1061,11 +1068,10 @@ const Outbound: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch Power BI users: ${response.status} ${response.statusText}`);
+        throw new Error("Failed to fetch Power BI users");
       }
       const data = await response.json();
       setPowerBiUsers(data);
-      console.log("Power BI users fetched:", data);
     } catch (error) {
       console.error("Error fetching Power BI users:", error);
       toast.error("Failed to load Power BI connections", {
@@ -1318,8 +1324,6 @@ const Outbound: React.FC = () => {
       return;
     }
 
-    console.log("Deleting Power BI connection:", { email, userId, connection_type: "outbound" });
-
     try {
       const response = await fetch("/api/power-bi-users/delete", {
         method: "POST",
@@ -1359,7 +1363,6 @@ const Outbound: React.FC = () => {
   };
 
   const toggleExpandSource = (sourceId: number) => {
-    console.log("Toggling source:", sourceId, "Current expandedSource:", expandedSource);
     setExpandedSource(expandedSource === sourceId ? null : sourceId);
   };
 
@@ -1554,7 +1557,7 @@ const Outbound: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-16"
+            className="mb-12"
           >
             <motion.a
               href="#"
@@ -1570,7 +1573,7 @@ const Outbound: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-5xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
+              className="text-4xl md:text-5xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
             >
               Data Destinations
             </motion.h1>
@@ -1578,7 +1581,7 @@ const Outbound: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="mt-4 text-xl text-gray-600 max-w-3xl"
+              className="mt-3 text-lg text-gray-600 max-w-3xl"
             >
               Choose where to send your data and configure automated exports
             </motion.p>
@@ -1598,27 +1601,37 @@ const Outbound: React.FC = () => {
                   key={destination.id}
                   variants={itemVariants}
                   whileHover={{ y: -8, transition: { type: "spring", stiffness: 300 } }}
-                  className="bg-white/80 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50"
+                  className="bg-white/80 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50 flex flex-col"
                   style={{ minHeight: "250px" }}
                 >
                   <div
                     className="h-2"
                     style={{ background: `linear-gradient(to right, ${destination.color}40, ${destination.color}60)` }}
                   />
-                  <div className="p-4">
-                    <div className="flex items-center gap-4 mb-4">
+                  <div className="p-5 flex flex-col flex-grow">
+                    <div className="flex items-start gap-4 mb-4">
                       <motion.div
                         whileHover={{ scale: 1.1, rotate: 10 }}
-                        className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+                        className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center flex-shrink-0"
                       >
                         <destination.icon className="w-6 h-6 text-blue-600" />
                       </motion.div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 text-lg">{destination.title}</h3>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-gray-900 text-lg truncate">{destination.title}</h3>
+                          {destination.id === 3 && (
+                            <button
+                              onClick={() => toggleExpandSource(destination.id)}
+                              className="text-gray-500 hover:text-gray-700 transition-colors ml-2 flex-shrink-0"
+                            >
+                              {expandedSource === destination.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            </button>
+                          )}
+                        </div>
                         <motion.span
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1"
                           style={{
                             background: `linear-gradient(to right, ${destination.color}20, ${destination.color}40)`,
                             color: destination.color,
@@ -1627,24 +1640,18 @@ const Outbound: React.FC = () => {
                           {destination.status}
                         </motion.span>
                       </div>
-                      {destination.id === 3 && (
-                        <button
-                          onClick={() => toggleExpandSource(destination.id)}
-                          className="text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                          {expandedSource === destination.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </button>
-                      )}
                     </div>
+                    
                     <p className="text-gray-600 text-sm mb-4">{destination.description}</p>
-                    <div className="relative">
+                    
+                    <div className="mt-auto">
                       {destination.id === 3 && expandedSource === destination.id && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.3 }}
-                          className="border-t border-gray-200 pt-4"
+                          className="border-t border-gray-200 pt-4 -mx-5 px-5"
                         >
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
@@ -1660,10 +1667,10 @@ const Outbound: React.FC = () => {
                               Refresh
                             </button>
                           </div>
-                          <div className="flex gap-4 mb-4">
+                          <div className="flex gap-2 mb-3">
                             <button
                               onClick={() => setActiveTab("active")}
-                              className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                              className={`px-2 py-1 text-xs font-medium rounded-lg transition-colors ${
                                 activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                               }`}
                             >
@@ -1671,7 +1678,7 @@ const Outbound: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setActiveTab("inactive")}
-                              className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                              className={`px-2 py-1 text-xs font-medium rounded-lg transition-colors ${
                                 activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                               }`}
                             >
@@ -1691,42 +1698,42 @@ const Outbound: React.FC = () => {
                               <p className="text-sm text-gray-500">No inactive connections</p>
                             </div>
                           ) : (
-                            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                               {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
                                 <motion.div
                                   key={index}
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: index * 0.05 }}
-                                  className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
+                                  className="flex items-center justify-between p-2 bg-white border border-gray-100 rounded-lg hover:shadow-sm transition-shadow"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                                      <User className="w-5 h-5 text-blue-600" />
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                      <User className="w-4 h-4 text-blue-600" />
                                     </div>
-                                    <div>
-                                      <p className="text-sm font-semibold text-gray-900">{user.power_bi_username || 'Unknown User'}</p>
-                                      <div className="flex items-center gap-2 mt-1">
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-semibold text-gray-900 truncate">{user.power_bi_username || 'Unknown User'}</p>
+                                      <div className="flex items-center gap-1 mt-0.5">
                                         <span
-                                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                          className={`text-2xs px-1.5 py-0.5 rounded-full font-medium ${
                                             user.connection_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                           }`}
                                         >
                                           {user.connection_status}
                                         </span>
-                                        <p className="text-xs text-gray-600 flex items-center gap-1">
-                                          <Mail className="w-3 h-3" />
-                                          <span className="truncate max-w-[150px]">{user.power_bi_email || 'No email'}</span>
+                                        <p className="text-2xs text-gray-600 flex items-center gap-1 truncate">
+                                          <Mail className="w-2.5 h-2.5" />
+                                          <span className="truncate max-w-[100px]">{user.power_bi_email || 'No email'}</span>
                                         </p>
                                       </div>
                                     </div>
                                   </div>
                                   <button
                                     onClick={() => handleDeleteConnection(user.power_bi_email)}
-                                    className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                    className="p-1 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                                     title="Remove connection"
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </motion.div>
                               ))}
@@ -1734,13 +1741,9 @@ const Outbound: React.FC = () => {
                           )}
                         </motion.div>
                       )}
-                      <div className="flex justify-between items-center mt-2">
-                        <motion.div
-                          initial={{ x: -10, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-                        >
+                      
+                      <div className="flex justify-between items-center pt-4">
+                        <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
                           <span className="text-sm font-medium">Learn more</span>
                           <motion.span
                             animate={{ x: [0, 5, 0] }}
@@ -1748,15 +1751,15 @@ const Outbound: React.FC = () => {
                           >
                             →
                           </motion.span>
-                        </motion.div>
+                        </div>
                         {destination.id === 4 ? (
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowScheduleForm(true)}
-                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+                            className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-medium rounded-lg shadow hover:shadow-md transition-all"
                           >
-                            <Clock className="w-4 h-4 inline mr-2" />
+                            <Clock className="w-3.5 h-3.5 inline mr-1.5" />
                             Schedule
                           </motion.button>
                         ) : destination.authEndpoint ? (
@@ -1765,14 +1768,14 @@ const Outbound: React.FC = () => {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleAuthClick(destination)}
                             disabled={loading[destination.id] || isAuthWindowOpen}
-                            className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+                            className={`px-3 py-1.5 bg-gradient-to-r from-green-600 to-green-700 text-white text-xs font-medium rounded-lg shadow hover:shadow-md transition-all ${
                               loading[destination.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
                             }`}
                           >
                             {loading[destination.id] ? (
                               <span className="flex items-center">
                                 <svg
-                                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                  className="animate-spin -ml-1 mr-1 h-3.5 w-3.5 text-white"
                                   xmlns="http://www.w3.org/2000/svg"
                                   fill="none"
                                   viewBox="0 0 24 24"
@@ -1800,12 +1803,7 @@ const Outbound: React.FC = () => {
                             )}
                           </motion.button>
                         ) : (
-                          <motion.div
-                            initial={{ x: -10, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-                          >
+                          <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
                             <span className="text-sm font-medium">Configure</span>
                             <motion.span
                               animate={{ x: [0, 5, 0] }}
@@ -1813,7 +1811,7 @@ const Outbound: React.FC = () => {
                             >
                               →
                             </motion.span>
-                          </motion.div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1822,11 +1820,12 @@ const Outbound: React.FC = () => {
               ))}
             </motion.div>
           )}
+          
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-16 text-center"
+            className="mt-12 text-center"
           >
             <p className="text-gray-600 max-w-2xl mx-auto">
               Each destination offers unique features and capabilities. Configure automated
