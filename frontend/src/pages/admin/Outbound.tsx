@@ -936,14 +936,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 const destinations = [
   {
-    id: 1,
-    title: "Azure",
-    description: "Microsoft's scalable object storage solution for unstructured data.",
-    icon: Database,
-    color: "#43A047",
-    status: "Enterprise",
-  },
-  {
     id: 3,
     title: "Power BI",
     description: "Push your customer item data directly to Power BI for advanced analytics and visualization.",
@@ -951,6 +943,14 @@ const destinations = [
     color: "#0078D4",
     status: "Analytics",
     authEndpoint: "/api/powerbi/auth_login",
+  },
+    {
+    id: 1,
+    title: "Azure",
+    description: "Microsoft's scalable object storage solution for unstructured data.",
+    icon: Database,
+    color: "#43A047",
+    status: "Enterprise",
   },
   {
     id: 4,
