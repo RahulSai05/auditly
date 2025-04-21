@@ -2827,19 +2827,22 @@ const Inbound: React.FC = () => {
   const [powerBiUsers, setPowerBiUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [expandedSource, setExpandedSource] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   useEffect(() => {
     console.log("Data sources:", dataSources); // Debug: Confirm dataSources is defined
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
+    } else {
+      console.warn("No userId found in localStorage");
     }
   }, []);
 
   useEffect(() => {
     if (userId) {
       fetchPowerBiUsers();
+    } else {
+      console.warn("userId is null, skipping fetchPowerBiUsers");
     }
   }, [userId]);
 
@@ -2858,7 +2861,7 @@ const Inbound: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch Power BI users");
+        throw new Error(`Failed to fetch Power BI users: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
       setPowerBiUsers(data);
@@ -3154,9 +3157,6 @@ const Inbound: React.FC = () => {
     setExpandedSource(expandedSource === sourceId ? null : sourceId);
   };
 
-  const activeConnections = powerBiUsers.filter(user => user.connection_status === 'Active');
-  const inactiveConnections = powerBiUsers.filter(user => user.connection_status !== 'Active');
-
   return (
     <ErrorBoundary>
       <div className={`min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 relative ${isAuthWindowOpen ? "pointer-events-none" : ""}`}>
@@ -3343,8 +3343,8 @@ const Inbound: React.FC = () => {
                   key={source.id}
                   variants={itemVariants}
                   whileHover={{ y: -8, transition: { type: "spring", stiffness: 300 } }}
-                  className="bg-white/80 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50 relative"
-                  style={{ minHeight: "250px" }} // Ensure consistent card height
+                  className="bg-white/80 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50"
+                  style={{ minHeight: "250px" }}
                 >
                   <div
                     className="h-2"
@@ -3382,15 +3382,15 @@ const Inbound: React.FC = () => {
                       )}
                     </div>
                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
-                    {source.id === 1 && expandedSource === source.id && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute left-0 right-0 bg-white/95 shadow-lg rounded-b-3xl z-10 overflow-hidden"
-                      >
-                        <div className="border-t border-gray-200 pt-4 px-6 pb-6">
+                    <div className="relative">
+                      {source.id === 1 && expandedSource === source.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="border-t border-gray-200 pt-4 mb-4"
+                        >
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
                               <User className="w-4 h-4" />
@@ -3405,39 +3405,17 @@ const Inbound: React.FC = () => {
                               Refresh
                             </button>
                           </div>
-                          <div className="flex gap-4 mb-4">
-                            <button
-                              onClick={() => setActiveTab("active")}
-                              className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                                activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                              }`}
-                            >
-                              Active ({activeConnections.length})
-                            </button>
-                            <button
-                              onClick={() => setActiveTab("inactive")}
-                              className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                                activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                              }`}
-                            >
-                              Inactive ({inactiveConnections.length})
-                            </button>
-                          </div>
                           {isLoadingUsers ? (
                             <div className="py-4 text-center">
                               <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
                             </div>
-                          ) : activeTab === "active" && activeConnections.length === 0 ? (
+                          ) : powerBiUsers.length === 0 ? (
                             <div className="py-4 text-center bg-gray-50 rounded-lg">
-                              <p className="text-sm text-gray-500">No active connections</p>
-                            </div>
-                          ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
-                            <div className="py-4 text-center bg-gray-50 rounded-lg">
-                              <p className="text-sm text-gray-500">No inactive connections</p>
+                              <p className="text-sm text-gray-500">No connections found. Add an account to get started.</p>
                             </div>
                           ) : (
                             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                              {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
+                              {powerBiUsers.map((user, index) => (
                                 <motion.div
                                   key={index}
                                   initial={{ opacity: 0, y: 10 }}
@@ -3477,36 +3455,76 @@ const Inbound: React.FC = () => {
                               ))}
                             </div>
                           )}
-                        </div>
-                      </motion.div>
-                    )}
-                    <div className="flex justify-between items-center">
-                      <motion.div
-                        initial={{ x: -10, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-                      >
-                        <span className="text-sm font-medium">Learn more</span>
-                        <motion.span
-                          animate={{ x: [0, 5, 0] }}
-                          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        </motion.div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <motion.div
+                          initial={{ x: -10, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
                         >
-                          →
-                        </motion.span>
-                      </motion.div>
-                      {source.id === 3 ? (
-                        <div className="flex gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowScheduleForm(true)}
-                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+                          <span className="text-sm font-medium">Learn more</span>
+                          <motion.span
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
                           >
-                            <Clock className="w-4 h-4 inline mr-2" />
-                            Schedule
-                          </motion.button>
-                          {source.authEndpoint && (
+                            →
+                          </motion.span>
+                        </motion.div>
+                        {source.id === 3 ? (
+                          <div className="flex gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setShowScheduleForm(true)}
+                              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+                            >
+                              <Clock className="w-4 h-4 inline mr-2" />
+                              Schedule
+                            </motion.button>
+                            {source.authEndpoint && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleAuthClick(source)}
+                                disabled={loading[source.id] || isAuthWindowOpen}
+                                className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+                                  loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
+                                }`}
+                              >
+                                {loading[source.id] ? (
+                                  <span className="flex items-center">
+                                    <svg
+                                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                      ></circle>
+                                      <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                      ></path>
+                                    </svg>
+                                    Connecting...
+                                  </span>
+                                ) : (
+                                  "Connect"
+                                )}
+                              </motion.button>
+                            )}
+                          </div>
+                        ) : (
+                          source.authEndpoint && (
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
@@ -3540,55 +3558,15 @@ const Inbound: React.FC = () => {
                                   </svg>
                                   Connecting...
                                 </span>
+                              ) : powerBiUsers.length > 0 && source.id === 1 ? (
+                                "Add Account"
                               ) : (
                                 "Connect"
                               )}
                             </motion.button>
-                          )}
-                        </div>
-                      ) : (
-                        source.authEndpoint && (
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleAuthClick(source)}
-                            disabled={loading[source.id] || isAuthWindowOpen}
-                            className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-                              loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
-                            }`}
-                          >
-                            {loading[source.id] ? (
-                              <span className="flex items-center">
-                                <svg
-                                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  ></circle>
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  ></path>
-                                </svg>
-                                Connecting...
-                              </span>
-                            ) : powerBiUsers.length > 0 && source.id === 1 ? (
-                              "Add Account"
-                            ) : (
-                              "Connect"
-                            )}
-                          </motion.button>
-                        )
-                      )}
+                          )
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
