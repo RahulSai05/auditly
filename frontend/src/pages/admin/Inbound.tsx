@@ -3343,8 +3343,7 @@ const Inbound: React.FC = () => {
                   key={source.id}
                   variants={itemVariants}
                   whileHover={{ y: -8, transition: { type: "spring", stiffness: 300 } }}
-                  className="bg-white/80 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50 relative"
-                  style={{ minHeight: "250px" }} // Ensure consistent card height
+                  className="bg-white/80 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50"
                 >
                   <div
                     className="h-2"
@@ -3388,9 +3387,9 @@ const Inbound: React.FC = () => {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="absolute left-0 right-0 bg-white/95 shadow-lg rounded-b-3xl z-10 overflow-hidden"
+                        className="mb-4 overflow-hidden"
                       >
-                        <div className="border-t border-gray-200 pt-4 px-6 pb-6">
+                        <div className="border-t border-gray-200 pt-4">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
                               <User className="w-4 h-4" />
