@@ -108,7 +108,7 @@
 //   const [isScheduling, setIsScheduling] = useState(false);
 //   const [powerBiUsers, setPowerBiUsers] = useState<any[]>([]);
 //   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-//   const [expandedSource, setExpandedSource] = useState<number | null>(null);
+//   const [expandedPowerBi, setExpandedPowerBi] = useState(false);
 //   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
 //   useEffect(() => {
@@ -452,8 +452,8 @@
 //     }
 //   };
 
-//   const toggleExpandSource = (sourceId: number) => {
-//     setExpandedSource(expandedSource === sourceId ? null : sourceId);
+//   const togglePowerBiExpand = () => {
+//     setExpandedPowerBi(!expandedPowerBi);
 //   };
 
 //   const activeConnections = powerBiUsers.filter(user => user.connection_status === 'Active');
@@ -686,111 +686,138 @@
 //                       </div>
 //                       {source.id === 1 && (
 //                         <button
-//                           onClick={() => toggleExpandSource(source.id)}
+//                           onClick={togglePowerBiExpand}
 //                           className="text-gray-500 hover:text-gray-700 transition-colors"
 //                         >
-//                           {expandedSource === source.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+//                           {expandedPowerBi ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
 //                         </button>
 //                       )}
 //                     </div>
 //                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
-//                     <div className="relative">
-//                       {source.id === 1 && expandedSource === source.id && (
-//                         <motion.div
-//                           initial={{ opacity: 0, height: 0 }}
-//                           animate={{ opacity: 1, height: "auto" }}
-//                           exit={{ opacity: 0, height: 0 }}
-//                           transition={{ duration: 0.3 }}
-//                           className="border-t border-gray-200 pt-4 overflow-hidden"
-//                         >
-//                           <div className="flex items-center justify-between mb-3">
-//                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
-//                               <User className="w-4 h-4" />
-//                               Connections
-//                             </h4>
-//                             <button
-//                               onClick={handleRefreshUsers}
-//                               disabled={isLoadingUsers}
-//                               className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
-//                             >
-//                               <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? "animate-spin" : ""}`} />
-//                               Refresh
-//                             </button>
-//                           </div>
-//                           <div className="flex gap-4 mb-4">
-//                             <button
-//                               onClick={() => setActiveTab("active")}
-//                               className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-//                                 activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-//                               }`}
-//                             >
-//                               Active ({activeConnections.length})
-//                             </button>
-//                             <button
-//                               onClick={() => setActiveTab("inactive")}
-//                               className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-//                                 activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-//                               }`}
-//                             >
-//                               Inactive ({inactiveConnections.length})
-//                             </button>
-//                           </div>
-//                           {isLoadingUsers ? (
-//                             <div className="py-4 text-center">
-//                               <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+                    
+//                     {/* Properly scoped expansion section */}
+//                     {source.id === 1 ? (
+//                       <div className="relative">
+//                         {expandedPowerBi && (
+//                           <motion.div
+//                             initial={{ opacity: 0, height: 0 }}
+//                             animate={{ opacity: 1, height: "auto" }}
+//                             exit={{ opacity: 0, height: 0 }}
+//                             transition={{ duration: 0.3 }}
+//                             className="border-t border-gray-200 pt-4 overflow-hidden"
+//                           >
+//                             <div className="flex items-center justify-between mb-3">
+//                               <h4 className="font-medium text-gray-800 flex items-center gap-2">
+//                                 <User className="w-4 h-4" />
+//                                 Connections
+//                               </h4>
+//                               <button
+//                                 onClick={handleRefreshUsers}
+//                                 disabled={isLoadingUsers}
+//                                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
+//                               >
+//                                 <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? "animate-spin" : ""}`} />
+//                                 Refresh
+//                               </button>
 //                             </div>
-//                           ) : activeTab === "active" && activeConnections.length === 0 ? (
-//                             <div className="py-4 text-center bg-gray-50 rounded-lg">
-//                               <p className="text-sm text-gray-500">No active connections</p>
+//                             <div className="flex gap-4 mb-4">
+//                               <button
+//                                 onClick={() => setActiveTab("active")}
+//                                 className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+//                                   activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+//                                 }`}
+//                               >
+//                                 Active ({activeConnections.length})
+//                               </button>
+//                               <button
+//                                 onClick={() => setActiveTab("inactive")}
+//                                 className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+//                                   activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+//                                 }`}
+//                               >
+//                                 Inactive ({inactiveConnections.length})
+//                               </button>
 //                             </div>
-//                           ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
-//                             <div className="py-4 text-center bg-gray-50 rounded-lg">
-//                               <p className="text-sm text-gray-500">No inactive connections</p>
-//                             </div>
-//                           ) : (
-//                             <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-//                               {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
-//                                 <motion.div
-//                                   key={index}
-//                                   initial={{ opacity: 0, y: 10 }}
-//                                   animate={{ opacity: 1, y: 0 }}
-//                                   transition={{ delay: index * 0.05 }}
-//                                   className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
-//                                 >
-//                                   <div className="flex items-center gap-3">
-//                                     <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-//                                       <User className="w-5 h-5 text-blue-600" />
-//                                     </div>
-//                                     <div>
-//                                       <p className="text-sm font-semibold text-gray-900">{user.power_bi_username || 'Unknown User'}</p>
-//                                       <div className="flex items-center gap-2 mt-1">
-//                                         <span
-//                                           className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-//                                             user.connection_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-//                                           }`}
-//                                         >
-//                                           {user.connection_status}
-//                                         </span>
-//                                         <p className="text-xs text-gray-600 flex items-center gap-1">
-//                                           <Mail className="w-3 h-3" />
-//                                           <span className="truncate max-w-[150px]">{user.power_bi_email || 'No email'}</span>
-//                                         </p>
+//                             {isLoadingUsers ? (
+//                               <div className="py-4 text-center">
+//                                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+//                               </div>
+//                             ) : activeTab === "active" && activeConnections.length === 0 ? (
+//                               <div className="py-4 text-center bg-gray-50 rounded-lg">
+//                                 <p className="text-sm text-gray-500">No active connections</p>
+//                               </div>
+//                             ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
+//                               <div className="py-4 text-center bg-gray-50 rounded-lg">
+//                                 <p className="text-sm text-gray-500">No inactive connections</p>
+//                               </div>
+//                             ) : (
+//                               <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+//                                 {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
+//                                   <motion.div
+//                                     key={index}
+//                                     initial={{ opacity: 0, y: 10 }}
+//                                     animate={{ opacity: 1, y: 0 }}
+//                                     transition={{ delay: index * 0.05 }}
+//                                     className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
+//                                   >
+//                                     <div className="flex items-center gap-3">
+//                                       <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+//                                         <User className="w-5 h-5 text-blue-600" />
+//                                       </div>
+//                                       <div>
+//                                         <p className="text-sm font-semibold text-gray-900">{user.power_bi_username || 'Unknown User'}</p>
+//                                         <div className="flex items-center gap-2 mt-1">
+//                                           <span
+//                                             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+//                                               user.connection_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+//                                             }`}
+//                                           >
+//                                             {user.connection_status}
+//                                           </span>
+//                                           <p className="text-xs text-gray-600 flex items-center gap-1">
+//                                             <Mail className="w-3 h-3" />
+//                                             <span className="truncate max-w-[150px]">{user.power_bi_email || 'No email'}</span>
+//                                           </p>
+//                                         </div>
 //                                       </div>
 //                                     </div>
-//                                   </div>
-//                                   <button
-//                                     onClick={() => handleDeleteConnection(user.power_bi_email)}
-//                                     className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-//                                     title="Remove connection"
-//                                   >
-//                                     <Trash2 className="w-4 h-4" />
-//                                   </button>
-//                                 </motion.div>
-//                               ))}
-//                             </div>
-//                           )}
-//                         </motion.div>
-//                       )}
+//                                     <button
+//                                       onClick={() => handleDeleteConnection(user.power_bi_email)}
+//                                       className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+//                                       title="Remove connection"
+//                                     >
+//                                       <Trash2 className="w-4 h-4" />
+//                                     </button>
+//                                   </motion.div>
+//                                 ))}
+//                               </div>
+//                             )}
+//                           </motion.div>
+//                         )}
+//                         <div className="flex justify-between items-center mt-4 pt-2">
+//                           <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
+//                             <span className="text-sm font-medium">Learn more</span>
+//                             <motion.span
+//                               animate={{ x: [0, 5, 0] }}
+//                               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+//                             >
+//                               →
+//                             </motion.span>
+//                           </div>
+//                           <motion.button
+//                             whileHover={{ scale: 1.05 }}
+//                             whileTap={{ scale: 0.95 }}
+//                             onClick={() => handleAuthClick(source)}
+//                             disabled={loading[source.id] || isAuthWindowOpen}
+//                             className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+//                               loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
+//                             }`}
+//                           >
+//                             {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
+//                           </motion.button>
+//                         </div>
+//                       </div>
+//                     ) : (
 //                       <div className="flex justify-between items-center mt-4 pt-2">
 //                         <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
 //                           <span className="text-sm font-medium">Learn more</span>
@@ -822,33 +849,7 @@
 //                                   loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
 //                                 }`}
 //                               >
-//                                 {loading[source.id] ? (
-//                                   <span className="flex items-center">
-//                                     <svg
-//                                       className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-//                                       xmlns="http://www.w3.org/2000/svg"
-//                                       fill="none"
-//                                       viewBox="0 0 24 24"
-//                                     >
-//                                       <circle
-//                                         className="opacity-25"
-//                                         cx="12"
-//                                         cy="12"
-//                                         r="10"
-//                                         stroke="currentColor"
-//                                         strokeWidth="4"
-//                                       ></circle>
-//                                       <path
-//                                         className="opacity-75"
-//                                         fill="currentColor"
-//                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-//                                       ></path>
-//                                     </svg>
-//                                     Connecting...
-//                                   </span>
-//                                 ) : (
-//                                   "Connect"
-//                                 )}
+//                                 Connect
 //                               </motion.button>
 //                             )}
 //                           </div>
@@ -863,40 +864,12 @@
 //                                 loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
 //                               }`}
 //                             >
-//                               {loading[source.id] ? (
-//                                 <span className="flex items-center">
-//                                   <svg
-//                                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-//                                     xmlns="http://www.w3.org/2000/svg"
-//                                     fill="none"
-//                                     viewBox="0 0 24 24"
-//                                   >
-//                                     <circle
-//                                       className="opacity-25"
-//                                       cx="12"
-//                                       cy="12"
-//                                       r="10"
-//                                       stroke="currentColor"
-//                                       strokeWidth="4"
-//                                     ></circle>
-//                                     <path
-//                                       className="opacity-75"
-//                                       fill="currentColor"
-//                                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-//                                     ></path>
-//                                   </svg>
-//                                   Connecting...
-//                                 </span>
-//                               ) : powerBiUsers.length > 0 && source.id === 1 ? (
-//                                 "Add Account"
-//                               ) : (
-//                                 "Connect"
-//                               )}
+//                               Connect
 //                             </motion.button>
 //                           )
 //                         )}
 //                       </div>
-//                     </div>
+//                     )}
 //                   </div>
 //                 </motion.div>
 //               ))}
@@ -909,7 +882,6 @@
 // };
 
 // export default Inbound;
-
 
 
 import React, { useState, useEffect } from "react";
@@ -1598,6 +1570,7 @@ const Inbound: React.FC = () => {
                           {source.status}
                         </motion.span>
                       </div>
+                      {/* Fixed: Only show expand button for Power BI */}
                       {source.id === 1 && (
                         <button
                           onClick={togglePowerBiExpand}
