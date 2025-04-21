@@ -919,14 +919,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 const destinations = [
   {
-    id: 1,
-    title: "Azure",
-    description: "Microsoft's scalable object storage solution for unstructured data.",
-    icon: Database,
-    color: "#43A047",
-    status: "Enterprise",
-  },
-  {
     id: 2,
     title: "Amazon S3",
     description: "Secure cloud storage with unlimited scalability and high availability.",
