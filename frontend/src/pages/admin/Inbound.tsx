@@ -33,7 +33,7 @@
 //   {
 //     id: 2,
 //     title: "D365",
-//     description: "Microsoft's suite of enterprise resource planning (ERP) and customer relationship management (CRM) applications.",
+//     description: "Microsoft's enterprise resource planning & customer relationship management applications.",
 //     icon: Database,
 //     color: "#43A047",
 //     status: "Enterprise",
@@ -46,6 +46,14 @@
 //     color: "#FF9900",
 //     status: "Enterprise",
 //   },
+// ];
+
+// // Cron expression examples for dropdown
+// const cronExamples = [
+//   { value: "0 9 * * *", label: "9 AM daily" },
+//   { value: "0 9 * * 1-5", label: "9 AM weekdays" },
+//   { value: "0 9 1 * *", label: "9 AM on 1st of month" },
+//   { value: "*/15 * * * *", label: "Every 15 minutes" },
 // ];
 
 // const containerVariants = {
@@ -106,7 +114,7 @@
 //   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
 //   useEffect(() => {
-//     console.log("Data sources:", dataSources); // Debug: Confirm dataSources is defined
+//     console.log("Data sources:", dataSources);
 //     const storedUserId = localStorage.getItem("userId");
 //     if (storedUserId) {
 //       setUserId(parseInt(storedUserId));
@@ -138,7 +146,7 @@
 //       }
 //       const data = await response.json();
 //       setPowerBiUsers(data);
-//       console.log("Power BI users fetched:", data); // Debug: Confirm data
+//       console.log("Power BI users fetched:", data);
 //     } catch (error) {
 //       console.error("Error fetching Power BI users:", error);
 //       toast.error("Failed to load Power BI connections", {
@@ -391,34 +399,59 @@
 //     }
 //   };
 
-//   const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//   const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 //     const { name, value } = e.target;
 //     setScheduleData((prev) => ({ ...prev, [name]: value }));
 //   };
 
+//   const handleCronExampleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+//     const value = e.target.value;
+//     setScheduleData((prev) => ({ ...prev, cron_expression: value }));
+//   };
+
 //   const handleDeleteConnection = async (email: string) => {
+//     if (!userId) {
+//       toast.error("User not authenticated. Please login again.", {
+//         position: "top-right",
+//         autoClose: 5000,
+//       });
+//       return;
+//     }
+
+//     console.log("Deleting Power BI connection:", { email, userId, connection_type: "inbound" });
+
 //     try {
-//       const response = await fetch(`/api/power-bi-users/${encodeURIComponent(email)}`, {
-//         method: "DELETE",
+//       const response = await fetch("/api/power-bi-users/delete", {
+//         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
 //         },
 //         body: JSON.stringify({
-//           auditly_user_id: userId,
+//           power_bi_email: email,
+//           power_bi_user_mapping_id: userId,
 //           connection_type: "inbound",
 //         }),
 //       });
+
+//       const data = await response.json();
+
 //       if (response.ok) {
 //         toast.success("Connection removed successfully", {
 //           position: "top-right",
 //           autoClose: 3000,
 //         });
 //         fetchPowerBiUsers();
+//       } else if (response.status === 404) {
+//         toast.error("Connection not found", {
+//           position: "top-right",
+//           autoClose: 5000,
+//         });
 //       } else {
-//         throw new Error("Failed to delete connection");
+//         throw new Error(data.detail || "Failed to delete connection");
 //       }
-//     } catch (error) {
-//       toast.error("Failed to remove connection", {
+//     } catch (error: any) {
+//       console.error("Error deleting Power BI connection:", error);
+//       toast.error(error.message || "Failed to remove connection", {
 //         position: "top-right",
 //         autoClose: 5000,
 //       });
@@ -426,7 +459,7 @@
 //   };
 
 //   const toggleExpandSource = (sourceId: number) => {
-//     console.log("Toggling source:", sourceId, "Current expandedSource:", expandedSource); // Debug: Track expansion
+//     console.log("Toggling source:", sourceId, "Current expandedSource:", expandedSource);
 //     setExpandedSource(expandedSource === sourceId ? null : sourceId);
 //   };
 
@@ -522,13 +555,24 @@
 //                           required
 //                         />
 //                         <div className="mt-2">
-//                           <p className="text-xs text-gray-500 font-medium mb-1">Common examples:</p>
-//                           <ul className="text-xs text-gray-500 space-y-1">
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * *</code> - 9 AM daily</li>
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * 1-5</code> - 9 AM weekdays</li>
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 1 * *</code> - 9 AM on 1st of month</li>
-//                             <li><code className="bg-gray-100 px-1 py-0.5 rounded">*/15 * * * *</code> - Every 15 minutes</li>
-//                           </ul>
+//                           <label
+//                             htmlFor="cron_example"
+//                             className="block text-xs font-medium text-gray-500 mb-1"
+//                           >
+//                             Select a common schedule:
+//                           </label>
+//                           <select
+//                             id="cron_example"
+//                             onChange={handleCronExampleSelect}
+//                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+//                           >
+//                             <option value="">Select an example</option>
+//                             {cronExamples.map((example) => (
+//                               <option key={example.value} value={example.value}>
+//                                 {example.label} ({example.value})
+//                               </option>
+//                             ))}
+//                           </select>
 //                         </div>
 //                       </div>
 //                       <div className="pt-2">
@@ -625,7 +669,7 @@
 //                     className="h-2"
 //                     style={{ background: `linear-gradient(to right, ${source.color}40, ${source.color}60)` }}
 //                   />
-//                   <div className="p-6">
+//                   <div className="p-4">
 //                     <div className="flex items-center gap-4 mb-4">
 //                       <motion.div
 //                         whileHover={{ scale: 1.1, rotate: 10 }}
@@ -657,15 +701,15 @@
 //                       )}
 //                     </div>
 //                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
-//                     {source.id === 1 && expandedSource === source.id && (
-//                       <motion.div
-//                         initial={{ opacity: 0, height: 0 }}
-//                         animate={{ opacity: 1, height: "auto" }}
-//                         exit={{ opacity: 0, height: 0 }}
-//                         transition={{ duration: 0.3 }}
-//                         className="mb-4 overflow-hidden"
-//                       >
-//                         <div className="border-t border-gray-200 pt-4">
+//                     <div className="relative">
+//                       {source.id === 1 && expandedSource === source.id && (
+//                         <motion.div
+//                           initial={{ opacity: 0, height: 0 }}
+//                           animate={{ opacity: 1, height: "auto" }}
+//                           exit={{ opacity: 0, height: 0 }}
+//                           transition={{ duration: 0.3 }}
+//                           className="border-t border-gray-200 pt-4 overflow-hidden"
+//                         >
 //                           <div className="flex items-center justify-between mb-3">
 //                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
 //                               <User className="w-4 h-4" />
@@ -752,36 +796,76 @@
 //                               ))}
 //                             </div>
 //                           )}
-//                         </div>
-//                       </motion.div>
-//                     )}
-//                     <div className="flex justify-between items-center">
-//                       <motion.div
-//                         initial={{ x: -10, opacity: 0 }}
-//                         animate={{ x: 0, opacity: 1 }}
-//                         transition={{ delay: 0.2 }}
-//                         className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-//                       >
-//                         <span className="text-sm font-medium">Learn more</span>
-//                         <motion.span
-//                           animate={{ x: [0, 5, 0] }}
-//                           transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+//                         </motion.div>
+//                       )}
+//                       <div className="flex justify-between items-center mt-2">
+//                         <motion.div
+//                           initial={{ x: -10, opacity: 0 }}
+//                           animate={{ x: 0, opacity: 1 }}
+//                           transition={{ delay: 0.2 }}
+//                           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
 //                         >
-//                           →
-//                         </motion.span>
-//                       </motion.div>
-//                       {source.id === 3 ? (
-//                         <div className="flex gap-2">
-//                           <motion.button
-//                             whileHover={{ scale: 1.05 }}
-//                             whileTap={{ scale: 0.95 }}
-//                             onClick={() => setShowScheduleForm(true)}
-//                             className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+//                           <span className="text-sm font-medium">Learn more</span>
+//                           <motion.span
+//                             animate={{ x: [0, 5, 0] }}
+//                             transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
 //                           >
-//                             <Clock className="w-4 h-4 inline mr-2" />
-//                             Schedule
-//                           </motion.button>
-//                           {source.authEndpoint && (
+//                             →
+//                           </motion.span>
+//                         </motion.div>
+//                         {source.id === 3 ? (
+//                           <div className="flex gap-2">
+//                             <motion.button
+//                               whileHover={{ scale: 1.05 }}
+//                               whileTap={{ scale: 0.95 }}
+//                               onClick={() => setShowScheduleForm(true)}
+//                               className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+//                             >
+//                               <Clock className="w-4 h-4 inline mr-2" />
+//                               Schedule
+//                             </motion.button>
+//                             {source.authEndpoint && (
+//                               <motion.button
+//                                 whileHover={{ scale: 1.05 }}
+//                                 whileTap={{ scale: 0.95 }}
+//                                 onClick={() => handleAuthClick(source)}
+//                                 disabled={loading[source.id] || isAuthWindowOpen}
+//                                 className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+//                                   loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
+//                                 }`}
+//                               >
+//                                 {loading[source.id] ? (
+//                                   <span className="flex items-center">
+//                                     <svg
+//                                       className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+//                                       xmlns="http://www.w3.org/2000/svg"
+//                                       fill="none"
+//                                       viewBox="0 0 24 24"
+//                                     >
+//                                       <circle
+//                                         className="opacity-25"
+//                                         cx="12"
+//                                         cy="12"
+//                                         r="10"
+//                                         stroke="currentColor"
+//                                         strokeWidth="4"
+//                                       ></circle>
+//                                       <path
+//                                         className="opacity-75"
+//                                         fill="currentColor"
+//                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+//                                       ></path>
+//                                     </svg>
+//                                     Connecting...
+//                                   </span>
+//                                 ) : (
+//                                   "Connect"
+//                                 )}
+//                               </motion.button>
+//                             )}
+//                           </div>
+//                         ) : (
+//                           source.authEndpoint && (
 //                             <motion.button
 //                               whileHover={{ scale: 1.05 }}
 //                               whileTap={{ scale: 0.95 }}
@@ -811,59 +895,19 @@
 //                                       className="opacity-75"
 //                                       fill="currentColor"
 //                                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-//                                     ></path>
-//                                   </svg>
-//                                   Connecting...
-//                                 </span>
-//                               ) : (
-//                                 "Connect"
-//                               )}
+//                                       ></path>
+//                                     </svg>
+//                                     Connecting...
+//                                   </span>
+//                                 ) : powerBiUsers.length > 0 && source.id === 1 ? (
+//                                   "Add Account"
+//                                 ) : (
+//                                   "Connect"
+//                                 )}
 //                             </motion.button>
-//                           )}
-//                         </div>
-//                       ) : (
-//                         source.authEndpoint && (
-//                           <motion.button
-//                             whileHover={{ scale: 1.05 }}
-//                             whileTap={{ scale: 0.95 }}
-//                             onClick={() => handleAuthClick(source)}
-//                             disabled={loading[source.id] || isAuthWindowOpen}
-//                             className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-//                               loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
-//                             }`}
-//                           >
-//                             {loading[source.id] ? (
-//                               <span className="flex items-center">
-//                                 <svg
-//                                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-//                                   xmlns="http://www.w3.org/2000/svg"
-//                                   fill="none"
-//                                   viewBox="0 0 24 24"
-//                                 >
-//                                   <circle
-//                                     className="opacity-25"
-//                                     cx="12"
-//                                     cy="12"
-//                                     r="10"
-//                                     stroke="currentColor"
-//                                     strokeWidth="4"
-//                                   ></circle>
-//                                   <path
-//                                     className="opacity-75"
-//                                     fill="currentColor"
-//                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-//                                   ></path>
-//                                 </svg>
-//                                 Connecting...
-//                               </span>
-//                             ) : powerBiUsers.length > 0 && source.id === 1 ? (
-//                               "Add Account"
-//                             ) : (
-//                               "Connect"
-//                             )}
-//                           </motion.button>
-//                         )
-//                       )}
+//                           )
+//                         )}
+//                       </div>
 //                     </div>
 //                   </div>
 //                 </motion.div>
@@ -1679,13 +1723,8 @@ const Inbound: React.FC = () => {
                           )}
                         </motion.div>
                       )}
-                      <div className="flex justify-between items-center mt-2">
-                        <motion.div
-                          initial={{ x: -10, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-                        >
+                      <div className="flex justify-between items-center mt-4 pt-2">
+                        <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
                           <span className="text-sm font-medium">Learn more</span>
                           <motion.span
                             animate={{ x: [0, 5, 0] }}
@@ -1693,7 +1732,7 @@ const Inbound: React.FC = () => {
                           >
                             →
                           </motion.span>
-                        </motion.div>
+                        </div>
                         {source.id === 3 ? (
                           <div className="flex gap-2">
                             <motion.button
