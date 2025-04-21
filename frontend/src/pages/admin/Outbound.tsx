@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect } from "react";
 // import { motion, AnimatePresence } from "framer-motion";
 // import { toast, ToastContainer } from "react-toastify";
@@ -21,6 +22,14 @@
 // import "react-toastify/dist/ReactToastify.css";
 
 // const destinations = [
+//   {
+//     id: 1,
+//     title: "Azure",
+//     description: "Microsoft's scalable object storage solution for unstructured data.",
+//     icon: Database,
+//     color: "#43A047",
+//     status: "Enterprise",
+//   },
 //   {
 //     id: 2,
 //     title: "Amazon S3",
@@ -106,7 +115,7 @@
 //   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
 //   useEffect(() => {
-//     console.log("Destinations:", destinations); // Debug: Confirm destinations is defined
+//     console.log("Destinations:", destinations);
 //     const storedUserId = localStorage.getItem("userId");
 //     if (storedUserId) {
 //       setUserId(parseInt(storedUserId));
@@ -142,7 +151,7 @@
 //       }
 //       const data = await response.json();
 //       setPowerBiUsers(data);
-//       console.log("Power BI users fetched:", data); // Debug: Confirm data
+//       console.log("Power BI users fetched:", data);
 //     } catch (error) {
 //       console.error("Error fetching Power BI users:", error);
 //       toast.error("Failed to load Power BI connections", {
@@ -382,28 +391,48 @@
 //   };
 
 //   const handleDeleteConnection = async (email: string) => {
+//     if (!userId) {
+//       toast.error("User not authenticated. Please login again.", {
+//         position: "top-right",
+//         autoClose: 5000,
+//       });
+//       return;
+//     }
+
+//     console.log("Deleting Power BI connection:", { email, userId, connection_type: "outbound" });
+
 //     try {
-//       const response = await fetch(`/api/power-bi-users/${encodeURIComponent(email)}`, {
-//         method: "DELETE",
+//       const response = await fetch("/api/power-bi-users/delete", {
+//         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
 //         },
 //         body: JSON.stringify({
-//           auditly_user_id: userId,
+//           power_bi_email: email,
+//           power_bi_user_mapping_id: userId,
 //           connection_type: "outbound",
 //         }),
 //       });
+
+//       const data = await response.json();
+
 //       if (response.ok) {
 //         toast.success("Connection removed successfully", {
 //           position: "top-right",
 //           autoClose: 3000,
 //         });
 //         fetchPowerBiUsers();
+//       } else if (response.status === 404) {
+//         toast.error("Connection not found", {
+//           position: "top-right",
+//           autoClose: 5000,
+//         });
 //       } else {
-//         throw new Error("Failed to delete connection");
+//         throw new Error(data.detail || "Failed to delete connection");
 //       }
-//     } catch (error) {
-//       toast.error("Failed to remove connection", {
+//     } catch (error: any) {
+//       console.error("Error deleting Power BI connection:", error);
+//       toast.error(error.message || "Failed to remove connection", {
 //         position: "top-right",
 //         autoClose: 5000,
 //       });
@@ -411,12 +440,12 @@
 //   };
 
 //   const toggleExpandSource = (sourceId: number) => {
-//     console.log("Toggling source:", sourceId, "Current expandedSource:", expandedSource); // Debug: Track expansion
+//     console.log("Toggling source:", sourceId, "Current expandedSource:", expandedSource);
 //     setExpandedSource(expandedSource === sourceId ? null : sourceId);
 //   };
 
-//   const activeConnections = powerBiUsers.filter(user => user.connection_status === 'Active');
-//   const inactiveConnections = powerBiUsers.filter(user => user.connection_status !== 'Active');
+//   const activeConnections = powerBiUsers.filter(user => user.connection_type === 'Active');
+//   const inactiveConnections = powerBiUsers.filter(user => user.connection_type !== 'Active');
 
 //   return (
 //     <ErrorBoundary>
@@ -882,6 +911,8 @@
 
 // export default Outbound;
 
+
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
@@ -938,6 +969,14 @@ const destinations = [
     color: "#FF9900",
     status: "Enterprise",
   },
+];
+
+// Cron expression examples for dropdown
+const cronExamples = [
+  { value: "0 9 * * *", label: "9 AM daily" },
+  { value: "0 9 * * 1-5", label: "9 AM weekdays" },
+  { value: "0 9 1 * *", label: "9 AM on 1st of month" },
+  { value: "*/15 * * * *", label: "Every 15 minutes" },
 ];
 
 const containerVariants = {
@@ -1273,6 +1312,11 @@ const Outbound: React.FC = () => {
     setScheduleData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCronExampleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setScheduleData((prev) => ({ ...prev, cron_expression: value }));
+  };
+
   const handleDeleteConnection = async (email: string) => {
     if (!userId) {
       toast.error("User not authenticated. Please login again.", {
@@ -1327,8 +1371,8 @@ const Outbound: React.FC = () => {
     setExpandedSource(expandedSource === sourceId ? null : sourceId);
   };
 
-  const activeConnections = powerBiUsers.filter(user => user.connection_type === 'Active');
-  const inactiveConnections = powerBiUsers.filter(user => user.connection_type !== 'Active');
+  const activeConnections = powerBiUsers.filter(user => user.connection_status === 'Active');
+  const inactiveConnections = powerBiUsers.filter(user => user.connection_status !== 'Active');
 
   return (
     <ErrorBoundary>
@@ -1446,13 +1490,24 @@ const Outbound: React.FC = () => {
                           required
                         />
                         <div className="mt-2">
-                          <p className="text-xs text-gray-500 font-medium mb-1">Common examples:</p>
-                          <ul className="text-xs text-gray-500 space-y-1">
-                            <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * *</code> - 9 AM daily</li>
-                            <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 * * 1-5</code> - 9 AM weekdays</li>
-                            <li><code className="bg-gray-100 px-1 py-0.5 rounded">0 9 1 * *</code> - 9 AM on 1st of month</li>
-                            <li><code className="bg-gray-100 px-1 py-0.5 rounded">*/15 * * * *</code> - Every 15 minutes</li>
-                          </ul>
+                          <label
+                            htmlFor="cron_example"
+                            className="block text-xs font-medium text-gray-500 mb-1"
+                          >
+                            Select a common schedule:
+                          </label>
+                          <select
+                            id="cron_example"
+                            onChange={handleCronExampleSelect}
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+                          >
+                            <option value="">Select an example</option>
+                            {cronExamples.map((example) => (
+                              <option key={example.value} value={example.value}>
+                                {example.label} ({example.value})
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                       <div className="pt-2">
@@ -1558,7 +1613,7 @@ const Outbound: React.FC = () => {
                     className="h-2"
                     style={{ background: `linear-gradient(to right, ${destination.color}40, ${destination.color}60)` }}
                   />
-                  <div className="p-6">
+                  <div className="p-4">
                     <div className="flex items-center gap-4 mb-4">
                       <motion.div
                         whileHover={{ scale: 1.1, rotate: 10 }}
@@ -1597,7 +1652,7 @@ const Outbound: React.FC = () => {
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.3 }}
-                          className="border-t border-gray-200 pt-4 mb-4"
+                          className="border-t border-gray-200 pt-4"
                         >
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-gray-800 flex items-center gap-2">
@@ -1687,7 +1742,7 @@ const Outbound: React.FC = () => {
                           )}
                         </motion.div>
                       )}
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center mt-2">
                         <motion.div
                           initial={{ x: -10, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
