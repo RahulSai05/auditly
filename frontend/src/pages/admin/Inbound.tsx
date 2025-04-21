@@ -1554,7 +1554,7 @@ const Inbound: React.FC = () => {
                         whileHover={{ scale: 1.1, rotate: 10 }}
                         className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
                       >
-                        <source.icon className="w-6 h-6 text-blue-600" />
+                        {React.createElement(source.icon, { className: "w-6 h-6 text-blue-600" })}
                       </motion.div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 text-lg">{source.title}</h3>
