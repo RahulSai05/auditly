@@ -945,14 +945,6 @@ const destinations = [
     status: "Enterprise",
   },
   {
-    id: 2,
-    title: "Amazon S3",
-    description: "Secure cloud storage with unlimited scalability and high availability.",
-    icon: Globe,
-    color: "#00796B",
-    status: "Popular",
-  },
-  {
     id: 3,
     title: "Power BI",
     description: "Push your customer item data directly to Power BI for advanced analytics and visualization.",
