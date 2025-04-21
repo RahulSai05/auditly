@@ -1863,8 +1863,7 @@ const Inbound: React.FC = () => {
   const [isScheduling, setIsScheduling] = useState(false);
   const [powerBiUsers, setPowerBiUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [expandedSource, setExpandedSource] = useState<number | null>(1);
-  const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
+  const [expandedSource, setExpandedSource] = useState<number | null>(null); // Initially null to keep all collapsed
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -2209,6 +2208,7 @@ const Inbound: React.FC = () => {
   };
 
   const toggleExpandSource = (sourceId: number) => {
+    // Expand only the clicked source, collapse others
     setExpandedSource(expandedSource === sourceId ? null : sourceId);
   };
 
