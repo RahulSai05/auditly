@@ -798,13 +798,8 @@
 //                           )}
 //                         </motion.div>
 //                       )}
-//                       <div className="flex justify-between items-center mt-2">
-//                         <motion.div
-//                           initial={{ x: -10, opacity: 0 }}
-//                           animate={{ x: 0, opacity: 1 }}
-//                           transition={{ delay: 0.2 }}
-//                           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-//                         >
+//                       <div className="flex justify-between items-center mt-4 pt-2">
+//                         <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
 //                           <span className="text-sm font-medium">Learn more</span>
 //                           <motion.span
 //                             animate={{ x: [0, 5, 0] }}
@@ -812,7 +807,7 @@
 //                           >
 //                             →
 //                           </motion.span>
-//                         </motion.div>
+//                         </div>
 //                         {source.id === 3 ? (
 //                           <div className="flex gap-2">
 //                             <motion.button
@@ -923,6 +918,7 @@
 // export default Inbound;
 
 
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -973,7 +969,6 @@ const dataSources = [
   },
 ];
 
-// Cron expression examples for dropdown
 const cronExamples = [
   { value: "0 9 * * *", label: "9 AM daily" },
   { value: "0 9 * * 1-5", label: "9 AM weekdays" },
@@ -1005,7 +1000,6 @@ const itemVariants = {
   },
 };
 
-// Error Boundary Component
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
 
@@ -1039,7 +1033,6 @@ const Inbound: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   useEffect(() => {
-    console.log("Data sources:", dataSources);
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
@@ -1071,7 +1064,6 @@ const Inbound: React.FC = () => {
       }
       const data = await response.json();
       setPowerBiUsers(data);
-      console.log("Power BI users fetched:", data);
     } catch (error) {
       console.error("Error fetching Power BI users:", error);
       toast.error("Failed to load Power BI connections", {
@@ -1343,8 +1335,6 @@ const Inbound: React.FC = () => {
       return;
     }
 
-    console.log("Deleting Power BI connection:", { email, userId, connection_type: "inbound" });
-
     try {
       const response = await fetch("/api/power-bi-users/delete", {
         method: "POST",
@@ -1384,7 +1374,6 @@ const Inbound: React.FC = () => {
   };
 
   const toggleExpandSource = (sourceId: number) => {
-    console.log("Toggling source:", sourceId, "Current expandedSource:", expandedSource);
     setExpandedSource(expandedSource === sourceId ? null : sourceId);
   };
 
@@ -1815,15 +1804,15 @@ const Inbound: React.FC = () => {
                                       className="opacity-75"
                                       fill="currentColor"
                                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                      ></path>
-                                    </svg>
-                                    Connecting...
-                                  </span>
-                                ) : powerBiUsers.length > 0 && source.id === 1 ? (
-                                  "Add Account"
-                                ) : (
-                                  "Connect"
-                                )}
+                                    ></path>
+                                  </svg>
+                                  Connecting...
+                                </span>
+                              ) : powerBiUsers.length > 0 && source.id === 1 ? (
+                                "Add Account"
+                              ) : (
+                                "Connect"
+                              )}
                             </motion.button>
                           )
                         )}
