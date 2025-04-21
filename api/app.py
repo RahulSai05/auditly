@@ -2808,3 +2808,54 @@ def create_and_push(access_token: str, db: Session = Depends(get_db)):
 
     except Exception as e:
         return {"status": "Error", "message": str(e)}
+
+
+
+
+class PowerBiUserDeleteRequest(BaseModel):
+    power_bi_email: str
+    power_bi_user_mapping_id: int
+    connection_type: str
+
+@app.post("/api/power-bi-users/delete")
+async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = Depends(get_db)):
+    """
+    Delete a Power BI user connection by email, user mapping ID, and connection type.
+    """
+    try:
+        # Validate inputs
+        if not request.power_bi_email:
+            raise HTTPException(status_code=400, detail="power_bi_email is required")
+        if not request.power_bi_user_mapping_id:
+            raise HTTPException(status_code=400, detail="power_bi_user_mapping_id is required")
+        if request.connection_type not in ["inbound", "outbound"]:
+            raise HTTPException(status_code=400, detail="connection_type must be 'inbound' or 'outbound'")
+
+        # Query for the Power BI user
+        power_bi_user = db.query(PowerBiUser).filter(
+            PowerBiUser.power_bi_email == request.power_bi_email,
+            PowerBiUser.power_bi_user_mapping_id == request.power_bi_user_mapping_id,
+            PowerBiUser.connection_type == request.connection_type
+        ).first()
+
+        if not power_bi_user:
+            raise HTTPException(status_code=404, detail="Power BI user not found")
+
+        # Delete the user
+        db.delete(power_bi_user)
+        db.commit()
+
+        return {
+            "message": "Power BI user deleted successfully",
+            "data": {
+                "power_bi_email": request.power_bi_email,
+                "power_bi_user_mapping_id": request.power_bi_user_mapping_id,
+                "connection_type": request.connection_type
+            }
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error deleting Power BI user: {str(e)}")
+
