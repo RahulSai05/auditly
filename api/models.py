@@ -193,6 +193,8 @@ class PowerBiUser(Base):
     refresh_token = Column(String)  # Added for refresh token
     token_expiry = Column(DateTime)  # Added for token expiration
     tenant_id = Column(String)      # Added for Azure tenant ID
+    connection_type = Column(String)
+
 
 
 class PowerBiSqlMapping(Base):
