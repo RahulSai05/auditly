@@ -813,59 +813,60 @@ const Inbound: React.FC = () => {
     };
   }, [activeAuthWindow]);
 
-  const handleAuthClick = async (source: any) => {
-    if (!source.authEndpoint) return;
+  const handleAuthClick = async (destination: typeof destinations[0]) => {
+  if (!destination.authEndpoint) return;
+  if (!userId) {
+    toast.error("User not authenticated. Please login again.", {
+      icon: "🔒",
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return;
+  }
 
-    try {
-      setLoading((prev) => ({ ...prev, [source.id]: true }));
-      setIsAuthWindowOpen(true);
+  try {
+    setIsAuthWindowOpen(true);
 
-      const width = 600;
-      const height = 700;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
+    const width = 600;
+    const height = 700;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
 
-      const returnUrl = encodeURIComponent(window.location.origin);
+    const returnUrl = encodeURIComponent(window.location.origin);
+    // Add connection_type=outbound to the auth URL
+    const authUrl = `${destination.authEndpoint}?mapping_id=${userId}&returnUrl=${returnUrl}&connection_type=outbound`;
 
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        throw new Error("Missing userId in localStorage.");
-      }
+    const authWindow = window.open(
+      authUrl,
+      "AuthPopup",
+      `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
+    );
 
-      const authUrl = `${source.authEndpoint}?mapping_id=${userId}&returnUrl=${returnUrl}`;
+    if (authWindow) {
+      setActiveAuthWindow(authWindow);
 
-      const authWindow = window.open(
-        authUrl,
-        "AuthPopup",
-        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
-      );
-
-      if (authWindow) {
-        setActiveAuthWindow(authWindow);
-
-        const checkWindowClosed = setInterval(() => {
-          if (authWindow.closed) {
-            clearInterval(checkWindowClosed);
-            setIsAuthWindowOpen(false);
-            setActiveAuthWindow(null);
-            setLoading((prev) => ({ ...prev, [source.id]: false }));
-          }
-        }, 500);
-      } else {
-        throw new Error("Failed to open authentication window");
-      }
-    } catch (error) {
-      console.error("Authentication error:", error);
-      toast.error("Failed to initiate authentication. Please try again.", {
-        icon: "❌",
-        position: "top-right",
-        autoClose: 5000,
-      });
-      setIsAuthWindowOpen(false);
-      setActiveAuthWindow(null);
-      setLoading((prev) => ({ ...prev, [source.id]: false }));
+      const checkWindowClosed = setInterval(() => {
+        if (authWindow.closed) {
+          clearInterval(checkWindowClosed);
+          setIsAuthWindowOpen(false);
+          setActiveAuthWindow(null);
+          fetchPowerBiUsers(); // Refresh connections after window closes
+        }
+      }, 500);
+    } else {
+      throw new Error("Failed to open authentication window");
     }
-  };
+  } catch (error) {
+    console.error("Authentication error:", error);
+    toast.error("Failed to initiate authentication. Please try again.", {
+      icon: "❌",
+      position: "top-right",
+      autoClose: 5000,
+    });
+    setIsAuthWindowOpen(false);
+    setActiveAuthWindow(null);
+  }
+};
 
   const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
