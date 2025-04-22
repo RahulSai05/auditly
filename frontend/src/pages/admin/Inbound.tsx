@@ -886,10 +886,9 @@
 // export default Inbound;
 
 
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useAppDispatch, useAppSelector } from "../hooks";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import {
@@ -908,15 +907,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { fetchPowerBiUsers } from "./slices/itemSlice";
+import { fetchPowerBiUsers, deletePowerBiUser, selectPowerBiUsers, selectPowerBiUsersLoading, selectPowerBiUsersError } from "../slices/itemSlice";
 import "react-toastify/dist/ReactToastify.css";
-
-interface PowerBiUser {
-  power_bi_username: string;
-  power_bi_email: string;
-  connection_status: 'Active' | 'Inactive' | string;
-  // Add other fields as needed
-}
 
 interface DataSource {
   id: number;
@@ -1023,12 +1015,13 @@ const Inbound: React.FC = () => {
   });
   const [userId, setUserId] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
-  const [powerBiUsers, setPowerBiUsers] = useState<PowerBiUser[]>([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [expandedPowerBi, setExpandedPowerBi] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const powerBiUsers = useAppSelector(selectPowerBiUsers);
+  const isLoadingUsers = useAppSelector(selectPowerBiUsersLoading);
+  const powerBiUsersError = useAppSelector(selectPowerBiUsersError);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -1039,65 +1032,23 @@ const Inbound: React.FC = () => {
 
   useEffect(() => {
     if (userId) {
-      fetchPowerBiUsers();
+      dispatch(fetchPowerBiUsers({ userId, connectionType: "inbound" }));
     }
-  }, [userId]);
-
-  const handleFetchPowerBiUsers = async () => {
-  if (!userId) return;
-  
-  try {
-    const resultAction = await dispatch(
-      fetchPowerBiUsers({ userId, connectionType: "inbound" })
-    );
-    
-    if (fetchPowerBiUsers.fulfilled.match(resultAction)) {
-      // Data is already in Redux store, but you can access it here if needed
-      const users = resultAction.payload;
-      toast.success("Power BI users loaded successfully");
-    } else if (fetchPowerBiUsers.rejected.match(resultAction)) {
-      throw new Error(resultAction.payload as string);
-    }
-  } catch (error) {
-    console.error("Error fetching Power BI users:", error);
-    toast.error(
-      error instanceof Error 
-        ? error.message 
-        : "Failed to load Power BI connections",
-      {
-        position: "top-right",
-        autoClose: 5000,
-      }
-    );
-  }
-};
+  }, [userId, dispatch]);
 
   const handleRefreshUsers = async () => {
-  await handleFetchPowerBiUsers();
-  toast.success("Power BI connections refreshed", {
-    position: "top-right",
-    autoClose: 3000,
-  });
-};
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to refresh Power BI users");
-      }
-
-      if (!Array.isArray(data)) {
-        throw new Error("Invalid response format: expected an array of users");
-      }
-
-      setPowerBiUsers(data);
-      dispatch(setPowerBiUsers(data));
+    if (!userId) return;
+    
+    try {
+      const result = await dispatch(
+        fetchPowerBiUsers({ userId, connectionType: "inbound" })
+      ).unwrap();
+      
       toast.success("Power BI connections refreshed", {
         position: "top-right",
         autoClose: 3000,
       });
     } catch (error) {
-      console.error("Error refreshing Power BI users:", error);
       toast.error(
         error instanceof Error 
           ? error.message 
@@ -1107,8 +1058,6 @@ const Inbound: React.FC = () => {
           autoClose: 5000,
         }
       );
-    } finally {
-      setIsLoadingUsers(false);
     }
   };
 
@@ -1149,7 +1098,7 @@ const Inbound: React.FC = () => {
         setIsAuthWindowOpen(false);
         setActiveAuthWindow(null);
         setLoading({});
-        fetchPowerBiUsers();
+        dispatch(fetchPowerBiUsers({ userId: userId!, connectionType: "inbound" }));
         toast.success("Authentication successful!", {
           icon: "🔐",
           position: "top-right",
@@ -1174,7 +1123,7 @@ const Inbound: React.FC = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [activeAuthWindow]);
+  }, [activeAuthWindow, dispatch, userId]);
 
   useEffect(() => {
     return () => {
@@ -1339,34 +1288,11 @@ const Inbound: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/power-bi-users/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          power_bi_email: email,
-          power_bi_user_mapping_id: userId,
-          connection_type: "inbound",
-        }),
+      await dispatch(deletePowerBiUser({ email, userId })).unwrap();
+      toast.success("Connection removed successfully", {
+        position: "top-right",
+        autoClose: 3000,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("Connection removed successfully", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        fetchPowerBiUsers();
-      } else if (response.status === 404) {
-        toast.error("Connection not found", {
-          position: "top-right",
-          autoClose: 5000,
-        });
-      } else {
-        throw new Error(data.detail || "Failed to delete connection");
-      }
     } catch (error: any) {
       console.error("Error deleting Power BI connection:", error);
       toast.error(error.message || "Failed to remove connection", {
