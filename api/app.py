@@ -2262,15 +2262,20 @@ async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depe
         }
     }
 
+# fixthiss
+class GetPowerBiDatasets(BaseModel):
+    power_bi_id: str
+    auditly_user_id: str   
+    
 @app.get("/api/get-powerbi-dataset-ids")
-async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of the Power BI workspace to query."), db: Session = Depends(get_db)):
+async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of the Power BI workspace to query."), request:GetPowerBiDatasets db: Session = Depends(get_db)):
     """
     Fetch all dataset IDs in the specified Power BI workspace.
     """
-    access_token = db.query(PowerBiUser).first().access_token  # Ensure you have a model to fetch this or adapt as needed
+    ACCESS_TOKEN = db.query(PowerBiUser).filter(PowerBiUser.power_bi_id == request.power_bi_id).filter(PowerBiUser.power_bi_user_mapping_id == request.auditly_user_id).first().access_token
 
     headers = {
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
     
