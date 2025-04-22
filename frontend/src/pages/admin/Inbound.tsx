@@ -908,7 +908,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { setPowerBiUsers } from "./itemSlice";
+import { fetchPowerBiUsers } from "./slices/itemSlice";
 import "react-toastify/dist/ReactToastify.css";
 
 interface PowerBiUser {
@@ -1043,67 +1043,42 @@ const Inbound: React.FC = () => {
     }
   }, [userId]);
 
-  const fetchPowerBiUsers = async () => {
-    setIsLoadingUsers(true);
-    try {
-      console.log("Fetching Power BI users with payload:", {
-        auditly_user_id: userId,
-        connection_type: "inbound",
-      });
-
-      const response = await fetch("/api/power-bi-users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          auditly_user_id: userId,
-          connection_type: "inbound",
-        }),
-      });
-
-      const data = await response.json();
-      console.log("Power BI users response:", { status: response.status, data });
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch Power BI users");
-      }
-
-      if (!Array.isArray(data)) {
-        throw new Error("Invalid response format: expected an array of users");
-      }
-
-      setPowerBiUsers(data);
-      dispatch(setPowerBiUsers(data));
-    } catch (error) {
-      console.error("Error fetching Power BI users:", error);
-      toast.error(
-        error instanceof Error 
-          ? error.message 
-          : "Failed to load Power BI connections",
-        {
-          position: "top-right",
-          autoClose: 5000,
-        }
-      );
-    } finally {
-      setIsLoadingUsers(false);
+  const handleFetchPowerBiUsers = async () => {
+  if (!userId) return;
+  
+  try {
+    const resultAction = await dispatch(
+      fetchPowerBiUsers({ userId, connectionType: "inbound" })
+    );
+    
+    if (fetchPowerBiUsers.fulfilled.match(resultAction)) {
+      // Data is already in Redux store, but you can access it here if needed
+      const users = resultAction.payload;
+      toast.success("Power BI users loaded successfully");
+    } else if (fetchPowerBiUsers.rejected.match(resultAction)) {
+      throw new Error(resultAction.payload as string);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching Power BI users:", error);
+    toast.error(
+      error instanceof Error 
+        ? error.message 
+        : "Failed to load Power BI connections",
+      {
+        position: "top-right",
+        autoClose: 5000,
+      }
+    );
+  }
+};
 
   const handleRefreshUsers = async () => {
-    setIsLoadingUsers(true);
-    try {
-      const response = await fetch("/api/power-bi-users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          auditly_user_id: userId,
-          connection_type: "inbound",
-        }),
-      });
+  await handleFetchPowerBiUsers();
+  toast.success("Power BI connections refreshed", {
+    position: "top-right",
+    autoClose: 3000,
+  });
+};
 
       const data = await response.json();
 
