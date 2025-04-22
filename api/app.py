@@ -2801,6 +2801,7 @@ def get_power_bi_users(request: GetPowerBiUsers, db: Session = Depends(get_db)):
             {
                 "power_bi_email": user.power_bi_email,
                 "power_bi_username": user.power_bi_username,
+                "power_bi_id": user.power_bi_id,
                 "connection_type": user.connection_type,
                 "connection_status": _check_connection_status(user.access_token)
             }
