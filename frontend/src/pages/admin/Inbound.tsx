@@ -885,7 +885,6 @@
 
 // export default Inbound;
 
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -907,10 +906,32 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { setPowerBiUsers } from "./itemSlice"; // Adjust path to your itemSlice file
+import { setPowerBiUsers } from "./itemSlice";
 import "react-toastify/dist/ReactToastify.css";
 
-const dataSources = [
+interface PowerBiUser {
+  power_bi_username: string;
+  power_bi_email: string;
+  connection_status: 'Active' | 'Inactive' | string;
+  // Add other fields as needed
+}
+
+interface DataSource {
+  id: number;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  status: string;
+  authEndpoint?: string;
+}
+
+interface ScheduleData {
+  cron_to_mapping_name: string;
+  cron_expression: string;
+}
+
+const dataSources: DataSource[] = [
   {
     id: 1,
     title: "Power BI",
@@ -976,6 +997,10 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     return { hasError: true };
   }
 
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+
   render() {
     if (this.state.hasError) {
       return <div className="text-red-500 text-center p-4">Something went wrong. Please refresh the page.</div>;
@@ -990,13 +1015,13 @@ const Inbound: React.FC = () => {
   const [isAuthWindowOpen, setIsAuthWindowOpen] = useState(false);
   const [activeAuthWindow, setActiveAuthWindow] = useState<Window | null>(null);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
-  const [scheduleData, setScheduleData] = useState({
+  const [scheduleData, setScheduleData] = useState<ScheduleData>({
     cron_to_mapping_name: "",
     cron_expression: "",
   });
   const [userId, setUserId] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
-  const [powerBiUsers, setPowerBiUsers] = useState<any[]>([]);
+  const [powerBiUsers, setPowerBiUsers] = useState<PowerBiUser[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [expandedPowerBi, setExpandedPowerBi] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
@@ -1019,6 +1044,11 @@ const Inbound: React.FC = () => {
   const fetchPowerBiUsers = async () => {
     setIsLoadingUsers(true);
     try {
+      console.log("Fetching Power BI users with payload:", {
+        auditly_user_id: userId,
+        connection_type: "inbound",
+      });
+
       const response = await fetch("/api/power-bi-users", {
         method: "POST",
         headers: {
@@ -1030,39 +1060,30 @@ const Inbound: React.FC = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}, StatusText: ${response.statusText}`);
-      }
-
       const data = await response.json();
-      console.log("Power BI users response:", data); // Debug: Log raw response
+      console.log("Power BI users response:", { status: response.status, data });
 
-      // Validate response data
-      if (!Array.isArray(data)) {
-        throw new Error("Expected an array of Power BI users, but received: " + JSON.stringify(data));
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch Power BI users");
       }
 
-      // Validate each user object (optional, for extra robustness)
-      data.forEach((user, index) => {
-        if (
-          !user.power_bi_email ||
-          !user.power_bi_username ||
-          typeof user.power_bi_id !== "number" ||
-          !user.connection_type ||
-          !user.connection_status
-        ) {
-          console.warn(`Invalid user data at index ${index}:`, user);
-        }
-      });
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response format: expected an array of users");
+      }
 
       setPowerBiUsers(data);
       dispatch(setPowerBiUsers(data));
-    } catch (error: any) {
-      console.error("Error fetching Power BI users:", error, error.stack);
-      toast.error(`Failed to load Power BI connections: ${error.message}`, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+    } catch (error) {
+      console.error("Error fetching Power BI users:", error);
+      toast.error(
+        error instanceof Error 
+          ? error.message 
+          : "Failed to load Power BI connections",
+        {
+          position: "top-right",
+          autoClose: 5000,
+        }
+      );
     } finally {
       setIsLoadingUsers(false);
     }
@@ -1082,30 +1103,15 @@ const Inbound: React.FC = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}, StatusText: ${response.statusText}`);
-      }
-
       const data = await response.json();
-      console.log("Refreshed Power BI users response:", data); // Debug: Log raw response
 
-      // Validate response data
-      if (!Array.isArray(data)) {
-        throw new Error("Expected an array of Power BI users, but received: " + JSON.stringify(data));
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to refresh Power BI users");
       }
 
-      // Validate each user object (optional, for extra robustness)
-      data.forEach((user, index) => {
-        if (
-          !user.power_bi_email ||
-          !user.power_bi_username ||
-          typeof user.power_bi_id !== "number" ||
-          !user.connection_type ||
-          !user.connection_status
-        ) {
-          console.warn(`Invalid user data at index ${index}:`, user);
-        }
-      });
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response format: expected an array of users");
+      }
 
       setPowerBiUsers(data);
       dispatch(setPowerBiUsers(data));
@@ -1113,12 +1119,17 @@ const Inbound: React.FC = () => {
         position: "top-right",
         autoClose: 3000,
       });
-    } catch (error: any) {
-      console.error("Error refreshing Power BI users:", error, error.stack);
-      toast.error(`Failed to refresh Power BI connections: ${error.message}`, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+    } catch (error) {
+      console.error("Error refreshing Power BI users:", error);
+      toast.error(
+        error instanceof Error 
+          ? error.message 
+          : "Failed to refresh connections",
+        {
+          position: "top-right",
+          autoClose: 5000,
+        }
+      );
     } finally {
       setIsLoadingUsers(false);
     }
@@ -1196,7 +1207,7 @@ const Inbound: React.FC = () => {
     };
   }, [activeAuthWindow]);
 
-  const handleAuthClick = async (source: typeof dataSources[0]) => {
+  const handleAuthClick = async (source: DataSource) => {
     if (!source.authEndpoint) return;
     if (!userId) {
       toast.error("User not authenticated. Please login again.", {
