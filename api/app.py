@@ -2280,7 +2280,7 @@ async def get_dataset_ids(request:GetPowerBiDatasets, db: Session = Depends(get_
         "Content-Type": "application/json"
     }
     
-    url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets"
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{request.workspace_id}/datasets"
     
     try:
         response = requests.get(url, headers=headers)
