@@ -2154,6 +2154,59 @@ async def get_columns(table_name: str, exclude_auto_increment: bool = True, db: 
 
 
 
+# class PowerBiSqlMappingBase(BaseModel):
+#     sql_table_name: str
+#     bi_table_name: str
+#     date_filter_column_name: str
+#     mapping: Optional[dict] = None
+#     user_id: int
+#     date_filter_value: str
+
+# @app.post("/api/power-bi-sql-mapping/")
+# async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depends(get_db)):
+#     """
+#     Create or update a mapping based on mapping_name. If the mapping_name already exists, update the existing record,
+#     otherwise create a new mapping record.
+#     """
+#     mapping_name = f"{request.user_id}-{request.bi_table_name}-{request.sql_table_name}"
+
+#     # Check if the mapping already exists
+#     existing_mapping = db.query(PowerBiSqlMapping).filter_by(mapping_name=mapping_name).first()
+    
+#     if existing_mapping:
+#         # Update existing mapping
+#         existing_mapping.mapping = request.mapping
+#         existing_mapping.sql_table_name = request.sql_table_name
+#         existing_mapping.bi_table_name = request.bi_table_name
+#         existing_mapping.date_filter_column_name = request.date_filter_column_name
+#         existing_mapping.date_filter_value = datetime.strptime(request.date_filter_value, "%m-%d-%Y")
+#         db.commit()
+#         message = "Mapping updated successfully."
+#     else:
+#         # Create a new mapping
+#         new_mapping_data = PowerBiSqlMapping(
+#             mapping=request.mapping,
+#             power_bi_sql_user_mapping_id=request.user_id,
+#             sql_table_name=request.sql_table_name,
+#             bi_table_name=request.bi_table_name,
+#             mapping_name=mapping_name,
+#             date_filter_column_name=request.date_filter_column_name,
+#             date_filter_value = datetime.strptime(request.date_filter_value, "%m-%d-%Y")
+
+#         )
+#         db.add(new_mapping_data)
+#         db.commit()
+#         db.refresh(new_mapping_data)
+#         message = "Mapping created successfully."
+
+#     return {
+#         "message": message,
+#         "data": {
+#             "mapping_name": mapping_name
+#         }
+#     }
+
+
 class PowerBiSqlMappingBase(BaseModel):
     sql_table_name: str
     bi_table_name: str
@@ -2161,14 +2214,15 @@ class PowerBiSqlMappingBase(BaseModel):
     mapping: Optional[dict] = None
     user_id: int
     date_filter_value: str
+    bi_user_id: int
 
-@app.post("/api/power-bi-sql-mapping/")
+@app.post("/power-bi-sql-mapping/")
 async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depends(get_db)):
     """
     Create or update a mapping based on mapping_name. If the mapping_name already exists, update the existing record,
     otherwise create a new mapping record.
     """
-    mapping_name = f"{request.user_id}-{request.bi_table_name}-{request.sql_table_name}"
+    mapping_name = f"{request.user_id}-{request.bi_table_name}-{request.sql_table_name}-{request.bi_user_id}"
 
     # Check if the mapping already exists
     existing_mapping = db.query(PowerBiSqlMapping).filter_by(mapping_name=mapping_name).first()
@@ -2191,8 +2245,8 @@ async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depe
             bi_table_name=request.bi_table_name,
             mapping_name=mapping_name,
             date_filter_column_name=request.date_filter_column_name,
-            date_filter_value = datetime.strptime(request.date_filter_value, "%m-%d-%Y")
-
+            date_filter_value = datetime.strptime(request.date_filter_value, "%m-%d-%Y"),
+            bi_user_mapping_id = request.bi_user_id
         )
         db.add(new_mapping_data)
         db.commit()
@@ -2205,7 +2259,6 @@ async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depe
             "mapping_name": mapping_name
         }
     }
-
 
 @app.get("/api/get-powerbi-dataset-ids")
 async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of the Power BI workspace to query."), db: Session = Depends(get_db)):
@@ -2229,77 +2282,6 @@ async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of 
         return {"dataset_ids": dataset_ids}
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
-class GetPowerBITableData(BaseModel):
-    workspace_id: str
-    dataset_id: str
-    sql_table_name: str
-    user_id: int
-    power_bi_table_name: str
-    access_token: Optional[str] = None
-
-
-# @app.post("/api/powerbi/get-table-data")
-# async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
-#     """
-#     Fetch table data from Power BI Dataset
-#     """
-#     sql_table_name = request.sql_table_name
-#     user_id = request.user_id
-#     workspace_id = request.workspace_id
-#     dataset_id = request.dataset_id
-#     power_bi_table_name = request.power_bi_table_name
-
-#     power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
-#     power_bi_user_mapping = power_bi_table_data.mapping
-#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-     
-#     headers = {
-#         "Authorization": f"Bearer {ACCESS_TOKEN}",
-#         "Content-Type": "application/json"
-#     }
-
-#     url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
-
-
-#     dax_query = {
-#         "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}], #name of the table in powerbi we are getting it as an input
-#         "serializerSettings": {"includeNulls": True}
-#     }
-
-#     response = requests.post(url, headers=headers, json=dax_query)
-#     print(response)
-#     response_table = response.json()["results"][0]["tables"][0]["rows"]
-#     bi_response_mapping = response_table.pop(0)
-#     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
-#     mapping_dict = {}
-#     for key, value in bi_response_mapping.items():
-#         if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
-#             return {"data": "Mapping Missmatch"}
-#         elif value == power_bi_table_data.date_filter_column_name:
-#             filter_column = key
-#         elif value in availabe_column_name:
-#             mapping_dict.update({key:power_bi_user_mapping[value]})
-#     table = Table(sql_table_name, metadata, autoload_with=engine)
-#     transformed_data = []
-#     for record in response_table:
-#         filter_check = None
-#         formatted_entry = {}
-#         for key, value in record.items():
-#             if key == filter_column and datetime.strptime(value, "%m-%d-%Y") < power_bi_table_data.date_filter_value:
-#                 filter_check = True
-#                 continue
-#             if key in [k for k,v in mapping_dict.items()]:
-#                 formatted_entry[mapping_dict[key]] = value
-#         if(not filter_check):
-#             transformed_data.append(formatted_entry)
-#     db.execute(table.insert(), transformed_data)
-#     db.commit()
-#     return response.json()
-
-
 
 
 @app.get("/api/powerbi/workspace-data")
@@ -2350,6 +2332,86 @@ async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
 
 
 
+# @app.post("/api/powerbi/get-table-data")
+# async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
+#     """
+#     Fetch table data from Power BI Dataset
+#     """
+#     sql_table_name = request.sql_table_name
+#     user_id = request.user_id
+#     workspace_id = request.workspace_id
+#     dataset_id = request.dataset_id
+#     power_bi_table_name = request.power_bi_table_name
+
+#     power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
+#     power_bi_user_mapping = power_bi_table_data.mapping
+#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+     
+#     headers = {
+#         "Authorization": f"Bearer {ACCESS_TOKEN}",
+#         "Content-Type": "application/json"
+#     }
+
+#     url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
+
+
+#     dax_query = {
+#         "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}], #name of the table in powerbi we are getting it as an input
+#         "serializerSettings": {"includeNulls": True}
+#     }
+
+#     response = requests.post(url, headers=headers, json=dax_query)
+#     print(response)
+#     response_table = response.json()["results"][0]["tables"][0]["rows"]
+#     bi_response_mapping = response_table.pop(0)
+#     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
+#     mapping_dict = {}
+#     for key, value in bi_response_mapping.items():
+#         if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
+#             # notification = db.query(NotificationTable).filter(NotificationTable.auditly_user_id == user_id).first()
+#             # # Update the read_at field
+#             # if notification:
+#             #     notification.notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}"
+#             # else:
+#             notification_new = NotificationTable(
+#                 auditly_user_id = user_id,
+#                 notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}",        
+#             )
+#             db.add(notification_new)   
+#             db.commit()
+#             return {"data": "Mapping Missmatch"}
+#         elif value == power_bi_table_data.date_filter_column_name:
+#             filter_column = key
+#         elif value in availabe_column_name:
+#             mapping_dict.update({key:power_bi_user_mapping[value]})
+#     table = Table(sql_table_name, metadata, autoload_with=engine)
+#     transformed_data = []
+#     for record in response_table:
+#         filter_check = None
+#         formatted_entry = {}
+#         for key, value in record.items():
+#             if key == filter_column and datetime.strptime(value, "%m-%d-%Y") < power_bi_table_data.date_filter_value:
+#                 filter_check = True
+#                 continue
+#             if key in [k for k,v in mapping_dict.items()]:
+#                 formatted_entry[mapping_dict[key]] = value
+#         if(not filter_check):
+#             transformed_data.append(formatted_entry)
+#     db.execute(table.insert(), transformed_data)
+#     db.commit()
+#     return response.json()
+
+
+class GetPowerBITableData(BaseModel):
+    workspace_id: str
+    dataset_id: str
+    sql_table_name: str
+    user_id: int
+    power_bi_table_name: str
+    access_token: Optional[str] = None
+    bi_user_id: int
+
+
 @app.post("/api/powerbi/get-table-data")
 async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
     """
@@ -2360,10 +2422,11 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     workspace_id = request.workspace_id
     dataset_id = request.dataset_id
     power_bi_table_name = request.power_bi_table_name
+    bi_user_id = request.bi_user_id
 
-    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
+    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).filter(PowerBiSqlMapping.bi_user_mapping_id == bi_user_id).first()
     power_bi_user_mapping = power_bi_table_data.mapping
-    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+    ACCESS_TOKEN = db.query(PowerBiUser).filter(PowerBiUser.power_bi_id == bi_user_id).filter(PowerBiUser.power_bi_user_mapping_id == user_id).first().access_token
      
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -2419,13 +2482,62 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     db.commit()
     return response.json()
 
+# class CronJobCreate(BaseModel):
+#     cron_to_mapping_name: str
+#     cron_expression: str
+#     auditly_user_id: int
+
+# @app.post("/api/add-cronjobs")
+# async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = Depends(get_db)):
+#     """
+#     Create a new cron job or update an existing one in the database.
+#     """
+#     # Check if there is already a cron job for the given user ID and mapping name
+#     existing_cron_job = db.query(CronJobTable).filter(
+#         CronJobTable.auditly_user_id == cron_job_data.auditly_user_id,
+#         CronJobTable.cron_to_mapping_name == cron_job_data.cron_to_mapping_name
+#     ).first()
+
+#     if existing_cron_job:
+#         # Update the existing cron job
+#         existing_cron_job.cron_expression = cron_job_data.cron_expression
+#         response_message = "Cron job updated successfully."
+#     else:
+#         # Create a new cron job if it doesn't exist
+#         new_cron_job = CronJobTable(
+#             cron_to_mapping_name=cron_job_data.cron_to_mapping_name,
+#             cron_expression=cron_job_data.cron_expression,
+#             auditly_user_id=cron_job_data.auditly_user_id
+#         )
+#         db.add(new_cron_job)
+#         response_message = "Cron job created successfully."
+#     mapping_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.mapping_name == cron_job_data.cron_to_mapping_name).first()
+
+#     db.commit()  # Commit the transaction
+    
+#     manage_cron_job('add', cron_job_data.auditly_user_id, 
+#                        cron_job_data.cron_to_mapping_name, cron_job_data.cron_expression, mapping_data.sql_table_name, mapping_data.bi_table_name)
+#     response_message = "Cron job created successfully."
+    
+#     return {
+#         "message": response_message,
+#         "cron_job_details": {
+#             "cron_to_mapping_name": cron_job_data.cron_to_mapping_name,
+#             "cron_expression": cron_job_data.cron_expression,
+#             "auditly_user_id": cron_job_data.auditly_user_id
+#         }
+#     }
+
+
+
 
 class CronJobCreate(BaseModel):
     cron_to_mapping_name: str
     cron_expression: str
     auditly_user_id: int
+    bi_user_mapping_id: int
 
-@app.post("/api/add-cronjobs")
+@app.post("/add-cronjobs")
 async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = Depends(get_db)):
     """
     Create a new cron job or update an existing one in the database.
@@ -2433,7 +2545,8 @@ async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = 
     # Check if there is already a cron job for the given user ID and mapping name
     existing_cron_job = db.query(CronJobTable).filter(
         CronJobTable.auditly_user_id == cron_job_data.auditly_user_id,
-        CronJobTable.cron_to_mapping_name == cron_job_data.cron_to_mapping_name
+        CronJobTable.cron_to_mapping_name == cron_job_data.cron_to_mapping_name,
+        CronJobTable.bi_user_mapping_id == cron_job_data.bi_user_mapping_id
     ).first()
 
     if existing_cron_job:
@@ -2445,7 +2558,8 @@ async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = 
         new_cron_job = CronJobTable(
             cron_to_mapping_name=cron_job_data.cron_to_mapping_name,
             cron_expression=cron_job_data.cron_expression,
-            auditly_user_id=cron_job_data.auditly_user_id
+            auditly_user_id=cron_job_data.auditly_user_id,
+            bi_user_mapping_id=cron_job_data.bi_user_mapping_id
         )
         db.add(new_cron_job)
         response_message = "Cron job created successfully."
@@ -2465,7 +2579,6 @@ async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = 
             "auditly_user_id": cron_job_data.auditly_user_id
         }
     }
-
 
 
 def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expression: Optional[str] = None,
