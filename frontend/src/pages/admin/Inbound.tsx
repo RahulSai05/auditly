@@ -914,8 +914,8 @@ import {
   setPowerBiUsers,
   setIsLoadingPowerBiUsers,
   setPowerBiError,
-} from './ItemSlice'; // Adjust the path as needed
-import { RootState } from './store'; // Adjust the path as needed
+} from "./slices/itemSlice"; // Adjust the path as needed
+import { RootState } from "./store"; // Adjust the path as needed
 
 const dataSources = [
   {
