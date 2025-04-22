@@ -64,7 +64,7 @@
 
 
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { AppDispatch, RootState } from "./store"; // Make sure you have these types defined
+import type { RootState } from "../store";
 
 interface PowerBiUser {
   power_bi_email: string;
@@ -99,7 +99,7 @@ const initialState: ItemState = {
 // Async thunk for fetching Power BI users
 export const fetchPowerBiUsers = createAsyncThunk(
   'item/fetchPowerBiUsers',
-  async ({ userId, connectionType }: { userId: number; connectionType: string }, { rejectWithValue }) => {
+  async (payload: { userId: number; connectionType: string }, { rejectWithValue }) => {
     try {
       const response = await fetch("/api/power-bi-users", {
         method: "POST",
@@ -107,8 +107,8 @@ export const fetchPowerBiUsers = createAsyncThunk(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          auditly_user_id: userId,
-          connection_type: connectionType,
+          auditly_user_id: payload.userId,
+          connection_type: payload.connectionType,
         }),
       });
 
@@ -129,8 +129,8 @@ export const fetchPowerBiUsers = createAsyncThunk(
   }
 );
 
-const ItemSlice = createSlice({
-  name: "Item",
+const itemSlice = createSlice({
+  name: "item",
   initialState,
   reducers: {
     addItem: (state, action: PayloadAction<any>) => {
@@ -158,7 +158,6 @@ const ItemSlice = createSlice({
     setItemId: (state, action: PayloadAction<number | null>) => {
       state.item_id = action.payload;
     },
-    // You can keep this if you need to set users directly
     setPowerBiUsers: (state, action: PayloadAction<PowerBiUser[]>) => {
       state.powerBiUsers = action.payload;
     },
@@ -188,6 +187,10 @@ export const {
   setCustomerId,
   setItemId,
   setPowerBiUsers,
-} = ItemSlice.actions;
+} = itemSlice.actions;
 
-export default ItemSlice.reducer;
+export const selectPowerBiUsers = (state: RootState) => state.ids.powerBiUsers;
+export const selectPowerBiUsersLoading = (state: RootState) => state.ids.powerBiUsersLoading;
+export const selectPowerBiUsersError = (state: RootState) => state.ids.powerBiUsersError;
+
+export default itemSlice.reducer;
