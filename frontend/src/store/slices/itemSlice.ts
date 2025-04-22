@@ -96,7 +96,6 @@ const initialState: ItemState = {
   powerBiUsersError: null,
 };
 
-// Async thunk for fetching Power BI users
 export const fetchPowerBiUsers = createAsyncThunk(
   'item/fetchPowerBiUsers',
   async (payload: { userId: number; connectionType: string }, { rejectWithValue }) => {
@@ -125,6 +124,35 @@ export const fetchPowerBiUsers = createAsyncThunk(
       return data as PowerBiUser[];
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to fetch Power BI users");
+    }
+  }
+);
+
+export const deletePowerBiUser = createAsyncThunk(
+  'item/deletePowerBiUser',
+  async (payload: { email: string; userId: number }, { rejectWithValue }) => {
+    try {
+      const response = await fetch("/api/power-bi-users/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          power_bi_email: payload.email,
+          power_bi_user_mapping_id: payload.userId,
+          connection_type: "inbound",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to delete connection");
+      }
+
+      return payload.email; // Return the email of the deleted user
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to delete connection");
     }
   }
 );
@@ -158,12 +186,10 @@ const itemSlice = createSlice({
     setItemId: (state, action: PayloadAction<number | null>) => {
       state.item_id = action.payload;
     },
-    setPowerBiUsers: (state, action: PayloadAction<PowerBiUser[]>) => {
-      state.powerBiUsers = action.payload;
-    },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Power BI Users
       .addCase(fetchPowerBiUsers.pending, (state) => {
         state.powerBiUsersLoading = true;
         state.powerBiUsersError = null;
@@ -175,6 +201,12 @@ const itemSlice = createSlice({
       .addCase(fetchPowerBiUsers.rejected, (state, action) => {
         state.powerBiUsersLoading = false;
         state.powerBiUsersError = action.payload as string;
+      })
+      // Delete Power BI User
+      .addCase(deletePowerBiUser.fulfilled, (state, action) => {
+        state.powerBiUsers = state.powerBiUsers.filter(
+          user => user.power_bi_email !== action.payload
+        );
       });
   },
 });
@@ -186,7 +218,6 @@ export const {
   setinspectionData,
   setCustomerId,
   setItemId,
-  setPowerBiUsers,
 } = itemSlice.actions;
 
 export const selectPowerBiUsers = (state: RootState) => state.ids.powerBiUsers;
