@@ -907,7 +907,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { fetchPowerBiUsers, deletePowerBiUser, selectPowerBiUsers, selectPowerBiUsersLoading, selectPowerBiUsersError } from "./slices/itemSlice";
+import { fetchPowerBiUsers, deletePowerBiUser, selectPowerBiUsers, selectPowerBiUsersLoading, selectPowerBiUsersError } from "../../store/slices/itemSlice";
 import "react-toastify/dist/ReactToastify.css";
 
 interface DataSource {
