@@ -63,7 +63,8 @@
 // export default ItemSlice.reducer;
 
 
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { AppDispatch, RootState } from "./store"; // Make sure you have these types defined
 
 interface PowerBiUser {
   power_bi_email: string;
@@ -79,7 +80,9 @@ interface ItemState {
   customerID: any;
   inspectionData: any;
   item_id: number | null;
-  powerBiUsers: PowerBiUser[]; // Add Power BI users array to state
+  powerBiUsers: PowerBiUser[];
+  powerBiUsersLoading: boolean;
+  powerBiUsersError: string | null;
 }
 
 const initialState: ItemState = {
@@ -88,15 +91,49 @@ const initialState: ItemState = {
   customerID: null,
   inspectionData: [],
   item_id: null,
-  powerBiUsers: [], // Initialize as empty array
+  powerBiUsers: [],
+  powerBiUsersLoading: false,
+  powerBiUsersError: null,
 };
+
+// Async thunk for fetching Power BI users
+export const fetchPowerBiUsers = createAsyncThunk(
+  'item/fetchPowerBiUsers',
+  async ({ userId, connectionType }: { userId: number; connectionType: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch("/api/power-bi-users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auditly_user_id: userId,
+          connection_type: connectionType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch Power BI users");
+      }
+
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response format: expected an array of users");
+      }
+
+      return data as PowerBiUser[];
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to fetch Power BI users");
+    }
+  }
+);
 
 const ItemSlice = createSlice({
   name: "Item",
   initialState,
   reducers: {
     addItem: (state, action: PayloadAction<any>) => {
-      console.log("Dispatching addItem with data:", action.payload);
       state.selectedItems = action.payload;
       state.customerID = action.payload.customer_id;
       state.item_id = action.payload.item_id;
@@ -104,13 +141,12 @@ const ItemSlice = createSlice({
     clearItem: (state) => {
       state.selectedItems = {};
       state.item_id = null;
-      state.powerBiUsers = []; // Clear Power BI users when clearing state
+      state.powerBiUsers = [];
     },
     produtstate: (state, action: PayloadAction<any>) => {
       state.productState = action.payload;
     },
     setCustomerId: (state, action: PayloadAction<number | null>) => {
-      console.log("Setting customer ID in Redux:", action.payload);
       state.customerID = action.payload;
     },
     setinspectionData: (state, action: PayloadAction<Record<string, any>>) => {
@@ -120,17 +156,30 @@ const ItemSlice = createSlice({
       };
     },
     setItemId: (state, action: PayloadAction<number | null>) => {
-      console.log("Setting item ID in Redux:", action.payload);
       state.item_id = action.payload;
     },
+    // You can keep this if you need to set users directly
     setPowerBiUsers: (state, action: PayloadAction<PowerBiUser[]>) => {
-      console.log("Setting Power BI users in Redux:", action.payload);
-      state.powerBiUsers = action.payload; // Set Power BI users
+      state.powerBiUsers = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPowerBiUsers.pending, (state) => {
+        state.powerBiUsersLoading = true;
+        state.powerBiUsersError = null;
+      })
+      .addCase(fetchPowerBiUsers.fulfilled, (state, action) => {
+        state.powerBiUsersLoading = false;
+        state.powerBiUsers = action.payload;
+      })
+      .addCase(fetchPowerBiUsers.rejected, (state, action) => {
+        state.powerBiUsersLoading = false;
+        state.powerBiUsersError = action.payload as string;
+      });
   },
 });
 
-// Export all actions
 export const {
   addItem,
   clearItem,
@@ -138,8 +187,7 @@ export const {
   setinspectionData,
   setCustomerId,
   setItemId,
-  setPowerBiUsers, // Export the new action
+  setPowerBiUsers,
 } = ItemSlice.actions;
 
 export default ItemSlice.reducer;
-
