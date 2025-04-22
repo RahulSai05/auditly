@@ -888,7 +888,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux"; // Import useDispatch
+import { useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import {
@@ -1001,7 +1001,7 @@ const Inbound: React.FC = () => {
   const [expandedPowerBi, setExpandedPowerBi] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
-  const dispatch = useDispatch(); // Initialize Redux dispatch
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -1031,14 +1031,35 @@ const Inbound: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch Power BI users");
+        throw new Error(`HTTP error! Status: ${response.status}, StatusText: ${response.statusText}`);
       }
+
       const data = await response.json();
+      console.log("Power BI users response:", data); // Debug: Log raw response
+
+      // Validate response data
+      if (!Array.isArray(data)) {
+        throw new Error("Expected an array of Power BI users, but received: " + JSON.stringify(data));
+      }
+
+      // Validate each user object (optional, for extra robustness)
+      data.forEach((user, index) => {
+        if (
+          !user.power_bi_email ||
+          !user.power_bi_username ||
+          typeof user.power_bi_id !== "number" ||
+          !user.connection_type ||
+          !user.connection_status
+        ) {
+          console.warn(`Invalid user data at index ${index}:`, user);
+        }
+      });
+
       setPowerBiUsers(data);
-      dispatch(setPowerBiUsers(data)); // Dispatch Power BI users to Redux store
-    } catch (error) {
-      console.error("Error fetching Power BI users:", error);
-      toast.error("Failed to load Power BI connections", {
+      dispatch(setPowerBiUsers(data));
+    } catch (error: any) {
+      console.error("Error fetching Power BI users:", error, error.stack);
+      toast.error(`Failed to load Power BI connections: ${error.message}`, {
         position: "top-right",
         autoClose: 5000,
       });
@@ -1062,18 +1083,39 @@ const Inbound: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to refresh Power BI users");
+        throw new Error(`HTTP error! Status: ${response.status}, StatusText: ${response.statusText}`);
       }
+
       const data = await response.json();
+      console.log("Refreshed Power BI users response:", data); // Debug: Log raw response
+
+      // Validate response data
+      if (!Array.isArray(data)) {
+        throw new Error("Expected an array of Power BI users, but received: " + JSON.stringify(data));
+      }
+
+      // Validate each user object (optional, for extra robustness)
+      data.forEach((user, index) => {
+        if (
+          !user.power_bi_email ||
+          !user.power_bi_username ||
+          typeof user.power_bi_id !== "number" ||
+          !user.connection_type ||
+          !user.connection_status
+        ) {
+          console.warn(`Invalid user data at index ${index}:`, user);
+        }
+      });
+
       setPowerBiUsers(data);
-      dispatch(setPowerBiUsers(data)); // Dispatch refreshed Power BI users to Redux store
+      dispatch(setPowerBiUsers(data));
       toast.success("Power BI connections refreshed", {
         position: "top-right",
         autoClose: 3000,
       });
-    } catch (error) {
-      console.error("Error refreshing Power BI users:", error);
-      toast.error("Failed to refresh connections", {
+    } catch (error: any) {
+      console.error("Error refreshing Power BI users:", error, error.stack);
+      toast.error(`Failed to refresh Power BI connections: ${error.message}`, {
         position: "top-right",
         autoClose: 5000,
       });
@@ -1196,7 +1238,6 @@ const Inbound: React.FC = () => {
       } else {
         throw new Error("Failed to open authentication window");
       }
- Civile
     } catch (error) {
       console.error("Authentication error:", error);
       toast.error("Failed to initiate authentication. Please try again.", {
