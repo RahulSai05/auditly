@@ -1992,7 +1992,7 @@ async def powerbi_callback(request: Request, db: Session = Depends(get_db)):
                 # existing_user=existing_user,
                 tenant_id=user_data['tenant_id'],
                 created_at=datetime.now(timezone.utc),
-                connection_type=connection_type
+                connection_type=connection_type,
                 power_bi_user_mapping_id=mapping_id  # ✅ Save mapping ID for new user
                 
             )
