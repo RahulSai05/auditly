@@ -208,6 +208,7 @@ class PowerBiSqlMapping(Base):
     date_filter_column_name = Column(String(255), nullable=False)
     date_filter_value = Column((DateTime), nullable=True)
     power_bi_sql_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+    bi_user_mapping_id = Column(Integer, ForeignKey('power_bi_user.power_bi_id'))
 
 
 class CronJobTable(Base):
@@ -217,6 +218,7 @@ class CronJobTable(Base):
     cron_to_mapping_name = Column(String(255), ForeignKey('power_bi_sql_mapping.mapping_name'))
     cron_expression = Column(String(255))
     auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+    bi_user_mapping_id = Column(Integer, ForeignKey('power_bi_user.power_bi_id'))
 
 
 
