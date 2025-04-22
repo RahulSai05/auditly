@@ -2268,7 +2268,7 @@ class GetPowerBiDatasets(BaseModel):
     auditly_user_id: str   
     
 @app.get("/api/get-powerbi-dataset-ids")
-async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of the Power BI workspace to query."), request:GetPowerBiDatasets db: Session = Depends(get_db)):
+async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of the Power BI workspace to query."), request:GetPowerBiDatasets, db: Session = Depends(get_db)):
     """
     Fetch all dataset IDs in the specified Power BI workspace.
     """
