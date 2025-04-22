@@ -1098,7 +1098,7 @@ const MappingRules: React.FC = () => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Get powerBiUser from Redux store
-  const powerBiUserFromStore = useSelector((state: RootState) => state.Item.powerBiUser);
+  const powerBiUserFromStore = useSelector((state: RootState) => state?.Item?.powerBiUser || null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
