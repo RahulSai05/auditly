@@ -2286,13 +2286,64 @@ async def get_dataset_ids(workspace_id: str = Query(..., description="The ID of 
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/powerbi/workspace-data")
-async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
+# @app.get("/api/powerbi/workspace-data")
+# async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
+#     """
+#     Fetch all datasets and their tables from a Power BI workspace.
+#     """
+#     WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
+#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+   
+#     headers = {
+#         "Authorization": f"Bearer {ACCESS_TOKEN}",
+#         "Content-Type": "application/json"
+#     }
+
+#     # Step 1: Get all datasets in the workspace
+#     datasets_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
+#     try:
+#         datasets_response = requests.get(datasets_url, headers=headers)
+#         datasets_response.raise_for_status()
+#         datasets_data = datasets_response.json().get("value", [])
+#     except requests.exceptions.RequestException as e:
+#         raise HTTPException(status_code=500, detail=f"Error fetching datasets: {str(e)}")
+
+#     # Step 2: Get tables for each dataset
+#     all_data = []
+#     for dataset in datasets_data:
+#         dataset_id = dataset["id"]
+#         dataset_name = dataset["name"]
+
+#         tables_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{dataset_id}/tables"
+#         try:
+#             tables_response = requests.get(tables_url, headers=headers)
+#             tables_response.raise_for_status()
+#             tables_data = tables_response.json().get("value", [])
+#         except requests.exceptions.RequestException:
+#             tables_data = []  # If tables API fails, return an empty list
+
+#         # Step 3: Organize Data
+#         dataset_info = {
+#             "dataset_id": dataset_id,
+#             "dataset_name": dataset_name,
+#             "tables": [{"table_name": table["name"]} for table in tables_data]
+#         }
+#         all_data.append(dataset_info)
+
+#     return {"workspace_id": WORKSPACE_ID, "datasets": all_data}
+
+
+class GetWorksapceData(BaseModel):
+    power_bi_id: str
+    auditly_user_id: str    
+    workspace_id: str
+
+@app.post("/api/powerbi/workspace-data")
+async def get_powerbi_workspace_data(request: GetWorksapceData,db: Session = Depends(get_db)):
     """
     Fetch all datasets and their tables from a Power BI workspace.
     """
-    WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
-    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+    ACCESS_TOKEN = db.query(PowerBiUser).filter(PowerBiUser.power_bi_id == request.power_bi_id).filter(PowerBiUser.power_bi_user_mapping_id == request.auditly_user_id).first().access_token
    
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -2300,7 +2351,7 @@ async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
     }
 
     # Step 1: Get all datasets in the workspace
-    datasets_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
+    datasets_url = f"https://api.powerbi.com/v1.0/myorg/groups/{request.workspace_id}/datasets"
     try:
         datasets_response = requests.get(datasets_url, headers=headers)
         datasets_response.raise_for_status()
@@ -2314,7 +2365,7 @@ async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
         dataset_id = dataset["id"]
         dataset_name = dataset["name"]
 
-        tables_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{dataset_id}/tables"
+        tables_url = f"https://api.powerbi.com/v1.0/myorg/groups/{request.workspace_id}/datasets/{dataset_id}/tables"
         try:
             tables_response = requests.get(tables_url, headers=headers)
             tables_response.raise_for_status()
@@ -2330,7 +2381,7 @@ async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
         }
         all_data.append(dataset_info)
 
-    return {"workspace_id": WORKSPACE_ID, "datasets": all_data}
+    return {"workspace_id": request.workspace_id, "datasets": all_data}
 
 
 
