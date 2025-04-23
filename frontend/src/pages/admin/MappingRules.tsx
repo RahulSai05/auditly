@@ -2072,7 +2072,6 @@
 
 // export default MappingRules;
 
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -2778,7 +2777,7 @@ const MappingRules: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <motion.div
-                whileHover={{ scale: 1.1, rotate: 10 }}
+                whileHover={{ scale: 1.1,-rotate: 10 }}
                 className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
               >
                 <Settings className="w-6 h-6 text-blue-600" />
@@ -3131,7 +3130,6 @@ const MappingRules: React.FC = () => {
                         name="date_filter_column"
                         value={powerBIData.date_filter_column}
                         onChange={handlePowerBIInputChange}
-                        className```tsx
                         className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                       >
                         <option value="">Select a column for date filtering</option>
