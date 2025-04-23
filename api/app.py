@@ -2483,7 +2483,7 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     power_bi_table_name = request.power_bi_table_name
     bi_user_id = request.bi_user_id
 
-    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).filter(PowerBiSqlMapping.power_bi_id == bi_user_id).first()
+    power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).filter(PowerBiSqlMapping.bi_user_mapping_id == bi_user_id).first()
     power_bi_user_mapping = power_bi_table_data.mapping
     ACCESS_TOKEN = db.query(PowerBiUser).filter(PowerBiUser.power_bi_id == bi_user_id).filter(PowerBiUser.power_bi_user_mapping_id == user_id).first().access_token
      
