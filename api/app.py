@@ -2050,7 +2050,7 @@ class GetPowerBITableColumns(BaseModel):
     workspace_id: str
     dataset_id: str
     power_bi_table_name: str
-    power_bi_id; int
+    power_bi_id: int
     auditly_user_id: int
     
 
