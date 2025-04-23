@@ -2185,12 +2185,10 @@ const NotificationToast: React.FC<{
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 100 }}
-      className={`
-        fixed top-4 right-4 rounded-xl p-4 flex items-start gap-3 max-w-sm shadow-lg
+      className={`fixed top-4 right-4 rounded-xl p-4 flex items-start gap-3 max-w-sm shadow-lg z-50
         ${notification.type === 'success' 
           ? 'bg-green-100 text-green-800' 
-          : 'bg-red-100 text-red-800'}
-      `}
+          : 'bg-red-100 text-red-800'}`}
     >
       {notification.type === 'success' ? (
         <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -2295,7 +2293,7 @@ const MappingRules: React.FC = () => {
       setPowerBiUsers(users);
 
       if (powerBiUserFromStore) {
-        const match = users.find(u => u.power_bi_id === powerBiUserFromStore.power_bi_id);
+        const match = users.find((u: PowerBIUser) => u.power_bi_id === powerBiUserFromStore.power_bi_id);
         if (match) setSelectedPowerBiUser(match);
       }
 
@@ -2683,6 +2681,8 @@ const MappingRules: React.FC = () => {
     setPowerBIColumns([]);
     setPowerBIColumnMappings({});
     setEditMode(false);
+    setMappingName('');
+    setSelectedPowerBiUser(null);
     addNotification({
       id: Date.now().toString(),
       type: 'success',
@@ -2763,6 +2763,7 @@ const MappingRules: React.FC = () => {
               onClick={() => fetchPowerBiUsers()}
               disabled={isLoading.fetchingUsers}
               className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+              aria-label="Refresh Power BI connections"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading.fetchingUsers ? 'animate-spin' : ''}`} />
               <span className="text-sm">Refresh</span>
@@ -2785,6 +2786,7 @@ const MappingRules: React.FC = () => {
               <button
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
                 className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors"
+                aria-label="Select Power BI connection"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -2812,7 +2814,7 @@ const MappingRules: React.FC = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                    className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden top-full"
                   >
                     <div className="max-h-60 overflow-y-auto">
                       {activeConnections.map((user) => (
@@ -2825,6 +2827,7 @@ const MappingRules: React.FC = () => {
                           className={`w-full text-left p-3 hover:bg-blue-50 transition-colors flex items-center gap-3 ${
                             selectedPowerBiUser?.power_bi_id === user.power_bi_id ? 'bg-blue-50' : ''
                           }`}
+                          aria-label={`Select ${user.power_bi_username} connection`}
                         >
                           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                             <User className="w-4 h-4 text-blue-600" />
@@ -2832,7 +2835,7 @@ const MappingRules: React.FC = () => {
                           <div>
                             <p className="font-medium text-gray-900">{user.power_bi_username}</p>
                             <p className="text-xs text-gray-500">{user.power_bi_email}</p>
-INGER                          </div>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -2848,7 +2851,7 @@ INGER                          </div>
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
+          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8 relative z-0"
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -2864,6 +2867,7 @@ INGER                          </div>
               <button
                 onClick={() => setShowPowerBIForm(!showPowerBIForm)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2"
+                aria-label={showPowerBIForm ? "Hide configuration form" : "Show configuration form"}
               >
                 {showPowerBIForm ? (
                   <>
@@ -2880,6 +2884,7 @@ INGER                          </div>
               <button
                 onClick={clearAllForms}
                 className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors flex items-center gap-2"
+                aria-label="Clear all forms"
               >
                 <X className="w-4 h-4" />
                 Clear All
@@ -2908,6 +2913,7 @@ INGER                          </div>
                         onChange={handlePowerBIInputChange}
                         className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                         placeholder="Enter Power BI Workspace ID"
+                        aria-required="true"
                       />
                       <button
                         onClick={handleFetchDatasets}
@@ -2917,6 +2923,7 @@ INGER                          </div>
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}
+                        aria-label="Fetch datasets"
                       >
                         {isLoading.fetchingDatasets ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
@@ -2937,6 +2944,7 @@ INGER                          </div>
                         value={powerBIData.dataset_id}
                         onChange={handlePowerBIInputChange}
                         className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+                        aria-required="true"
                       >
                         <option value="">Select a Dataset</option>
                         {datasets.map((dataset) => (
@@ -2961,6 +2969,7 @@ INGER                          </div>
                       onChange={handlePowerBIInputChange}
                       className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
                       placeholder="Enter Power BI Table Name"
+                      aria-required="true"
                     />
                     <button
                       onClick={handleFetchPowerBIColumns}
@@ -2970,6 +2979,7 @@ INGER                          </div>
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
+                      aria-label="Fetch Power BI columns"
                     >
                       {isLoading.fetchingPowerBIColumns ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -2986,8 +2996,9 @@ INGER                          </div>
 
         {/* Table Selection and Mapping Section */}
         <motion.div
-          initial="hidden"
-          animate="visible"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
           className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 p-6 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
@@ -3010,6 +3021,7 @@ INGER                          </div>
                         onClick={copyToClipboard}
                         className="text-gray-400 hover:text-blue-600 transition-colors"
                         title="Copy mapping name"
+                        aria-label="Copy mapping name to clipboard"
                       >
                         <Clipboard className="w-4 h-4" />
                       </button>
@@ -3017,7 +3029,7 @@ INGER                          </div>
                         <motion.div
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="absolute left-full ml-2 px-2 py IRL                        bg-gray-800 text-white text-xs rounded whitespace-nowrap"
+                          className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-50"
                         >
                           Copied!
                         </motion.div>
@@ -3039,6 +3051,7 @@ INGER                          </div>
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                   disabled={isLoading.saving || !selectedTable || !userId || !selectedPowerBiUser}
+                  aria-label="Edit column mappings"
                 >
                   <Edit className="w-5 h-5" />
                   Edit Mappings
@@ -3054,6 +3067,7 @@ INGER                          </div>
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
                   disabled={isLoading.saving}
+                  aria-label="Save column mappings"
                 >
                   {isLoading.saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -3071,6 +3085,7 @@ INGER                          </div>
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
+                aria-label="Sync data to Power BI"
               >
                 {isSyncing ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -3099,6 +3114,7 @@ INGER                          </div>
                     <button 
                       onClick={copyToClipboard}
                       className="text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 text-sm"
+                      aria-label="Copy mapping name"
                     >
                       <Clipboard className="w-4 h-4" />
                       <span>Copy</span>
@@ -3126,6 +3142,7 @@ INGER                          </div>
                   }}
                   className="w-full p-3 pr-10 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 appearance-none bg-white"
                   disabled={isLoading.tables || isLoading.columns}
+                  aria-label="Select database table"
                 >
                   <option value="">Select a Table</option>
                   {tables.map((table) => (
@@ -3180,6 +3197,7 @@ INGER                          </div>
                                       : 'border border-transparent bg-transparent'
                                   }`}
                                   disabled={!editMode}
+                                  aria-label={`Select Power BI field for ${row.source}`}
                                 >
                                   <option value="">Select Power BI Field</option>
                                   {powerBIColumns.map((column) => (
@@ -3192,6 +3210,7 @@ INGER                          </div>
                                   <button
                                     onClick={() => handleDestinationChange(index, '')}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-blue-100 rounded-full"
+                                    aria-label={`Clear Power BI field for ${row.source}`}
                                   >
                                     <X className="w-4 h-4 text-gray-400" />
                                   </button>
@@ -3216,6 +3235,7 @@ INGER                          </div>
                         value={powerBIData.date_filter_column}
                         onChange={handlePowerBIInputChange}
                         className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+                        aria-label="Select date filter column"
                       >
                         <option value="">Select a column for date filtering</option>
                         {powerBIColumns.map((column) => (
@@ -3237,6 +3257,7 @@ INGER                          </div>
                         onChange={handlePowerBIInputChange}
                         placeholder="Enter date in mm-dd-yyyy format"
                         className="w-full p-3 border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200"
+                        aria-label="Enter date filter value"
                       />
                     </div>
                   </div>
