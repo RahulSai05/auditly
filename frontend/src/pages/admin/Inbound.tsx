@@ -991,7 +991,9 @@ const Inbound: React.FC = () => {
   const [userId, setUserId] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
-  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+  // const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+  const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
+
 
   const dispatch = useAppDispatch();
   const powerBiUsers = useAppSelector(selectPowerBiUsers);
@@ -1011,12 +1013,17 @@ const Inbound: React.FC = () => {
     }
   }, [userId, dispatch]);
 
+  // const toggleCardExpand = (cardId: number) => {
+  //   setExpandedCards(prev => ({
+  //     ...prev,
+  //     [cardId]: !prev[cardId]
+  //   }));
+  // };
+
   const toggleCardExpand = (cardId: number) => {
-    setExpandedCards(prev => ({
-      ...prev,
-      [cardId]: !prev[cardId]
-    }));
-  };
+      setExpandedCardId(prev => (prev === cardId ? null : cardId));
+    };
+
 
   const handleRefreshUsers = async () => {
     if (!userId) return;
@@ -1516,7 +1523,9 @@ const Inbound: React.FC = () => {
                         onClick={() => toggleCardExpand(source.id)}
                         className="text-gray-500 hover:text-gray-700 transition-colors"
                       >
-                        {expandedCards[source.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+{/*                         {expandedCards[source.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />} */}
+                        {expandedCardId === source.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+
                       </button>
                     </div>
 
@@ -1537,11 +1546,13 @@ const Inbound: React.FC = () => {
                           onClick={() => toggleCardExpand(source.id)}
                           className="text-gray-500 hover:text-gray-700 transition-colors"
                         >
-                          {expandedCards[source.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+{/*                           {expandedCards[source.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />} */}
+                        {expandedCardId === source.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+
                         </button>
                       </div>
 
-                      {expandedCards[source.id] && source.id === 1 && (
+                      {expandedCardId ===source.id && source.id === 1 && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
