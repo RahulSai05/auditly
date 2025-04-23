@@ -2218,7 +2218,7 @@ class PowerBiSqlMappingBase(BaseModel):
     date_filter_value: str
     bi_user_id: int
 
-@app.post("/power-bi-sql-mapping/")
+@app.post("/api/power-bi-sql-mapping/")
 async def powerbi_sql_mapping(request: PowerBiSqlMappingBase, db: Session = Depends(get_db)):
     """
     Create or update a mapping based on mapping_name. If the mapping_name already exists, update the existing record,
