@@ -1,7 +1,9 @@
 // import React, { useState, useEffect } from "react";
 // import { useSearchParams } from "react-router-dom";
+// import { useDispatch, useSelector } from "react-redux";
 // import { motion, AnimatePresence } from "framer-motion";
 // import { toast, ToastContainer } from "react-toastify";
+// import { useAppDispatch, useAppSelector } from '../../store/hooks';
 // import {
 //   ArrowLeft,
 //   Database,
@@ -18,9 +20,25 @@
 //   ChevronDown,
 //   ChevronUp,
 // } from "lucide-react";
+// import { fetchPowerBiUsers, deletePowerBiUser, selectPowerBiUsers, selectPowerBiUsersLoading, selectPowerBiUsersError } from "../../store/slices/itemSlice";
 // import "react-toastify/dist/ReactToastify.css";
 
-// const dataSources = [
+// interface DataSource {
+//   id: number;
+//   title: string;
+//   description: string;
+//   icon: React.ComponentType<{ className?: string }>;
+//   color: string;
+//   status: string;
+//   authEndpoint?: string;
+// }
+
+// interface ScheduleData {
+//   cron_to_mapping_name: string;
+//   cron_expression: string;
+// }
+
+// const dataSources: DataSource[] = [
 //   {
 //     id: 1,
 //     title: "Power BI",
@@ -86,6 +104,10 @@
 //     return { hasError: true };
 //   }
 
+//   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+//     console.error("ErrorBoundary caught:", error, errorInfo);
+//   }
+
 //   render() {
 //     if (this.state.hasError) {
 //       return <div className="text-red-500 text-center p-4">Something went wrong. Please refresh the page.</div>;
@@ -100,16 +122,19 @@
 //   const [isAuthWindowOpen, setIsAuthWindowOpen] = useState(false);
 //   const [activeAuthWindow, setActiveAuthWindow] = useState<Window | null>(null);
 //   const [showScheduleForm, setShowScheduleForm] = useState(false);
-//   const [scheduleData, setScheduleData] = useState({
+//   const [scheduleData, setScheduleData] = useState<ScheduleData>({
 //     cron_to_mapping_name: "",
 //     cron_expression: "",
 //   });
 //   const [userId, setUserId] = useState<number | null>(null);
 //   const [isScheduling, setIsScheduling] = useState(false);
-//   const [powerBiUsers, setPowerBiUsers] = useState<any[]>([]);
-//   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 //   const [expandedPowerBi, setExpandedPowerBi] = useState(false);
 //   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
+
+//   const dispatch = useAppDispatch();
+//   const powerBiUsers = useAppSelector(selectPowerBiUsers);
+//   const isLoadingUsers = useAppSelector(selectPowerBiUsersLoading);
+//   const powerBiUsersError = useAppSelector(selectPowerBiUsersError);
 
 //   useEffect(() => {
 //     const storedUserId = localStorage.getItem("userId");
@@ -120,71 +145,32 @@
 
 //   useEffect(() => {
 //     if (userId) {
-//       fetchPowerBiUsers();
+//       dispatch(fetchPowerBiUsers({ userId, connectionType: "inbound" }));
 //     }
-//   }, [userId]);
-
-//   const fetchPowerBiUsers = async () => {
-//     setIsLoadingUsers(true);
-//     try {
-//       const response = await fetch("/api/power-bi-users", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           auditly_user_id: userId,
-//           connection_type: "inbound",
-//         }),
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Failed to fetch Power BI users");
-//       }
-//       const data = await response.json();
-//       setPowerBiUsers(data);
-//     } catch (error) {
-//       console.error("Error fetching Power BI users:", error);
-//       toast.error("Failed to load Power BI connections", {
-//         position: "top-right",
-//         autoClose: 5000,
-//       });
-//     } finally {
-//       setIsLoadingUsers(false);
-//     }
-//   };
+//   }, [userId, dispatch]);
 
 //   const handleRefreshUsers = async () => {
-//     setIsLoadingUsers(true);
+//     if (!userId) return;
+    
 //     try {
-//       const response = await fetch("/api/power-bi-users", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           auditly_user_id: userId,
-//           connection_type: "inbound",
-//         }),
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Failed to refresh Power BI users");
-//       }
-//       const data = await response.json();
-//       setPowerBiUsers(data);
+//       const result = await dispatch(
+//         fetchPowerBiUsers({ userId, connectionType: "inbound" })
+//       ).unwrap();
+      
 //       toast.success("Power BI connections refreshed", {
 //         position: "top-right",
 //         autoClose: 3000,
 //       });
 //     } catch (error) {
-//       console.error("Error refreshing Power BI users:", error);
-//       toast.error("Failed to refresh connections", {
-//         position: "top-right",
-//         autoClose: 5000,
-//       });
-//     } finally {
-//       setIsLoadingUsers(false);
+//       toast.error(
+//         error instanceof Error 
+//           ? error.message 
+//           : "Failed to refresh connections",
+//         {
+//           position: "top-right",
+//           autoClose: 5000,
+//         }
+//       );
 //     }
 //   };
 
@@ -225,7 +211,7 @@
 //         setIsAuthWindowOpen(false);
 //         setActiveAuthWindow(null);
 //         setLoading({});
-//         fetchPowerBiUsers();
+//         dispatch(fetchPowerBiUsers({ userId: userId!, connectionType: "inbound" }));
 //         toast.success("Authentication successful!", {
 //           icon: "🔐",
 //           position: "top-right",
@@ -250,7 +236,7 @@
 
 //     window.addEventListener("message", handleMessage);
 //     return () => window.removeEventListener("message", handleMessage);
-//   }, [activeAuthWindow]);
+//   }, [activeAuthWindow, dispatch, userId]);
 
 //   useEffect(() => {
 //     return () => {
@@ -260,7 +246,7 @@
 //     };
 //   }, [activeAuthWindow]);
 
-//   const handleAuthClick = async (source: typeof dataSources[0]) => {
+//   const handleAuthClick = async (source: DataSource) => {
 //     if (!source.authEndpoint) return;
 //     if (!userId) {
 //       toast.error("User not authenticated. Please login again.", {
@@ -415,34 +401,11 @@
 //     }
 
 //     try {
-//       const response = await fetch("/api/power-bi-users/delete", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           power_bi_email: email,
-//           power_bi_user_mapping_id: userId,
-//           connection_type: "inbound",
-//         }),
+//       await dispatch(deletePowerBiUser({ email, userId })).unwrap();
+//       toast.success("Connection removed successfully", {
+//         position: "top-right",
+//         autoClose: 3000,
 //       });
-
-//       const data = await response.json();
-
-//       if (response.ok) {
-//         toast.success("Connection removed successfully", {
-//           position: "top-right",
-//           autoClose: 3000,
-//         });
-//         fetchPowerBiUsers();
-//       } else if (response.status === 404) {
-//         toast.error("Connection not found", {
-//           position: "top-right",
-//           autoClose: 5000,
-//         });
-//       } else {
-//         throw new Error(data.detail || "Failed to delete connection");
-//       }
 //     } catch (error: any) {
 //       console.error("Error deleting Power BI connection:", error);
 //       toast.error(error.message || "Failed to remove connection", {
@@ -884,6 +847,8 @@
 // };
 
 // export default Inbound;
+
+
 
 
 import React, { useState, useEffect } from "react";
@@ -1547,128 +1512,148 @@ const Inbound: React.FC = () => {
 
                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
                     
-                    {source.id === 1 && (
-                      <div className="relative">
-                        {expandedPowerBi && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="border-t border-gray-200 pt-4 overflow-hidden"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-medium text-gray-800 flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                Connections
-                              </h4>
-                              <button
-                                onClick={handleRefreshUsers}
-                                disabled={isLoadingUsers}
-                                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
-                              >
-                                <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? "animate-spin" : ""}`} />
-                                Refresh
-                              </button>
-                            </div>
-                            <div className="flex gap-4 mb-4">
-                              <button
-                                onClick={() => setActiveTab("active")}
-                                className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                                  activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}
-                              >
-                                Active ({activeConnections.length})
-                              </button>
-                              <button
-                                onClick={() => setActiveTab("inactive")}
-                                className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                                  activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}
-                              >
-                                Inactive ({inactiveConnections.length})
-                              </button>
-                            </div>
-                            {isLoadingUsers ? (
-                              <div className="py-4 text-center">
-                                <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
-                              </div>
-                            ) : activeTab === "active" && activeConnections.length === 0 ? (
-                              <div className="py-4 text-center bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-500">No active connections</p>
-                              </div>
-                            ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
-                              <div className="py-4 text-center bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-500">No inactive connections</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                                {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
-                                  <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                                        <User className="w-5 h-5 text-blue-600" />
-                                      </div>
-                                      <div>
-                                        <p className="text-sm font-semibold text-gray-900">{user.power_bi_username || 'Unknown User'}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                          <span
-                                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                              user.connection_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                            }`}
-                                          >
-                                            {user.connection_status}
-                                          </span>
-                                          <p className="text-xs text-gray-600 flex items-center gap-1">
-                                            <Mail className="w-3 h-3" />
-                                            <span className="truncate max-w-[150px]">{user.power_bi_email || 'No email'}</span>
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <button
-                                      onClick={() => handleDeleteConnection(user.power_bi_email)}
-                                      className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                      title="Remove connection"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </motion.div>
-                                ))}
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
-                        <div className="flex justify-between items-center mt-4 pt-2">
-                          <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
-                            <span className="text-sm font-medium">Learn more</span>
-                            <motion.span
-                              animate={{ x: [0, 5, 0] }}
-                              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            >
-                              →
-                            </motion.span>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleAuthClick(source)}
-                            disabled={loading[source.id] || isAuthWindowOpen}
-                            className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-                              loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
-                            }`}
-                          >
-                            {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
-                          </motion.button>
-                        </div>
-                      </div>
-                    )}
+                    {source.id === 1 ? (
+  <div className="relative">
+    <div className="flex justify-between items-center mt-4 pt-2">
+      <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
+        <span className="text-sm font-medium">Learn more</span>
+        <motion.span
+          animate={{ x: [0, 5, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+        >
+          →
+        </motion.span>
+      </div>
+      <button
+        onClick={togglePowerBiExpand}
+        className="text-gray-500 hover:text-gray-700 transition-colors"
+      >
+        {expandedPowerBi ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+      </button>
+    </div>
+
+    {expandedPowerBi && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.3 }}
+        className="border-t border-gray-200 pt-4 overflow-hidden"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-gray-800 flex items-center gap-2">
+            <User className="w-4 h-4" />
+            Connections
+          </h4>
+          <button
+            onClick={handleRefreshUsers}
+            disabled={isLoadingUsers}
+            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
+          >
+            <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === "active"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Active ({activeConnections.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("inactive")}
+            className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === "inactive"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Inactive ({inactiveConnections.length})
+          </button>
+        </div>
+        {isLoadingUsers ? (
+          <div className="py-4 text-center">
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+          </div>
+        ) : activeTab === "active" && activeConnections.length === 0 ? (
+          <div className="py-4 text-center bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-500">No active connections</p>
+          </div>
+        ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
+          <div className="py-4 text-center bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-500">No inactive connections</p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+            {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                    <User className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user.power_bi_username || "Unknown User"}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          user.connection_status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {user.connection_status}
+                      </span>
+                      <p className="text-xs text-gray-600 flex items-center gap-1">
+                        <Mail className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">
+                          {user.power_bi_email || "No email"}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDeleteConnection(user.power_bi_email)}
+                  className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  title="Remove connection"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+        <div className="flex justify-end items-center mt-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleAuthClick(source)}
+            disabled={loading[source.id] || isAuthWindowOpen}
+            className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+              loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
+            }`}
+          >
+            {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
+          </motion.button>
+        </div>
+      </motion.div>
+    )}
+  </div>
+) : (
+
 
                     {source.id !== 1 && (
                       <div className="flex justify-between items-center mt-4 pt-2">
@@ -1735,3 +1720,4 @@ const Inbound: React.FC = () => {
 };
 
 export default Inbound;
+
