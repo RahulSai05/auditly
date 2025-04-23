@@ -1301,10 +1301,11 @@ const fetchPowerBiUsers = async () => {
       const response = await axios.post(
         "https://auditlyai.com/api/powerbi/get-powerbi-table-columns",
         {
-          workspace_id: powerBIData.workspace_id,
-          dataset_id: powerBIData.dataset_id,
-          power_bi_table_name: powerBIData.table_name,
-          bi_user_id: selectedPowerBiUser.power_bi_id
+            workspace_id: powerBIData.workspace_id,
+            dataset_id: powerBIData.dataset_id,
+            power_bi_table_name: powerBIData.table_name,
+            power_bi_id: selectedPowerBiUser.power_bi_id,
+            auditly_user_id: userId
         }
       );
 
