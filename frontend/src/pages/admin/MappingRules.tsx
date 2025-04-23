@@ -1244,11 +1244,11 @@ const fetchPowerBiUsers = async () => {
   try {
     const response = await axios.post(
       "https://auditlyai.com/api/get-powerbi-dataset-ids",
-      {
-        workspace_id: powerBIData.workspace_id,
-        power_bi_id: selectedPowerBiUser.power_bi_id,
-        auditly_user_id: userId
-      }
+          {
+            workspace_id: powerBIData.workspace_id,
+            power_bi_id: String(selectedPowerBiUser.power_bi_id),
+            auditly_user_id: String(userId)
+          }
     );
 
     const datasetList = response.data.dataset_ids.map((id: string) => ({ id, name: id }));
