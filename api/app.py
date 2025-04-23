@@ -2050,6 +2050,9 @@ class GetPowerBITableColumns(BaseModel):
     workspace_id: str
     dataset_id: str
     power_bi_table_name: str
+    power_bi_id; int
+    auditly_user_id: int
+    
 
 @app.post("/api/powerbi/get-powerbi-table-columns")
 async def get_powerbi_table_column(request: GetPowerBITableColumns, db: Session = Depends(get_db)):
@@ -2057,7 +2060,7 @@ async def get_powerbi_table_column(request: GetPowerBITableColumns, db: Session 
     dataset_id = request.dataset_id
     power_bi_table_name = request.power_bi_table_name
 
-    ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
+    ACCESS_TOKEN = db.query(PowerBiUser).filter(PowerBiUser.power_bi_id == request.power_bi_id).filter(PowerBiUser.power_bi_user_mapping_id == request.auditly_user_id).first().access_token
 
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
