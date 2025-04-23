@@ -2922,19 +2922,18 @@ def get_powerbi_headers(access_token: str):
     }
 
 
-def create_powerbi_dataset(access_token: str) -> str:
+def create_powerbi_dataset(access_token: str, dataset_name: str) -> str:
     url = "https://api.powerbi.com/v1.0/myorg/datasets"
-    schema = generate_dataset_schema()
+    schema = generate_dataset_schema(dataset_name)
     headers = get_powerbi_headers(access_token)
 
     response = requests.post(url, json=schema, headers=headers)
 
     if response.status_code == 201:
-        dataset_id = response.json().get("id")
-        print(f"Dataset created successfully: {dataset_id}")
-        return dataset_id
+        return response.json().get("id")
     else:
         raise Exception(f"Failed to create dataset: {response.status_code} - {response.text}")
+
 
 def get_push_url(dataset_id: str):
     return f"https://api.powerbi.com/v1.0/myorg/datasets/{dataset_id}/tables/Items/rows"
@@ -2967,14 +2966,27 @@ def push_to_powerbi(access_token: str, push_url: str, data: list):
             "message": f"Power BI responded with {response.status_code}: {response.text}"
         }
 
+def get_existing_dataset_id(access_token: str, dataset_name: str):
+    url = "https://api.powerbi.com/v1.0/myorg/datasets"
+    headers = get_powerbi_headers(access_token)
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        datasets = response.json().get("value", [])
+        for ds in datasets:
+            if ds["name"].lower() == dataset_name.lower():
+                return ds["id"]
+    return None
+
+
 class PowerBIPushRequest(BaseModel):
     power_bi_email: str
     auditly_user_id: int
+    dataset_name: str
 
 @app.post("/api/powerbi/create-and-push")
 def create_and_push(request: PowerBIPushRequest, db: Session = Depends(get_db)):
     try:
-        # Step 0: Fetch access_token from DB using email + auditly_user_id
         user = db.query(PowerBiUser).filter(
             PowerBiUser.power_bi_email == request.power_bi_email,
             PowerBiUser.power_bi_user_mapping_id == request.auditly_user_id
@@ -2985,8 +2997,13 @@ def create_and_push(request: PowerBIPushRequest, db: Session = Depends(get_db)):
 
         access_token = user.access_token
 
-        # Step 1: Create dataset
-        dataset_id = create_powerbi_dataset(access_token)
+        # Step 1: Check if dataset exists
+        dataset_id = get_existing_dataset_id(access_token, request.dataset_name)
+        created_new = False
+
+        if not dataset_id:
+            dataset_id = create_powerbi_dataset(access_token, request.dataset_name)
+            created_new = True
 
         # Step 2: Build push URL
         push_url = get_push_url(dataset_id)
@@ -2995,11 +3012,16 @@ def create_and_push(request: PowerBIPushRequest, db: Session = Depends(get_db)):
         data = prepare_item_data(db)
 
         # Step 4: Push to Power BI
-        return push_to_powerbi(access_token, push_url, data)
+        result = push_to_powerbi(access_token, push_url, data)
+
+        result["dataset_id"] = dataset_id
+        result["dataset_name"] = request.dataset_name
+        result["message"] = "Dataset created and data pushed successfully." if created_new else "Existing dataset updated with new data."
+
+        return result
 
     except Exception as e:
         return {"status": "Error", "message": str(e)}
-
 
 
 
