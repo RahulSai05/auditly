@@ -1301,10 +1301,11 @@ const fetchPowerBiUsers = async () => {
       const response = await axios.post(
         "https://auditlyai.com/api/powerbi/get-powerbi-table-columns",
         {
-          workspace_id: powerBIData.workspace_id,
-          dataset_id: powerBIData.dataset_id,
-          power_bi_table_name: powerBIData.table_name,
-          bi_user_id: selectedPowerBiUser.power_bi_id
+            workspace_id: powerBIData.workspace_id,
+            dataset_id: powerBIData.dataset_id,
+            power_bi_table_name: powerBIData.table_name,
+            power_bi_id: selectedPowerBiUser.power_bi_id,      
+            auditly_user_id: userId 
         }
       );
 
@@ -1314,19 +1315,16 @@ const fetchPowerBiUsers = async () => {
       const actualColumnNames = Object.values(columnMappings);
       setPowerBIColumns(actualColumnNames);
       
-      const autoMappedRows = mappingRows.map(row => {
-        const matchingEntry = Object.entries(columnMappings).find(([_, actualName]) => 
-          actualName.toLowerCase() === row.source.toLowerCase()
-        );
-        
+      const autoMappedRows = mappingRows.map((row, index) => {
+      const autoMappedRows = mappingRows.map((row, index) => {
+        const matchedCol = actualColumnNames.find(col => col.toLowerCase() === row.source.toLowerCase());
         return {
-          ...row,
-          destination: matchingEntry ? columnMappings[matchingEntry[0]] : ""
-        };
+            ...row,
+            destination: matchedCol || ""
+          };
       });
-      
       setMappingRows(autoMappedRows);
-      
+          
       setNotification({
         id: Date.now().toString(),
         type: 'success',
