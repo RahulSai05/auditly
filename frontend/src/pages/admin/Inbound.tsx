@@ -1,3 +1,6 @@
+
+
+
 // import React, { useState, useEffect } from "react";
 // import { useSearchParams } from "react-router-dom";
 // import { useDispatch, useSelector } from "react-redux";
@@ -659,8 +662,26 @@
 
 //                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
                     
-//                     {source.id === 1 && (
+//                     {source.id === 1 ? (
 //                       <div className="relative">
+//                         <div className="flex justify-between items-center mt-4 pt-2">
+//                           <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
+//                             <span className="text-sm font-medium">Learn more</span>
+//                             <motion.span
+//                               animate={{ x: [0, 5, 0] }}
+//                               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+//                             >
+//                               →
+//                             </motion.span>
+//                           </div>
+//                           <button
+//                             onClick={togglePowerBiExpand}
+//                             className="text-gray-500 hover:text-gray-700 transition-colors"
+//                           >
+//                             {expandedPowerBi ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+//                           </button>
+//                         </div>
+
 //                         {expandedPowerBi && (
 //                           <motion.div
 //                             initial={{ opacity: 0, height: 0 }}
@@ -755,34 +776,23 @@
 //                                 ))}
 //                               </div>
 //                             )}
+//                             <div className="flex justify-end items-center mt-4">
+//                               <motion.button
+//                                 whileHover={{ scale: 1.05 }}
+//                                 whileTap={{ scale: 0.95 }}
+//                                 onClick={() => handleAuthClick(source)}
+//                                 disabled={loading[source.id] || isAuthWindowOpen}
+//                                 className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+//                                   loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
+//                                 }`}
+//                               >
+//                                 {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
+//                               </motion.button>
+//                             </div>
 //                           </motion.div>
 //                         )}
-//                         <div className="flex justify-between items-center mt-4 pt-2">
-//                           <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
-//                             <span className="text-sm font-medium">Learn more</span>
-//                             <motion.span
-//                               animate={{ x: [0, 5, 0] }}
-//                               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-//                             >
-//                               →
-//                             </motion.span>
-//                           </div>
-//                           <motion.button
-//                             whileHover={{ scale: 1.05 }}
-//                             whileTap={{ scale: 0.95 }}
-//                             onClick={() => handleAuthClick(source)}
-//                             disabled={loading[source.id] || isAuthWindowOpen}
-//                             className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-//                               loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
-//                             }`}
-//                           >
-//                             {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
-//                           </motion.button>
-//                         </div>
 //                       </div>
-//                     )}
-
-//                     {source.id !== 1 && (
+//                     ) : (
 //                       <div className="flex justify-between items-center mt-4 pt-2">
 //                         <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
 //                           <span className="text-sm font-medium">Learn more</span>
@@ -828,7 +838,7 @@
 //                               className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
 //                                 loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
 //                               }`}
-//                             >
+//                               >
 //                               Connect
 //                             </motion.button>
 //                           )
@@ -847,7 +857,6 @@
 // };
 
 // export default Inbound;
-
 
 
 import React, { useState, useEffect } from "react";
@@ -871,6 +880,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  Zap,
 } from "lucide-react";
 import { fetchPowerBiUsers, deletePowerBiUser, selectPowerBiUsers, selectPowerBiUsersLoading, selectPowerBiUsersError } from "../../store/slices/itemSlice";
 import "react-toastify/dist/ReactToastify.css";
@@ -980,8 +990,8 @@ const Inbound: React.FC = () => {
   });
   const [userId, setUserId] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
-  const [expandedPowerBi, setExpandedPowerBi] = useState(false);
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
 
   const dispatch = useAppDispatch();
   const powerBiUsers = useAppSelector(selectPowerBiUsers);
@@ -1000,6 +1010,13 @@ const Inbound: React.FC = () => {
       dispatch(fetchPowerBiUsers({ userId, connectionType: "inbound" }));
     }
   }, [userId, dispatch]);
+
+  const toggleCardExpand = (cardId: number) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [cardId]: !prev[cardId]
+    }));
+  };
 
   const handleRefreshUsers = async () => {
     if (!userId) return;
@@ -1098,7 +1115,7 @@ const Inbound: React.FC = () => {
     };
   }, [activeAuthWindow]);
 
-  const handleAuthClick = async (source: DataSource) => {
+  const handleAuthClick = async (source: DataSource, email?: string) => {
     if (!source.authEndpoint) return;
     if (!userId) {
       toast.error("User not authenticated. Please login again.", {
@@ -1110,7 +1127,7 @@ const Inbound: React.FC = () => {
     }
 
     try {
-      setLoading((prev) => ({ ...prev, [source.id]: true }));
+      setLoading(prev => ({ ...prev, [source.id]: true }));
       setIsAuthWindowOpen(true);
 
       const width = 600;
@@ -1119,7 +1136,7 @@ const Inbound: React.FC = () => {
       const top = window.screen.height / 2 - height / 2;
 
       const returnUrl = encodeURIComponent(window.location.origin);
-      const authUrl = `${source.authEndpoint}?mapping_id=${userId}&returnUrl=${returnUrl}&connection_type=inbound`;
+      const authUrl = `${source.authEndpoint}?mapping_id=${userId}&returnUrl=${returnUrl}&connection_type=inbound${email ? `&email=${encodeURIComponent(email)}` : ''}`;
 
       const authWindow = window.open(
         authUrl,
@@ -1134,7 +1151,7 @@ const Inbound: React.FC = () => {
             clearInterval(checkWindowClosed);
             setIsAuthWindowOpen(false);
             setActiveAuthWindow(null);
-            setLoading((prev) => ({ ...prev, [source.id]: false }));
+            setLoading(prev => ({ ...prev, [source.id]: false }));
           }
         }, 500);
       } else {
@@ -1149,7 +1166,7 @@ const Inbound: React.FC = () => {
       });
       setIsAuthWindowOpen(false);
       setActiveAuthWindow(null);
-      setLoading((prev) => ({ ...prev, [source.id]: false }));
+      setLoading(prev => ({ ...prev, [source.id]: false }));
     }
   };
 
@@ -1235,12 +1252,12 @@ const Inbound: React.FC = () => {
 
   const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setScheduleData((prev) => ({ ...prev, [name]: value }));
+    setScheduleData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCronExampleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setScheduleData((prev) => ({ ...prev, cron_expression: value }));
+    setScheduleData(prev => ({ ...prev, cron_expression: value }));
   };
 
   const handleDeleteConnection = async (email: string) => {
@@ -1265,10 +1282,6 @@ const Inbound: React.FC = () => {
         autoClose: 5000,
       });
     }
-  };
-
-  const togglePowerBiExpand = () => {
-    setExpandedPowerBi(!expandedPowerBi);
   };
 
   const activeConnections = powerBiUsers.filter(user => user.connection_status === 'Active');
@@ -1499,149 +1512,17 @@ const Inbound: React.FC = () => {
                           {source.status}
                         </motion.span>
                       </div>
-                      {source.id === 1 && (
-                        <button
-                          onClick={togglePowerBiExpand}
-                          className="text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                          {expandedPowerBi ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => toggleCardExpand(source.id)}
+                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {expandedCards[source.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </button>
                     </div>
 
                     <p className="text-gray-600 text-sm mb-4">{source.description}</p>
                     
-                    {source.id === 1 ? (
-                      <div className="relative">
-                        <div className="flex justify-between items-center mt-4 pt-2">
-                          <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
-                            <span className="text-sm font-medium">Learn more</span>
-                            <motion.span
-                              animate={{ x: [0, 5, 0] }}
-                              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            >
-                              →
-                            </motion.span>
-                          </div>
-                          <button
-                            onClick={togglePowerBiExpand}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            {expandedPowerBi ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                          </button>
-                        </div>
-
-                        {expandedPowerBi && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="border-t border-gray-200 pt-4 overflow-hidden"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-medium text-gray-800 flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                Connections
-                              </h4>
-                              <button
-                                onClick={handleRefreshUsers}
-                                disabled={isLoadingUsers}
-                                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
-                              >
-                                <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? "animate-spin" : ""}`} />
-                                Refresh
-                              </button>
-                            </div>
-                            <div className="flex gap-4 mb-4">
-                              <button
-                                onClick={() => setActiveTab("active")}
-                                className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                                  activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}
-                              >
-                                Active ({activeConnections.length})
-                              </button>
-                              <button
-                                onClick={() => setActiveTab("inactive")}
-                                className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                                  activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}
-                              >
-                                Inactive ({inactiveConnections.length})
-                              </button>
-                            </div>
-                            {isLoadingUsers ? (
-                              <div className="py-4 text-center">
-                                <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
-                              </div>
-                            ) : activeTab === "active" && activeConnections.length === 0 ? (
-                              <div className="py-4 text-center bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-500">No active connections</p>
-                              </div>
-                            ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
-                              <div className="py-4 text-center bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-500">No inactive connections</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                                {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
-                                  <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                                        <User className="w-5 h-5 text-blue-600" />
-                                      </div>
-                                      <div>
-                                        <p className="text-sm font-semibold text-gray-900">{user.power_bi_username || 'Unknown User'}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                          <span
-                                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                              user.connection_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                            }`}
-                                          >
-                                            {user.connection_status}
-                                          </span>
-                                          <p className="text-xs text-gray-600 flex items-center gap-1">
-                                            <Mail className="w-3 h-3" />
-                                            <span className="truncate max-w-[150px]">{user.power_bi_email || 'No email'}</span>
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <button
-                                      onClick={() => handleDeleteConnection(user.power_bi_email)}
-                                      className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                      title="Remove connection"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </motion.div>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex justify-end items-center mt-4">
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleAuthClick(source)}
-                                disabled={loading[source.id] || isAuthWindowOpen}
-                                className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-                                  loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
-                                }`}
-                              >
-                                {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
-                              </motion.button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    ) : (
+                    <div className="relative">
                       <div className="flex justify-between items-center mt-4 pt-2">
                         <div className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
                           <span className="text-sm font-medium">Learn more</span>
@@ -1652,33 +1533,120 @@ const Inbound: React.FC = () => {
                             →
                           </motion.span>
                         </div>
-                        {source.id === 3 ? (
-                          <div className="flex gap-2">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => setShowScheduleForm(true)}
-                              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all"
+                        <button
+                          onClick={() => toggleCardExpand(source.id)}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          {expandedCards[source.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </button>
+                      </div>
+
+                      {expandedCards[source.id] && source.id === 1 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="border-t border-gray-200 pt-4 overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-medium text-gray-800 flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              Connections
+                            </h4>
+                            <button
+                              onClick={handleRefreshUsers}
+                              disabled={isLoadingUsers}
+                              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
                             >
-                              <Clock className="w-4 h-4 inline mr-2" />
-                              Schedule
-                            </motion.button>
-                            {source.authEndpoint && (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleAuthClick(source)}
-                                disabled={loading[source.id] || isAuthWindowOpen}
-                                className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
-                                  loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
-                                }`}
-                              >
-                                Connect
-                              </motion.button>
-                            )}
+                              <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? "animate-spin" : ""}`} />
+                              Refresh
+                            </button>
                           </div>
-                        ) : (
-                          source.authEndpoint && (
+                          <div className="flex gap-4 mb-4">
+                            <button
+                              onClick={() => setActiveTab("active")}
+                              className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                                activeTab === "active" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              }`}
+                            >
+                              Active ({activeConnections.length})
+                            </button>
+                            <button
+                              onClick={() => setActiveTab("inactive")}
+                              className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                                activeTab === "inactive" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              }`}
+                            >
+                              Inactive ({inactiveConnections.length})
+                            </button>
+                          </div>
+                          {isLoadingUsers ? (
+                            <div className="py-4 text-center">
+                              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+                            </div>
+                          ) : activeTab === "active" && activeConnections.length === 0 ? (
+                            <div className="py-4 text-center bg-gray-50 rounded-lg">
+                              <p className="text-sm text-gray-500">No active connections</p>
+                            </div>
+                          ) : activeTab === "inactive" && inactiveConnections.length === 0 ? (
+                            <div className="py-4 text-center bg-gray-50 rounded-lg">
+                              <p className="text-sm text-gray-500">No inactive connections</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                              {(activeTab === "active" ? activeConnections : inactiveConnections).map((user, index) => (
+                                <motion.div
+                                  key={index}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: index * 0.05 }}
+                                  className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-shadow"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                                      <User className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-semibold text-gray-900">{user.power_bi_username || 'Unknown User'}</p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span
+                                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                            user.connection_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                          }`}
+                                        >
+                                          {user.connection_status}
+                                        </span>
+                                        <p className="text-xs text-gray-600 flex items-center gap-1">
+                                          <Mail className="w-3 h-3" />
+                                          <span className="truncate max-w-[150px]">{user.power_bi_email || 'No email'}</span>
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    {user.connection_status !== 'Active' && (
+                                      <button
+                                        onClick={() => handleAuthClick(source, user.power_bi_email)}
+                                        className="p-1.5 rounded-full text-green-500 hover:bg-green-50 hover:text-green-600 transition-colors"
+                                        title="Activate connection"
+                                      >
+                                        <Zap className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleDeleteConnection(user.power_bi_email)}
+                                      className="p-1.5 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                      title="Remove connection"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex justify-end items-center mt-4">
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
@@ -1687,13 +1655,13 @@ const Inbound: React.FC = () => {
                               className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
                                 loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
                               }`}
-                              >
-                              Connect
+                            >
+                              {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
                             </motion.button>
-                          )
-                        )}
-                      </div>
-                    )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}
