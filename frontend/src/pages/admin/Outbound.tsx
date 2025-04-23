@@ -1743,7 +1743,7 @@ const Outbound: React.FC = () => {
                               loading[destination.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
                             }`}
                           >
-                            {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
+                            {powerBiUsers.length > 0 ? "Add Account" : "Add Account"}
                           </motion.button>
                         </div>
                       </div>
