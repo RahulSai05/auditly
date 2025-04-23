@@ -2967,9 +2967,24 @@ def push_to_powerbi(access_token: str, push_url: str, data: list):
             "message": f"Power BI responded with {response.status_code}: {response.text}"
         }
 
+class PowerBIPushRequest(BaseModel):
+    power_bi_email: str
+    auditly_user_id: int
+
 @app.post("/api/powerbi/create-and-push")
-def create_and_push(access_token: str, db: Session = Depends(get_db)):
+def create_and_push(request: PowerBIPushRequest, db: Session = Depends(get_db)):
     try:
+        # Step 0: Fetch access_token from DB using email + auditly_user_id
+        user = db.query(PowerBiUser).filter(
+            PowerBiUser.power_bi_email == request.power_bi_email,
+            PowerBiUser.power_bi_user_mapping_id == request.auditly_user_id
+        ).first()
+
+        if not user or not user.access_token:
+            raise HTTPException(status_code=404, detail="Valid Power BI user not found")
+
+        access_token = user.access_token
+
         # Step 1: Create dataset
         dataset_id = create_powerbi_dataset(access_token)
 
