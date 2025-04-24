@@ -1583,7 +1583,7 @@ const Inbound: React.FC = () => {
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="border-t border-gray-200 pt-4 overflow-hidden"
+                            className="border-t border-gray-200 pt-6 mt-4 overflow-hidden"
                           >
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="font-medium text-gray-800 flex items-center gap-2">
