@@ -952,7 +952,7 @@ const dataSources: DataSource[] = [
     title: "Inbound Automate",
     description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
     icon: Server,
-    color: "#FF9900",
+    color: "#BDBDBD",
     status: "Enterprise",
   },
 ];
