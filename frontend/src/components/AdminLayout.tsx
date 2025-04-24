@@ -1022,7 +1022,7 @@ const AdminLayout = () => {
                 >
                   <SettingsIcon className="w-6 h-6 mr-3" />
                 </motion.div>
-                <span className="flex-1 text-left">Settings</span>
+                <span className="flex-1 text-left">Admin</span>
                 <motion.div
                   animate={{ rotate: settingsOpen ? 90 : 0 }}
                   transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
