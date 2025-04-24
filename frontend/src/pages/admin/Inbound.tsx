@@ -1573,7 +1573,7 @@ const Inbound: React.FC = () => {
                             }`}
                             aria-label={powerBiUsers.length > 0 ? "Add new Power BI account" : "Connect Power BI account"}
                           >
-                            {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
+                            {powerBiUsers.length > 0 ? "Add Account" : "Add Account"}
                           </motion.button>
                         </div>
 
