@@ -802,7 +802,7 @@ const Inbound: React.FC = () => {
                                 ))}
                               </div>
                             )}
-                            <div className="flex justify-end items-center mt-4">
+{/*                             <div className="flex justify-end items-center mt-4">
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -815,7 +815,7 @@ const Inbound: React.FC = () => {
                               >
                                 {powerBiUsers.length > 0 ? "Add Account" : "Connect"}
                               </motion.button>
-                            </div>
+                            </div> */}
                           </motion.div>
                         )}
                       </div>
