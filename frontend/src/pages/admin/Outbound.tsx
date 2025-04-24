@@ -1945,7 +1945,7 @@ const Outbound: React.FC = () => {
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleAuthClick(destination)}
                               disabled={loading[destination.id] || isAuthWindowOpen}
-                              className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+                              className={`px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
                                 loading[destination.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
                               }`}
                               aria-label={powerBiUsers.length > 0 ? "Add new Power BI account" : "Connect Power BI account"}
