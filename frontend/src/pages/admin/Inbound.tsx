@@ -831,7 +831,7 @@ const Inbound: React.FC = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleAuthClick(source)}
                                 disabled={loading[source.id] || isAuthWindowOpen}
-                                className={`px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
+                                className={`px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg shadow hover:shadow-md transition-all ${
                                   loading[source.id] || isAuthWindowOpen ? "opacity-75 cursor-not-allowed" : ""
                                 }`}
                                 aria-label="Connect data source"
