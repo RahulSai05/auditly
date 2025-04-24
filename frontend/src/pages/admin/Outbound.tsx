@@ -943,7 +943,7 @@ const destinations = [
     title: "Power BI",
     description: "Push your customer item data directly to Power BI for advanced analytics and visualization.",
     icon: BarChart2,
-    color: "#0078D4",
+    color: "#338DDB",
     status: "Analytics",
     authEndpoint: "/api/powerbi/auth_login",
   },
@@ -952,7 +952,7 @@ const destinations = [
     title: "Azure",
     description: "Microsoft's scalable object storage solution for unstructured data.",
     icon: Database,
-    color: "#43A047",
+    color: "#338DDB",
     status: "Enterprise",
   },
   {
@@ -960,8 +960,8 @@ const destinations = [
     title: "Outbound Automate",
     description: "Automate workflows and integrate apps, services, and systems to improve productivity.",
     icon: Share2,
-    color: "#FF9900",
-    status: "Enterprise",
+    color: "#338DDB",
+    status: "Automation",
   },
 ];
 
@@ -1757,7 +1757,7 @@ const Outbound: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-5xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
+              className="text-4xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
             >
               Data Destinations
             </motion.h1>
