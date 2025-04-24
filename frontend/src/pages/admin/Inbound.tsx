@@ -935,7 +935,7 @@ const dataSources: DataSource[] = [
     title: "Power BI",
     description: "Business analytics tool for visualizing data and sharing insights across your organization.",
     icon: Cloud,
-    color: "#00796B",
+    color: "#338DDB",
     status: "Enterprise",
     authEndpoint: "/api/powerbi/auth_login",
   },
