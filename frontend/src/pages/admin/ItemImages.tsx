@@ -182,15 +182,18 @@ const ItemImages: React.FC = () => {
                       disabled={loading}
                     />
                     {searchTerm && (
-                      <motion.button
-                        onClick={handleClear}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-50 rounded-full transition-colors"
-                        whileHover={{ scale: 1.1, rotate: 90 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <X className="w-5 h-5 text-blue-400" />
-                      </motion.button>
-                    )}
+  <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 overflow-hidden">
+    <motion.button
+      onClick={handleClear}
+      className="p-2 hover:bg-blue-50 rounded-full transition-colors"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <X className="w-5 h-5 text-blue-400" />
+    </motion.button>
+  </div>
+)}
+
                   </div>
                   <motion.button
                     onClick={fetchItemData}
