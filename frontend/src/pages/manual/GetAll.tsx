@@ -559,7 +559,7 @@ const GetAll: React.FC = () => {
                                 <div className="space-y-4">
                                     <InfoRow label="SKU Number" value={productData.item_details.item_number} />
                                     <InfoRow label="Item Description" value={productData.item_details.item_description} />
-                                    <InfoRow label="Vendor Item Number" value={productData.item_details.vendor_item_number} />
+                                    <InfoRow label="Vendor Item Number" value={productData.vendor_item_number} />
                                     <InfoRow label="SSCC Number" value={productData.sscc_number} />
                                     <InfoRow label="Tag Number" value={productData.tag_number} />
                                 </div>
