@@ -243,7 +243,7 @@ export default function Details() {
             <h3 className="font-bold text-xl text-gray-800">Sales Order Info</h3>
           </div>
           <div className="space-y-4">
-            <InfoRow label="Sales Order" value={Item.original_sales_order_number} />
+            <InfoRow label="Sales Order Number" value={Item.original_sales_order_number} />
             <InfoRow label="Order Line" value={Item.original_sales_order_line} />
             <InfoRow label="Order Quantity" value={Item.ordered_qty} />
             <InfoRow label="Shipped To" value={Item.shipped_to_person} />
