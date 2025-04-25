@@ -696,7 +696,7 @@ const AdminLayout = () => {
               >
                 <LogOut className="w-5 h-5 mr-2" />
               </motion.div>
-              Logout
+{/*               Logout */}
             </motion.button>
           </motion.li>
         </ul>
