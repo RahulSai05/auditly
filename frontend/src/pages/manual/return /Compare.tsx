@@ -114,7 +114,7 @@ export default function UploadMedia() {
             </h3>
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Base Image</p>
+                    <p className="text-sm font-medium text-gray-700"> Original Product Image</p>
                     <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
                         {baseImage ? (
                             <img
@@ -130,7 +130,7 @@ export default function UploadMedia() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Difference Overlay</p>
+                    <p className="text-sm font-medium text-gray-700">Return Image with Overlay</p>
                     <div className="aspect-square rounded-lg border overflow-hidden bg-gray-50">
                         {diffImage ? (
                             <img
