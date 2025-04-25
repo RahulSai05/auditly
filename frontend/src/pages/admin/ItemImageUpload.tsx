@@ -276,7 +276,6 @@
 
 // export default ItemImageUpload;
 
-
 import React, { useState, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -317,7 +316,6 @@ const ItemImageUpload = () => {
   const handleImageChange = useCallback((e, setImage, setPreview) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log("Selected file:", file);
       setImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -347,11 +345,6 @@ const ItemImageUpload = () => {
     formData.append("front_image", frontImage);
     formData.append("back_image", backImage);
 
-    // Debugging: Log FormData contents
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
     setIsLoading(true);
     try {
       const response = await axios.post(
@@ -362,12 +355,10 @@ const ItemImageUpload = () => {
         }
       );
       setNotification({ type: 'success', message: response.data.message });
-      // Clear form after successful upload
       setItemNumber('');
       clearImage(setFrontImage, setFrontPreview);
       clearImage(setBackImage, setBackPreview);
     } catch (error) {
-      console.error("Error uploading images:", error);
       setNotification({ type: 'error', message: "An error occurred while uploading images." });
     } finally {
       setIsLoading(false);
@@ -384,11 +375,11 @@ const ItemImageUpload = () => {
         ${preview ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}
       `}>
         {preview ? (
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-lg">
             <img 
               src={preview} 
               alt={title} 
-              className="w-full h-48 object-cover rounded-lg"
+              className="w-full h-48 object-cover"
             />
             <div className="absolute top-2 right-2 z-10">
               <motion.button
@@ -422,7 +413,6 @@ const ItemImageUpload = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
