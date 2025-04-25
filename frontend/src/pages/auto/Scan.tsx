@@ -350,7 +350,24 @@ const Scan = () => {
             </div>
           )}
 
+
           {isFetched && !productData && (
+  <div className="mt-8 bg-white p-8 rounded-2xl shadow-lg text-center">
+    <p className="text-gray-800 mb-6">
+      No matching records found. Please try manual entry.
+    </p>
+    <div className="flex justify-center"> {/* Added this container */}
+      <button
+        onClick={handleManualEntry}
+        className="group flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+      >
+        Go to Manual Entry
+        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+      </button>
+    </div>
+  </div>
+)}
+{/*           {isFetched && !productData && (
             <div className="mt-8 bg-white p-8 rounded-2xl shadow-lg text-center">
               <p className="text-gray-800 mb-6">
                 No matching records found. Please try manual entry.
@@ -363,7 +380,7 @@ const Scan = () => {
                 <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>
