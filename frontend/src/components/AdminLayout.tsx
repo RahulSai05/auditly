@@ -684,7 +684,7 @@ const AdminLayout = () => {
             ""
           )}
 
-          <motion.li variants={itemVariants} className="mt-auto">
+{/*           <motion.li variants={itemVariants} className="mt-auto">
             <motion.button
               className="flex items-center p-3 rounded-lg transition duration-300 hover:bg-red-100 text-red-600 hover:text-red-700 w-full mt-8"
               whileHover={{ x: 5 }}
@@ -696,9 +696,9 @@ const AdminLayout = () => {
               >
                 <LogOut className="w-5 h-5 mr-2" />
               </motion.div>
-{/*               Logout */}
+                  Logout 
             </motion.button>
-          </motion.li>
+          </motion.li> */}
         </ul>
       </motion.div>
 
