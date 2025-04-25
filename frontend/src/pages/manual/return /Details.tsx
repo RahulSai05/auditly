@@ -283,7 +283,6 @@ export default function Details() {
           </div>
           <div className="space-y-4">
             <InfoRow label="SKU Number" value={Item.item_details.item_number} />
-            <InfoRow label="Item Number" value={Item.item_details.item_number} />
             <InfoRow label="Item Description" value={Item.item_details.item_description} />
             <InfoRow label="Vendor Item Number" value={Item.vendor_item_number} />
             <InfoRow label="SSCC Number" value={Item.sscc_number} />
