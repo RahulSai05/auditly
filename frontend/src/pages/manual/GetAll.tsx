@@ -42,7 +42,17 @@ const GetAll: React.FC = () => {
             console.error("API error:", err);
             setProductData(null);
             setIsFetched(true);
-            setError(err.message || "An error occurred while fetching the data.");
+            
+            // Improved error handling
+            if (err.response && err.response.status === 404) {
+                setError("We couldn't find a return with that number. Please check your return order number and try again.");
+            } else if (err.message === "Customer ID not found in response.") {
+                setError("Invalid product data received. Please contact support.");
+            } else if (err.message.includes("Network Error")) {
+                setError("Network error. Please check your connection and try again.");
+            } else {
+                setError("An error occurred. Please try again later.");
+            }
         } finally {
             setIsLoading(false);
         }
