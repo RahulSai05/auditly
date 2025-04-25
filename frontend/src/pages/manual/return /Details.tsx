@@ -246,9 +246,9 @@ export default function Details() {
             <InfoRow label="Sales Order" value={Item.original_sales_order_number} />
             <InfoRow label="Order Line" value={Item.original_sales_order_line} />
             <InfoRow label="Order Quantity" value={Item.ordered_qty} />
-            <InfoRow label="Shipped to Customer" value={Item.shipped_to_person} />
+            <InfoRow label="Shipped To" value={Item.shipped_to_person} />
             <InfoRow label="Customer Address" value={formatAddress(Item.shipped_to_address)} />
-            <InfoRow label="Bill to Customer" value={Item.shipped_to_person} />
+            <InfoRow label="Billed To" value={Item.shipped_to_person} />
             <InfoRow label="Billing Address" value={formatAddress(Item.shipped_to_address)} />
           </div>
         </motion.div>
