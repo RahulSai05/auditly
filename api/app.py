@@ -150,17 +150,71 @@ oauth.register(
 )
 
 
+# @app.get("/api/item_order_instance")
+# async def get_item_instance_details(
+#     identifier: str = Query(..., title="Serial Number or Return Order Number"),  # Single input field
+#     db: Session = Depends(get_db)
+# ):
+#     """
+#     Retrieve details of an item instance using a single identifier.
+#     The identifier can be either a Serial Number or a Return Order Number.
+#     """
+
+#     # Query to check if the identifier matches serial_number or return_order_number
+#     item_instance = db.query(CustomerItemData).filter(
+#         (CustomerItemData.serial_number == identifier) |
+#         (CustomerItemData.return_order_number == identifier)
+#     ).first()
+
+#     if not item_instance:
+#         raise HTTPException(status_code=404, detail="Item Instance not found.")
+
+#     return {
+#         "original_sales_order_number": item_instance.original_sales_order_number,
+#         "original_sales_order_line": item_instance.original_sales_order_line,
+#         "ordered_qty": item_instance.ordered_qty,
+#         "return_order_number": item_instance.return_order_number,
+#         "return_order_line": item_instance.return_order_line,
+#         "return_qty": item_instance.return_qty,
+#         "return_destination": item_instance.return_destination,
+#         "return_condition": item_instance.return_condition,
+#         "return_carrier": item_instance.return_carrier,
+#         "return_warehouse": item_instance.return_warehouse,
+#         "item_id": item_instance.item_id,
+#         "serial_number": item_instance.serial_number,
+#         "sscc_number": item_instance.sscc_number,
+#         "tag_number": item_instance.tag_number,
+#         "vendor_item_number": item_instance.vendor_item_number,
+#         "shipped_from_warehouse": item_instance.shipped_from_warehouse,
+#         "shipped_to_person": item_instance.shipped_to_person,
+#         "shipped_to_address": {
+#             "street_number": item_instance.street_number,
+#             "city": item_instance.city,
+#             "state": item_instance.state,
+#             "country": item_instance.country,
+#         },
+#         "dimensions": {
+#             "depth": item_instance.dimensions_depth,
+#             "length": item_instance.dimensions_length,
+#             "breadth": item_instance.dimensions_breadth,
+#             "weight": item_instance.dimensions_weight,
+#             "volume": item_instance.dimensions_volume,
+#             "size": item_instance.dimensions_size,
+#         },
+#         "customer_id": item_instance.id,
+#     }
+
+
 @app.get("/api/item_order_instance")
 async def get_item_instance_details(
-    identifier: str = Query(..., title="Serial Number or Return Order Number"),  # Single input field
+    identifier: str = Query(..., title="Serial Number or Return Order Number"),
     db: Session = Depends(get_db)
 ):
     """
     Retrieve details of an item instance using a single identifier.
-    The identifier can be either a Serial Number or a Return Order Number.
+    Includes linked item details from the Item table.
     """
 
-    # Query to check if the identifier matches serial_number or return_order_number
     item_instance = db.query(CustomerItemData).filter(
         (CustomerItemData.serial_number == identifier) |
         (CustomerItemData.return_order_number == identifier)
@@ -168,6 +222,8 @@ async def get_item_instance_details(
 
     if not item_instance:
         raise HTTPException(status_code=404, detail="Item Instance not found.")
+
+    item_details = db.query(Item).filter(Item.id == item_instance.item_id).first()
 
     return {
         "original_sales_order_number": item_instance.original_sales_order_number,
@@ -201,8 +257,16 @@ async def get_item_instance_details(
             "volume": item_instance.dimensions_volume,
             "size": item_instance.dimensions_size,
         },
+        "item_details": {
+            "item_number": item_details.item_number if item_details else None,
+            "item_description": item_details.item_description if item_details else None,
+            "brand_id": item_details.brand_id if item_details else None,
+            "category": item_details.category if item_details else None,
+            "configuration": item_details.configuration if item_details else None,
+        },
         "customer_id": item_instance.id,
     }
+
 
 
 @app.post("/api/upload-customer-images")
