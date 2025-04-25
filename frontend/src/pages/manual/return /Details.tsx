@@ -28,6 +28,11 @@
 //     visible: { opacity: 1, y: 0 }
 //   };
 
+//   // Format address helper function
+//   const formatAddress = (address: any) => {
+//     return `${address.street_number}, ${address.city}, ${address.state}, ${address.country}`;
+//   };
+
 //   return (
 //     <motion.div 
 //       initial="hidden"
@@ -58,7 +63,7 @@
 //         variants={containerVariants}
 //         className="grid md:grid-cols-2 gap-8 mb-8"
 //       >
-//         {/* General Information */}
+//         {/* Sales Order Info */}
 //         <motion.div 
 //           variants={itemVariants}
 //           whileHover={{ scale: 1.02 }}
@@ -66,16 +71,20 @@
 //         >
 //           <div className="flex items-center justify-center mb-4">
 //             <Package2 className="w-8 h-8 text-blue-600 mr-2" />
-//             <h3 className="font-bold text-xl text-gray-800">General Information</h3>
+//             <h3 className="font-bold text-xl text-gray-800">Sales Order Info</h3>
 //           </div>
 //           <div className="space-y-4">
-//             <InfoRow label="Original sales Order" value={Item.original_sales_order_number} />
+//             <InfoRow label="Sales Order Number" value={Item.original_sales_order_number} />
 //             <InfoRow label="Order Line" value={Item.original_sales_order_line} />
-//             <InfoRow label="Ordered Quantity" value={Item.ordered_qty} />
+//             <InfoRow label="Order Quantity" value={Item.ordered_qty} />
+//             <InfoRow label="Shipped To" value={Item.shipped_to_person} />
+//             <InfoRow label="Customer Address" value={formatAddress(Item.shipped_to_address)} />
+//             <InfoRow label="Billed To" value={Item.shipped_to_person} />
+//             <InfoRow label="Billing Address" value={formatAddress(Item.shipped_to_address)} />
 //           </div>
 //         </motion.div>
 
-//         {/* Return Information */}
+//         {/* Return Order Information */}
 //         <motion.div 
 //           variants={itemVariants}
 //           whileHover={{ scale: 1.02 }}
@@ -83,16 +92,17 @@
 //         >
 //           <div className="flex items-center justify-center mb-4">
 //             <FileText className="w-8 h-8 text-green-600 mr-2" />
-//             <h3 className="font-bold text-xl text-gray-800">Return Information</h3>
+//             <h3 className="font-bold text-xl text-gray-800">Return Order Information</h3>
 //           </div>
 //           <div className="space-y-4">
 //             <InfoRow label="Return Order Number" value={`#${Item.return_order_number}`} />
 //             <InfoRow label="Order Line" value={Item.return_order_line} />
-//             <InfoRow label="Ordered Quantity" value={Item.return_qty} />
+//             <InfoRow label="Return Quantity" value={Item.return_qty} />
+//             <InfoRow label="Return Pick up Location" value={formatAddress(Item.shipped_to_address)} />
 //           </div>
 //         </motion.div>
 
-//         {/* Shipping Information */}
+//         {/* Product Information */}
 //         <motion.div 
 //           variants={itemVariants}
 //           whileHover={{ scale: 1.02 }}
@@ -103,17 +113,15 @@
 //             <h3 className="font-bold text-xl text-gray-800">Product Information</h3>
 //           </div>
 //           <div className="space-y-4">
-//             <InfoRow label="Serial Number" value={Item.serial_number} />
+//             <InfoRow label="SKU Number" value={Item.item_details.item_number} />
+//             <InfoRow label="Item Description" value={Item.item_details.item_description} />
 //             <InfoRow label="Vendor Item Number" value={Item.vendor_item_number} />
-//             <InfoRow label="Shipped to" value={Item.shipped_to_person} />
-//             <InfoRow 
-//               label="Address" 
-//               value={`${Item.shipped_to_address.street_number}, ${Item.shipped_to_address.city}, ${Item.shipped_to_address.state}, ${Item.shipped_to_address.country}`} 
-//             />
+//             <InfoRow label="SSCC Number" value={Item.sscc_number} />
+//             <InfoRow label="Tag Number" value={Item.tag_number} />
 //           </div>
 //         </motion.div>
 
-//         {/* Dimensions */}
+//         {/* Product Dimensions */}
 //         <motion.div 
 //           variants={itemVariants}
 //           whileHover={{ scale: 1.02 }}
@@ -121,13 +129,15 @@
 //         >
 //           <div className="flex items-center justify-center mb-4">
 //             <Ruler className="w-8 h-8 text-orange-600 mr-2" />
-//             <h3 className="font-bold text-xl text-gray-800">Dimensions</h3>
+//             <h3 className="font-bold text-xl text-gray-800">Product Dimensions</h3>
 //           </div>
 //           <div className="space-y-4">
-//             <InfoRow label="Depth" value={Item.dimensions.depth} />
-//             <InfoRow label="Length" value={Item.dimensions.length} />
-//             <InfoRow label="Breadth" value={Item.dimensions.breadth} />
-//             <InfoRow label="Weight" value={Item.dimensions.weight} />
+//             <InfoRow label="Depth" value={`${Item.dimensions.depth} in`} />
+//             <InfoRow label="Length" value={`${Item.dimensions.length} in`} />
+//             <InfoRow label="Breadth" value={`${Item.dimensions.breadth} in`} />
+//             <InfoRow label="Weight" value={`${Item.dimensions.weight} lbs`} />
+//             <InfoRow label="Volume" value={`${Item.dimensions.volume} cu in`} />
+//             <InfoRow label="Size" value={Item.dimensions.size} />
 //           </div>
 //         </motion.div>
 //       </motion.div>
@@ -164,9 +174,10 @@
 // const InfoRow = ({ label, value }: { label: string; value: string | number }) => (
 //   <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
 //     <span className="text-gray-600 font-medium">{label}</span>
-//     <span className="text-gray-800 font-semibold">{value}</span>
+//     <span className="text-gray-800 font-semibold text-right max-w-[60%] break-words">{value}</span>
 //   </div>
 // );
+
 
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
@@ -174,7 +185,7 @@ import { useNavigate } from "react-router-dom";
 import { Stepper } from "../../../components/Stepper";
 import ProductDetails from "../../../components/ProductDetails";
 import { motion } from "framer-motion";
-import { Package2, Truck, Ruler, FileText, ArrowLeft, ArrowRight } from "lucide-react";
+import { Package2, Truck, Ruler, FileText, ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 
 export default function Details() {
   const Item = useSelector((state: RootState) => state.ids.selectedItems);
@@ -220,6 +231,21 @@ export default function Details() {
             { label: "Review & Submit", status: "upcoming" },
           ]}
         />
+      </motion.div>
+
+      {/* Information Alert */}
+      <motion.div 
+        variants={itemVariants}
+        className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg"
+      >
+        <div className="flex items-center">
+          <AlertCircle className="h-5 w-5 text-yellow-400 mr-3" />
+          <div>
+            <p className="text-sm text-yellow-700">
+              If the displayed information is incorrect, please go back and re-enter or scan the return order number.
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Product Details */}
