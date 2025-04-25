@@ -733,7 +733,7 @@ const Outbound: React.FC = () => {
                     </h3>
                     <button
                       onClick={() => setShowPushDataForm(false)}
-                      className="text-gray-400 hover:text-gray-500 transition-colors"
+                      className="text-gray-500 hover:text-gray-600 transition-colors"
                       aria-label="Close push data form"
                     >
                       <X className="w-5 h-5" />
