@@ -470,27 +470,30 @@ export default function Home() {
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50">
             <div className="p-8">
               <div className="flex gap-4">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    placeholder="Enter inspection number..."
-                    value={receiptNumber}
-                    onChange={(e) => setReceiptNumber(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full px-6 py-4 pr-12 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
-                    disabled={loading}
-                  />
-                  {receiptNumber && (
-                    <motion.button
-                      onClick={handleClear}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-50 rounded-full transition-colors"
-                      whileHover={{ scale: 1.1, rotate: 90 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <X className="w-5 h-5 text-blue-400" />
-                    </motion.button>
-                  )}
-                </div>
+                <div className="relative flex-1 overflow-hidden">
+  <input
+    type="text"
+    placeholder="Enter inspection number..."
+    value={receiptNumber}
+    onChange={(e) => setReceiptNumber(e.target.value)}
+    onKeyPress={handleKeyPress}
+    className="w-full px-6 py-4 pr-12 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
+    disabled={loading}
+  />
+  {receiptNumber && (
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+      <motion.button
+        onClick={handleClear}
+        className="p-2 hover:bg-blue-50 rounded-full transition-colors"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <X className="w-5 h-5 text-blue-400" />
+      </motion.button>
+    </div>
+  )}
+</div>
+
                 <motion.button
                   onClick={handleSearch}
                   disabled={loading}
