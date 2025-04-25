@@ -521,9 +521,9 @@ const GetAll: React.FC = () => {
                                     <InfoRow label="Sales Order" value={productData.original_sales_order_number} />
                                     <InfoRow label="Order Line" value={productData.original_sales_order_line} />
                                     <InfoRow label="Order Quantity" value={productData.ordered_qty} />
-                                    <InfoRow label="Shipped to Customer" value={productData.shipped_to_person} />
+                                    <InfoRow label="Shipped to" value={productData.shipped_to_person} />
                                     <InfoRow label="Customer Address" value={formatAddress(productData.shipped_to_address)} />
-                                    <InfoRow label="Bill to Customer" value={productData.shipped_to_person} />
+                                    <InfoRow label="Billed to" value={productData.shipped_to_person} />
                                     <InfoRow label="Billing Address" value={formatAddress(productData.shipped_to_address)} />
                                 </div>
                             </motion.div>
@@ -558,7 +558,6 @@ const GetAll: React.FC = () => {
                                 </div>
                                 <div className="space-y-4">
                                     <InfoRow label="SKU Number" value={productData.item_details.item_number} />
-                                    <InfoRow label="Item Number" value={productData.item_details.item_number} />
                                     <InfoRow label="Item Description" value={productData.item_details.item_description} />
                                     <InfoRow label="Vendor Item Number" value={productData.vendor_item_number} />
                                     <InfoRow label="SSCC Number" value={productData.sscc_number} />
