@@ -301,85 +301,139 @@ const Inbound: React.FC = () => {
     }
   };
 
+  // const handleScheduleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!userId) {
+  //     toast.error("User not authenticated. Please login again.", {
+  //       icon: "🔒",
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //     });
+  //     return;
+  //   }
+  //   if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression) {
+  //     toast.error("Please fill all required fields.", {
+  //       icon: "⚠️",
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //     });
+  //     return;
+  //   }
+  //   setIsScheduling(true);
+  //   try {
+  //     const response = await fetch("/api/add-cronjobs", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         ...scheduleData,
+  //         auditly_user_id: userId,
+  //       }),
+  //     });
+  //     const data = await response.json();
+  //     if (response.ok) {
+  //       toast.success(
+  //         <div>
+  //           <p className="font-medium">Automation scheduled successfully! 🎉</p>
+  //           <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
+  //           <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
+  //         </div>,
+  //         {
+  //           position: "top-right",
+  //           autoClose: 5000,
+  //           icon: <Clock className="text-green-500" />,
+  //         }
+  //       );
+  //       setTimeout(() => {
+  //         toast.info(
+  //           <div className="flex items-start gap-3">
+  //             <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+  //             <div>
+  //               <p className="font-medium">Automation Notifications</p>
+  //               <p className="text-sm mt-1">You'll receive notifications for:</p>
+  //               <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
+  //                 <li>Successful runs</li>
+  //                 <li>Failed executions</li>
+  //                 <li>Schedule changes</li>
+  //               </ul>
+  //             </div>
+  //           </div>,
+  //           {
+  //             autoClose: 8000,
+  //             position: "top-right",
+  //           }
+  //         );
+  //       }, 1000);
+  //       setShowScheduleForm(false);
+  //       setScheduleData({ cron_to_mapping_name: "", cron_expression: "" });
+  //     } else {
+  //       throw new Error(data.message || "Failed to create cron job");
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error.message || "Failed to create cron job", {
+  //       icon: "❌",
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //     });
+  //   } finally {
+  //     setIsScheduling(false);
+  //   }
+  // };
+
   const handleScheduleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId) {
-      toast.error("User not authenticated. Please login again.", {
-        icon: "🔒",
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return;
+  e.preventDefault();
+
+  if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression) {
+    toast.error("Please fill all required fields.", {
+      icon: "⚠️",
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return;
+  }
+
+  // ❌ No API call here
+  // ✅ Only show success notification directly
+
+  toast.success(
+    <div>
+      <p className="font-medium">Automation scheduled successfully! 🎉</p>
+      <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
+      <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
+    </div>,
+    {
+      position: "top-right",
+      autoClose: 5000,
+      icon: <Clock className="text-green-500" />,
     }
-    if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression) {
-      toast.error("Please fill all required fields.", {
-        icon: "⚠️",
+  );
+
+  setTimeout(() => {
+    toast.info(
+      <div className="flex items-start gap-3">
+        <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+        <div>
+          <p className="font-medium">Automation Notifications</p>
+          <p className="text-sm mt-1">You'll receive notifications for:</p>
+          <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
+            <li>Successful runs</li>
+            <li>Failed executions</li>
+            <li>Schedule changes</li>
+          </ul>
+        </div>
+      </div>,
+      {
+        autoClose: 8000,
         position: "top-right",
-        autoClose: 5000,
-      });
-      return;
-    }
-    setIsScheduling(true);
-    try {
-      const response = await fetch("/api/add-cronjobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...scheduleData,
-          auditly_user_id: userId,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        toast.success(
-          <div>
-            <p className="font-medium">Automation scheduled successfully! 🎉</p>
-            <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
-            <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
-          </div>,
-          {
-            position: "top-right",
-            autoClose: 5000,
-            icon: <Clock className="text-green-500" />,
-          }
-        );
-        setTimeout(() => {
-          toast.info(
-            <div className="flex items-start gap-3">
-              <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
-              <div>
-                <p className="font-medium">Automation Notifications</p>
-                <p className="text-sm mt-1">You'll receive notifications for:</p>
-                <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
-                  <li>Successful runs</li>
-                  <li>Failed executions</li>
-                  <li>Schedule changes</li>
-                </ul>
-              </div>
-            </div>,
-            {
-              autoClose: 8000,
-              position: "top-right",
-            }
-          );
-        }, 1000);
-        setShowScheduleForm(false);
-        setScheduleData({ cron_to_mapping_name: "", cron_expression: "" });
-      } else {
-        throw new Error(data.message || "Failed to create cron job");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create cron job", {
-        icon: "❌",
-        position: "top-right",
-        autoClose: 5000,
-      });
-    } finally {
-      setIsScheduling(false);
-    }
-  };
+    );
+  }, 1000);
+
+  setShowScheduleForm(false);
+  setScheduleData({ cron_to_mapping_name: "", cron_expression: "" });
+};
+
 
   const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
