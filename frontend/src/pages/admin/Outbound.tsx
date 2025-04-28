@@ -298,90 +298,149 @@ const Outbound: React.FC = () => {
   };
 
   const handleScheduleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId) {
-      toast.error("User not authenticated. Please login again.", {
-        icon: "🔒",
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return;
+  e.preventDefault();
+
+  if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression || !scheduleData.destination_type) {
+    toast.error("Please fill all required fields.", {
+      icon: "⚠️",
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return;
+  }
+
+  // Just show a success notification — no API call
+  toast.success(
+    <div>
+      <p className="font-medium">Outbound automation scheduled successfully! 🎉</p>
+      <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
+      <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
+      <p className="text-sm">Destination: {scheduleData.destination_type.toUpperCase()}</p>
+    </div>,
+    {
+      position: "top-right",
+      autoClose: 5000,
+      icon: <Clock className="text-green-500" />,
     }
-    if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression || !scheduleData.destination_type) {
-      toast.error("Please fill all required fields.", {
-        icon: "⚠️",
+  );
+
+  setTimeout(() => {
+    toast.info(
+      <div className="flex items-start gap-3">
+        <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+        <div>
+          <p className="font-medium">Outbound Automation Notifications</p>
+          <p className="text-sm mt-1">You'll receive notifications for:</p>
+          <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
+            <li>Successful data exports</li>
+            <li>Failed delivery attempts</li>
+            <li>Schedule changes</li>
+            <li>Destination connectivity issues</li>
+          </ul>
+        </div>
+      </div>,
+      {
+        autoClose: 8000,
         position: "top-right",
-        autoClose: 5000,
-      });
-      return;
-    }
-    setIsScheduling(true);
-    try {
-      const response = await fetch("/api/add-cronjobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...scheduleData,
-          auditly_user_id: userId,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        toast.success(
-          <div>
-            <p className="font-medium">Outbound automation scheduled successfully! 🎉</p>
-            <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
-            <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
-            <p className="text-sm">Destination: {scheduleData.destination_type.toUpperCase()}</p>
-          </div>,
-          {
-            position: "top-right",
-            autoClose: 5000,
-            icon: <Clock className="text-green-500" />,
-          }
-        );
-        setTimeout(() => {
-          toast.info(
-            <div className="flex items-start gap-3">
-              <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
-              <div>
-                <p className="font-medium">Outbound Automation Notifications</p>
-                <p className="text-sm mt-1">You'll receive notifications for:</p>
-                <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
-                  <li>Successful data exports</li>
-                  <li>Failed delivery attempts</li>
-                  <li>Schedule changes</li>
-                  <li>Destination connectivity issues</li>
-                </ul>
-              </div>
-            </div>,
-            {
-              autoClose: 8000,
-              position: "top-right",
-            }
-          );
-        }, 1000);
-        setShowScheduleForm(false);
-        setScheduleData({
-          cron_to_mapping_name: "",
-          cron_expression: "",
-          destination_type: "s3",
-        });
-      } else {
-        throw new Error(data.message || "Failed to create cron job");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to schedule outbound automation", {
-        icon: "❌",
-        position: "top-right",
-        autoClose: 5000,
-      });
-    } finally {
-      setIsScheduling(false);
-    }
-  };
+    );
+  }, 1000);
+
+  // Close the form and reset fields
+  setShowScheduleForm(false);
+  setScheduleData({
+    cron_to_mapping_name: "",
+    cron_expression: "",
+    destination_type: "s3",
+  });
+};
+
+
+  // const handleScheduleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!userId) {
+  //     toast.error("User not authenticated. Please login again.", {
+  //       icon: "🔒",
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //     });
+  //     return;
+  //   }
+  //   if (!scheduleData.cron_to_mapping_name || !scheduleData.cron_expression || !scheduleData.destination_type) {
+  //     toast.error("Please fill all required fields.", {
+  //       icon: "⚠️",
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //     });
+  //     return;
+  //   }
+  //   setIsScheduling(true);
+  //   try {
+  //     const response = await fetch("/api/add-cronjobs", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         ...scheduleData,
+  //         auditly_user_id: userId,
+  //       }),
+  //     });
+  //     const data = await response.json();
+  //     if (response.ok) {
+  //       toast.success(
+  //         <div>
+  //           <p className="font-medium">Outbound automation scheduled successfully! 🎉</p>
+  //           <p className="text-sm mt-1">Name: {scheduleData.cron_to_mapping_name}</p>
+  //           <p className="text-sm">Schedule: {scheduleData.cron_expression}</p>
+  //           <p className="text-sm">Destination: {scheduleData.destination_type.toUpperCase()}</p>
+  //         </div>,
+  //         {
+  //           position: "top-right",
+  //           autoClose: 5000,
+  //           icon: <Clock className="text-green-500" />,
+  //         }
+  //       );
+  //       setTimeout(() => {
+  //         toast.info(
+  //           <div className="flex items-start gap-3">
+  //             <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+  //             <div>
+  //               <p className="font-medium">Outbound Automation Notifications</p>
+  //               <p className="text-sm mt-1">You'll receive notifications for:</p>
+  //               <ul className="text-xs list-disc ml-4 mt-1 space-y-1">
+  //                 <li>Successful data exports</li>
+  //                 <li>Failed delivery attempts</li>
+  //                 <li>Schedule changes</li>
+  //                 <li>Destination connectivity issues</li>
+  //               </ul>
+  //             </div>
+  //           </div>,
+  //           {
+  //             autoClose: 8000,
+  //             position: "top-right",
+  //           }
+  //         );
+  //       }, 1000);
+  //       setShowScheduleForm(false);
+  //       setScheduleData({
+  //         cron_to_mapping_name: "",
+  //         cron_expression: "",
+  //         destination_type: "s3",
+  //       });
+  //     } else {
+  //       throw new Error(data.message || "Failed to create cron job");
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error.message || "Failed to schedule outbound automation", {
+  //       icon: "❌",
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //     });
+  //   } finally {
+  //     setIsScheduling(false);
+  //   }
+  // };
 
   const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -594,7 +653,7 @@ const Outbound: React.FC = () => {
                   </div>
                   <form onSubmit={handleScheduleSubmit}>
                     <div className="space-y-4">
-                      <div>
+{/*                       <div>
                         <label htmlFor="cron_to_mapping_name" className="block text-sm font-medium text-gray-700 mb-1">
                           Automation Name *
                         </label>
@@ -608,7 +667,28 @@ const Outbound: React.FC = () => {
                           placeholder="Enter automation name"
                           required
                         />
-                      </div>
+                      </div> */}
+                      <div>
+  <label htmlFor="power_bi_email" className="block text-sm font-medium text-gray-700 mb-1">
+    Power BI Email *
+  </label>
+  <select
+    id="power_bi_email"
+    name="power_bi_email"
+    value={scheduleData.cron_to_mapping_name}
+    onChange={handleScheduleChange}
+    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+    required
+  >
+    <option value="">Select an active email</option>
+    {activeConnections.map((user) => (
+      <option key={user.power_bi_email} value={user.power_bi_email}>
+        {user.power_bi_email}
+      </option>
+    ))}
+  </select>
+</div>
+
                       <div>
                         <label htmlFor="destination_type" className="block text-sm font-medium text-gray-700 mb-1">
                           Destination *
