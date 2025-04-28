@@ -673,8 +673,8 @@ const Outbound: React.FC = () => {
     Power BI Email *
   </label>
   <select
-    id="power_bi_email"
-    name="power_bi_email"
+    id="cron_to_mapping_name"
+    name="cron_to_mapping_name"
     value={scheduleData.cron_to_mapping_name}
     onChange={handleScheduleChange}
     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
