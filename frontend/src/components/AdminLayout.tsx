@@ -1457,7 +1457,7 @@ const AdminLayout = () => {
             </motion.li>
             <motion.li variants={itemVariants}>
               <NavLink
-                to="/agent/scheduled-pickups"
+                to="/admin/agent/scheduled-pickups"
                 className={({ isActive }) =>
                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                 }
@@ -1469,7 +1469,7 @@ const AdminLayout = () => {
             </motion.li>
             <motion.li variants={itemVariants}>
               <NavLink
-                to="/agent/schedule-delivery"
+                to="/admin/agent/scheduled-deliveries"
                 className={({ isActive }) =>
                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                 }
