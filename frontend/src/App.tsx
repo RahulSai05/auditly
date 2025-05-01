@@ -354,14 +354,14 @@ export default function App(): JSX.Element {
               <Schedule />
             </InspectionRoute>
           } />
-          <Route path="/admin/agent/schedule-deliveries" element={
+          <Route path="/admin/agent/scheduled-deliveries" element={
             <InspectionRoute>
               <ScheduledDeliveries />
             </InspectionRoute>
           } />
-          <Route path="/admin/agent/schedule-pickups" element={
+          <Route path="/admin/agent/scheduled-pickups" element={
             <InspectionRoute>
-              <SchedulePickups />
+              <ScheduledPickups />
             </InspectionRoute>
           } />
           <Route path="/admin/settings/Item-Image-Upload" element={
