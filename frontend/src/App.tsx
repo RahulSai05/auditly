@@ -31,7 +31,7 @@ import UserMaintenance from "./pages/admin/UserMaintenance";
 import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
-import Schedule from "./pages/agent/schedule";
+import Schedule from "./pages/agent/Schedule";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
 import ApiEndpoint from "./pages/admin/ApiEndpoint";
 import Login from "./components/auth/Login";
