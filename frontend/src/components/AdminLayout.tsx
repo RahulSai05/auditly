@@ -1411,6 +1411,25 @@ const AdminLayout = () => {
       </AnimatePresence>
     </motion.li>
 
+
+    <motion.li variants={itemVariants}>
+  <NavLink
+    to="/admin/help-center"
+    className={({ isActive }) =>
+      `${baseLinkStyle} ${isActive ? activeLinkStyle : ""}`
+    }
+    onClick={handleLinkClick}
+  >
+    <motion.div
+      whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+      transition={{ duration: 0.5 }}
+    >
+      <Mail className="w-6 h-6 mr-3" />
+    </motion.div>
+    Help Center
+  </NavLink>
+</motion.li>
+    
     {/* Agent Section */}
     <motion.li variants={itemVariants}>
       <motion.button
