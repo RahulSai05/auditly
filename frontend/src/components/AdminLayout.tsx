@@ -1464,7 +1464,7 @@ const AdminLayout = () => {
                 onClick={handleLinkClick}
               >
                 <Inbox className="w-5 h-5 mr-2" />
-                Scheduled Return Pickups
+                Scheduled Pickups
               </NavLink>
             </motion.li>
             <motion.li variants={itemVariants}>
@@ -1476,7 +1476,7 @@ const AdminLayout = () => {
                 onClick={handleLinkClick}
               >
                 <Truck className="w-5 h-5 mr-2" />
-                Schedule Delivery
+                Scheduled Deliveries
               </NavLink>
             </motion.li>
           </motion.ul>
