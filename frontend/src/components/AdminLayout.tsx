@@ -1445,7 +1445,7 @@ const AdminLayout = () => {
           >
             <motion.li variants={itemVariants}>
               <NavLink
-                to="/agent/schedule"
+                to="/admin/agent/schedule"
                 className={({ isActive }) =>
                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                 }
