@@ -32,6 +32,8 @@ import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import Schedule from "./pages/agent/Schedule";
+import Schedule from "./pages/agent/ScheduledDeliveries";
+import Schedule from "./pages/agent/ScheduledPickups";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
 import ApiEndpoint from "./pages/admin/ApiEndpoint";
 import Login from "./components/auth/Login";
@@ -350,6 +352,16 @@ export default function App(): JSX.Element {
           <Route path="/admin/agent/schedule" element={
             <InspectionRoute>
               <Schedule />
+            </InspectionRoute>
+          } />
+          <Route path="/admin/agent/schedule-deliveries" element={
+            <InspectionRoute>
+              <ScheduledDeliveries />
+            </InspectionRoute>
+          } />
+          <Route path="/admin/agent/schedule-pickups" element={
+            <InspectionRoute>
+              <SchedulePickups />
             </InspectionRoute>
           } />
           <Route path="/admin/settings/Item-Image-Upload" element={
