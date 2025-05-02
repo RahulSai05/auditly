@@ -224,6 +224,7 @@ async def get_item_instance_details(
     }
 
 
+
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
     customer_item_data_id: int,  
