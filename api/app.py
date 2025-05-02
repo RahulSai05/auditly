@@ -1945,68 +1945,161 @@ async def get_images_by_item_number_or_description(
 
 
 
+# @app.post("/api/get-inspection-data")
+# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+#     if request.receipt_number is None:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand,
+#             BaseData
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).outerjoin(
+#             BaseData, BaseData.base_to_item_mapping == Item.id
+#         ).all()
+#     else:
+#         data = db.query(
+#             CustomerItemCondition,
+#             CustomerItemData,
+#             Item,
+#             Brand,
+#             BaseData
+#         ).join(
+#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+#         ).join(
+#             Item, CustomerItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).outerjoin(
+#             BaseData, BaseData.base_to_item_mapping == Item.id
+#         ).filter(
+#             CustomerItemCondition.ack_number == request.receipt_number
+#         ).first()
+        
+#         data = [data]
+
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+
+#     receipt_data_list = []
+#     for condition, item_data, item, brand, base_data in data:
+#         # Construct web-accessible URLs for difference images
+#         front_diff_url = f"/api/difference-images/{condition.id}/front" if condition.difference_front_image else None
+#         back_diff_url = f"/api/difference-images/{condition.id}/back" if condition.difference_back_image else None
+        
+#         receipt_data = {
+#             "receipt_number": condition.ack_number,
+#             "overall_condition": condition.overall_condition,
+#             "item_description": item.item_description,
+#             "brand_name": brand.brand_name,
+#             "original_sales_order_number": item_data.original_sales_order_number,
+#             "return_order_number": item_data.return_order_number,
+#             "return_qty": item_data.return_qty,
+#             "shipping_info": {
+#                 "shipped_to_person": item_data.shipped_to_person,
+#                 "address": item_data.shipped_to_address,
+#                 "city": item_data.city,
+#                 "state": item_data.state,
+#                 "country": item_data.country
+#             },
+#             "images": {
+#                 "difference_images": {
+#                     "front": front_diff_url,
+#                     "back": back_diff_url
+#                 },
+#                 "similarity_scores": {
+#                     "front": condition.front_similarity,
+#                     "back": condition.back_similarity,
+#                     "average": condition.average_ssi
+#                 }
+#             }
+#         }
+        
+#         if base_data:
+#             receipt_data["images"]["base_images"] = {
+#                 "front": f"/api/base-images/{base_data.id}/front",
+#                 "back": f"/api/base-images/{base_data.id}/back"
+#             }
+        
+#         receipt_data_list.append(receipt_data)
+    
+#     return receipt_data_list
+
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+    # If no receipt number provided, return all
     if request.receipt_number is None:
         data = db.query(
             CustomerItemCondition,
-            CustomerItemData,
+            SaleItemData,
+            ReturnItemData,
             Item,
             Brand,
             BaseData
         ).join(
-            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+            SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
         ).join(
-            Item, CustomerItemData.item_id == Item.id
+            Item, SaleItemData.item_id == Item.id
         ).join(
             Brand, Item.brand_id == Brand.id
         ).outerjoin(
             BaseData, BaseData.base_to_item_mapping == Item.id
+        ).outerjoin(
+            ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
         ).all()
     else:
+        # Filter by receipt number
         data = db.query(
             CustomerItemCondition,
-            CustomerItemData,
+            SaleItemData,
+            ReturnItemData,
             Item,
             Brand,
             BaseData
         ).join(
-            CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+            SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
         ).join(
-            Item, CustomerItemData.item_id == Item.id
+            Item, SaleItemData.item_id == Item.id
         ).join(
             Brand, Item.brand_id == Brand.id
         ).outerjoin(
             BaseData, BaseData.base_to_item_mapping == Item.id
+        ).outerjoin(
+            ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
         ).filter(
             CustomerItemCondition.ack_number == request.receipt_number
         ).first()
         
-        data = [data]
+        data = [data] if data else []
 
     if not data:
         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
 
     receipt_data_list = []
-    for condition, item_data, item, brand, base_data in data:
-        # Construct web-accessible URLs for difference images
+    for condition, sale_data, return_data, item, brand, base_data in data:
         front_diff_url = f"/api/difference-images/{condition.id}/front" if condition.difference_front_image else None
         back_diff_url = f"/api/difference-images/{condition.id}/back" if condition.difference_back_image else None
-        
+
         receipt_data = {
             "receipt_number": condition.ack_number,
             "overall_condition": condition.overall_condition,
             "item_description": item.item_description,
             "brand_name": brand.brand_name,
-            "original_sales_order_number": item_data.original_sales_order_number,
-            "return_order_number": item_data.return_order_number,
-            "return_qty": item_data.return_qty,
+            "original_sales_order_number": sale_data.original_sales_order_number,
+            "return_order_number": return_data.return_order_number if return_data else None,
+            "return_qty": return_data.return_qty if return_data else None,
             "shipping_info": {
-                "shipped_to_person": item_data.shipped_to_person,
-                "address": item_data.shipped_to_address,
-                "city": item_data.city,
-                "state": item_data.state,
-                "country": item_data.country
+                "shipped_to_person": sale_data.shipped_to_person,
+                "address": sale_data.shipped_to_street,
+                "city": sale_data.shipped_to_city,
+                "state": sale_data.shipped_to_state,
+                "country": sale_data.shipped_to_country
             },
             "images": {
                 "difference_images": {
@@ -2020,16 +2113,17 @@ async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)
                 }
             }
         }
-        
+
         if base_data:
             receipt_data["images"]["base_images"] = {
                 "front": f"/api/base-images/{base_data.id}/front",
                 "back": f"/api/base-images/{base_data.id}/back"
             }
-        
+
         receipt_data_list.append(receipt_data)
-    
+
     return receipt_data_list
+
 
 @app.get("/api/difference-images/{condition_id}/{image_type}")
 async def get_difference_image(condition_id: int, image_type: str, db: Session = Depends(get_db)):
