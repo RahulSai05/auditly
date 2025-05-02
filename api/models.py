@@ -25,7 +25,8 @@ class Item(Base):
 
     brand = relationship("Brand", back_populates="items")
     customer_item_data = relationship("CustomerItemData", back_populates="item")
-
+    sale_item_data = relationship("SaleItemData", back_populates="item")
+    return_item_data = relationship("ReturnItemData", back_populates="item")
 
 class OnboardUser(Base):
     __tablename__ = "onboard_user"
@@ -220,6 +221,69 @@ class CronJobTable(Base):
     auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
     bi_user_mapping_id = Column(Integer, ForeignKey('power_bi_user.power_bi_id'))
 
+
+class SaleItemData(Base):
+    __tablename__ = 'sale_item_data'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    item_id = Column(Integer, ForeignKey('item.id'))
+    original_sales_order_number = Column(String(50))
+    original_sales_order_line = Column(Integer)
+    ordered_qty = Column(Integer)
+    serial_number = Column(String(100))
+    sscc_number = Column(String(100))
+    tag_number = Column(String(100))
+    vendor_item_number = Column(String(100))
+    shipped_from_warehouse = Column(String(100))
+    shipped_to_person = Column(String(100))
+    shipped_to_billing_address = Column(Text)
+    account_number = Column(String(50))
+    customer_email = Column(String(50))
+    shipped_to_apt_number = Column(String(50))
+    shipped_to_street = Column(String(100))
+    shipped_to_city = Column(String(100))
+    shipped_to_zip = Column(Integer)
+    shipped_to_state = Column(String(50))
+    shipped_to_country = Column(String(50))
+    dimension_depth = Column(Float)
+    dimension_length = Column(Float)
+    dimension_breadth = Column(Float)
+    dimension_weight = Column(Float)
+    dimension_volume = Column(Float)
+    dimension_size = Column(String(50))
+    date_purchased = Column(DateTime)
+    date_shipped = Column(DateTime)
+    date_delivered = Column(DateTime)
+
+    item = relationship("Item", back_populates="sale_item_data", lazy="joined")
+
+
+class ReturnItemData(Base):
+    __tablename__ = 'return_item_data'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    item_id = Column(Integer, ForeignKey('item.id'))
+    original_sales_order_number = Column(String(50))
+    return_order_number = Column(String(50))
+    return_order_line = Column(Integer)
+    return_qty = Column(Integer)
+    return_destination = Column(String(100))
+    return_condition = Column(String(100))
+    return_carrier = Column(String(100))
+    return_warehouse = Column(String(100))
+    return_house_number = Column(String(50))
+    return_street = Column(String(100))
+    return_city = Column(String(100))
+    return_zip = Column(Integer)
+    return_state = Column(String(50))
+    return_country = Column(String(50))
+    date_purchased = Column(DateTime)
+    date_shipped = Column(DateTime)
+    date_delivered = Column(DateTime)
+    return_created_date = Column(DateTime)
+    return_received_date = Column(DateTime)
+
+    item = relationship("Item", back_populates="return_item_data", lazy="joined")
 
 
 class TeamEmail(Base):
