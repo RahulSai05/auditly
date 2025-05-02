@@ -1007,15 +1007,48 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
 
     receipt_number = random.randint(100000000, 999999999)
 
+    # data = db.query(
+    #     CustomerItemCondition,
+    #     CustomerItemData,
+    #     Item,
+    #     Brand
+    # ).join(
+    #     CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+    # ).join(
+    #     Item, CustomerItemData.item_id == Item.id
+    # ).join(
+    #     Brand, Item.brand_id == Brand.id
+    # ).filter(
+    #     CustomerData.customer_item_data_id == customer_id
+    # ).first()
+
+
+    # condition, item_data, item, brand = data
+
+    # sales_order_number = item_data.original_sales_order_number
+    # account_number = item_data.account_number
+    # account_name = item_data.shipped_to_person
+    # serial_number = item_data.serial_number
+    # return_order_number = item_data.return_order_number
+    # customer_email = item_data.customer_email
+    # factory_seal = customer_data.factory_seal
+    # new_conditiono = customer_data.new_conditiono
+    # user_front_image = customer_data.customer_front_image
+    # user_back_image = customer_data.customer_back_image
+
     data = db.query(
         CustomerItemCondition,
-        CustomerItemData,
+        # CustomerItemData,
+        SaleItemData,
+        ReturnItemData,
         Item,
         Brand
     ).join(
-        CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
+        SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
     ).join(
-        Item, CustomerItemData.item_id == Item.id
+        ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
+    ).join(
+        Item, SaleItemData.item_id == Item.id
     ).join(
         Brand, Item.brand_id == Brand.id
     ).filter(
@@ -1023,14 +1056,14 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
     ).first()
 
 
-    condition, item_data, item, brand = data
+    condition, sale_data, return_data, item, brand = data
 
-    sales_order_number = item_data.original_sales_order_number
-    account_number = item_data.account_number
-    account_name = item_data.shipped_to_person
-    serial_number = item_data.serial_number
-    return_order_number = item_data.return_order_number
-    customer_email = item_data.customer_email
+    sales_order_number = sale_data.original_sales_order_number
+    account_number = sale_data.account_number
+    account_name = sale_data.shipped_to_person
+    serial_number = sale_data.serial_number
+    return_order_number = return_data.return_order_number
+    customer_email = sale_data.customer_email
     factory_seal = customer_data.factory_seal
     new_conditiono = customer_data.new_conditiono
     user_front_image = customer_data.customer_front_image
