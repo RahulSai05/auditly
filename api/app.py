@@ -1264,8 +1264,6 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
     sale_data, return_data, item, brand = data
 
 
-    condition, sale_data, return_data, item, brand = data
-
     sales_order_number = sale_data.original_sales_order_number
     account_number = sale_data.account_number
     account_name = sale_data.shipped_to_person
