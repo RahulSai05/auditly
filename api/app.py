@@ -1552,6 +1552,28 @@ async def get_sales_data(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {str(e)}")
 
 
+@app.get("/api/return-data")
+def get_full_return_data(db: Session = Depends(get_db)):
+    results = db.query(
+        ReturnItemData.return_order_number.label("rma_number"),
+        SaleItemData.account_number,
+        SaleItemData.shipped_to_person.label("customer_name"),
+        Item.item_description,
+        Item.configuration,
+        SaleItemData.original_sales_order_number.label("sales_order"),
+        SaleItemData.original_sales_order_line.label("line"),
+        SaleItemData.serial_number,
+        ReturnItemData.date_purchased.label("purchased"),
+        ReturnItemData.date_shipped.label("shipped"),
+        ReturnItemData.date_delivered.label("delivered"),
+        ReturnItemData.return_received_date.label("return_date")
+    ).join(
+        SaleItemData, ReturnItemData.original_sales_order_number == SaleItemData.original_sales_order_number
+    ).join(
+        Item, SaleItemData.item_id == Item.id
+    ).all()
+
+    return [dict(row._mapping) for row in results]
 
 
 @app.post("/api/customer-serial-upload/")
