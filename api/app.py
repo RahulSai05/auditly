@@ -617,14 +617,23 @@ def get_full_return_data(db: Session = Depends(get_db)):
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
     
-@app.get("/api/item-details/{return_order_number}")
-async def get_item_details(return_order_number: str, db: Session = Depends(get_db)):
+
+@app.get("/api/item-details/{identifier}")
+async def get_item_details(
+    identifier: str,
+    db: Session = Depends(get_db),
+    identifier_type: str = Query(None, description="Optional: Specify 'sales_order' or 'serial_number' to search by those instead")
+):
     """
-    Fetch item details based on the return order number.
-    Includes item info, brand name, return condition, and return quantity.
+    Fetch item details based on:
+    - return order number (default)
+    - original sales order number (when identifier_type='sales_order')
+    - serial number (when identifier_type='serial_number')
+    
+    Returns item info, brand name, return condition, and return quantity.
     """
     try:
-        result = db.query(
+        query = db.query(
             Item.item_number,
             Item.item_description,
             Brand.brand_name,
@@ -632,22 +641,38 @@ async def get_item_details(return_order_number: str, db: Session = Depends(get_d
             Item.configuration,
             ReturnItemData.return_order_number,
             ReturnItemData.return_qty,
-            ReturnItemData.return_condition
+            ReturnItemData.return_condition,
+            SaleItemData.serial_number,
+            SaleItemData.original_sales_order_number
         ).join(
             SaleItemData, SaleItemData.item_id == Item.id
         ).join(
             ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
         ).join(
             Brand, Item.brand_id == Brand.id
-        ).filter(
-            ReturnItemData.return_order_number == return_order_number
-        ).first()
+        )
+
+        # Determine filter based on identifier_type or pattern matching
+        if identifier_type == "sales_order":
+            query = query.filter(SaleItemData.original_sales_order_number == identifier)
+        elif identifier_type == "serial_number":
+            query = query.filter(SaleItemData.serial_number == identifier)
+        else:
+            # Default behavior - try to detect if it's a return order number
+            # You might want to add pattern matching here if return orders have a specific format
+            # For example, if they always start with "RMA":
+            # if identifier.startswith("RMA"):
+            query = query.filter(ReturnItemData.return_order_number == identifier)
+
+        result = query.first()
 
         if result:
             return dict(result._mapping)
         else:
-            raise HTTPException(status_code=404, detail="Item not found for the given return order number.")
+            raise HTTPException(status_code=404, detail="Item not found for the given identifier.")
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
 
