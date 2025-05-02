@@ -150,60 +150,6 @@ oauth.register(
 )
 
 
-# @app.get("/api/item_order_instance")
-# async def get_item_instance_details(
-#     identifier: str = Query(..., title="Serial Number or Return Order Number"),  # Single input field
-#     db: Session = Depends(get_db)
-# ):
-#     """
-#     Retrieve details of an item instance using a single identifier.
-#     The identifier can be either a Serial Number or a Return Order Number.
-#     """
-
-#     # Query to check if the identifier matches serial_number or return_order_number
-#     item_instance = db.query(CustomerItemData).filter(
-#         (CustomerItemData.serial_number == identifier) |
-#         (CustomerItemData.return_order_number == identifier)
-#     ).first()
-
-#     if not item_instance:
-#         raise HTTPException(status_code=404, detail="Item Instance not found.")
-
-#     return {
-#         "original_sales_order_number": item_instance.original_sales_order_number,
-#         "original_sales_order_line": item_instance.original_sales_order_line,
-#         "ordered_qty": item_instance.ordered_qty,
-#         "return_order_number": item_instance.return_order_number,
-#         "return_order_line": item_instance.return_order_line,
-#         "return_qty": item_instance.return_qty,
-#         "return_destination": item_instance.return_destination,
-#         "return_condition": item_instance.return_condition,
-#         "return_carrier": item_instance.return_carrier,
-#         "return_warehouse": item_instance.return_warehouse,
-#         "item_id": item_instance.item_id,
-#         "serial_number": item_instance.serial_number,
-#         "sscc_number": item_instance.sscc_number,
-#         "tag_number": item_instance.tag_number,
-#         "vendor_item_number": item_instance.vendor_item_number,
-#         "shipped_from_warehouse": item_instance.shipped_from_warehouse,
-#         "shipped_to_person": item_instance.shipped_to_person,
-#         "shipped_to_address": {
-#             "street_number": item_instance.street_number,
-#             "city": item_instance.city,
-#             "state": item_instance.state,
-#             "country": item_instance.country,
-#         },
-#         "dimensions": {
-#             "depth": item_instance.dimensions_depth,
-#             "length": item_instance.dimensions_length,
-#             "breadth": item_instance.dimensions_breadth,
-#             "weight": item_instance.dimensions_weight,
-#             "volume": item_instance.dimensions_volume,
-#             "size": item_instance.dimensions_size,
-#         },
-#         "customer_id": item_instance.id,
-#     }
-
 
 @app.get("/api/item_order_instance")
 async def get_item_instance_details(
@@ -372,34 +318,6 @@ async def upload_customer_images(
 
 
 
-
-
-@app.get("/api/customer-images/{id}")
-async def get_customer_images(id: int, db: Session = Depends(get_db)):
-    """
-    Retrieve the paths to the customer's front and back images from the database.
-
-    Args:
-        id (int): The ID of the customer record.
-        db (Session): The database session dependency.
-
-    Returns:
-        dict: Contains the paths to the front and back images.
-    """
-    # Query the database for the customer record with the given ID
-    customer_data = db.query(CustomerData).filter(CustomerData.id == id).first()
-
-    # Check if the record exists
-    if not customer_data:
-        raise HTTPException(status_code=404, detail="Customer images not found")
-
-    # Return the image paths
-    return {
-        "id": customer_data.id,
-        "front_image_path": customer_data.customer_front_image,
-        "back_image_path": customer_data.customer_back_image,
-    }
-
 @app.get("/api/base-images/{item-number}")
 async def get_base_images(id: int, db: Session = Depends(get_db)):
     """
@@ -426,73 +344,27 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
         "back_image_path": base_data.base_back_image,
     }
 
-@app.post("/api/upload-customer-return-item-data")
-async def upload_customer_item_data(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """
-    Upload a CSV file and insert data into the customer_item_data table.
-    """
-    try:
-        contents = (await file.read()).decode("utf-8")
-        csv_reader = csv.DictReader(contents.splitlines())
-
-        for row in csv_reader:
-            item = CustomerItemData(
-                original_sales_order_number=row["original_sales_order_number"],
-                original_sales_order_line=row["original_sales_order_line"],
-                ordered_qty=row["ordered_qty"],
-                return_order_number=row["return_order_number"],
-                return_order_line=row["return_order_line"],
-                return_qty=row["return_qty"],
-                return_destination=row["return_destination"],
-                return_condition=row["return_condition"],
-                return_carrier=row["return_carrier"],
-                return_warehouse=row["return_warehouse"],
-                item_id=row["item_id"],
-                serial_number=row["serial_number"],
-                sscc_number=row["sscc_number"],
-                tag_number=row["tag_number"],
-                vendor_item_number=row["vendor_item_number"],
-                shipped_from_warehouse=row["shipped_from_warehouse"],
-                shipped_to_person=row["shipped_to_person"],
-                shipped_to_address=row["shipped_to_address"],
-                street_number=row["street_number"],
-                city=row["city"],
-                state=row["state"],
-                country=row["country"],
-                dimensions_depth=row["dimensions_depth"],
-                dimensions_length=row["dimensions_length"],
-                dimensions_breadth=row["dimensions_breadth"],
-                dimensions_weight=row["dimensions_weight"],
-                dimensions_volume=row["dimensions_volume"],
-                dimensions_size=row["dimensions_size"],
-            )
-            db.add(item)
-        db.commit()
-
-        return {"message": "File uploaded and data inserted successfully!"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
     
-@app.get("/api/search-customer-return-item-data")
-async def search_customer_item_data(query: str, db: Session = Depends(get_db)):
-    """
-    Search the customer_item_data table based on a query.
-    """
-    try:
-        results = db.query(CustomerItemData).filter(
-            (CustomerItemData.serial_number.like(f"%{query}%")) |
-            (CustomerItemData.return_order_number.like(f"%{query}%")) |
-            (CustomerItemData.return_warehouse.like(f"%{query}%")) |
-            (CustomerItemData.city.like(f"%{query}%"))
-        ).all()
+# @app.get("/api/search-customer-return-item-data")
+# async def search_customer_item_data(query: str, db: Session = Depends(get_db)):
+#     """
+#     Search the customer_item_data table based on a query.
+#     """
+#     try:
+#         results = db.query(CustomerItemData).filter(
+#             (CustomerItemData.serial_number.like(f"%{query}%")) |
+#             (CustomerItemData.return_order_number.like(f"%{query}%")) |
+#             (CustomerItemData.return_warehouse.like(f"%{query}%")) |
+#             (CustomerItemData.city.like(f"%{query}%"))
+#         ).all()
 
-        # Convert results into dictionaries, excluding private attributes
-        return [
-            {column.name: getattr(result, column.name) for column in result.__table__.columns}
-            for result in results
-        ]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+#         # Convert results into dictionaries, excluding private attributes
+#         return [
+#             {column.name: getattr(result, column.name) for column in result.__table__.columns}
+#             for result in results
+#         ]
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
 @app.post("/api/upload-items-csv")
@@ -670,6 +542,51 @@ def get_all_items(db: Session = Depends(get_db)):
         }
         for item in items
     ]
+
+
+@router.get("/api/sale-data")
+def get_all_sale_items(db: Session = Depends(get_db)):
+    results = db.query(
+        SaleItemData.original_sales_order_number.label("sales_order"),
+        SaleItemData.original_sales_order_line.label("order_line"),
+        SaleItemData.account_number,
+        SaleItemData.shipped_to_person.label("customer_name"),
+        Item.item_description,
+        Item.configuration.label("item_configuration"),
+        Brand.brand_name.label("brand"),
+        SaleItemData.serial_number,
+        SaleItemData.date_purchased,
+        SaleItemData.date_shipped,
+        SaleItemData.date_delivered
+    ).join(Item, SaleItemData.item_id == Item.id
+    ).join(Brand, Item.brand_id == Brand.id
+    ).all()
+
+    return [dict(row._mapping) for row in results]
+
+
+@app.get("/api/returns-data")
+def get_full_return_data(db: Session = Depends(get_db)):
+    results = db.query(
+        ReturnItemData.return_order_number.label("rma_number"),
+        SaleItemData.account_number,
+        SaleItemData.shipped_to_person.label("customer_name"),
+        Item.item_description,
+        Item.configuration,
+        SaleItemData.original_sales_order_number.label("sales_order"),
+        SaleItemData.original_sales_order_line.label("line"),
+        SaleItemData.serial_number,
+        ReturnItemData.date_purchased.label("purchased"),
+        ReturnItemData.date_shipped.label("shipped"),
+        ReturnItemData.date_delivered.label("delivered"),
+        ReturnItemData.return_received_date.label("return_date")
+    ).join(
+        SaleItemData, ReturnItemData.original_sales_order_number == SaleItemData.original_sales_order_number
+    ).join(
+        Item, SaleItemData.item_id == Item.id
+    ).all()
+
+    return [dict(row._mapping) for row in results]
 
 
 @app.get("/api/customer-item-data")
