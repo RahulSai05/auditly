@@ -125,6 +125,8 @@
 //   );
 // }
 
+
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
@@ -221,13 +223,15 @@ export default function ProductDetails() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {itemDetails.item_description}
             </h3>
-            <div className="flex items-center gap-2 text-gray-600 mb-1">
-              <Barcode className="w-4 h-4" />
-              <span className="text-sm">Item: {itemDetails.item_number}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Award className="w-4 h-4" />
-              <span className="text-sm">Brand: {itemDetails.brand_name}</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Barcode className="w-4 h-4" />
+                <span className="text-sm">Item: {itemDetails.item_number}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Award className="w-4 h-4" />
+                <span className="text-sm font-medium">Brand: {itemDetails.brand_name}</span>
+              </div>
             </div>
           </div>
         </div>
