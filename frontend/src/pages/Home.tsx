@@ -36,10 +36,27 @@
 //           receipt_number: receiptNumber,
 //         }
 //       );
-//       setData(response.data);
+      
+//       if (response.data && response.data.receipt_number) {
+//         setData(response.data);
+//       } else {
+//         setError("No inspection found with this number. Please check and try again.");
+//       }
 //     } catch (error) {
 //       console.error("Error fetching details:", error);
-//       setError("Failed to fetch details. Please try again.");
+//       if (error.response) {
+//         if (error.response.status === 404) {
+//           setError("Inspection not found. Please check the number and try again.");
+//         } else if (error.response.status === 500) {
+//           setError("Server error. Please try again later.");
+//         } else {
+//           setError("Failed to fetch details. Please try again.");
+//         }
+//       } else if (error.request) {
+//         setError("Network error. Please check your connection and try again.");
+//       } else {
+//         setError("An unexpected error occurred. Please try again.");
+//       }
 //     } finally {
 //       setLoading(false);
 //     }
@@ -130,27 +147,30 @@
 //           <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-blue-50">
 //             <div className="p-8">
 //               <div className="flex gap-4">
-//                 <div className="relative flex-1">
-//                   <input
-//                     type="text"
-//                     placeholder="Enter inspection number..."
-//                     value={receiptNumber}
-//                     onChange={(e) => setReceiptNumber(e.target.value)}
-//                     onKeyPress={handleKeyPress}
-//                     className="w-full px-6 py-4 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
-//                     disabled={loading}
-//                   />
-//                   {receiptNumber && (
-//                     <motion.button
-//                       onClick={handleClear}
-//                       className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-blue-50 rounded-full transition-colors"
-//                       whileHover={{ scale: 1.1, rotate: 90 }}
-//                       whileTap={{ scale: 0.9 }}
-//                     >
-//                       <X className="w-5 h-5 text-blue-400" />
-//                     </motion.button>
-//                   )}
-//                 </div>
+//                 <div className="relative flex-1 overflow-hidden">
+//   <input
+//     type="text"
+//     placeholder="Enter inspection number..."
+//     value={receiptNumber}
+//     onChange={(e) => setReceiptNumber(e.target.value)}
+//     onKeyPress={handleKeyPress}
+//     className="w-full px-6 py-4 pr-12 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
+//     disabled={loading}
+//   />
+//   {receiptNumber && (
+//     <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+//       <motion.button
+//         onClick={handleClear}
+//         className="p-2 hover:bg-blue-50 rounded-full transition-colors"
+//         whileHover={{ scale: 1.05 }}
+//         whileTap={{ scale: 0.95 }}
+//       >
+//         <X className="w-5 h-5 text-blue-400" />
+//       </motion.button>
+//     </div>
+//   )}
+// </div>
+
 //                 <motion.button
 //                   onClick={handleSearch}
 //                   disabled={loading}
@@ -334,6 +354,7 @@ import {
   Truck,
   Building2,
   ShoppingBag,
+  Image as ImageIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -343,6 +364,7 @@ export default function Home() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeImageTab, setActiveImageTab] = useState("difference");
 
   const handleSearch = async () => {
     if (!receiptNumber.trim()) {
@@ -354,14 +376,14 @@ export default function Home() {
     setError("");
     try {
       const response = await axios.post(
-        "https://auditlyai.com/api/get-receipt-data",
+        "/api/get-inspection-data",
         {
           receipt_number: receiptNumber,
         }
       );
       
-      if (response.data && response.data.receipt_number) {
-        setData(response.data);
+      if (response.data && response.data.length > 0) {
+        setData(response.data[0]); // Using the first item since we're searching by specific receipt number
       } else {
         setError("No inspection found with this number. Please check and try again.");
       }
@@ -389,6 +411,7 @@ export default function Home() {
     setReceiptNumber("");
     setData(null);
     setError("");
+    setActiveImageTab("difference");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -471,28 +494,28 @@ export default function Home() {
             <div className="p-8">
               <div className="flex gap-4">
                 <div className="relative flex-1 overflow-hidden">
-  <input
-    type="text"
-    placeholder="Enter inspection number..."
-    value={receiptNumber}
-    onChange={(e) => setReceiptNumber(e.target.value)}
-    onKeyPress={handleKeyPress}
-    className="w-full px-6 py-4 pr-12 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
-    disabled={loading}
-  />
-  {receiptNumber && (
-    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-      <motion.button
-        onClick={handleClear}
-        className="p-2 hover:bg-blue-50 rounded-full transition-colors"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <X className="w-5 h-5 text-blue-400" />
-      </motion.button>
-    </div>
-  )}
-</div>
+                  <input
+                    type="text"
+                    placeholder="Enter inspection number..."
+                    value={receiptNumber}
+                    onChange={(e) => setReceiptNumber(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full px-6 py-4 pr-12 bg-white/50 backdrop-blur-sm border-2 border-blue-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all duration-300 text-lg shadow-sm"
+                    disabled={loading}
+                  />
+                  {receiptNumber && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                      <motion.button
+                        onClick={handleClear}
+                        className="p-2 hover:bg-blue-50 rounded-full transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <X className="w-5 h-5 text-blue-400" />
+                      </motion.button>
+                    </div>
+                  )}
+                </div>
 
                 <motion.button
                   onClick={handleSearch}
@@ -552,13 +575,13 @@ export default function Home() {
                         data: [
                           {
                             label: "Return Order #",
-                            value: data.return_order_number,
+                            value: data.return_order_number || "N/A",
                           },
                           {
                             label: "Original Order #",
                             value: data.original_sales_order_number,
                           },
-                          { label: "Quantity", value: data.return_qty },
+                          { label: "Quantity", value: data.return_qty || "N/A" },
                         ],
                       },
                       {
@@ -631,6 +654,121 @@ export default function Home() {
                         </dl>
                       </motion.div>
                     ))}
+                  </div>
+
+                  {/* Image Section */}
+                  <div className="p-6 border-t border-blue-50">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                        <ImageIcon className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900">Inspection Images</h3>
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="flex border-b border-gray-200">
+                        <button
+                          onClick={() => setActiveImageTab("difference")}
+                          className={`px-4 py-2 font-medium text-sm ${activeImageTab === "difference" ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                          Difference Images
+                        </button>
+                        {data.images.base_images && (
+                          <button
+                            onClick={() => setActiveImageTab("base")}
+                            className={`px-4 py-2 font-medium text-sm ${activeImageTab === "base" ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                          >
+                            Base Images
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {activeImageTab === "difference" ? (
+                        <>
+                          <div className="bg-gray-50 rounded-xl p-4">
+                            <h4 className="font-medium text-gray-900 mb-2">Front View</h4>
+                            {data.images.difference_images.front ? (
+                              <img
+                                src={data.images.difference_images.front}
+                                alt="Front difference"
+                                className="w-full h-auto rounded-lg shadow-sm"
+                              />
+                            ) : (
+                              <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                                No image available
+                              </div>
+                            )}
+                            {data.images.similarity_scores && (
+                              <p className="mt-2 text-sm text-gray-600">
+                                Similarity: {data.images.similarity_scores.front}%
+                              </p>
+                            )}
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-4">
+                            <h4 className="font-medium text-gray-900 mb-2">Back View</h4>
+                            {data.images.difference_images.back ? (
+                              <img
+                                src={data.images.difference_images.back}
+                                alt="Back difference"
+                                className="w-full h-auto rounded-lg shadow-sm"
+                              />
+                            ) : (
+                              <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                                No image available
+                              </div>
+                            )}
+                            {data.images.similarity_scores && (
+                              <p className="mt-2 text-sm text-gray-600">
+                                Similarity: {data.images.similarity_scores.back}%
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        data.images.base_images && (
+                          <>
+                            <div className="bg-gray-50 rounded-xl p-4">
+                              <h4 className="font-medium text-gray-900 mb-2">Base Front View</h4>
+                              <img
+                                src={data.images.base_images.front}
+                                alt="Base front"
+                                className="w-full h-auto rounded-lg shadow-sm"
+                              />
+                            </div>
+                            <div className="bg-gray-50 rounded-xl p-4">
+                              <h4 className="font-medium text-gray-900 mb-2">Base Back View</h4>
+                              <img
+                                src={data.images.base_images.back}
+                                alt="Base back"
+                                className="w-full h-auto rounded-lg shadow-sm"
+                              />
+                            </div>
+                          </>
+                        )
+                      )}
+                    </div>
+
+                    {data.images.similarity_scores && (
+                      <div className="mt-6 bg-blue-50 rounded-xl p-4">
+                        <h4 className="font-medium text-gray-900 mb-2">Similarity Scores</h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600">Front</p>
+                            <p className="font-medium">{data.images.similarity_scores.front}%</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Back</p>
+                            <p className="font-medium">{data.images.similarity_scores.back}%</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Average</p>
+                            <p className="font-medium">{data.images.similarity_scores.average}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
