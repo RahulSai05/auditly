@@ -433,7 +433,7 @@ export default function Inspection() {
     ];
 
     const productConditions = [
-        { id: "new_conditiono", label: "new_condition", icon: <Package className="w-5 h-5" /> },
+        { id: "new_condition", label: "new_condition", icon: <Package className="w-5 h-5" /> },
         { id: "not_new_condition", label: "not_new_condition", icon: <AlertCircle className="w-5 h-5" /> },
     ];
 
@@ -500,7 +500,7 @@ export default function Inspection() {
             no_factory_seal: condition === "no_factory_seal",
             minimal_tear: condition === "minimal_tear",
             no_package: condition === "no_package",
-            new_conditiono: productCondition === "new_condition",
+            new_condition: productCondition === "new_condition",
             not_new_condition: productCondition === "not_new_condition",
             bio_stains: issue === "bio_stains",
             package_stains: issue === "package_stains",
