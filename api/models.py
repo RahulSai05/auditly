@@ -115,11 +115,11 @@ class CustomerData(Base):
     no_factory_seal = Column(Boolean, default=False)
     minimal_tear = Column(Boolean, default=False)
     no_package = Column(Boolean, default=False)
-    new_conditiono = Column(Boolean, default=False)
+    new_condition = Column(Boolean, default=False)
     not_new_condition = Column(Boolean, default=False)
     bio_stains = Column(Boolean, default=False)
     package_stains = Column(Boolean, default=False)
-    customer_item_data_id = Column(Integer, ForeignKey("customer_item_data.id"), nullable=True)
+    sale_item_data_id = Column(Integer, ForeignKey("sale_item_data.id"), nullable=True)
     #customer_item_data = Foreign key referencing customer_item_data(id)
     # customer_item_data = relationship("customer_item_data", back_populates="CustomerDatas")
     # customer_item_data = Column(Integer, ForeignKey("customer_item_data.id"), nullable=False)
@@ -156,7 +156,7 @@ class CustomerItemCondition(Base):
     ack_number = Column(String(100))
     difference_front_image = Column(String(5555))
     difference_back_image = Column(String(5555))
-    customer_item_condition_mapping_id = Column(Integer, ForeignKey("customer_item_data.id"), nullable=True)
+    customer_item_condition_mapping_id = Column(Integer, ForeignKey("sale_item_data.id"), nullable=True)
     
 class SalesData(Base):
     __tablename__ = 'sales_data'
