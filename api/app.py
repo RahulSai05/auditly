@@ -29,7 +29,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, NotificationTable
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -215,11 +215,19 @@ async def get_item_instance_details(
     Includes linked item details from the Item table.
     """
 
-    item_instance = db.query(CustomerItemData).filter(
-        (CustomerItemData.serial_number == identifier) |
-        (CustomerItemData.return_order_number == identifier)
+    item_instance = db.query(SaleItemData).filter(
+        (SaleItemData.serial_number == identifier) | 
+        (SaleItemData.original_sales_order_number == identifier)
     ).first()
-
+    if item_instance:
+        return_instance = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == item_instance.original_sales_order_number).first()
+    else:
+        return_instance = db.query(ReturnItemData).filter(
+        (ReturnItemData.return_order_number == identifier)
+    ).first()
+        item_instance = db.query(SaleItemData).filter(
+            SaleItemData.original_sales_order_number == return_instance.original_sales_order_number
+        ).first()
     if not item_instance:
         raise HTTPException(status_code=404, detail="Item Instance not found.")
 
@@ -229,13 +237,13 @@ async def get_item_instance_details(
         "original_sales_order_number": item_instance.original_sales_order_number,
         "original_sales_order_line": item_instance.original_sales_order_line,
         "ordered_qty": item_instance.ordered_qty,
-        "return_order_number": item_instance.return_order_number,
-        "return_order_line": item_instance.return_order_line,
-        "return_qty": item_instance.return_qty,
-        "return_destination": item_instance.return_destination,
-        "return_condition": item_instance.return_condition,
-        "return_carrier": item_instance.return_carrier,
-        "return_warehouse": item_instance.return_warehouse,
+        "return_order_number": return_instance.return_order_number,
+        "return_order_line": return_instance.return_order_line,
+        "return_qty": return_instance.return_qty,
+        "return_destination": return_instance.return_destination,
+        "return_condition": return_instance.return_condition,
+        "return_carrier": return_instance.return_carrier,
+        "return_warehouse": return_instance.return_warehouse,
         "item_id": item_instance.item_id,
         "serial_number": item_instance.serial_number,
         "sscc_number": item_instance.sscc_number,
@@ -244,18 +252,20 @@ async def get_item_instance_details(
         "shipped_from_warehouse": item_instance.shipped_from_warehouse,
         "shipped_to_person": item_instance.shipped_to_person,
         "shipped_to_address": {
-            "street_number": item_instance.street_number,
-            "city": item_instance.city,
-            "state": item_instance.state,
-            "country": item_instance.country,
+            "apt_number": item_instance.shipped_to_apt_number,
+            "street": item_instance.shipped_to_street,
+            "city": item_instance.shipped_to_city,
+            "zip": item_instance.shipped_to_zip,
+            "state": item_instance.shipped_to_state,
+            "country": item_instance.shipped_to_country,
         },
         "dimensions": {
-            "depth": item_instance.dimensions_depth,
-            "length": item_instance.dimensions_length,
-            "breadth": item_instance.dimensions_breadth,
-            "weight": item_instance.dimensions_weight,
-            "volume": item_instance.dimensions_volume,
-            "size": item_instance.dimensions_size,
+            "depth": item_instance.dimension_depth,
+            "length": item_instance.dimension_length,
+            "breadth": item_instance.dimension_breadth,
+            "weight": item_instance.dimension_weight,
+            "volume": item_instance.dimension_volume,
+            "size": item_instance.dimension_size,
         },
         "item_details": {
             "item_number": item_details.item_number if item_details else None,
