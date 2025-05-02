@@ -544,7 +544,7 @@ def get_all_items(db: Session = Depends(get_db)):
     ]
 
 
-@router.get("/api/sale-data")
+@app.get("/api/sale-data")
 def get_all_sale_items(db: Session = Depends(get_db)):
     results = db.query(
         SaleItemData.original_sales_order_number.label("sales_order"),
