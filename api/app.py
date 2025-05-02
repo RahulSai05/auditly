@@ -589,93 +589,66 @@ def get_full_return_data(db: Session = Depends(get_db)):
     return [dict(row._mapping) for row in results]
 
 
-@app.get("/api/customer-item-data")
-async def get_customer_item_data(db: Session = Depends(get_db)):
-    customer_item_data = db.query(CustomerItemData).join(Item).all()
-    
-    response = []
-    for data in customer_item_data:
-        response.append({
-            "id": data.id,
-            "original_sales_order_number": data.original_sales_order_number,
-            "original_sales_order_line": data.original_sales_order_line,
-            "ordered_qty": data.ordered_qty,
-            "return_order_number": data.return_order_number,
-            "return_order_line": data.return_order_line,
-            "return_qty": data.return_qty,
-            "return_destination": data.return_destination,
-            "return_condition": data.return_condition,
-            "return_carrier": data.return_carrier,
-            "return_warehouse": data.return_warehouse,
-            "item_id": data.item_id,
-            "serial_number": data.serial_number,
-            "sscc_number": data.sscc_number,
-            "tag_number": data.tag_number,
-            "vendor_item_number": data.vendor_item_number,
-            "shipped_from_warehouse": data.shipped_from_warehouse,
-            "shipped_to_person": data.shipped_to_person,
-            "shipped_to_address": data.shipped_to_address,
-            "street_number": data.street_number,
-            "city": data.city,
-            "state": data.state,
-            "country": data.country,
-            "dimensions_depth": float(data.dimensions_depth) if data.dimensions_depth else None,
-            "dimensions_length": float(data.dimensions_length) if data.dimensions_length else None,
-            "dimensions_breadth": float(data.dimensions_breadth) if data.dimensions_breadth else None,
-            "dimensions_weight": float(data.dimensions_weight) if data.dimensions_weight else None,
-            "dimensions_volume": float(data.dimensions_volume) if data.dimensions_volume else None,
-            "dimensions_size": data.dimensions_size,
-            "barcode": data.barcode,
-            "customer_email": data.customer_email,
-            "account_number": data.account_number,
-            "date_purchased": data.date_purchased.isoformat() if data.date_purchased else None,
-            "date_shipped": data.date_shipped.isoformat() if data.date_shipped else None,
-            "date_delivered": data.date_delivered.isoformat() if data.date_delivered else None,
-            "return_created_date": data.return_created_date.isoformat() if data.return_created_date else None,
-            "item_details": {
-                "item_id": data.item.id,
-                "item_number": data.item.item_number,
-                "item_description": data.item.item_description,
-                "brand_id": data.item.brand_id,
-                "category": data.item.category,
-                "configuration": data.item.configuration,
-            }
-        })
-    
-    return response
+# @app.get("/api/item-details/{return_order_number}")
+# async def get_item_details(return_order_number: str, db: Session = Depends(get_db)):
+#     """
+#     Fetch item details based on the return order number.
+#     """
+#     try:
+#         result = db.query(Item, CustomerItemData).join(CustomerItemData, Item.id == CustomerItemData.item_id).filter(
+#             CustomerItemData.return_order_number == return_order_number
+#         ).first()
 
+#         if result:
+#             item, customer_item = result
+#             return {
+#                 "item_number": item.item_number,
+#                 "item_description": item.item_description,
+#                 "brand_id": item.brand_id,
+#                 "category": item.category,
+#                 "configuration": item.configuration,
+#                 "return_order_number": customer_item.return_order_number,
+#                 "return_qty": customer_item.return_qty,
+#                 "return_condition": customer_item.return_condition
+#             }
+#         else:
+#             raise HTTPException(status_code=404, detail="Item not found for the given return order number.")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
     
-    
-
-
 @app.get("/api/item-details/{return_order_number}")
 async def get_item_details(return_order_number: str, db: Session = Depends(get_db)):
     """
     Fetch item details based on the return order number.
+    Includes item info, brand name, return condition, and return quantity.
     """
     try:
-        result = db.query(Item, CustomerItemData).join(CustomerItemData, Item.id == CustomerItemData.item_id).filter(
-            CustomerItemData.return_order_number == return_order_number
+        result = db.query(
+            Item.item_number,
+            Item.item_description,
+            Brand.brand_name,
+            Item.category,
+            Item.configuration,
+            ReturnItemData.return_order_number,
+            ReturnItemData.return_qty,
+            ReturnItemData.return_condition
+        ).join(
+            SaleItemData, SaleItemData.item_id == Item.id
+        ).join(
+            ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
+        ).join(
+            Brand, Item.brand_id == Brand.id
+        ).filter(
+            ReturnItemData.return_order_number == return_order_number
         ).first()
 
         if result:
-            item, customer_item = result
-            return {
-                "item_number": item.item_number,
-                "item_description": item.item_description,
-                "brand_id": item.brand_id,
-                "category": item.category,
-                "configuration": item.configuration,
-                "return_order_number": customer_item.return_order_number,
-                "return_qty": customer_item.return_qty,
-                "return_condition": customer_item.return_condition
-            }
+            return dict(result._mapping)
         else:
             raise HTTPException(status_code=404, detail="Item not found for the given return order number.")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
-    
-
 
 @app.post("/api/register")
 async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
