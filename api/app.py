@@ -277,6 +277,7 @@ async def get_item_instance_details(
         "customer_id": item_instance.id,
     }
 
+
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
     customer_item_data_id: int,  
@@ -368,6 +369,7 @@ async def upload_customer_images(
             "back_image_path": back_image_path,
         },
     }
+
 
 
 
@@ -1496,7 +1498,6 @@ def highlight_differences(image1_path, image2_path, view, path, target_size=(224
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode('utf-8')
-
 
 
 @app.post("/api/get-receipt-data/")
