@@ -15,6 +15,7 @@ import Done from "./pages/manual/return /Done";
 import Scan from "./pages/auto/Scan";
 import Onboard from "./pages/inspection/Onboard";
 import InspectionData from "./pages/inspection/InspectionData";
+import RequestAccess from "./pages/inspection/RequestAccess";
 import Dashboard from "./pages/admin/Dashboard";
 import DashboardTables from "./pages/admin/DashboardTables";
 import ItemUpload from "./pages/admin/ItemUpload";
@@ -444,6 +445,11 @@ export default function App(): JSX.Element {
         <Route path="/return/done" element={
           <InspectionRoute>
             <Done />
+          </InspectionRoute>
+        } />
+        <Route path="/request-access" element={
+          <InspectionRoute>
+            <RequestAccess />
           </InspectionRoute>
         } />
         <Route path="/auto/scan" element={
