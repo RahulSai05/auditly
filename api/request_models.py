@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy import Date
 
 class CompareImagesRequest(BaseModel):
     customer_id: int
@@ -55,8 +56,9 @@ class UpdateUserTypeRequest(BaseModel):
     modifier_user_id: int  # Admin ID making the request
     target_user_id: int  # ID of the user whose type is being modified
     is_inspection_user: bool
-    is_admin: bool
+    is_admin: bool 
     is_reports_user: bool
 
 class ReceiptSearch(BaseModel):
     receipt_number: Optional[str] = None
+    

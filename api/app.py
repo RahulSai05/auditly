@@ -29,7 +29,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -224,6 +224,62 @@ async def get_item_instance_details(
     }
 
 
+class AgentCreate(BaseModel):
+    agent_name: str
+    manager_id: Optional[dict] = None
+    current_address: Optional[str] = None
+    delivery_type: str  # 'Delivery', 'Return', or 'Both'
+    pickup_routing_mode: Optional[bool] = False
+    delivery_routing_mode: Optional[bool] = False
+    servicing_state: Optional[str] = None
+    servicing_city: Optional[str] = None
+    servicing_zip: Optional[str] = None
+    permanent_adress: Optional[str] = None
+    permanent_address_state: Optional[str] = None
+    permanent_address_city: Optional[str] = None
+    permanent_address_zip: Optional[str] = None
+    is_verified: Optional[bool] = False
+    gender: str  # 'Male', 'Female', 'Other', 'Prefer not to say'
+    dob: Optional[date] = None
+    work_schedule: Optional[dict] = None
+    company_id: Optional[int] = None
+    agent_to_user_mapping_id: Optional[int] = None
+    additional_info_1: Optional[str] = None
+    additional_info_2: Optional[str] = None
+    additional_info_3: Optional[str] = None
+
+@app.post("/api/create-agent/")
+def create_agent(agent: AgentCreate, db: Session = Depends(get_db)):
+    new_agent = Agent(
+        agent_name=agent.agent_name,
+        manager_id=agent.manager_id,
+        current_address=agent.current_address,
+        delivery_type=agent.delivery_type,
+        pickup_routing_mode=agent.pickup_routing_mode,
+        delivery_routing_mode=agent.delivery_routing_mode,
+        servicing_state=agent.servicing_state,
+        servicing_city=agent.servicing_city,
+        servicing_zip=agent.servicing_zip,
+        permanent_adress=agent.permanent_adress,
+        permanent_address_state=agent.permanent_address_state,
+        permanent_address_city=agent.permanent_address_city,
+        permanent_address_zip=agent.permanent_address_zip,
+        is_verified=agent.is_verified,
+        gender=agent.gender,
+        dob=agent.dob,
+        work_schedule=agent.work_schedule,
+        company_id=agent.company_id,
+        agent_to_user_mapping_id=agent.agent_to_user_mapping_id,
+        additional_info_1=agent.additional_info_1,
+        additional_info_2=agent.additional_info_2,
+        additional_info_3=agent.additional_info_3
+    )
+
+    db.add(new_agent)
+    db.commit()
+    db.refresh(new_agent)
+    return {"message": "Agent created successfully", "agent_id": new_agent.agent_id}
+
 
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
@@ -345,27 +401,6 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
         "back_image_path": base_data.base_back_image,
     }
 
-    
-# @app.get("/api/search-customer-return-item-data")
-# async def search_customer_item_data(query: str, db: Session = Depends(get_db)):
-#     """
-#     Search the customer_item_data table based on a query.
-#     """
-#     try:
-#         results = db.query(CustomerItemData).filter(
-#             (CustomerItemData.serial_number.like(f"%{query}%")) |
-#             (CustomerItemData.return_order_number.like(f"%{query}%")) |
-#             (CustomerItemData.return_warehouse.like(f"%{query}%")) |
-#             (CustomerItemData.city.like(f"%{query}%"))
-#         ).all()
-
-#         # Convert results into dictionaries, excluding private attributes
-#         return [
-#             {column.name: getattr(result, column.name) for column in result.__table__.columns}
-#             for result in results
-#         ]
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
 @app.post("/api/upload-items-csv")
@@ -589,33 +624,6 @@ def get_full_return_data(db: Session = Depends(get_db)):
 
     return [dict(row._mapping) for row in results]
 
-
-# @app.get("/api/item-details/{return_order_number}")
-# async def get_item_details(return_order_number: str, db: Session = Depends(get_db)):
-#     """
-#     Fetch item details based on the return order number.
-#     """
-#     try:
-#         result = db.query(Item, CustomerItemData).join(CustomerItemData, Item.id == CustomerItemData.item_id).filter(
-#             CustomerItemData.return_order_number == return_order_number
-#         ).first()
-
-#         if result:
-#             item, customer_item = result
-#             return {
-#                 "item_number": item.item_number,
-#                 "item_description": item.item_description,
-#                 "brand_id": item.brand_id,
-#                 "category": item.category,
-#                 "configuration": item.configuration,
-#                 "return_order_number": customer_item.return_order_number,
-#                 "return_qty": customer_item.return_qty,
-#                 "return_condition": customer_item.return_condition
-#             }
-#         else:
-#             raise HTTPException(status_code=404, detail="Item not found for the given return order number.")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
     
 
 @app.get("/api/item-details/{identifier}")
@@ -2683,52 +2691,6 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     db.execute(table.insert(), transformed_data)
     db.commit()
     return response.json()
-
-# class CronJobCreate(BaseModel):
-#     cron_to_mapping_name: str
-#     cron_expression: str
-#     auditly_user_id: int
-
-# @app.post("/api/add-cronjobs")
-# async def create_or_update_cron_job(cron_job_data: CronJobCreate, db: Session = Depends(get_db)):
-#     """
-#     Create a new cron job or update an existing one in the database.
-#     """
-#     # Check if there is already a cron job for the given user ID and mapping name
-#     existing_cron_job = db.query(CronJobTable).filter(
-#         CronJobTable.auditly_user_id == cron_job_data.auditly_user_id,
-#         CronJobTable.cron_to_mapping_name == cron_job_data.cron_to_mapping_name
-#     ).first()
-
-#     if existing_cron_job:
-#         # Update the existing cron job
-#         existing_cron_job.cron_expression = cron_job_data.cron_expression
-#         response_message = "Cron job updated successfully."
-#     else:
-#         # Create a new cron job if it doesn't exist
-#         new_cron_job = CronJobTable(
-#             cron_to_mapping_name=cron_job_data.cron_to_mapping_name,
-#             cron_expression=cron_job_data.cron_expression,
-#             auditly_user_id=cron_job_data.auditly_user_id
-#         )
-#         db.add(new_cron_job)
-#         response_message = "Cron job created successfully."
-#     mapping_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.mapping_name == cron_job_data.cron_to_mapping_name).first()
-
-#     db.commit()  # Commit the transaction
-    
-#     manage_cron_job('add', cron_job_data.auditly_user_id, 
-#                        cron_job_data.cron_to_mapping_name, cron_job_data.cron_expression, mapping_data.sql_table_name, mapping_data.bi_table_name)
-#     response_message = "Cron job created successfully."
-    
-#     return {
-#         "message": response_message,
-#         "cron_job_details": {
-#             "cron_to_mapping_name": cron_job_data.cron_to_mapping_name,
-#             "cron_expression": cron_job_data.cron_expression,
-#             "auditly_user_id": cron_job_data.auditly_user_id
-#         }
-#     }
 
 
 

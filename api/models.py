@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, Float, DateTime, SmallInteger, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Text, Float, DateTime, SmallInteger, JSON, Enum, Date, Time, TIMESTAMP
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from database import Base
@@ -55,10 +55,13 @@ class AuditlyUser(Base):
     reset_otp = Column(String(255), nullable=True )
     reset_otp_expiration = Column(DateTime,nullable=True)
     user_type = Column(String(255), default="common_user")
-    is_reports_user = Column(Boolean, default=True)
+    is_reports_user = Column(Boolean, default=False)
     is_inspection_user = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
     user_company = Column(String(255), nullable=True)
+    is_agent  = Column(Boolean, default=False)
+    is_manager  = Column(Boolean, default=False)
+
 
 
 
@@ -308,3 +311,61 @@ class NotificationTable(Base):
     notification_message = Column(String(255))
     read_at = Column(DateTime, default=None)
     created_at = Column(DateTime, default=func.current_timestamp())
+
+
+class Agent(Base):
+    __tablename__ = "agent"
+
+    agent_id = Column(Integer, primary_key=True, autoincrement=True)
+    agent_name = Column(String(100), nullable=False)
+    manager_id = Column(JSON, nullable=True)
+    current_address = Column(Text)
+    delivery_type = Column(Enum('Delivery', 'Return', 'Both'), nullable=False)
+    pickup_routing_mode = Column(Boolean, default=False)  # 0 = auto, 1 = manual
+    delivery_routing_mode = Column(Boolean, default=False)
+    servicing_state = Column(String(50))
+    servicing_city = Column(String(50))
+    servicing_zip = Column(String(20))
+    permanent_adress = Column(Text)  # Typo in original schema – consider fixing to "permanent_address"
+    permanent_address_state = Column(String(50))
+    permanent_address_city = Column(String(50))
+    permanent_address_zip = Column(String(20))
+    is_verified = Column(Boolean, default=False)
+    gender = Column(Enum('Male', 'Female', 'Other', 'Prefer not to say'), nullable=False)
+    dob = Column(Date)
+    work_schedule = Column(JSON)
+    company_id = Column(Integer)
+    agent_to_user_mapping_id = Column(Integer, ForeignKey("auditly_user.auditly_user_id"))
+    additional_info_1 = Column(Text)
+    additional_info_2 = Column(Text)
+    additional_info_3 = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    agent_to_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+
+class AgentSchedule(Base):
+    __tablename__ = "agent_schedule"
+
+    schedule_id = Column(Integer, primary_key=True, autoincrement=True)
+    agent_id = Column(Integer, ForeignKey("agent.agent_id"))
+    day_of_week = Column(Enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'))
+    start_time = Column(Time)
+    end_time = Column(Time)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
+
+class UserManager(Base):
+    __tablename__ = "user_manager"
+
+    manager_id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100))
+    email = Column(String(100), unique=True)
+    role = Column(Enum('RegionalManager', 'Admin'))
+    address_state = Column(String(50))
+    address_city = Column(String(50))
+    address_zip = Column(String(20))
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
