@@ -212,6 +212,9 @@ export function Navbar() {
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
                 {isInspectionUser && (
+                  <NavLink to="/request-access" icon={ShieldUser}>Request Privilege</NavLink>
+                )}
+                {isInspectionUser && (
                   <NavLink to="/admin/settings/item-master-upload" icon={FileUp}>Manual Data Ingestion</NavLink>
                 )}
                 <NavLink to="/help-center" icon={MessageCircleQuestion}>Help Center</NavLink>
