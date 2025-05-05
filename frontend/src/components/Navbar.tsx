@@ -30,6 +30,8 @@ export function Navbar() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReportUser, setIsReportUser] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [isInspectionUser, setIsInspectionUser] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -40,6 +42,8 @@ export function Navbar() {
       setIsAdmin(userData["User Type"].includes("admin"));
       setIsReportUser(userData["User Type"].includes("reports_user"));
       setIsInspectionUser(userData["User Type"].includes("inpection_user"));
+      setIsAgent(userData.is_agent);
+      setIsManager(userData.is_manager);
     }
   }, [userData]);
 
@@ -142,6 +146,11 @@ export function Navbar() {
     exit: { opacity: 0, y: -20, scale: 0.95 },
   };
 
+  console.log("Navbar userData:", userData);
+  console.log("Show Request Privilege:",
+  isInspectionUser && !isAdmin && !isAgent && !isManager);
+
+
   const NavLink = ({ to, icon: Icon, children }) => (
     <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
       <Link
@@ -211,7 +220,7 @@ export function Navbar() {
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
-                {isInspectionUser && !isAdmin && !userData?.is_agent && !userData?.is_manager && (
+                {isInspectionUser && !isAdmin && !isAgent && !isManager && (
                   <NavLink to="/request-access" icon={ShieldUser}>Request Privilege</NavLink>
                 )}
                 {isInspectionUser && (
