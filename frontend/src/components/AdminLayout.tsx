@@ -12,6 +12,8 @@
 //   Database,
 //   BoxesIcon,
 //   UserCircle,
+//   Clock,
+//   Truck,
 //   RefreshCw,
 //   Menu,
 //   UserCog,
@@ -32,6 +34,7 @@
 //   const [connectorsOpen, setConnectorsOpen] = useState(false);
 //   const [apiConfigOpen, setApiConfigOpen] = useState(false); // New state for API Config dropdown
 //   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
+//   const [agentOpen, setAgentOpen] = useState(false);
 //   const [reportsOpen, setReportsOpen] = useState(false);
 //   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 //   const [isMobile, setIsMobile] = useState(false);
@@ -603,86 +606,168 @@
 //           )}
 
 //           {isInspectionUser ? (
-//             <motion.li variants={itemVariants}>
-//               <motion.button
-//                 onClick={() => setMaintenanceOpen(!maintenanceOpen)}
-//                 className={`${baseLinkStyle} w-full group`}
-//                 whileHover={{ x: 5 }}
-//                 whileTap={{ scale: 0.98 }}
-//               >
-//                 <motion.div
-//                   whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-//                   transition={{ duration: 0.5 }}
-//                 >
-//                   <FileUp className="w-6 h-6 mr-3" />
-//                 </motion.div>
-//                 <span className="flex-1 text-left">Manual Data Ingestion</span>
-//                 <motion.div
-//                   animate={{ rotate: maintenanceOpen ? 90 : 0 }}
-//                   transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-//                 >
-//                   <ChevronRight className="w-4 h-4" />
-//                 </motion.div>
-//               </motion.button>
+//   <>
+//     {/* Manual Data Ingestion Section */}
+//     <motion.li variants={itemVariants}>
+//       <motion.button
+//         onClick={() => setMaintenanceOpen(!maintenanceOpen)}
+//         className={`${baseLinkStyle} w-full group`}
+//         whileHover={{ x: 5 }}
+//         whileTap={{ scale: 0.98 }}
+//       >
+//         <motion.div
+//           whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+//           transition={{ duration: 0.5 }}
+//         >
+//           <FileUp className="w-6 h-6 mr-3" />
+//         </motion.div>
+//         <span className="flex-1 text-left">Manual Data Ingestion</span>
+//         <motion.div
+//           animate={{ rotate: maintenanceOpen ? 90 : 0 }}
+//           transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+//         >
+//           <ChevronRight className="w-4 h-4" />
+//         </motion.div>
+//       </motion.button>
 
-//               <AnimatePresence>
-//                 {maintenanceOpen && (
-//                   <motion.ul
-//                     initial="closed"
-//                     animate="open"
-//                     exit="closed"
-//                     variants={dropdownVariants}
-//                     className="mt-2 space-y-1 overflow-hidden"
-//                   >
-//                     {[
-//                       {
-//                         name: "item-master-upload",
-//                         icon: <Asterisk className="w-5 h-5 mr-2" />,
-//                       },
-//                       {
-//                         name: "customer-serial-upload",
-//                         icon: <Usb className="w-5 h-5 mr-2" />,
-//                       },
-//                       {
-//                         name: "item-image-upload",
-//                         icon: <Image className="w-5 h-5 mr-2" />,
-//                       },
-//                       {
-//                         name: "return-upload",
-//                         icon: <Undo2 className="w-5 h-5 mr-2" />,
-//                       },
-//                     ].map((item) => (
-//                       <motion.li key={item.name} variants={itemVariants}>
-//                         <NavLink
-//                           to={`/admin/settings/${item.name}`}
-//                           className={({ isActive }) =>
-//                             `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
-//                           }
-//                           onClick={handleLinkClick}
-//                         >
-//                           <motion.div
-//                             whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-//                             transition={{ duration: 0.5 }}
-//                           >
-//                             {item.icon}
-//                           </motion.div>
-//                           {item.name
-//                             .split("-")
-//                             .map(
-//                               (word) =>
-//                                 word.charAt(0).toUpperCase() + word.slice(1)
-//                             )
-//                             .join(" ")}
-//                         </NavLink>
-//                       </motion.li>
-//                     ))}
-//                   </motion.ul>
-//                 )}
-//               </AnimatePresence>
+//       <AnimatePresence>
+//         {maintenanceOpen && (
+//           <motion.ul
+//             initial="closed"
+//             animate="open"
+//             exit="closed"
+//             variants={dropdownVariants}
+//             className="mt-2 space-y-1 overflow-hidden"
+//           >
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/settings/item-master-upload"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Asterisk className="w-5 h-5 mr-2" />
+//                 Item Master Upload
+//               </NavLink>
 //             </motion.li>
-//           ) : (
-//             ""
-//           )}
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/settings/customer-serial-upload"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Usb className="w-5 h-5 mr-2" />
+//                 Customer Serial Upload
+//               </NavLink>
+//             </motion.li>
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/settings/item-image-upload"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Image className="w-5 h-5 mr-2" />
+//                 Item Image Upload
+//               </NavLink>
+//             </motion.li>
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/settings/return-upload"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Undo2 className="w-5 h-5 mr-2" />
+//                 Return Upload
+//               </NavLink>
+//             </motion.li>
+//           </motion.ul>
+//         )}
+//       </AnimatePresence>
+//     </motion.li>
+
+
+//     {/* Agent Section */}
+//     <motion.li variants={itemVariants}>
+//       <motion.button
+//         onClick={() => setAgentOpen(!agentOpen)}
+//         className={`${baseLinkStyle} w-full group`}
+//         whileHover={{ x: 5 }}
+//         whileTap={{ scale: 0.98 }}
+//       >
+//         <motion.div
+//           whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+//           transition={{ duration: 0.5 }}
+//         >
+//           <UserCog className="w-6 h-6 mr-3" />
+//         </motion.div>
+//         <span className="flex-1 text-left">Agent</span>
+//         <motion.div
+//           animate={{ rotate: agentOpen ? 90 : 0 }}
+//           transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+//         >
+//           <ChevronRight className="w-4 h-4" />
+//         </motion.div>
+//       </motion.button>
+
+//       <AnimatePresence>
+//         {agentOpen && (
+//           <motion.ul
+//             initial="closed"
+//             animate="open"
+//             exit="closed"
+//             variants={dropdownVariants}
+//             className="mt-2 space-y-1 overflow-hidden"
+//           >
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/agent/schedule"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Clock className="w-5 h-5 mr-2" />
+//                 Schedule
+//               </NavLink>
+//             </motion.li>
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/agent/scheduled-pickups"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Inbox className="w-5 h-5 mr-2" />
+//                 Scheduled Pickups
+//               </NavLink>
+//             </motion.li>
+//             <motion.li variants={itemVariants}>
+//               <NavLink
+//                 to="/admin/agent/scheduled-deliveries"
+//                 className={({ isActive }) =>
+//                   `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+//                 }
+//                 onClick={handleLinkClick}
+//               >
+//                 <Truck className="w-5 h-5 mr-2" />
+//                 Scheduled Deliveries
+//               </NavLink>
+//             </motion.li>
+//           </motion.ul>
+//         )}
+//       </AnimatePresence>
+//     </motion.li>
+//   </>
+// ) : null}
+
 
 // {/*           <motion.li variants={itemVariants} className="mt-auto">
 //             <motion.button
@@ -1157,6 +1242,25 @@ const AdminLayout = () => {
                       </AnimatePresence>
                     </motion.li>
 
+                    <motion.li variants={itemVariants}>
+                    <NavLink
+                      to="/admin/settings/user-permission-requests"
+                      className={({ isActive }) =>
+                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                      }
+                      onClick={handleLinkClick}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <UserCog className="w-5 h-5 mr-2" />
+                      </motion.div>
+                      Approve Access Requests
+                    </NavLink>
+                  </motion.li>
+
+
                     {[
                       {
                         name: "email-configurations",
@@ -1519,3 +1623,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+
