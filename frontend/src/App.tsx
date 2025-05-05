@@ -556,12 +556,6 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
-const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
   // Updated to check the boolean fields directly
   const isInspectionUser = userData && (
     userData.is_inpection_user === true || 
