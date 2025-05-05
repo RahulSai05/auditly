@@ -609,6 +609,7 @@ export default function App(): JSX.Element {
 
 
   const [userData, setUserData] = useState<UserData | null>(() => {
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
@@ -624,109 +625,105 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     const checkUserValidity = async () => {
-      try {
-        const res = await fetch("https://auditlyai.com/api/users");
-        const data = await res.json();
+  setIsCheckingUser(true); // ✅ Start loading
+  try {
+    const res = await fetch("https://auditlyai.com/api/users");
+    const data = await res.json();
 
-        if (data.data && userData) {
-          const userExists = data.data.some((user: any) => user?.user_name === userData["User Name"]);
+    if (data.data && userData) {
+      const userExists = data.data.some((user: any) => user?.user_name === userData["User Name"]);
 
-          let userExistsData = userExists
-            ? data.data.filter((user: any) => user?.user_name === userData["User Name"])[0]
-            : null;
+      let userExistsData = userExists
+        ? data.data.filter((user: any) => user?.user_name === userData["User Name"])[0]
+        : null;
 
-          if (userExists && userExistsData) {
-            // Check if user has EXACTLY the permissions specified in User Type array (no more, no less)
-            const requiredUserTypes = userData["User Type"];
-            let isAuthorized = true;
+      if (userExists && userExistsData) {
+        const requiredUserTypes = userData["User Type"];
+        let isAuthorized = true;
 
-            // Check all required permissions are present
-            for (let i = 0; i < requiredUserTypes.length; i++) {
-              const userType = requiredUserTypes[i];
+        for (let i = 0; i < requiredUserTypes.length; i++) {
+          const userType = requiredUserTypes[i];
 
-              if (userType === "reports_user" && !userExistsData.is_reports_user) {
-                console.log("Missing required permission: reports_user");
-                isAuthorized = false;
-                break;
-              } else if (userType === "admin" && !userExistsData.is_admin) {
-                console.log("Missing required permission: admin");
-                isAuthorized = false;
-                break;
-              } else if (userType === "inpection_user" && !userExistsData.is_inpection_user) {
-                console.log("Missing required permission: inpection_user");
-                isAuthorized = false;
-                break;
-              }
-            }
-
-            const enrichedUserData = {
-              ...userData,
-              is_admin: userExistsData.is_admin,
-              is_reports_user: userExistsData.is_reports_user,
-              is_inpection_user: userExistsData.is_inpection_user,
-              is_agent: userExistsData.is_agent,
-              is_manager: userExistsData.is_manager,
-            };
-            
-            localStorage.setItem("token", JSON.stringify(enrichedUserData));
-            setUserData(enrichedUserData);
-
-            // Check no additional permissions are present
-            if (isAuthorized) {
-              // Check if user has reports_user permission
-              if (userExistsData.is_reports_user && !requiredUserTypes.includes("reports_user")) {
-                console.log("User has unauthorized permission: reports_user");
-                isAuthorized = false;
-              }
-
-              // Check if user has admin permission
-              if (userExistsData.is_admin && !requiredUserTypes.includes("admin")) {
-                console.log("User has unauthorized permission: admin");
-                isAuthorized = false;
-              }
-
-              // Check if user has inpection_user permission
-              if (userExistsData.is_inpection_user && !requiredUserTypes.includes("inpection_user")) {
-                console.log("User has unauthorized permission: inpection_user");
-                isAuthorized = false;
-              }
-            }
-
-            console.log("User exists data:", userExistsData);
-            console.log("User types required:", userData["User Type"]);
-            console.log("User authorized with exact permissions:", isAuthorized);
-
-            if (!isAuthorized) {
-              localStorage.removeItem("token");
-              localStorage.removeItem("usertype");
-              const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-              const isauthroute = authRoutes.includes(location.pathname);
-              if (isauthroute) {
-                console.log("Asd")
-                navigate("/login");
-              }
-            }
-          } else if (!userExists) {
-            console.log("User does not exist");
-            localStorage.removeItem("token");
-            localStorage.removeItem("usertype");
-            navigate("/login");
+          if (userType === "reports_user" && !userExistsData.is_reports_user) {
+            console.log("Missing required permission: reports_user");
+            isAuthorized = false;
+            break;
+          } else if (userType === "admin" && !userExistsData.is_admin) {
+            console.log("Missing required permission: admin");
+            isAuthorized = false;
+            break;
+          } else if (userType === "inpection_user" && !userExistsData.is_inpection_user) {
+            console.log("Missing required permission: inpection_user");
+            isAuthorized = false;
+            break;
           }
-        } else {
-          console.log("Invalid user state");
+        }
+
+        // ✅ Enrich and update localStorage + state with all permission flags
+        const enrichedUserData = {
+          ...userData,
+          is_admin: userExistsData.is_admin,
+          is_reports_user: userExistsData.is_reports_user,
+          is_inpection_user: userExistsData.is_inpection_user,
+          is_agent: userExistsData.is_agent,
+          is_manager: userExistsData.is_manager,
+        };
+
+        localStorage.setItem("token", JSON.stringify(enrichedUserData));
+        setUserData(enrichedUserData);
+
+        // Ensure no extra permissions
+        if (isAuthorized) {
+          if (userExistsData.is_reports_user && !requiredUserTypes.includes("reports_user")) {
+            console.log("User has unauthorized permission: reports_user");
+            isAuthorized = false;
+          }
+          if (userExistsData.is_admin && !requiredUserTypes.includes("admin")) {
+            console.log("User has unauthorized permission: admin");
+            isAuthorized = false;
+          }
+          if (userExistsData.is_inpection_user && !requiredUserTypes.includes("inpection_user")) {
+            console.log("User has unauthorized permission: inpection_user");
+            isAuthorized = false;
+          }
+        }
+
+        console.log("User exists data:", userExistsData);
+        console.log("User types required:", userData["User Type"]);
+        console.log("User authorized with exact permissions:", isAuthorized);
+
+        if (!isAuthorized) {
           localStorage.removeItem("token");
           localStorage.removeItem("usertype");
           const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
           const isauthroute = authRoutes.includes(location.pathname);
-          if (!isauthroute) {
-            console.log("here logged in")
+          if (isauthroute) {
             navigate("/login");
           }
         }
-      } catch (error) {
-        console.error("Error checking user validity:", error);
+      } else {
+        console.log("User does not exist");
+        localStorage.removeItem("token");
+        localStorage.removeItem("usertype");
+        navigate("/login");
       }
-    };
+    } else {
+      console.log("Invalid user state");
+      localStorage.removeItem("token");
+      localStorage.removeItem("usertype");
+      const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
+      const isauthroute = authRoutes.includes(location.pathname);
+      if (!isauthroute) {
+        navigate("/login");
+      }
+    }
+  } catch (error) {
+    console.error("Error checking user validity:", error);
+  } finally {
+    setIsCheckingUser(false); // ✅ End loading
+  }
+};
+
 
     const timer = setTimeout(() => {
       console.log("Checking user validity...");
