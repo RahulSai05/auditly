@@ -949,9 +949,11 @@ export default function App(): JSX.Element {
           </InspectionRoute>
         } />
         <Route path="/request-access" element={
-          <OnlyInspectionRoute>
+          userData?.is_inpection_user && !userData?.is_agent && !userData?.is_admin ? (
             <RequestAccess />
-          </OnlyInspectionRoute>
+          ) : (
+            <Navigate to="/unauthorized" />
+          )
         } />
         <Route path="/auto/scan" element={
           <InspectionRoute>
