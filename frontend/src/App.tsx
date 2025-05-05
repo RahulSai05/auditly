@@ -621,6 +621,20 @@ export default function App(): JSX.Element {
     setUserData(localUser ? JSON.parse(localUser) : null);
   }, [location.pathname]); // Sync state with localStorage
 
+
+  useEffect(() => {
+    const enriched = localStorage.getItem("token");
+    if (enriched) {
+      const parsed = JSON.parse(enriched);
+      if (
+        JSON.stringify(parsed) !== JSON.stringify(userData)
+      ) {
+        setUserData(parsed);
+      }
+    }
+  }, [location.pathname]);
+
+
   useEffect(() => {
     console.log("Updated userData:", userData);
   }, [userData]); // Log changes
