@@ -640,6 +640,15 @@ export default function App(): JSX.Element {
   }, [userData]); // Log changes
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+  
+    console.log("Running checkUserValidity with token:", token);
+    checkUserValidity();
+  }, [location.pathname]);
+
+
+  useEffect(() => {
     const checkUserValidity = async () => {
   setIsCheckingUser(true); // ✅ Start loading
   try {
@@ -687,6 +696,8 @@ export default function App(): JSX.Element {
 
         localStorage.setItem("token", JSON.stringify(enrichedUserData));
         setUserData(enrichedUserData);
+        window.location.reload();
+
 
         // Ensure no extra permissions
         if (isAuthorized) {
