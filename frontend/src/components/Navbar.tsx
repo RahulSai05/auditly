@@ -557,9 +557,12 @@ export function Navbar() {
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
-                {isInspectionUser && !isAdmin && !isAgent && !isManager && (
-                  <NavLink to="/request-access" icon={ShieldUser}>Request Privilege</NavLink>
-                )}
+                {userData?.is_inpection_user && 
+                   !userData?.is_admin && 
+                   !userData?.is_agent && 
+                   !userData?.is_manager && (
+                    <NavLink to="/request-access" icon={ShieldUser}>Request Privilege</NavLink>
+                 )}
                 {isInspectionUser && (
                   <NavLink to="/admin/settings/item-master-upload" icon={FileUp}>Manual Data Ingestion</NavLink>
                 )}
