@@ -609,10 +609,12 @@ export default function App(): JSX.Element {
 
 
   const [userData, setUserData] = useState<UserData | null>(() => {
-  const [isCheckingUser, setIsCheckingUser] = useState(true);
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
+
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
+
 
   useEffect(() => {
     const localUser = localStorage.getItem("token");
