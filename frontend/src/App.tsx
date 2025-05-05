@@ -33,6 +33,7 @@ import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import Schedule from "./pages/agent/Schedule";
+import UserPermissionRequests from "./pages/agent/UserPermissionRequests";
 import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
 import ScheduledPickups from "./pages/agent/ScheduledPickups";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
@@ -274,6 +275,11 @@ export default function App(): JSX.Element {
             <AdminRoute>
               <Inbound />
             </AdminRoute>
+          } />
+          <Route path="/admin/agent/permission-requests" element={
+            <UserPermissionRequests>
+              <ScheduledDeliveries />
+            </UserPermissionRequests>
           } />
           <Route path="/admin/settings/connectors/outbound" element={
             <AdminRoute>
