@@ -917,36 +917,78 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
+# @app.post("/api/verify-login-otp")
+# async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
+#     """
+#     API for verifying otp to login
+#     """ 
+#    # try:  
+#     auditly_user_name = request.user_name
+#     login_otp = request.login_otp
+
+#     user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.reset_otp == login_otp).first()
+
+
+#     if user_data:
+#         user_data.last_login_time = datetime.now()
+#         db.commit()
+#         db.refresh(user_data)
+#         return {
+#             "message": "Login Successfull",
+#             "data": {
+#                 "User ID": user_data.auditly_user_id,
+#                 "User Name": user_data.auditly_user_name,
+#                 "User Type": [_key for _key, _value in {"reports_user": user_data.is_reports_user, "admin": user_data.is_admin, "inpection_user": user_data.is_inspection_user}.items() if _value == 1]                
+#             }
+#             }
+#     else:
+#         return {
+#             "message": "Invalid User Name or otp",
+#             }
+#     # except Exception as e:
+#     #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+
 @app.post("/api/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
     """
-    API for verifying otp to login
+    API for verifying OTP to login
     """ 
-   # try:  
     auditly_user_name = request.user_name
     login_otp = request.login_otp
 
-    user_data = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_name == auditly_user_name,AuditlyUser.reset_otp == login_otp).first()
-
+    user_data = db.query(AuditlyUser).filter(
+        AuditlyUser.auditly_user_name == auditly_user_name,
+        AuditlyUser.reset_otp == login_otp
+    ).first()
 
     if user_data:
         user_data.last_login_time = datetime.now()
         db.commit()
         db.refresh(user_data)
+
         return {
             "message": "Login Successfull",
             "data": {
                 "User ID": user_data.auditly_user_id,
                 "User Name": user_data.auditly_user_name,
-                "User Type": [_key for _key, _value in {"reports_user": user_data.is_reports_user, "admin": user_data.is_admin, "inpection_user": user_data.is_inspection_user}.items() if _value == 1]                
+                "User Type": [
+                    key for key, val in {
+                        "reports_user": user_data.is_reports_user,
+                        "admin": user_data.is_admin,
+                        "inpection_user": user_data.is_inspection_user
+                    }.items() if val
+                ],
+                "is_admin": user_data.is_admin,
+                "is_agent": user_data.is_agent,
+                "is_manager": user_data.is_manager,
+                "is_inspection_user": user_data.is_inspection_user
             }
-            }
+        }
     else:
         return {
-            "message": "Invalid User Name or otp",
-            }
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
+            "message": "Invalid User Name or otp"
+        }
+
 
 @app.post("/api/logout")
 async def login(request: LogoutRequest, db: Session = Depends(get_db)):   
@@ -3345,4 +3387,3 @@ async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting Power BI user: {str(e)}")
-
