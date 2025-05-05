@@ -589,11 +589,12 @@ const OnlyInspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   });
 
   const isOnlyInspectionUser =
-    userData?.is_inpection_user &&
-    !userData?.is_admin &&
-    !userData?.is_reports_user &&
-    !userData?.is_agent &&
-    !userData?.is_manager;
+    userData?.is_inpection_user === true &&
+    userData?.is_admin !== true &&
+    userData?.is_reports_user !== true &&
+    userData?.is_agent !== true &&
+    userData?.is_manager !== true;
+
 
   return isOnlyInspectionUser ? <>{children}</> : <Navigate to="/unauthorized" />;
 };
