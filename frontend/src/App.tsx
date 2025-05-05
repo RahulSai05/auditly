@@ -658,6 +658,18 @@ export default function App(): JSX.Element {
               }
             }
 
+            const enrichedUserData = {
+              ...userData,
+              is_admin: userExistsData.is_admin,
+              is_reports_user: userExistsData.is_reports_user,
+              is_inpection_user: userExistsData.is_inpection_user,
+              is_agent: userExistsData.is_agent,
+              is_manager: userExistsData.is_manager,
+            };
+            
+            localStorage.setItem("token", JSON.stringify(enrichedUserData));
+            setUserData(enrichedUserData);
+
             // Check no additional permissions are present
             if (isAuthorized) {
               // Check if user has reports_user permission
