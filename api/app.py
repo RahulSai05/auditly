@@ -280,6 +280,115 @@ def create_agent(agent: AgentCreate, db: Session = Depends(get_db)):
     db.refresh(new_agent)
     return {"message": "Agent created successfully", "agent_id": new_agent.agent_id}
 
+@app.get("/api/pending-agent-approval")
+def pending_agent_approval(db: Session = Depends(get_db)):
+    agents = db.query(Agent, AuditlyUser).join(
+        AuditlyUser, Agent.agent_to_user_mapping_id == AuditlyUser.auditly_user_id
+    ).filter(
+        AuditlyUser.is_agent == False
+    ).all()
+    result = [
+        {
+            "agent": {
+                "agent_id": agent.agent_id,
+                "agent_name": agent.agent_name,
+                "delivery_type": agent.delivery_type,
+                "current_address": agent.current_address,
+                "servicing_state": agent.servicing_state,
+                "servicing_city": agent.servicing_city,
+                "is_verified": agent.is_verified,
+                "gender": agent.gender,
+                "dob": agent.dob,
+                "created_at": agent.created_at,
+                "updated_at": agent.updated_at,
+            },
+            "user": {
+                "auditly_user_id": user.auditly_user_id,
+                "auditly_user_name": user.auditly_user_name,
+                "email": user.email,
+                "user_type": user.user_type,
+                "is_agent": user.is_agent,
+                "is_inspection_user": user.is_inspection_user,
+                "is_admin": user.is_admin,
+            }
+        }
+        for agent, user in agents
+    ]
+    return {"agents": result}
+
+
+class AgentApprovalRequest(BaseModel):
+    agent_id: int
+    auditly_user_id: int
+
+@app.post("/api/approve-agent")
+def approve_agent(request: AgentApprovalRequest, db: Session = Depends(get_db)):
+    # Fetch user
+    user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.auditly_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="AuditlyUser not found")
+
+    # Fetch agent
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    # Update user
+    user.is_agent = True
+
+    # Update agent
+    agent.approved_by_auditly_user_id = request.auditly_user_id
+
+    db.commit()
+    return {"message": "Agent approved and user updated successfully"}
+
+class AgentScheduleCheckRequest(BaseModel):
+    agent_id: int
+
+@app.post("/api/check-agent-last-working-day")
+def is_last_working_day(request: AgentScheduleCheckRequest, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    if not agent.work_schedule or "days" not in agent.work_schedule:
+        raise HTTPException(status_code=400, detail="Work schedule not set for agent")
+
+    try:
+        working_days = list(map(int, agent.work_schedule["days"].split(",")))
+        today = datetime.today().isoweekday()  # Monday = 1, Sunday = 7
+        is_last_day = today == max(working_days)
+        return {"is_last_working_day": is_last_day}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Invalid work schedule format: {e}")
+
+class UpdateScheduleRequest(BaseModel):
+    agent_id: int
+    work_schedule: Dict
+
+@app.post("/api/update-work-schedule")
+def update_work_schedule(request: UpdateScheduleRequest, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    try:
+        if "days" not in request.work_schedule:
+            raise ValueError("Missing 'days' in work_schedule")
+
+        day_list = list(map(int, request.work_schedule["days"].split(",")))
+        if any(day < 1 or day > 7 for day in day_list):
+            raise ValueError("Days must be between 1 (Monday) and 7 (Sunday)")
+
+        agent.work_schedule = request.work_schedule
+        db.commit()
+        return {
+            "message": "Work schedule updated successfully",
+            "agent_id": agent.agent_id,
+            "work_schedule": agent.work_schedule
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
 
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
@@ -1603,7 +1712,10 @@ async def get_users(db: Session = Depends(get_db)):
                 "is_reports_user": user.is_reports_user,
                 "is_admin": user.is_admin,
                 "is_inpection_user": user.is_inspection_user,
-                "user_company": user.user_company 
+                "user_company": user.user_company,
+                "is_manager": user.is_manager,
+                "is_agent": user.is_admin
+
 
 
             } for user in users]
