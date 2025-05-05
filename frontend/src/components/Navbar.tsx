@@ -369,15 +369,25 @@ export function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+
   useEffect(() => {
-    if (userData && Array.isArray(userData["User Type"])) {
-      setIsAdmin(userData["User Type"].includes("admin"));
-      setIsReportUser(userData["User Type"].includes("reports_user"));
-      setIsInspectionUser(userData["User Type"].includes("inpection_user"));
-      setIsAgent(userData["User Type"].includes("agent")); // Check for agent role
-      setIsManager(userData["User Type"].includes("manager"));
-    }
-  }, [userData]);
+        if (userData) {
+          setIsAdmin(userData.is_admin === true);
+          setIsReportUser(userData.is_reports_user === true);
+          setIsInspectionUser(userData.is_inpection_user === true); // Note: matches API's "is_inpection_user" spelling
+          setIsAgent(userData.is_agent === true);
+          setIsManager(userData.is_manager === true);
+        }
+      }, [userData]);    
+  // useEffect(() => {
+  //   if (userData && Array.isArray(userData["User Type"])) {
+  //     setIsAdmin(userData["User Type"].includes("admin"));
+  //     setIsReportUser(userData["User Type"].includes("reports_user"));
+  //     setIsInspectionUser(userData["User Type"].includes("inpection_user"));
+  //     setIsAgent(userData["User Type"].includes("agent")); // Check for agent role
+  //     setIsManager(userData["User Type"].includes("manager"));
+  //   }
+  // }, [userData]);
 
   useEffect(() => {
     if (userData?.id) {
