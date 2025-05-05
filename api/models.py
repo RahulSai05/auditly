@@ -339,6 +339,7 @@ class Agent(Base):
     additional_info_1 = Column(Text)
     additional_info_2 = Column(Text)
     additional_info_3 = Column(Text)
+    approved_by_auditly_user_id = Column(Integer)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
