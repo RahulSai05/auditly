@@ -1244,7 +1244,7 @@ const AdminLayout = () => {
 
                     <motion.li variants={itemVariants}>
                     <NavLink
-                      to="/admin/settings/user-permission-requests"
+                      to="admin/agent/permission-requests"
                       className={({ isActive }) =>
                         `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
                       }
@@ -1256,7 +1256,7 @@ const AdminLayout = () => {
                       >
                         <UserCog className="w-5 h-5 mr-2" />
                       </motion.div>
-                      Approve Access Requests
+                      Privilege Requests
                     </NavLink>
                   </motion.li>
 
