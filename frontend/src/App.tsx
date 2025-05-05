@@ -734,7 +734,7 @@ export default function App(): JSX.Element {
     }, 200);
 
     return () => clearTimeout(timer); // Cleanup timeout
-  }, [location.pathname, userData]); // Ensure fresh userData
+  }, [location.pathname]); // Ensure fresh userData
 
 
 
