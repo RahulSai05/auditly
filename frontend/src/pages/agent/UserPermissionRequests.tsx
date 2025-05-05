@@ -1,7 +1,7 @@
 // HelloWorld.tsx
 import React from "react";
 
-const Schedule: React.FC = () => {
+const UserPermissionRequests: React.FC = () => {
   return (
     <div style={{ padding: "20px", fontSize: "24px", fontWeight: "bold" }}>
       Hello World
@@ -9,4 +9,4 @@ const Schedule: React.FC = () => {
   );
 };
 
-export default Schedule;
+export default UserPermissionRequests;
