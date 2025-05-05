@@ -7,6 +7,8 @@ interface UserData {
   is_inpection_user?: boolean;
   is_agent?: boolean;
   is_admin?: boolean;
+  is_reports_user?: boolean;  // Add this for completeness
+  "User Type"?: string[];    // Add this to match your API response
   // Add other fields as needed
 }
 
