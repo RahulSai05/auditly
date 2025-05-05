@@ -536,9 +536,7 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
-  const isAdmin = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("admin");
-
+  const isAdmin = userData && userData.is_admin === true;
   return isAdmin ? <>{children}</> : <Navigate to="/unauthorized" />;
 };
 
@@ -548,10 +546,8 @@ const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
-  const isReportUser = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("reports_user");
-
-  return (isReportUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
+  const isReportUser = userData && userData.is_reports_user === true;
+  return isReportUser ? <>{children}</> : <Navigate to="/unauthorized" />;
 };
 
 const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
@@ -560,17 +556,32 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
-  const isInspectionUser = userData && (
-    // Check for the array format (if your backend provides it)
-    (Array.isArray(userData["User Type"]) && 
-      (userData["User Type"].includes("inspection_user") || 
-       userData["User Type"].includes("agent"))) ||
-    // OR check for direct boolean fields
-    (userData.is_inspection_user === true || 
-     userData.is_agent === true);
+const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const [userData] = useState<UserData | null>(() => {
+    const userDataString = localStorage.getItem("token");
+    return userDataString ? JSON.parse(userDataString) : null;
+  });
 
-  return (isInspectionUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
-};
+  // Updated to check the boolean fields directly
+  const isInspectionUser = userData && (
+    userData.is_inpection_user === true || 
+    userData.is_agent === true
+  );
+
+  return isInspectionUser ? <>{children}</> : <Navigate to="/unauthorized" />;
+};  
+
+//   const isInspectionUser = userData && (
+//     // Check for the array format (if your backend provides it)
+//     (Array.isArray(userData["User Type"]) && 
+//       (userData["User Type"].includes("inspection_user") || 
+//        userData["User Type"].includes("agent"))) ||
+//     // OR check for direct boolean fields
+//     (userData.is_inspection_user === true || 
+//      userData.is_agent === true);
+
+//   return (isInspectionUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
+// };
 
 // Auth verification component
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
