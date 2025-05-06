@@ -1141,24 +1141,6 @@ Audit team
         secret_data = get_secret("test/auditly/secrets")
         send_email(secret_data["from_email_address"], secret_data["from_email_password"], customer_email, subject, body, [user_front_image, user_back_image])
 
-# def send_inspection_email(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, customer_email, user_front_image, user_back_image, factory_seal, new_condition):
-#     if factory_seal and new_condition:
-#         condition = "in good condition, making it resalable."
-#     else:
-#         condition = "NOT in good condition, hence cannot be resold."
-
-#     subject = _generate_inspection_email_subject(account_number, serial_number, receipt_number)
-#     body = _generate_inspection_email_body(account_name, account_number, serial_number, sales_order_number, return_order_number, receipt_number, condition)
-
-#     print("Sent Email")
-#     print(customer_email)
-
-#     if ENV == "DEV":
-#         send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", customer_email, subject, body, [user_front_image, user_back_image])
-#     elif ENV == "TEST":
-#         secret_data = get_secret("test/auditly/secrets")
-#         send_email(secret_data["from_email_address"], secret_data["from_email_password"], customer_email, subject, body, [user_front_image, user_back_image])
-
     def classify_condition(front_score, back_score, ssi_score):
         average_score = (front_score + back_score) / 2
     # Assess if any of the individual scores suggest the item is damaged.
@@ -1435,63 +1417,7 @@ async def get_users(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
 
-# @app.post("/api/onboard")
-# async def onboard(request: Onboard, db: Session = Depends(get_db)):   
-#     """
-#     API to onboard an third party to use api
-#     """ 
-#     try:  
-#         onboard_name = request.onboard_name
-#         onboard_email = request.onboard_email
-        
-#         customer_user_id = f'CUST{_gen_otp()}'
-#         token = f'{_gen_otp()}{_gen_otp()}{customer_user_id}{_gen_otp()}'
 
-#         new_user = OnboardUser(
-#         onboard_name = onboard_name,
-#         onboard_email = onboard_email,
-#         token = token,
-#         customer_user_id = customer_user_id,
-#         )
-#         db.add(new_user)
-#         db.commit()
-#         db.refresh(new_user)
-
-
-#         customer_data = db.query(OnboardUser).filter(OnboardUser.customer_user_id == customer_user_id).first()
-
-#         subject = """Onboarding Details: Auditly"""
-        
-#         body = """
-# Hello """+onboard_name+""",
-
-# You are now Onboarded!
-
-# Below are the details:
-
-# Customer User ID -  """+customer_data.customer_user_id+"""
-# Authorization Token – """+token+"""
-
-# Thanks,
-# Audit team
-# """
-#        # send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
-#         if ENV == "DEV": send_email("rahulgr20@gmail.com", "fxei hthz bulr slzh", onboard_email, subject, body)
-#         elif ENV == "TEST":
-#             secret_data = get_secret("test/auditly/secrets")
-#             send_email(secret_data["from_email_address"], secret_data["from_email_password"], onboard_email, subject, body)
-        
-
-
-#         return {
-#             "message": "Onboarded Successfully.",
-#             "data": {
-#                 "Customer User Id": customer_data.customer_user_id,
-#                 "Customer Token": customer_data.token
-#             }
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
 @app.post("/api/onboard")
@@ -1675,93 +1601,6 @@ async def get_images_by_item_number_or_description(
     }
 
 
-
-
-# @app.post("/api/get-inspection-data")
-# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-#     if request.receipt_number is None:
-#         data = db.query(
-#             CustomerItemCondition,
-#             CustomerItemData,
-#             Item,
-#             Brand,
-#             BaseData
-#         ).join(
-#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-#         ).join(
-#             Item, CustomerItemData.item_id == Item.id
-#         ).join(
-#             Brand, Item.brand_id == Brand.id
-#         ).outerjoin(
-#             BaseData, BaseData.base_to_item_mapping == Item.id
-#         ).all()
-#     else:
-#         data = db.query(
-#             CustomerItemCondition,
-#             CustomerItemData,
-#             Item,
-#             Brand,
-#             BaseData
-#         ).join(
-#             CustomerItemData, CustomerItemCondition.customer_item_condition_mapping_id == CustomerItemData.id
-#         ).join(
-#             Item, CustomerItemData.item_id == Item.id
-#         ).join(
-#             Brand, Item.brand_id == Brand.id
-#         ).outerjoin(
-#             BaseData, BaseData.base_to_item_mapping == Item.id
-#         ).filter(
-#             CustomerItemCondition.ack_number == request.receipt_number
-#         ).first()
-        
-#         data = [data]
-
-#     if not data:
-#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
-
-#     receipt_data_list = []
-#     for condition, item_data, item, brand, base_data in data:
-#         # Construct web-accessible URLs for difference images
-#         front_diff_url = f"/api/difference-images/{condition.id}/front" if condition.difference_front_image else None
-#         back_diff_url = f"/api/difference-images/{condition.id}/back" if condition.difference_back_image else None
-        
-#         receipt_data = {
-#             "receipt_number": condition.ack_number,
-#             "overall_condition": condition.overall_condition,
-#             "item_description": item.item_description,
-#             "brand_name": brand.brand_name,
-#             "original_sales_order_number": item_data.original_sales_order_number,
-#             "return_order_number": item_data.return_order_number,
-#             "return_qty": item_data.return_qty,
-#             "shipping_info": {
-#                 "shipped_to_person": item_data.shipped_to_person,
-#                 "address": item_data.shipped_to_address,
-#                 "city": item_data.city,
-#                 "state": item_data.state,
-#                 "country": item_data.country
-#             },
-#             "images": {
-#                 "difference_images": {
-#                     "front": front_diff_url,
-#                     "back": back_diff_url
-#                 },
-#                 "similarity_scores": {
-#                     "front": condition.front_similarity,
-#                     "back": condition.back_similarity,
-#                     "average": condition.average_ssi
-#                 }
-#             }
-#         }
-        
-#         if base_data:
-#             receipt_data["images"]["base_images"] = {
-#                 "front": f"/api/base-images/{base_data.id}/front",
-#                 "back": f"/api/base-images/{base_data.id}/back"
-#             }
-        
-#         receipt_data_list.append(receipt_data)
-    
-#     return receipt_data_list
 
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
@@ -2267,52 +2106,6 @@ async def get_dataset_ids(request:GetPowerBiDatasets, db: Session = Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# @app.get("/api/powerbi/workspace-data")
-# async def get_powerbi_workspace_data(db: Session = Depends(get_db)):
-#     """
-#     Fetch all datasets and their tables from a Power BI workspace.
-#     """
-#     WORKSPACE_ID = "313280a3-6d47-44c9-9c67-9cfaf97fb0b4"
-#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-   
-#     headers = {
-#         "Authorization": f"Bearer {ACCESS_TOKEN}",
-#         "Content-Type": "application/json"
-#     }
-
-#     # Step 1: Get all datasets in the workspace
-#     datasets_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets"
-#     try:
-#         datasets_response = requests.get(datasets_url, headers=headers)
-#         datasets_response.raise_for_status()
-#         datasets_data = datasets_response.json().get("value", [])
-#     except requests.exceptions.RequestException as e:
-#         raise HTTPException(status_code=500, detail=f"Error fetching datasets: {str(e)}")
-
-#     # Step 2: Get tables for each dataset
-#     all_data = []
-#     for dataset in datasets_data:
-#         dataset_id = dataset["id"]
-#         dataset_name = dataset["name"]
-
-#         tables_url = f"https://api.powerbi.com/v1.0/myorg/groups/{WORKSPACE_ID}/datasets/{dataset_id}/tables"
-#         try:
-#             tables_response = requests.get(tables_url, headers=headers)
-#             tables_response.raise_for_status()
-#             tables_data = tables_response.json().get("value", [])
-#         except requests.exceptions.RequestException:
-#             tables_data = []  # If tables API fails, return an empty list
-
-#         # Step 3: Organize Data
-#         dataset_info = {
-#             "dataset_id": dataset_id,
-#             "dataset_name": dataset_name,
-#             "tables": [{"table_name": table["name"]} for table in tables_data]
-#         }
-#         all_data.append(dataset_info)
-
-#     return {"workspace_id": WORKSPACE_ID, "datasets": all_data}
-
 
 class GetWorksapceData(BaseModel):
     power_bi_id: str
@@ -2363,78 +2156,6 @@ async def get_powerbi_workspace_data(request: GetWorksapceData,db: Session = Dep
         all_data.append(dataset_info)
 
     return {"workspace_id": request.workspace_id, "datasets": all_data}
-
-
-
-# @app.post("/api/powerbi/get-table-data")
-# async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Depends(get_db)):
-#     """
-#     Fetch table data from Power BI Dataset
-#     """
-#     sql_table_name = request.sql_table_name
-#     user_id = request.user_id
-#     workspace_id = request.workspace_id
-#     dataset_id = request.dataset_id
-#     power_bi_table_name = request.power_bi_table_name
-
-#     power_bi_table_data = db.query(PowerBiSqlMapping).filter(PowerBiSqlMapping.sql_table_name == sql_table_name).filter(PowerBiSqlMapping.power_bi_sql_user_mapping_id == user_id ).first()
-#     power_bi_user_mapping = power_bi_table_data.mapping
-#     ACCESS_TOKEN = db.query(PowerBiUser).first().access_token
-     
-#     headers = {
-#         "Authorization": f"Bearer {ACCESS_TOKEN}",
-#         "Content-Type": "application/json"
-#     }
-
-#     url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/executeQueries"
-
-
-#     dax_query = {
-#         "queries": [{"query": f"EVALUATE '{power_bi_table_name}'"}], #name of the table in powerbi we are getting it as an input
-#         "serializerSettings": {"includeNulls": True}
-#     }
-
-#     response = requests.post(url, headers=headers, json=dax_query)
-#     print(response)
-#     response_table = response.json()["results"][0]["tables"][0]["rows"]
-#     bi_response_mapping = response_table.pop(0)
-#     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
-#     mapping_dict = {}
-#     for key, value in bi_response_mapping.items():
-#         if value not in availabe_column_name and value != "id" and value != power_bi_table_data.date_filter_column_name:
-#             # notification = db.query(NotificationTable).filter(NotificationTable.auditly_user_id == user_id).first()
-#             # # Update the read_at field
-#             # if notification:
-#             #     notification.notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}"
-#             # else:
-#             notification_new = NotificationTable(
-#                 auditly_user_id = user_id,
-#                 notification_message = f"Mapping missmatched while syncing at: {power_bi_table_name}",        
-#             )
-#             db.add(notification_new)   
-#             db.commit()
-#             return {"data": "Mapping Missmatch"}
-#         elif value == power_bi_table_data.date_filter_column_name:
-#             filter_column = key
-#         elif value in availabe_column_name:
-#             mapping_dict.update({key:power_bi_user_mapping[value]})
-#     table = Table(sql_table_name, metadata, autoload_with=engine)
-#     transformed_data = []
-#     for record in response_table:
-#         filter_check = None
-#         formatted_entry = {}
-#         for key, value in record.items():
-#             if key == filter_column and datetime.strptime(value, "%m-%d-%Y") < power_bi_table_data.date_filter_value:
-#                 filter_check = True
-#                 continue
-#             if key in [k for k,v in mapping_dict.items()]:
-#                 formatted_entry[mapping_dict[key]] = value
-#         if(not filter_check):
-#             transformed_data.append(formatted_entry)
-#     db.execute(table.insert(), transformed_data)
-#     db.commit()
-#     return response.json()
-
 
 class GetPowerBITableData(BaseModel):
     workspace_id: str
@@ -2949,54 +2670,6 @@ def create_and_push(request: PowerBIPushRequest, db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "Error", "message": str(e)}
 
-
-
-# class PowerBiUserDeleteRequest(BaseModel):
-#     power_bi_email: str
-#     power_bi_user_mapping_id: int
-#     connection_type: str
-
-# @app.post("/api/power-bi-users/delete")
-# async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = Depends(get_db)):
-#     """
-#     Delete a Power BI user connection by email, user mapping ID, and connection type.
-#     """
-#     try:
-#         # Validate inputs
-#         if not request.power_bi_email:
-#             raise HTTPException(status_code=400, detail="power_bi_email is required")
-#         if not request.power_bi_user_mapping_id:
-#             raise HTTPException(status_code=400, detail="power_bi_user_mapping_id is required")
-#         if request.connection_type not in ["inbound", "outbound"]:
-#             raise HTTPException(status_code=400, detail="connection_type must be 'inbound' or 'outbound'")
-
-#         # Query for the Power BI user
-#         power_bi_user = db.query(PowerBiUser).filter(
-#             PowerBiUser.power_bi_email == request.power_bi_email,
-#             PowerBiUser.power_bi_user_mapping_id == request.power_bi_user_mapping_id,
-#             PowerBiUser.connection_type == request.connection_type
-#         ).first()
-
-#         if not power_bi_user:
-#             raise HTTPException(status_code=404, detail="Power BI user not found")
-
-#         # Delete the user
-#         db.delete(power_bi_user)
-#         db.commit()
-
-#         return {
-#             "message": "Power BI user deleted successfully",
-#             "data": {
-#                 "power_bi_email": request.power_bi_email,
-#                 "power_bi_user_mapping_id": request.power_bi_user_mapping_id,
-#                 "connection_type": request.connection_type
-#             }
-#         }
-#     except HTTPException as he:
-#         raise he
-#     except Exception as e:
-#         db.rollback()
-#         raise HTTPException(status_code=500, detail=f"Error deleting Power BI user: {str(e)}")
 
 
 class PowerBiUserDeleteRequest(BaseModel):
