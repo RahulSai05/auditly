@@ -2654,6 +2654,7 @@ def push_to_powerbi(db: Session = Depends(get_db)):
             "message": f"Power BI responded with {response.status_code}: {response.text}"
         }
 
+
 class DatabaseJsonItem(BaseModel):
     onboard_token: str
     onboard_user_id: str
@@ -2694,10 +2695,41 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
     # Return a success message
     return {"message": "Data has been inserted successfully!"}
 
+class SaleItem(BaseModel):
+    item_id: int
+    original_sales_order_number: str
+    original_sales_order_line: int
+    ordered_qty: int
+    serial_number: str
+    sscc_number: str
+    tag_number: str
+    vendor_item_number: str
+    shipped_from_warehouse: str
+    shipped_to_person: str
+    shipped_to_billing_address: str
+    account_number: str
+    customer_email: str
+    shipped_to_apt_number: str
+    shipped_to_street: str
+    shipped_to_city: str
+    shipped_to_zip: int
+    shipped_to_state: str
+    shipped_to_country: str
+    dimension_depth: float
+    dimension_length: float
+    dimension_breadth: float
+    dimension_weight: float
+    dimension_volume: float
+    dimension_size: str
+    date_purchased: datetime
+    date_shipped: datetime
+    date_delivered: datetime
+
+
 class DatabaseJsonSaleItem(BaseModel):
     onboard_token: str
     onboard_user_id: str
-    json_data: List[SaleItem]
+    json_data: List[SalesData]
 
 @app.post("/api/update-database-json-customer-serials")
 def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get_db)):
