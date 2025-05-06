@@ -401,7 +401,7 @@ function CustomerSerialUpload() {
     }
   };
 
-  const handleFileUpload = async (e: React.FormEvent) => {
+  const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!csvFile) {
       setNotification({ type: 'error', message: "Please select a CSV file to upload." });
