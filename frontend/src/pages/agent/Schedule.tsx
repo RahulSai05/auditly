@@ -35,7 +35,7 @@ const Schedule: React.FC = () => {
 
   useEffect(() => {
     // Simulate fetching agent ID - replace with your actual auth logic
-    const storedAgentId = localStorage.getItem("agentId");
+    const storedAgentId = localStorage.getItem("userId");
     if (storedAgentId) {
       setAgentId(parseInt(storedAgentId));
       fetchSchedule(parseInt(storedAgentId));
