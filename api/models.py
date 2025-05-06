@@ -257,6 +257,8 @@ class SaleItemData(Base):
     date_purchased = Column(DateTime)
     date_shipped = Column(DateTime)
     date_delivered = Column(DateTime)
+    status = Column(String(100), default="Pending Agent Assignment")
+    delivery_agent_id = Column(Integer)
 
     item = relationship("Item", back_populates="sale_item_data", lazy="joined")
 
@@ -285,6 +287,8 @@ class ReturnItemData(Base):
     date_delivered = Column(DateTime)
     return_created_date = Column(DateTime)
     return_received_date = Column(DateTime)
+    status = Column(String(100), default="Pending Agent Assignment")
+    return_agent_id = Column(Integer)
 
     item = relationship("Item", back_populates="return_item_data", lazy="joined")
 
