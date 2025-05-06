@@ -675,7 +675,7 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
-@router.post("/api/upload-return-items-csv")
+@app.post("/api/upload-return-items-csv")
 async def upload_return_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
         content = await file.read()
