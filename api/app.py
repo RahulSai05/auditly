@@ -569,6 +569,94 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
+
+@app.post("/api/upload-sale-items-csv")
+async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        content = await file.read()
+        decoded_content = content.decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(decoded_content))
+
+        # Normalize headers
+        csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
+
+        required_fields = {
+            "item_id", "original_sales_order_number", "original_sales_order_line", "ordered_qty",
+            "serial_number", "customer_email", "account_number", "sscc_number", "tag_number",
+            "vendor_item_number", "shipped_from_warehouse", "shipped_to_person", "shipped_to_billing_address",
+            "shipped_to_apt_number", "shipped_to_street", "shipped_to_city", "shipped_to_zip",
+            "shipped_to_state", "shipped_to_country", "dimension_depth", "dimension_length",
+            "dimension_breadth", "dimension_weight", "dimension_volume", "dimension_size",
+            "date_purchased", "date_shipped", "date_delivered"
+        }
+
+        if not required_fields.issubset(set(csv_reader.fieldnames)):
+            raise HTTPException(status_code=400, detail="Missing required columns in CSV.")
+
+        added, skipped = 0, []
+
+        for row in csv_reader:
+            try:
+                # Normalize and validate row
+                row = {k.strip().lower(): v.strip() for k, v in row.items()}
+                item_id = int(row["item_id"])
+
+                # Validate foreign key existence
+                if not db.query(Item).filter(Item.id == item_id).first():
+                    raise ValueError(f"Item ID {item_id} does not exist.")
+
+                sale_item = SaleItemData(
+                    item_id=item_id,
+                    original_sales_order_number=row["original_sales_order_number"],
+                    original_sales_order_line=int(row["original_sales_order_line"]),
+                    ordered_qty=int(row["ordered_qty"]),
+                    serial_number=row["serial_number"],
+                    customer_email=row["customer_email"],
+                    account_number=row["account_number"],
+                    sscc_number=row["sscc_number"],
+                    tag_number=row["tag_number"],
+                    vendor_item_number=row["vendor_item_number"],
+                    shipped_from_warehouse=row["shipped_from_warehouse"],
+                    shipped_to_person=row["shipped_to_person"],
+                    shipped_to_billing_address=row["shipped_to_billing_address"],
+                    shipped_to_apt_number=row["shipped_to_apt_number"],
+                    shipped_to_street=row["shipped_to_street"],
+                    shipped_to_city=row["shipped_to_city"],
+                    shipped_to_zip=int(row["shipped_to_zip"]),
+                    shipped_to_state=row["shipped_to_state"],
+                    shipped_to_country=row["shipped_to_country"],
+                    dimension_depth=float(row["dimension_depth"]),
+                    dimension_length=float(row["dimension_length"]),
+                    dimension_breadth=float(row["dimension_breadth"]),
+                    dimension_weight=float(row["dimension_weight"]),
+                    dimension_volume=float(row["dimension_volume"]),
+                    dimension_size=row["dimension_size"],
+                    date_purchased=datetime.strptime(row["date_purchased"], "%Y-%m-%d").date(),
+                    date_shipped=datetime.strptime(row["date_shipped"], "%Y-%m-%d").date(),
+                    date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date()
+                )
+
+                db.add(sale_item)
+                added += 1
+
+            except Exception as row_error:
+                skipped.append({
+                    "row_data": row,
+                    "error": str(row_error)
+                })
+                continue
+
+        db.commit()
+        return {
+            "message": "Sale items CSV processed.",
+            "items_added": added,
+            "rows_skipped": skipped
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+
 @app.get("/api/search-items")
 async def search_items(query: str = "", db: Session = Depends(get_db)):
     """
