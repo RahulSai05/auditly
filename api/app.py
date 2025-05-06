@@ -317,15 +317,16 @@ def pending_agent_approval(db: Session = Depends(get_db)):
     return {"agents": result}
 
 
+
 class AgentApprovalRequest(BaseModel):
     agent_id: int
-    auditly_user_id: int
+    approver_id: int
 
 @app.post("/api/approve-agent")
 def approve_agent(request: AgentApprovalRequest, db: Session = Depends(get_db)):
     # Fetch user
-    user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.auditly_user_id).first()
-    if not user:
+    approver = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.approver_id).first()
+    if not approver:
         raise HTTPException(status_code=404, detail="AuditlyUser not found")
 
     # Fetch agent
@@ -334,13 +335,15 @@ def approve_agent(request: AgentApprovalRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Agent not found")
 
     # Update user
+    user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == agent.agent_to_user_mapping_id).first()
     user.is_agent = True
 
     # Update agent
-    agent.approved_by_auditly_user_id = request.auditly_user_id
+    agent.approved_by_auditly_user_id = request.approver_id
 
     db.commit()
     return {"message": "Agent approved and user updated successfully"}
+
 
 class AgentScheduleCheckRequest(BaseModel):
     agent_id: int
