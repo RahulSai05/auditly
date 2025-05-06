@@ -2695,57 +2695,72 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
     # Return a success message
     return {"message": "Data has been inserted successfully!"}
 
+class SaleItem(BaseModel):
+    item_id: int
+    original_sales_order_number: str
+    original_sales_order_line: int
+    ordered_qty: int
+    serial_number: str
+    sscc_number: str
+    tag_number: str
+    vendor_item_number: str
+    shipped_from_warehouse: str
+    shipped_to_person: str
+    shipped_to_billing_address: str
+    account_number: str
+    customer_email: str
+    shipped_to_apt_number: str
+    shipped_to_street: str
+    shipped_to_city: str
+    shipped_to_zip: int
+    shipped_to_state: str
+    shipped_to_country: str
+    dimension_depth: float
+    dimension_length: float
+    dimension_breadth: float
+    dimension_weight: float
+    dimension_volume: float
+    dimension_size: str
+    date_purchased: datetime
+    date_shipped: datetime
+    date_delivered: datetime
 
 class DatabaseJsonSaleItem(BaseModel):
     onboard_token: str
     onboard_user_id: str
-    json_data: List  # raw list, we’ll validate fields manually
+    json_data: List[SaleItem]  # ✅ Typed validation here
 
+# Step 2: FastAPI route
 @app.post("/api/update-database-json-customer-serials")
 def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get_db)):
-    onboard_token = data.onboard_token
-    onboard_user_id = data.onboard_user_id
-    json_data = data.json_data
-
-    # Authenticate user
     onboard_user = db.query(OnboardUser).filter(
-        OnboardUser.customer_user_id == onboard_user_id,
-        OnboardUser.token == onboard_token
+        OnboardUser.customer_user_id == data.onboard_user_id,
+        OnboardUser.token == data.onboard_token
     ).first()
 
     if not onboard_user:
         raise HTTPException(status_code=404, detail="Invalid user or token.")
 
-    # Define expected keys (optional: remove fields like status, delivery_agent_id if you want to skip them)
-    valid_keys = {
-        "item_id", "original_sales_order_number", "original_sales_order_line", "ordered_qty",
-        "serial_number", "sscc_number", "tag_number", "vendor_item_number", "shipped_from_warehouse",
-        "shipped_to_person", "shipped_to_billing_address", "account_number", "customer_email",
-        "shipped_to_apt_number", "shipped_to_street", "shipped_to_city", "shipped_to_zip",
-        "shipped_to_state", "shipped_to_country", "dimension_depth", "dimension_length",
-        "dimension_breadth", "dimension_weight", "dimension_volume", "dimension_size",
-        "date_purchased", "date_shipped", "date_delivered"
-    }
+    added = 0
+    skipped = []
 
-    added, skipped = 0, []
-
-    for row in json_data:
-        if any(key not in valid_keys for key in row.keys()):
-            skipped.append({"row": row, "error": "Invalid keys in JSON"})
-            continue
-
+    for row in data.json_data:
         try:
-            sale_item = SaleItemData(**row)
+            sale_item = SaleItemData(**row.dict())
             db.add(sale_item)
             added += 1
         except Exception as e:
-            skipped.append({"row": row, "error": str(e)})
+            skipped.append({
+                "row_data": row.dict(),
+                "error": str(e)
+            })
 
     db.commit()
     return {
         "message": f"{added} sale items inserted successfully.",
         "rows_skipped": skipped
     }
+
 
 @app.get("/api/onboard-users")
 def read_users(db: Session = Depends(get_db)):
