@@ -2694,6 +2694,46 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
     # Return a success message
     return {"message": "Data has been inserted successfully!"}
 
+class DatabaseJsonSaleItem(BaseModel):
+    onboard_token: str
+    onboard_user_id: str
+    json_data: List[SaleItem]
+
+@app.post("/api/update-database-json-customer-serials")
+def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get_db)):
+    onboard_token = data.onboard_token
+    onboard_user_id = data.onboard_user_id
+    json_data = data.json_data
+
+    # Authenticate user
+    onboard_user = db.query(OnboardUser).filter(
+        OnboardUser.customer_user_id == onboard_user_id,
+        OnboardUser.token == onboard_token
+    ).first()
+
+    if not onboard_user:
+        raise HTTPException(status_code=404, detail="Invalid user or token.")
+
+    added = 0
+    skipped = []
+
+    for row in json_data:
+        try:
+            sale_item = SaleItemData(**row.dict())
+            db.add(sale_item)
+            added += 1
+        except Exception as e:
+            skipped.append({
+                "row_data": row.dict(),
+                "error": str(e)
+            })
+
+    db.commit()
+
+    return {
+        "message": f"{added} sale items inserted successfully.",
+        "rows_skipped": skipped
+    }
 @app.get("/api/onboard-users")
 def read_users(db: Session = Depends(get_db)):
     users = db.query(OnboardUser).all()
