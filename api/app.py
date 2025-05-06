@@ -3390,3 +3390,47 @@ async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error deleting Power BI user: {str(e)}")
+
+
+
+@app.post("/api/assign-agent-sale")
+async def assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
+    sales_order_id = "1"
+    sale_order = db.query(SaleItemData).filter(SaleItemData.id == sales_order_id).first()
+    return_message = ""
+    if sale_order.status == "Agent Assigned":
+        return_message = "Agent Already Assigned"
+    elif sale_order.status == "Deliverd":
+        return_message = "Already Deliverd"
+    else:
+        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == sale_order.shipped_to_zip).filter((Agent.delivery_type == "Delivery") | (Agent.delivery_type == "Both"))
+        for agent in availabe_agent:
+            if agent.approved_by_auditly_user_id is not None and str(datetime.today().isoweekday()) in agent.work_schedule["days"].split(","):
+                sale_order.delivery_agent_id = agent.agent_id
+                sale_order.status = "Agent Assigned"
+                db.commit()
+                return_message = "Agent Assigned"
+                break
+
+    return return_message
+
+@app.post("/api/assign-agent-return")
+async def assign_return_order(db: Session = Depends(get_db), return_order_id = None):
+    return_order_id = "1"
+    return_order = db.query(ReturnItemData).filter(ReturnItemData.id == return_order_id).first()
+    return_message = ""
+    if return_order.status == "Agent Assigned":
+        return_message = "Agent Already Assigned"
+    elif return_order.status == "Picked Up":
+        return_message = "Already Picked Up"
+    else:
+        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == return_order.return_zip).filter((Agent.delivery_type == "Return") | (Agent.delivery_type == "Both"))
+        for agent in availabe_agent:
+            if agent.approved_by_auditly_user_id is not None and str(datetime.today().isoweekday()) in agent.work_schedule["days"].split(","):
+                return_order.return_agent_id = agent.agent_id
+                return_order.status = "Agent Assigned"
+                db.commit()
+                return_message = "Agent Assigned"
+                break
+
+    return return_message
