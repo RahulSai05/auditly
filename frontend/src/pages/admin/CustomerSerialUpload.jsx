@@ -378,22 +378,38 @@
 
 // export default CustomerSerialUpload;
 
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Search, X, Download, Loader2, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import axios from 'axios';
 
+interface SearchResult {
+  sales_order: string;
+  order_line: number;
+  customer_name: string;
+  account_number: string;
+  item_description: string;
+  brand: string;
+  item_configuration: string;
+  serial_number: string;
+  date_shipped: string;
+}
+
+interface NotificationType {
+  type: 'success' | 'error' | '';
+  message: string;
+}
+
 function CustomerSerialUpload() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState({ type: '', message: '' });
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileName, setFileName] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [notification, setNotification] = useState<NotificationType>({ type: '', message: '' });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setCsvFile(file);
@@ -401,7 +417,7 @@ function CustomerSerialUpload() {
     }
   };
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!csvFile) {
       setNotification({ type: 'error', message: "Please select a CSV file to upload." });
@@ -414,7 +430,10 @@ function CustomerSerialUpload() {
     setUploadProgress(0);
 
     try {
-      const response = await axios.post(
+      const response = await axios.post<{
+        items_added: number;
+        rows_skipped: string[];
+      }>(
         "https://auditlyai.com/api/upload-sale-items-csv",
         formData,
         {
@@ -437,9 +456,11 @@ function CustomerSerialUpload() {
         type: 'success', 
         message: `Success! ${response.data.items_added} items added. ${response.data.rows_skipped.length} rows skipped.` 
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error uploading CSV:", error);
-      const errorMessage = error.response?.data?.detail || "An error occurred while uploading the CSV.";
+      const errorMessage = axios.isAxiosError(error) 
+        ? error.response?.data?.detail || "An error occurred while uploading the CSV."
+        : "An error occurred while uploading the CSV.";
       setNotification({ type: 'error', message: errorMessage });
     } finally {
       setIsLoading(false);
@@ -453,7 +474,7 @@ function CustomerSerialUpload() {
     }
     setIsLoading(true);
     try {
-      const response = await axios.get(
+      const response = await axios.get<SearchResult[]>(
         "https://auditlyai.com/api/sale-data",
         {
           params: { query: searchQuery },
@@ -465,9 +486,11 @@ function CustomerSerialUpload() {
       } else {
         setNotification({ type: '', message: '' });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error searching sale items:", error);
-      const errorMessage = error.response?.data?.detail || "An error occurred while searching for sale items.";
+      const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.detail || "An error occurred while searching for sale items."
+        : "An error occurred while searching for sale items.";
       setNotification({ type: 'error', message: errorMessage });
     } finally {
       setIsLoading(false);
@@ -486,13 +509,8 @@ function CustomerSerialUpload() {
     }
   };
 
-  const downloadSampleCSV = () => {
-    // Create CSV content with sample data matching the API requirements
-    const csvContent = [
-      "item_id,original_sales_order_number,original_sales_order_line,ordered_qty,serial_number,customer_email,account_number,sscc_number,tag_number,vendor_item_number,shipped_from_warehouse,shipped_to_person,shipped_to_billing_address,shipped_to_apt_number,shipped_to_street,shipped_to_city,shipped_to_zip,shipped_to_state,shipped_to_country,dimension_depth,dimension_length,dimension_breadth,dimension_weight,dimension_volume,dimension_size,date_purchased,date_shipped,date_delivered",
-      "1001,SO-2023-001,1,2,SN12345678,customer@example.com,ACC12345,SSCC98765,TAG54321,VIN87654,Warehouse A,John Doe,123 Main St,Apt 4B,123 Main St,New York,10001,NY,USA,10.5,15.2,8.3,5.7,1200.5,Large,2023-01-15,2023-01-20,2023-01-25",
-      "1002,SO-2023-001,2,1,SN87654321,customer@example.com,ACC12345,SSCC98766,TAG54322,VIN87655,Warehouse A,Jane Smith,123 Main St,Apt 4B,123 Main St,New York,10001,NY,USA,8.2,12.5,6.8,3.2,800.3,Medium,2023-01-15,2023-01-20,2023-01-25"
-    ].join("\n");
+  const downloadTemplateCSV = () => {
+    const csvContent = "item_id,original_sales_order_number,original_sales_order_line,ordered_qty,serial_number,customer_email,account_number,sscc_number,tag_number,vendor_item_number,shipped_from_warehouse,shipped_to_person,shipped_to_billing_address,shipped_to_apt_number,shipped_to_street,shipped_to_city,shipped_to_zip,shipped_to_state,shipped_to_country,dimension_depth,dimension_length,dimension_breadth,dimension_weight,dimension_volume,dimension_size,date_purchased,date_shipped,date_delivered";
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -503,7 +521,7 @@ function CustomerSerialUpload() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    setNotification({ type: 'success', message: "Sample CSV template downloaded. Add your data to the file and upload it." });
+    setNotification({ type: 'success', message: "CSV template downloaded successfully. Add your data to the file and upload it." });
   };
 
   return (
@@ -620,11 +638,11 @@ function CustomerSerialUpload() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="button"
-                  onClick={downloadSampleCSV}
+                  onClick={downloadTemplateCSV}
                   className="flex-1 px-4 py-3 bg-white border border-blue-200 text-blue-600 rounded-xl font-medium hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <Download className="w-5 h-5" />
-                  Download Sample
+                  Download Template
                 </motion.button>
 
                 <motion.button
