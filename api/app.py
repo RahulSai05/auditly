@@ -2761,6 +2761,63 @@ def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get
         "rows_skipped": skipped
     }
 
+class ReturnItem(BaseModel):
+    item_id: int
+    original_sales_order_number: str
+    return_order_number: str
+    return_order_line: int
+    return_qty: int
+    return_destination: str
+    return_condition: str
+    return_carrier: str
+    return_warehouse: str
+    return_house_number: str
+    return_street: str
+    return_city: str
+    return_zip: int
+    return_state: str
+    return_country: str
+    date_purchased: datetime
+    date_shipped: datetime
+    date_delivered: datetime
+    return_created_date: datetime
+    return_received_date: datetime
+
+class DatabaseJsonReturnItem(BaseModel):
+    onboard_token: str
+    onboard_user_id: str
+    json_data: List[ReturnItem]
+
+@app.post("/api/update-database-json-return-items")
+def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends(get_db)):
+    onboard_user = db.query(OnboardUser).filter(
+        OnboardUser.customer_user_id == data.onboard_user_id,
+        OnboardUser.token == data.onboard_token
+    ).first()
+
+    if not onboard_user:
+        raise HTTPException(status_code=404, detail="Invalid user or token.")
+
+    added = 0
+    skipped = []
+
+    for row in data.json_data:
+        try:
+            return_item = ReturnItemData(**row.dict())
+            db.add(return_item)
+            added += 1
+        except Exception as e:
+            skipped.append({
+                "row_data": row.dict(),
+                "error": str(e)
+            })
+
+    db.commit()
+
+    return {
+        "message": f"{added} return items inserted successfully.",
+        "rows_skipped": skipped
+    }
 
 @app.get("/api/onboard-users")
 def read_users(db: Session = Depends(get_db)):
