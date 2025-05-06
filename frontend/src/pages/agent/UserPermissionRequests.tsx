@@ -242,7 +242,7 @@ const UserPermissionRequests: React.FC = () => {
       setProcessingId(agentId);
       
       // Get approver ID from localStorage (assuming it's stored there after login)
-      const approverId = localStorage.getItem("auditly_user_id");
+      const approverId = localStorage.getItem("userId");
       
       if (!approverId) {
         throw new Error("Approver ID not found in local storage");
