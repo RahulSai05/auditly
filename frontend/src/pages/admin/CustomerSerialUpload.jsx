@@ -388,7 +388,7 @@ function CustomerSerialUpload() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | ''; message: string }>({ type: '', message: '' });
+  const [notification, setNotification] = useState({ type: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
