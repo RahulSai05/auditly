@@ -569,8 +569,7 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
-
-@app.post("/api/upload-sale-items-csv")
+@router.post("/api/upload-sale-items-csv")
 async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
         content = await file.read()
@@ -594,23 +593,42 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
             raise HTTPException(status_code=400, detail="Missing required columns in CSV.")
 
         added, skipped = 0, []
+        seen_combinations = set()
 
         for row in csv_reader:
             try:
-                # Normalize and validate row
                 row = {k.strip().lower(): v.strip() for k, v in row.items()}
                 item_id = int(row["item_id"])
+                order_no = row["original_sales_order_number"]
+                order_line = int(row["original_sales_order_line"])
+                serial = row["serial_number"]
 
-                # Validate foreign key existence
+                unique_key = (order_no, order_line, serial)
+
+                # Check for duplicates in CSV
+                if unique_key in seen_combinations:
+                    raise ValueError("Duplicate row in CSV file.")
+                seen_combinations.add(unique_key)
+
+                # Check for duplicates in DB
+                db_duplicate = db.query(SaleItemData).filter(
+                    SaleItemData.original_sales_order_number == order_no,
+                    SaleItemData.original_sales_order_line == order_line,
+                    SaleItemData.serial_number == serial
+                ).first()
+                if db_duplicate:
+                    raise ValueError("Duplicate already exists in database.")
+
+                # Check item existence
                 if not db.query(Item).filter(Item.id == item_id).first():
                     raise ValueError(f"Item ID {item_id} does not exist.")
 
                 sale_item = SaleItemData(
                     item_id=item_id,
-                    original_sales_order_number=row["original_sales_order_number"],
-                    original_sales_order_line=int(row["original_sales_order_line"]),
+                    original_sales_order_number=order_no,
+                    original_sales_order_line=order_line,
                     ordered_qty=int(row["ordered_qty"]),
-                    serial_number=row["serial_number"],
+                    serial_number=serial,
                     customer_email=row["customer_email"],
                     account_number=row["account_number"],
                     sscc_number=row["sscc_number"],
@@ -655,7 +673,6 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
-
 
 @app.get("/api/search-items")
 async def search_items(query: str = "", db: Session = Depends(get_db)):
