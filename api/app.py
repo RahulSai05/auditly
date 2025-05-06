@@ -483,11 +483,11 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
     }
 
 
-
 @app.post("/api/upload-items-csv")
 async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
     Upload a CSV file to add or update items in the database.
+    Skips rows with invalid or duplicate data and returns a summary.
     """
     try:
         content = await file.read()
@@ -498,23 +498,41 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
         csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
         required_fields = {"item_number", "item_description", "brand_id", "category", "configuration"}
         if not required_fields.issubset(set(csv_reader.fieldnames)):
-            raise HTTPException(status_code=400, detail="Missing required columns in CSV.")
+            raise HTTPException(status_code=400, detail=f"Missing required columns. Required: {required_fields}")
 
         added, updated = 0, 0
+        skipped_rows = []
+        seen_items = set()
 
         for row in csv_reader:
             try:
-                print("Processing row:", row)  # Debug log
-                item_number = int(row["item_number"])
-                brand_id = int(row["brand_id"])
+                # Strip and normalize all values in row
+                row = {k.strip().lower(): v.strip() for k, v in row.items()}
+
+                item_number_str = row.get("item_number")
+                brand_id_str = row.get("brand_id")
+
+                # Validate item_number and brand_id
+                if not item_number_str or not item_number_str.isdigit():
+                    raise ValueError("Invalid or missing item_number")
+                if not brand_id_str or not brand_id_str.isdigit():
+                    raise ValueError("Invalid or missing brand_id")
+
+                item_number = int(item_number_str)
+                brand_id = int(brand_id_str)
+
+                # Check for duplicate item_number in the uploaded CSV
+                if item_number in seen_items:
+                    raise ValueError(f"Duplicate item_number {item_number} in CSV")
+                seen_items.add(item_number)
 
                 # Check if brand exists
                 brand_exists = db.query(Brand).filter(Brand.id == brand_id).first()
                 if not brand_exists:
-                    raise HTTPException(status_code=400, detail=f"Brand ID {brand_id} does not exist.")
+                    raise ValueError(f"Brand ID {brand_id} does not exist")
 
+                # Add or update item
                 existing_item = db.query(Item).filter(Item.item_number == item_number).first()
-
                 if existing_item:
                     existing_item.item_description = row["item_description"]
                     existing_item.brand_id = brand_id
@@ -533,14 +551,18 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
                     added += 1
 
             except Exception as row_error:
-                print(f"Skipping row due to error: {row_error} | Row data: {row}")
-                continue  # Skip problematic row and continue with the rest
+                skipped_rows.append({
+                    "row_data": row,
+                    "error": str(row_error)
+                })
+                continue  # move to next row
 
         db.commit()
         return {
             "message": "CSV processed.",
             "items_added": added,
-            "items_updated": updated
+            "items_updated": updated,
+            "rows_skipped": skipped_rows
         }
 
     except Exception as e:
