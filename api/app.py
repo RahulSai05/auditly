@@ -674,6 +674,93 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
+
+@router.post("/api/upload-return-items-csv")
+async def upload_return_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        content = await file.read()
+        decoded_content = content.decode("utf-8")
+        csv_reader = csv.DictReader(StringIO(decoded_content))
+
+        csv_reader.fieldnames = [field.strip().lower() for field in csv_reader.fieldnames]
+
+        required_fields = {
+            "original_sales_order_number", "return_order_number", "return_order_line", "return_qty",
+            "item_id", "return_destination", "return_condition", "return_carrier", "return_warehouse",
+            "return_house_number", "return_street", "return_city", "return_zip", "return_state", "return_country",
+            "date_purchased", "date_shipped", "date_delivered", "return_created_date", "return_received_date"
+        }
+
+        if not required_fields.issubset(set(csv_reader.fieldnames)):
+            raise HTTPException(status_code=400, detail=f"Missing required fields: {required_fields - set(csv_reader.fieldnames)}")
+
+        added, skipped = 0, []
+        seen_keys = set()
+
+        for row in csv_reader:
+            try:
+                row = {k.strip().lower(): v.strip() for k, v in row.items()}
+
+                order_number = row["return_order_number"]
+                order_line = int(row["return_order_line"])
+                item_id = int(row["item_id"])
+                unique_key = (order_number, order_line)
+
+                # Check duplicate in CSV
+                if unique_key in seen_keys:
+                    raise ValueError("Duplicate return entry in CSV")
+                seen_keys.add(unique_key)
+
+                # Check duplicate in DB
+                exists = db.query(ReturnItemData).filter(
+                    ReturnItemData.return_order_number == order_number,
+                    ReturnItemData.return_order_line == order_line
+                ).first()
+
+                if exists:
+                    raise ValueError("Duplicate return entry already exists in DB")
+
+                return_item = ReturnItemData(
+                    original_sales_order_number=row["original_sales_order_number"],
+                    return_order_number=order_number,
+                    return_order_line=order_line,
+                    return_qty=int(row["return_qty"]),
+                    item_id=item_id,
+                    return_destination=row["return_destination"],
+                    return_condition=row["return_condition"],
+                    return_carrier=row["return_carrier"],
+                    return_warehouse=row["return_warehouse"],
+                    return_house_number=row["return_house_number"],
+                    return_street=row["return_street"],
+                    return_city=row["return_city"],
+                    return_zip=int(row["return_zip"]),
+                    return_state=row["return_state"],
+                    return_country=row["return_country"],
+                    date_purchased=datetime.strptime(row["date_purchased"], "%Y-%m-%d").date(),
+                    date_shipped=datetime.strptime(row["date_shipped"], "%Y-%m-%d").date(),
+                    date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date(),
+                    return_created_date=datetime.strptime(row["return_created_date"], "%Y-%m-%d").date(),
+                    return_received_date=datetime.strptime(row["return_received_date"], "%Y-%m-%d").date()
+                )
+
+                db.add(return_item)
+                added += 1
+
+            except Exception as row_error:
+                skipped.append({"row_data": row, "error": str(row_error)})
+                continue
+
+        db.commit()
+        return {
+            "message": "Return items CSV processed.",
+            "items_added": added,
+            "rows_skipped": skipped
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+
 @app.get("/api/search-items")
 async def search_items(query: str = "", db: Session = Depends(get_db)):
     """
