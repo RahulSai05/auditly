@@ -3395,7 +3395,7 @@ async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = 
 
 @app.post("/api/assign-agent-sale")
 async def assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
-    sales_order_id = "1"
+    sales_order_id = "2"
     sale_order = db.query(SaleItemData).filter(SaleItemData.id == sales_order_id).first()
     return_message = ""
     if sale_order.status == "Agent Assigned":
