@@ -1428,7 +1428,7 @@ const AdminLayout = () => {
             ""
           )}
 
-          {isInspectionUser ? (
+          {isInspectionUser && userData?.is_agent ? (
   <>
     {/* Manual Data Ingestion Section */}
     <motion.li variants={itemVariants}>
