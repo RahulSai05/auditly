@@ -158,6 +158,7 @@
 
 // export default UserPermissionRequests;
 
+
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -185,6 +186,7 @@ interface Agent {
   dob: string;
   created_at: string;
   updated_at: string;
+  agent_to_user_mapping_id: number; // Added this field
 }
 
 interface User {
@@ -214,15 +216,8 @@ const UserPermissionRequests: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Cache-busting technique
       const timestamp = new Date().getTime();
-      const response = await fetch(`/api/pending-agent-approval?t=${timestamp}`, {
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0",
-        },
-      });
+      const response = await fetch(`/api/pending-agent-approval?t=${timestamp}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -245,10 +240,12 @@ const UserPermissionRequests: React.FC = () => {
   const handleApproveAgent = async (agentId: number) => {
     try {
       setProcessingId(agentId);
-      const auditlyUserId = localStorage.getItem("userId");
       
-      if (!auditlyUserId) {
-        throw new Error("User ID not found");
+      // Get approver ID from localStorage (assuming it's stored there after login)
+      const approverId = localStorage.getItem("auditly_user_id");
+      
+      if (!approverId) {
+        throw new Error("Approver ID not found in local storage");
       }
 
       const response = await fetch("/api/approve-agent", {
@@ -258,15 +255,17 @@ const UserPermissionRequests: React.FC = () => {
         },
         body: JSON.stringify({
           agent_id: agentId,
-          auditly_user_id: parseInt(auditlyUserId),
+          approver_id: parseInt(approverId),
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Approval failed with status: ${response.status}`);
+        throw new Error(responseData.detail || `Approval failed with status: ${response.status}`);
       }
 
-      setSuccessMessage("Agent approved successfully!");
+      setSuccessMessage(responseData.message || "Agent approved successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
       fetchPendingAgents(); // Refresh the list
     } catch (err) {
