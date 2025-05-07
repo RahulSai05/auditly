@@ -2785,6 +2785,9 @@ def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get
             sale_item = SaleItemData(**row.dict())
             db.add(sale_item)
             added += 1
+            added_sale_item = db.query(SaleItemData).filter(SaleItemData.original_sales_order_number == row["original_sales_order_number"]).first()
+            print(added_sale_item)
+            _assign_sales_order(db,added_sale_item.id)
         except Exception as e:
             skipped.append({
                 "row_data": row.dict(),
@@ -3108,9 +3111,7 @@ async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = 
 
 
 
-@app.post("/api/assign-agent-sale")
-async def assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
-    sales_order_id = "2"
+def _assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
     sale_order = db.query(SaleItemData).filter(SaleItemData.id == sales_order_id).first()
     return_message = ""
     if sale_order.status == "Agent Assigned":
@@ -3129,9 +3130,7 @@ async def assign_sales_order(db: Session = Depends(get_db), sales_order_id = Non
 
     return return_message
 
-@app.post("/api/assign-agent-return")
-async def assign_return_order(db: Session = Depends(get_db), return_order_id = None):
-    return_order_id = "2"
+def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
     return_order = db.query(ReturnItemData).filter(ReturnItemData.id == return_order_id).first()
     return_message = ""
     if return_order.status == "Agent Assigned":
