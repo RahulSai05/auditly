@@ -2843,6 +2843,7 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
     for row in data.json_data:
         try:
             return_item = ReturnItemData(**row.dict())
+            print(row)
             db.add(return_item)
             added += 1
             added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row["original_sales_order_number"]).first()
