@@ -431,7 +431,7 @@ const RequestAccess: React.FC = () => {
             {/* Basic Information Section */}
             <FormSection 
               title="Basic Information" 
-              icon={<User className="w-5 h-5 text-blue-600" />}
+              icon={<UserIcon className="w-5 h-5 text-blue-600" />}
             >
               <FormField
                 label="Agent Name"
@@ -440,7 +440,7 @@ const RequestAccess: React.FC = () => {
                 value={form.agent_name}
                 onChange={handleChange}
                 required
-                icon={<User className="w-4 h-4" />}
+                icon={<UserIcon className="w-4 h-4" />}
               />
               <FormField
                 label="Gender"
