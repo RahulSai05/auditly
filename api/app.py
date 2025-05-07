@@ -2846,7 +2846,7 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
             print(row)
             db.add(return_item)
             added += 1
-            added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row["original_sales_order_number"]).first()
+            added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row.original_sales_order_number).first()
             print(added_return_item)
             _assign_sales_order(db,added_return_item.id)
         except Exception as e:
