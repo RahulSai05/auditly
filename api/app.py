@@ -2845,6 +2845,7 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
             return_item = ReturnItemData(**row.dict())
             print(row)
             db.add(return_item)
+            db.commit()
             added += 1
             added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row.original_sales_order_number).first()
             print(added_return_item)
@@ -2855,7 +2856,6 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
                 "error": str(e)
             })
 
-    db.commit()
 
     return {
         "message": f"{added} return items inserted successfully.",
