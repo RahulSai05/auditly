@@ -568,7 +568,6 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
-
 @app.post("/api/upload-sale-items-csv")
 async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
@@ -655,6 +654,18 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
                 )
 
                 db.add(sale_item)
+                db.commit()  # Commit before assignment
+
+                # Retrieve inserted record by unique key
+                added_sale_item = db.query(SaleItemData).filter(
+                    SaleItemData.original_sales_order_number == order_no,
+                    SaleItemData.original_sales_order_line == order_line,
+                    SaleItemData.serial_number == serial
+                ).first()
+
+                # Call assignment function
+                _assign_sales_order(db, added_sale_item.id)
+
                 added += 1
 
             except Exception as row_error:
@@ -664,7 +675,6 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
                 })
                 continue
 
-        db.commit()
         return {
             "message": "Sale items CSV processed.",
             "items_added": added,
@@ -673,7 +683,6 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
-
 
 @app.post("/api/upload-return-items-csv")
 async def upload_return_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -706,12 +715,10 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
                 item_id = int(row["item_id"])
                 unique_key = (order_number, order_line)
 
-                # Check duplicate in CSV
                 if unique_key in seen_keys:
                     raise ValueError("Duplicate return entry in CSV")
                 seen_keys.add(unique_key)
 
-                # Check duplicate in DB
                 exists = db.query(ReturnItemData).filter(
                     ReturnItemData.return_order_number == order_number,
                     ReturnItemData.return_order_line == order_line
@@ -744,13 +751,21 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
                 )
 
                 db.add(return_item)
+                db.commit()
+
+                added_return_item = db.query(ReturnItemData).filter(
+                    ReturnItemData.return_order_number == order_number,
+                    ReturnItemData.return_order_line == order_line
+                ).first()
+
+                _assign_return_order(db, added_return_item.id)
+
                 added += 1
 
             except Exception as row_error:
                 skipped.append({"row_data": row, "error": str(row_error)})
                 continue
 
-        db.commit()
         return {
             "message": "Return items CSV processed.",
             "items_added": added,
