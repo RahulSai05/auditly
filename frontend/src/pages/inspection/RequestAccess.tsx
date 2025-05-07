@@ -387,7 +387,7 @@ const RequestAccess: React.FC = () => {
           }}
           className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
         >
-          <Users className="w-10 h-10 text-blue-600" />
+          <UsersIcon className="w-10 h-10 text-blue-600" />
         </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
@@ -455,7 +455,7 @@ const RequestAccess: React.FC = () => {
                   { value: "Other", label: "Other" },
                   { value: "Prefer not to say", label: "Prefer not to say" }
                 ]}
-                icon={<Users className="w-4 h-4" />}
+                icon={<UsersIcon className="w-4 h-4" />}
               />
               <FormField
                 label="Date of Birth"
@@ -714,7 +714,7 @@ const RequestAccess: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Users className="w-5 h-5" />
+                    <UsersIcon className="w-5 h-5" />
                     <span>Create Agent</span>
                   </>
                 )}
