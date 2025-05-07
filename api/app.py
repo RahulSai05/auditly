@@ -2785,9 +2785,9 @@ def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get
             sale_item = SaleItemData(**row.dict())
             db.add(sale_item)
             added += 1
-            added_sale_item = db.query(SaleItemData).filter(SaleItemData.original_sales_order_number == row["original_sales_order_number"]).first()
-            print(added_sale_item)
-            _assign_sales_order(db,added_sale_item.id)
+            # added_sale_item = db.query(SaleItemData).filter(SaleItemData.original_sales_order_number == row["original_sales_order_number"]).first()
+            # print(added_sale_item)
+            # _assign_sales_order(db,added_sale_item.id)
         except Exception as e:
             skipped.append({
                 "row_data": row.dict(),
@@ -2845,6 +2845,9 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
             return_item = ReturnItemData(**row.dict())
             db.add(return_item)
             added += 1
+            added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row["original_sales_order_number"]).first()
+            print(added_return_item)
+            _assign_sales_order(db,added_return_item.id)
         except Exception as e:
             skipped.append({
                 "row_data": row.dict(),
