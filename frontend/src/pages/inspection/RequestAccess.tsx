@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  User, 
-  Users, 
-  MapPin, 
-  Calendar, 
-  Truck,
-  CheckCircle,
-  ClipboardList,
-  Route,
-  Settings,
-  ChevronDown,
-  ChevronUp
+  User as UserIcon, 
+  Users as UsersIcon, 
+  MapPin as MapPinIcon, 
+  Calendar as CalendarIcon, 
+  Truck as TruckIcon,
+  CheckCircle as CheckCircleIcon,
+  ClipboardList as ClipboardListIcon,
+  Route as RouteIcon,
+  Settings as SettingsIcon,
+  ChevronDown as ChevronDownIcon,
+  ChevronUp as ChevronUpIcon,
+  Navigation as NavigationIcon
 } from "lucide-react";
 
 // FormField component (same as before)
