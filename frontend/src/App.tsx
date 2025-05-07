@@ -1,5 +1,5 @@
 import { Route, Routes, useNavigate, useLocation, Navigate, Outlet, useFetcher } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState, ReactNode } from "react";
 // Import all your page components as before
 import Home from "./pages/Home";
@@ -48,6 +48,8 @@ import EditProfile from "./components/auth/EditProfile";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import { RootState } from "./store/store";
+import { setAgentId } from "./slices/itemSlice";
+
 
 // Type definitions
 interface UserData {
@@ -115,6 +117,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 export default function App(): JSX.Element {
   const itemData = useSelector((state: RootState) => state.ids);
   const location = useLocation();
+  const dispatch = useDispatch();
 
 
   const navigate = useNavigate();
@@ -149,6 +152,16 @@ export default function App(): JSX.Element {
 
           if (userExists && userExistsData) {
             // Check if user has EXACTLY the permissions specified in User Type array (no more, no less)
+
+            if (userExistsData.agent_id) {
+              localStorage.setItem("agentId", userExistsData.agent_id.toString());
+              dispatch(setAgentId(userExistsData.agent_id));
+              console.log("Agent ID set:", userExistsData.agent_id);
+            } else {
+              localStorage.removeItem("agentId");
+              dispatch(setAgentId(null));
+            }
+
             const requiredUserTypes = userData["User Type"];
             let isAuthorized = true;
 
