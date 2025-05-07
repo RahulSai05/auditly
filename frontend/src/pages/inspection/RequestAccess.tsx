@@ -9,15 +9,47 @@ import {
   CheckCircle,
   ClipboardList,
   Route,
-  Settings,
   ChevronDown,
   ChevronUp,
   Navigation2
 } from "lucide-react";
 import FormField from "../components/FormField";
 import FormSection from "../components/FormSection";
-import { DayOption, FormState, SuccessData } from "../types";
 
+// Types
+interface DayOption {
+  id: number;
+  name: string;
+  selected: boolean;
+}
+
+interface FormState {
+  agent_name: string;
+  current_address: string;
+  delivery_type: string;
+  pickup_routing_mode: string;
+  delivery_routing_mode: string;
+  servicing_state: string;
+  servicing_city: string;
+  servicing_zip: string;
+  permanent_adress: string;
+  permanent_address_state: string;
+  permanent_address_city: string;
+  permanent_address_zip: string;
+  gender: string;
+  dob: string;
+  work_schedule: string;
+  agent_to_user_mapping_id: string;
+  additional_info_1: string;
+  additional_info_2: string;
+  additional_info_3: string;
+}
+
+interface SuccessData {
+  agent_id: number;
+}
+
+// Main Component
 const RequestAccess: React.FC = () => {
   const [days, setDays] = useState<DayOption[]>([
     { id: 1, name: "Monday", selected: false },
@@ -34,8 +66,8 @@ const RequestAccess: React.FC = () => {
     agent_name: "",
     current_address: "",
     delivery_type: "Delivery",
-    pickup_routing_mode: "auto", // auto or manual
-    delivery_routing_mode: "auto", // auto or manual
+    pickup_routing_mode: "auto",
+    delivery_routing_mode: "auto",
     servicing_state: "",
     servicing_city: "",
     servicing_zip: "",
@@ -58,7 +90,6 @@ const RequestAccess: React.FC = () => {
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
 
   useEffect(() => {
-    // Get user ID from local storage and set it to agent_to_user_mapping_id
     const userId = localStorage.getItem("userId");
     if (userId) {
       setForm(prev => ({
@@ -74,7 +105,6 @@ const RequestAccess: React.FC = () => {
     );
     setDays(updatedDays);
     
-    // Update work_schedule in form
     const selectedDays = updatedDays
       .filter(day => day.selected)
       .map(day => day.id)
@@ -103,7 +133,6 @@ const RequestAccess: React.FC = () => {
     setError(null);
     
     try {
-      // Prepare the payload according to the API model
       const payload = {
         agent_name: form.agent_name,
         current_address: form.current_address || null,
@@ -207,298 +236,21 @@ const RequestAccess: React.FC = () => {
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Information Section */}
-            <FormSection 
-              title="Basic Information" 
-              icon={<User className="w-5 h-5" />}
-            >
-              <FormField
-                label="Agent Name"
-                name="agent_name"
-                type="text"
-                value={form.agent_name}
-                onChange={handleChange}
-                required
-                icon={<User className="w-4 h-4" />}
-              />
-              <FormField
-                label="Gender"
-                name="gender"
-                type="select"
-                value={form.gender}
-                onChange={handleChange}
-                required
-                options={[
-                  { value: "Male", label: "Male" },
-                  { value: "Female", label: "Female" },
-                  { value: "Other", label: "Other" },
-                  { value: "Prefer not to say", label: "Prefer not to say" }
-                ]}
-                icon={<Users className="w-4 h-4" />}
-              />
-              <FormField
-                label="Date of Birth"
-                name="dob"
-                type="date"
-                value={form.dob}
-                onChange={handleChange}
-                icon={<Calendar className="w-4 h-4" />}
-              />
-            </FormSection>
+            <BasicInfoSection form={form} handleChange={handleChange} />
+            <DeliveryTypeSection form={form} handleChange={handleChange} />
+            <RoutingModeSection form={form} handleChange={handleChange} />
+            
+            <WorkScheduleSection 
+              days={days}
+              isExpanded={isScheduleExpanded}
+              toggleExpanded={() => setIsScheduleExpanded(!isScheduleExpanded)}
+              toggleDaySelection={toggleDaySelection}
+            />
 
-            {/* Delivery Type Section */}
-            <FormSection 
-              title="Delivery Type" 
-              icon={<Truck className="w-5 h-5" />}
-            >
-              <FormField
-                label="Delivery Type"
-                name="delivery_type"
-                type="select"
-                value={form.delivery_type}
-                onChange={handleChange}
-                required
-                options={[
-                  { value: "Delivery", label: "Delivery" },
-                  { value: "Return", label: "Return" },
-                  { value: "Both", label: "Both" }
-                ]}
-                icon={<Truck className="w-4 h-4" />}
-              />
-            </FormSection>
+            <AddressInfoSection form={form} handleChange={handleChange} />
+            <AdditionalInfoSection form={form} handleChange={handleChange} />
 
-            {/* Routing Mode Section */}
-            <FormSection 
-              title="Routing Mode" 
-              icon={<Route className="w-5 h-5" />}
-            >
-              <FormField
-                label="Pickup Routing Mode"
-                name="pickup_routing_mode"
-                type="select"
-                value={form.pickup_routing_mode}
-                onChange={handleChange}
-                required
-                options={[
-                  { value: "auto", label: "Automatic" },
-                  { value: "manual", label: "Manual" }
-                ]}
-                icon={<Navigation2 className="w-4 h-4" />}
-              />
-              <FormField
-                label="Delivery Routing Mode"
-                name="delivery_routing_mode"
-                type="select"
-                value={form.delivery_routing_mode}
-                onChange={handleChange}
-                required
-                options={[
-                  { value: "auto", label: "Automatic" },
-                  { value: "manual", label: "Manual" }
-                ]}
-                icon={<Truck className="w-4 h-4" />}
-              />
-            </FormSection>
-
-            {/* Work Schedule Section */}
-            <FormSection 
-              title="Work Schedule" 
-              icon={<Calendar className="w-5 h-5" />}
-            >
-              <div className="col-span-2">
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
-                  className="w-full flex justify-between items-center px-4 py-3 bg-blue-50 rounded-lg mb-4"
-                >
-                  <span className="font-medium text-gray-800">
-                    Select Working Days
-                  </span>
-                  {isScheduleExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
-                </motion.button>
-
-                <AnimatePresence>
-                  {isScheduleExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4"
-                    >
-                      {days.map((day) => (
-                        <motion.div
-                          key={day.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => toggleDaySelection(day.id)}
-                          className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-                            day.selected
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          }`}
-                        >
-                          {day.name}
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-800 mb-2">
-                    Selected Days:
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {days.filter(day => day.selected).length > 0 ? (
-                      days
-                        .filter(day => day.selected)
-                        .map(day => (
-                          <motion.span
-                            key={day.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                          >
-                            {day.name}
-                          </motion.span>
-                        ))
-                    ) : (
-                      <span className="text-gray-500">No days selected</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </FormSection>
-
-            {/* Address Information Section */}
-            <FormSection 
-              title="Address Information" 
-              icon={<MapPin className="w-5 h-5" />}
-            >
-              <FormField
-                label="Current Address"
-                name="current_address"
-                type="text"
-                value={form.current_address}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Permanent Address"
-                name="permanent_adress"
-                type="text"
-                value={form.permanent_adress}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Servicing State"
-                name="servicing_state"
-                type="text"
-                value={form.servicing_state}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Servicing City"
-                name="servicing_city"
-                type="text"
-                value={form.servicing_city}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Servicing Zip Code"
-                name="servicing_zip"
-                type="text"
-                value={form.servicing_zip}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Permanent Address State"
-                name="permanent_address_state"
-                type="text"
-                value={form.permanent_address_state}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Permanent Address City"
-                name="permanent_address_city"
-                type="text"
-                value={form.permanent_address_city}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-              <FormField
-                label="Permanent Address Zip Code"
-                name="permanent_address_zip"
-                type="text"
-                value={form.permanent_address_zip}
-                onChange={handleChange}
-                icon={<MapPin className="w-4 h-4" />}
-              />
-            </FormSection>
-
-            {/* Additional Information Section */}
-            <FormSection 
-              title="Additional Information"
-              icon={<ClipboardList className="w-5 h-5" />}
-            >
-              <FormField
-                label="Additional Info 1"
-                name="additional_info_1"
-                type="text"
-                value={form.additional_info_1}
-                onChange={handleChange}
-                icon={<ClipboardList className="w-4 h-4" />}
-              />
-              <FormField
-                label="Additional Info 2"
-                name="additional_info_2"
-                type="text"
-                value={form.additional_info_2}
-                onChange={handleChange}
-                icon={<ClipboardList className="w-4 h-4" />}
-              />
-              <FormField
-                label="Additional Info 3"
-                name="additional_info_3"
-                type="text"
-                value={form.additional_info_3}
-                onChange={handleChange}
-                icon={<ClipboardList className="w-4 h-4" />}
-              />
-            </FormSection>
-
-            <div className="pt-6">
-              <motion.button
-                type="submit"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={loading}
-                className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-                    <span>Creating Agent...</span>
-                  </>
-                ) : (
-                  <>
-                    <Users className="w-5 h-5" />
-                    <span>Create Agent</span>
-                  </>
-                )}
-              </motion.button>
-            </div>
+            <SubmitButton loading={loading} />
           </form>
         </div>
       </motion.div>
@@ -506,6 +258,7 @@ const RequestAccess: React.FC = () => {
   );
 };
 
+// Sub-components
 const FormHeader: React.FC = () => {
   return (
     <motion.div
@@ -593,5 +346,309 @@ const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => 
     </div>
   );
 };
+
+interface SectionProps {
+  form: FormState;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+}
+
+const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
+  <FormSection title="Basic Information" icon={<User className="w-5 h-5" />}>
+    <FormField
+      label="Agent Name"
+      name="agent_name"
+      type="text"
+      value={form.agent_name}
+      onChange={handleChange}
+      required
+      icon={<User className="w-4 h-4" />}
+    />
+    <FormField
+      label="Gender"
+      name="gender"
+      type="select"
+      value={form.gender}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "Male", label: "Male" },
+        { value: "Female", label: "Female" },
+        { value: "Other", label: "Other" },
+        { value: "Prefer not to say", label: "Prefer not to say" }
+      ]}
+      icon={<Users className="w-4 h-4" />}
+    />
+    <FormField
+      label="Date of Birth"
+      name="dob"
+      type="date"
+      value={form.dob}
+      onChange={handleChange}
+      icon={<Calendar className="w-4 h-4" />}
+    />
+  </FormSection>
+);
+
+const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
+  <FormSection title="Delivery Type" icon={<Truck className="w-5 h-5" />}>
+    <FormField
+      label="Delivery Type"
+      name="delivery_type"
+      type="select"
+      value={form.delivery_type}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "Delivery", label: "Delivery" },
+        { value: "Return", label: "Return" },
+        { value: "Both", label: "Both" }
+      ]}
+      icon={<Truck className="w-4 h-4" />}
+    />
+  </FormSection>
+);
+
+const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
+  <FormSection title="Routing Mode" icon={<Route className="w-5 h-5" />}>
+    <FormField
+      label="Pickup Routing Mode"
+      name="pickup_routing_mode"
+      type="select"
+      value={form.pickup_routing_mode}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "auto", label: "Automatic" },
+        { value: "manual", label: "Manual" }
+      ]}
+      icon={<Navigation2 className="w-4 h-4" />}
+    />
+    <FormField
+      label="Delivery Routing Mode"
+      name="delivery_routing_mode"
+      type="select"
+      value={form.delivery_routing_mode}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "auto", label: "Automatic" },
+        { value: "manual", label: "Manual" }
+      ]}
+      icon={<Truck className="w-4 h-4" />}
+    />
+  </FormSection>
+);
+
+interface WorkScheduleProps {
+  days: DayOption[];
+  isExpanded: boolean;
+  toggleExpanded: () => void;
+  toggleDaySelection: (dayId: number) => void;
+}
+
+const WorkScheduleSection: React.FC<WorkScheduleProps> = ({ 
+  days, 
+  isExpanded, 
+  toggleExpanded, 
+  toggleDaySelection 
+}) => (
+  <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5" />}>
+    <div className="col-span-2">
+      <motion.button
+        type="button"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={toggleExpanded}
+        className="w-full flex justify-between items-center px-4 py-3 bg-blue-50 rounded-lg mb-4"
+      >
+        <span className="font-medium text-gray-800">
+          Select Working Days
+        </span>
+        {isExpanded ? (
+          <ChevronUp className="w-5 h-5 text-gray-600" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-600" />
+        )}
+      </motion.button>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4"
+          >
+            {days.map((day) => (
+              <motion.div
+                key={day.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => toggleDaySelection(day.id)}
+                className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
+                  day.selected
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
+                }`}
+              >
+                {day.name}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="mb-4">
+        <h3 className="font-medium text-gray-800 mb-2">
+          Selected Days:
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {days.filter(day => day.selected).length > 0 ? (
+            days
+              .filter(day => day.selected)
+              .map(day => (
+                <motion.span
+                  key={day.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                >
+                  {day.name}
+                </motion.span>
+              ))
+          ) : (
+            <span className="text-gray-500">No days selected</span>
+          )}
+        </div>
+      </div>
+    </div>
+  </FormSection>
+);
+
+const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
+  <FormSection title="Address Information" icon={<MapPin className="w-5 h-5" />}>
+    <FormField
+      label="Current Address"
+      name="current_address"
+      type="text"
+      value={form.current_address}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Permanent Address"
+      name="permanent_adress"
+      type="text"
+      value={form.permanent_adress}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Servicing State"
+      name="servicing_state"
+      type="text"
+      value={form.servicing_state}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Servicing City"
+      name="servicing_city"
+      type="text"
+      value={form.servicing_city}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Servicing Zip Code"
+      name="servicing_zip"
+      type="text"
+      value={form.servicing_zip}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Permanent Address State"
+      name="permanent_address_state"
+      type="text"
+      value={form.permanent_address_state}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Permanent Address City"
+      name="permanent_address_city"
+      type="text"
+      value={form.permanent_address_city}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+    <FormField
+      label="Permanent Address Zip Code"
+      name="permanent_address_zip"
+      type="text"
+      value={form.permanent_address_zip}
+      onChange={handleChange}
+      icon={<MapPin className="w-4 h-4" />}
+    />
+  </FormSection>
+);
+
+const AdditionalInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
+  <FormSection title="Additional Information" icon={<ClipboardList className="w-5 h-5" />}>
+    <FormField
+      label="Additional Info 1"
+      name="additional_info_1"
+      type="text"
+      value={form.additional_info_1}
+      onChange={handleChange}
+      icon={<ClipboardList className="w-4 h-4" />}
+    />
+    <FormField
+      label="Additional Info 2"
+      name="additional_info_2"
+      type="text"
+      value={form.additional_info_2}
+      onChange={handleChange}
+      icon={<ClipboardList className="w-4 h-4" />}
+    />
+    <FormField
+      label="Additional Info 3"
+      name="additional_info_3"
+      type="text"
+      value={form.additional_info_3}
+      onChange={handleChange}
+      icon={<ClipboardList className="w-4 h-4" />}
+    />
+  </FormSection>
+);
+
+interface SubmitButtonProps {
+  loading: boolean;
+}
+
+const SubmitButton: React.FC<SubmitButtonProps> = ({ loading }) => (
+  <div className="pt-6">
+    <motion.button
+      type="submit"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      disabled={loading}
+      className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+    >
+      {loading ? (
+        <>
+          <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+          <span>Creating Agent...</span>
+        </>
+      ) : (
+        <>
+          <Users className="w-5 h-5" />
+          <span>Create Agent</span>
+        </>
+      )}
+    </motion.button>
+  </div>
+);
 
 export default RequestAccess;
