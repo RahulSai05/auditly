@@ -1,173 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  User as UserIcon, 
-  Users as UsersIcon, 
-  MapPin as MapPinIcon, 
-  Calendar as CalendarIcon, 
-  Truck as TruckIcon,
-  CheckCircle as CheckCircleIcon,
-  ClipboardList as ClipboardListIcon,
-  Route as RouteIcon,
-  Settings as SettingsIcon,
-  ChevronDown as ChevronDownIcon,
-  ChevronUp as ChevronUpIcon,
-  Navigation as NavigationIcon
+  User, 
+  Users, 
+  MapPin, 
+  Calendar, 
+  Truck,
+  CheckCircle,
+  ClipboardList,
+  Route,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  Navigation2
 } from "lucide-react";
+import FormField from "../components/FormField";
+import FormSection from "../components/FormSection";
+import { DayOption, FormState, SuccessData } from "../types";
 
-// FormField component (same as before)
-interface FormFieldProps {
-  label: string;
-  name: string;
-  type?: "text" | "date" | "number" | "select" | "textarea" | "checkbox";
-  value: any;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-  required?: boolean;
-  options?: { value: string; label: string }[];
-  placeholder?: string;
-  colSpan?: boolean;
-  rows?: number;
-  icon?: React.ReactNode;
-  readOnly?: boolean;
-}
-
-const FormField: React.FC<FormFieldProps> = ({
-  label,
-  name,
-  type = "text",
-  value,
-  onChange,
-  required = false,
-  options = [],
-  placeholder = "",
-  colSpan = false,
-  rows = 3,
-  icon,
-  readOnly = false
-}) => {
-  if (type === "checkbox") {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center space-x-3"
-      >
-        <div className="flex items-center h-5">
-          <input
-            type="checkbox"
-            id={name}
-            name={name}
-            checked={value}
-            onChange={onChange}
-            className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          {icon && <span className="text-blue-500">{icon}</span>}
-          <label htmlFor={name} className="text-gray-700 font-medium">
-            {label}
-          </label>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={colSpan ? "col-span-2" : ""}
-    >
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-            {icon}
-          </div>
-        )}
-        
-        {type === "select" ? (
-          <select
-            id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
-            required={required}
-            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm`}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        ) : type === "textarea" ? (
-          <textarea
-            id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
-            required={required}
-            rows={rows}
-            placeholder={placeholder}
-            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm`}
-          />
-        ) : (
-          <input
-            type={type}
-            id={name}
-            name={name}
-            value={value}
-            onChange={onChange}
-            required={required}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm ${readOnly ? 'bg-gray-100' : ''}`}
-          />
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-// FormSection component (same as before)
-interface FormSectionProps {
-  title: string;
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-}
-
-const FormSection: React.FC<FormSectionProps> = ({ title, children, icon }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      className="space-y-4"
-    >
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
-        {icon}
-        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
-        {children}
-      </div>
-    </motion.div>
-  );
-};
-
-interface DayOption {
-  id: number;
-  name: string;
-  selected: boolean;
-}
-
-// Main RequestAccess component
 const RequestAccess: React.FC = () => {
   const [days, setDays] = useState<DayOption[]>([
     { id: 1, name: "Monday", selected: false },
@@ -180,7 +30,7 @@ const RequestAccess: React.FC = () => {
   ]);
   const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     agent_name: "",
     current_address: "",
     delivery_type: "Delivery",
@@ -205,7 +55,7 @@ const RequestAccess: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successData, setSuccessData] = useState<{agent_id: number} | null>(null);
+  const [successData, setSuccessData] = useState<SuccessData | null>(null);
 
   useEffect(() => {
     // Get user ID from local storage and set it to agent_to_user_mapping_id
@@ -301,111 +151,40 @@ const RequestAccess: React.FC = () => {
   };
 
   if (submitted) {
-    return (
-      <div className="max-w-4xl mx-auto mt-10 p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-blue-50">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 20,
-            }}
-            className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
-          >
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </motion.div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-700">
-            Agent Created Successfully!
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-            The new agent has been successfully registered in the system.
-          </p>
-          {successData && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
-              <p className="text-blue-700 font-medium">Agent ID: {successData.agent_id}</p>
-            </div>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              setSubmitted(false);
-              setSuccessData(null);
-              // Reset form if needed
-              setForm({
-                agent_name: "",
-                current_address: "",
-                delivery_type: "Delivery",
-                pickup_routing_mode: "auto",
-                delivery_routing_mode: "auto",
-                servicing_state: "",
-                servicing_city: "",
-                servicing_zip: "",
-                permanent_adress: "",
-                permanent_address_state: "",
-                permanent_address_city: "",
-                permanent_address_zip: "",
-                gender: "Male",
-                dob: "",
-                work_schedule: "",
-                agent_to_user_mapping_id: localStorage.getItem("userId") || "",
-                additional_info_1: "",
-                additional_info_2: "",
-                additional_info_3: ""
-              });
-              setDays(days.map(day => ({ ...day, selected: false })));
-            }}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
-          >
-            Create Another Agent
-          </motion.button>
-        </motion.div>
-      </div>
-    );
+    return <SuccessView 
+      successData={successData} 
+      resetForm={() => {
+        setSubmitted(false);
+        setSuccessData(null);
+        setForm({
+          agent_name: "",
+          current_address: "",
+          delivery_type: "Delivery",
+          pickup_routing_mode: "auto",
+          delivery_routing_mode: "auto",
+          servicing_state: "",
+          servicing_city: "",
+          servicing_zip: "",
+          permanent_adress: "",
+          permanent_address_state: "",
+          permanent_address_city: "",
+          permanent_address_zip: "",
+          gender: "Male",
+          dob: "",
+          work_schedule: "",
+          agent_to_user_mapping_id: localStorage.getItem("userId") || "",
+          additional_info_1: "",
+          additional_info_2: "",
+          additional_info_3: ""
+        });
+        setDays(days.map(day => ({ ...day, selected: false })));
+      }}
+    />;
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
-        <motion.div
-          initial={{ scale: 0.8, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 20,
-          }}
-          className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
-        >
-          <UsersIcon className="w-10 h-10 text-blue-600" />
-        </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-4xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
-        >
-          Create New Agent
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-xl text-gray-600 max-w-2xl mx-auto"
-        >
-          Register a new delivery agent to your system
-        </motion.p>
-      </motion.div>
+      <FormHeader />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -431,7 +210,7 @@ const RequestAccess: React.FC = () => {
             {/* Basic Information Section */}
             <FormSection 
               title="Basic Information" 
-              icon={<UserIcon className="w-5 h-5 text-blue-600" />}
+              icon={<User className="w-5 h-5" />}
             >
               <FormField
                 label="Agent Name"
@@ -440,7 +219,7 @@ const RequestAccess: React.FC = () => {
                 value={form.agent_name}
                 onChange={handleChange}
                 required
-                icon={<UserIcon className="w-4 h-4" />}
+                icon={<User className="w-4 h-4" />}
               />
               <FormField
                 label="Gender"
@@ -455,7 +234,7 @@ const RequestAccess: React.FC = () => {
                   { value: "Other", label: "Other" },
                   { value: "Prefer not to say", label: "Prefer not to say" }
                 ]}
-                icon={<UsersIcon className="w-4 h-4" />}
+                icon={<Users className="w-4 h-4" />}
               />
               <FormField
                 label="Date of Birth"
@@ -470,7 +249,7 @@ const RequestAccess: React.FC = () => {
             {/* Delivery Type Section */}
             <FormSection 
               title="Delivery Type" 
-              icon={<Truck className="w-5 h-5 text-blue-600" />}
+              icon={<Truck className="w-5 h-5" />}
             >
               <FormField
                 label="Delivery Type"
@@ -491,7 +270,7 @@ const RequestAccess: React.FC = () => {
             {/* Routing Mode Section */}
             <FormSection 
               title="Routing Mode" 
-              icon={<Route className="w-5 h-5 text-blue-600" />}
+              icon={<Route className="w-5 h-5" />}
             >
               <FormField
                 label="Pickup Routing Mode"
@@ -504,7 +283,7 @@ const RequestAccess: React.FC = () => {
                   { value: "auto", label: "Automatic" },
                   { value: "manual", label: "Manual" }
                 ]}
-                icon={<Navigation className="w-4 h-4" />}
+                icon={<Navigation2 className="w-4 h-4" />}
               />
               <FormField
                 label="Delivery Routing Mode"
@@ -524,7 +303,7 @@ const RequestAccess: React.FC = () => {
             {/* Work Schedule Section */}
             <FormSection 
               title="Work Schedule" 
-              icon={<Calendar className="w-5 h-5 text-blue-600" />}
+              icon={<Calendar className="w-5 h-5" />}
             >
               <div className="col-span-2">
                 <motion.button
@@ -600,7 +379,7 @@ const RequestAccess: React.FC = () => {
             {/* Address Information Section */}
             <FormSection 
               title="Address Information" 
-              icon={<MapPin className="w-5 h-5 text-blue-600" />}
+              icon={<MapPin className="w-5 h-5" />}
             >
               <FormField
                 label="Current Address"
@@ -671,7 +450,7 @@ const RequestAccess: React.FC = () => {
             {/* Additional Information Section */}
             <FormSection 
               title="Additional Information"
-              icon={<ClipboardList className="w-5 h-5 text-blue-600" />}
+              icon={<ClipboardList className="w-5 h-5" />}
             >
               <FormField
                 label="Additional Info 1"
@@ -714,7 +493,7 @@ const RequestAccess: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <UsersIcon className="w-5 h-5" />
+                    <Users className="w-5 h-5" />
                     <span>Create Agent</span>
                   </>
                 )}
@@ -722,6 +501,94 @@ const RequestAccess: React.FC = () => {
             </div>
           </form>
         </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const FormHeader: React.FC = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-center mb-12"
+    >
+      <motion.div
+        initial={{ scale: 0.8, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 200,
+          damping: 20,
+        }}
+        className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
+      >
+        <Users className="w-10 h-10 text-blue-600" />
+      </motion.div>
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-4xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
+      >
+        Create New Agent
+      </motion.h1>
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="text-xl text-gray-600 max-w-2xl mx-auto"
+      >
+        Register a new delivery agent to your system
+      </motion.p>
+    </motion.div>
+  );
+};
+
+interface SuccessViewProps {
+  successData: SuccessData | null;
+  resetForm: () => void;
+}
+
+const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => {
+  return (
+    <div className="max-w-4xl mx-auto mt-10 p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-blue-50">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <motion.div
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 200,
+            damping: 20,
+          }}
+          className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+        >
+          <CheckCircle className="w-10 h-10 text-green-600" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-700">
+          Agent Created Successfully!
+        </h2>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
+          The new agent has been successfully registered in the system.
+        </p>
+        {successData && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
+            <p className="text-blue-700 font-medium">Agent ID: {successData.agent_id}</p>
+          </div>
+        )}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={resetForm}
+          className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+        >
+          Create Another Agent
+        </motion.button>
       </motion.div>
     </div>
   );
