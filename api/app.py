@@ -3219,6 +3219,7 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
         for order in orders
     ]
 
+
 @app.get("/api/agent/return-orders/{agent_id}")
 def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
     orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
@@ -3228,25 +3229,37 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
 
     return [
         {
-            "serial_number": order.serial_number if hasattr(order, "serial_number") else None,
+            "id": order.id,
+            "item_id": order.item_id,
             "original_sales_order_number": order.original_sales_order_number,
-            "return_order_number": order.return_order_number,
-            "return_order_line": order.return_order_line,
-            "return_qty": order.return_qty,
-            "return_condition": order.return_condition,
-            "return_destination": order.return_destination,
-            "return_carrier": order.return_carrier,
-            "return_warehouse": order.return_warehouse,
-            "return_house_number": order.return_house_number,
-            "return_street": order.return_street,
-            "return_city": order.return_city,
-            "return_zip": order.return_zip,
-            "return_state": order.return_state,
-            "return_country": order.return_country,
+            "original_sales_order_line": order.return_order_line,  # Using return_order_line as original_sales_order_line
+            "ordered_qty": order.return_qty,
+            "serial_number": order.serial_number if hasattr(order, "serial_number") else None,
+            "sscc_number": None,  # Not in ReturnItemData model
+            "tag_number": None,   # Not in ReturnItemData model
+            "vendor_item_number": None,  # Not in ReturnItemData model
+            "shipped_from_warehouse": order.return_warehouse,
+            "shipped_to_person": "Return Customer",  # Default value
+            "shipped_to_billing_address": None,  # Not in ReturnItemData model
+            "account_number": None,  # Not in ReturnItemData model
+            "customer_email": None,  # Not in ReturnItemData model
+            "shipped_to_apt_number": None,  # Not in ReturnItemData model
+            "shipped_to_street": order.return_street,
+            "shipped_to_city": order.return_city,
+            "shipped_to_zip": order.return_zip,
+            "shipped_to_state": order.return_state,
+            "shipped_to_country": order.return_country,
+            "dimension_depth": None,  # Not in ReturnItemData model
+            "dimension_length": None,  # Not in ReturnItemData model
+            "dimension_breadth": None,  # Not in ReturnItemData model
+            "dimension_weight": None,  # Not in ReturnItemData model
+            "dimension_volume": None,  # Not in ReturnItemData model
+            "dimension_size": None,  # Not in ReturnItemData model
             "date_purchased": order.date_purchased,
             "date_shipped": order.date_shipped,
             "date_delivered": order.date_delivered,
-            "return_created_date": order.return_created_date,
+            "status": "Return Requested",  # Default status for returns
+            "delivery_agent_id": agent_id,
             "item": {
                 "item_number": order.item.item_number if order.item else None,
                 "item_description": order.item.item_description if order.item else None,
