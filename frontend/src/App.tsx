@@ -258,7 +258,9 @@ export default function App(): JSX.Element {
 
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
+  // const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
+  const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
+
 
 
   useEffect(() => {
