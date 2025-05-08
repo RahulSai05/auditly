@@ -28,6 +28,8 @@ import {
   Code,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Clipboard as ClipboardIcon } from "lucide-react";
+
 
 const AdminLayout = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -829,7 +831,7 @@ const AdminLayout = () => {
               }
               onClick={handleLinkClick}
             >
-              <Clipboard className="w-5 h-5 mr-2" />
+              <ClipboardIcon className="w-5 h-5 mr-2" />
              Assign Deliveries
             </NavLink>
           </motion.li>
