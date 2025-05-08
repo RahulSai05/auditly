@@ -135,7 +135,7 @@ const FormField: React.FC<FormFieldProps> = ({
             value={value}
             onChange={onChange}
             required={required}
-            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm`}
+            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white`}
           >
             {options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -152,7 +152,7 @@ const FormField: React.FC<FormFieldProps> = ({
             required={required}
             rows={rows}
             placeholder={placeholder}
-            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm`}
+            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white`}
           />
         ) : (
           <input
@@ -164,7 +164,7 @@ const FormField: React.FC<FormFieldProps> = ({
             required={required}
             placeholder={placeholder}
             readOnly={readOnly}
-            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm ${readOnly ? 'bg-gray-100' : ''}`}
+            className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white ${readOnly ? 'bg-gray-100' : ''}`}
           />
         )}
       </div>
@@ -209,9 +209,9 @@ const RequestAccess: React.FC = () => {
   const [form, setForm] = useState<FormState>({
     agent_name: "",
     current_address: "",
-    delivery_type: "Delivery",
-    pickup_routing_mode: "auto",
-    delivery_routing_mode: "auto",
+    delivery_type: "",
+    pickup_routing_mode: "",
+    delivery_routing_mode: "",
     servicing_state: "",
     servicing_city: "",
     servicing_zip: "",
@@ -219,7 +219,7 @@ const RequestAccess: React.FC = () => {
     permanent_address_state: "",
     permanent_address_city: "",
     permanent_address_zip: "",
-    gender: "Male",
+    gender: "",
     dob: "",
     work_schedule: "",
     agent_to_user_mapping_id: "",
@@ -332,9 +332,9 @@ const RequestAccess: React.FC = () => {
         setForm({
           agent_name: "",
           current_address: "",
-          delivery_type: "Delivery",
-          pickup_routing_mode: "auto",
-          delivery_routing_mode: "auto",
+          delivery_type: "",
+          pickup_routing_mode: "",
+          delivery_routing_mode: "",
           servicing_state: "",
           servicing_city: "",
           servicing_zip: "",
@@ -342,7 +342,7 @@ const RequestAccess: React.FC = () => {
           permanent_address_state: "",
           permanent_address_city: "",
           permanent_address_zip: "",
-          gender: "Male",
+          gender: "",
           dob: "",
           work_schedule: "",
           agent_to_user_mapping_id: localStorage.getItem("userId") || "",
@@ -363,7 +363,7 @@ const RequestAccess: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-blue-50 overflow-hidden"
+        className="bg-white rounded-2xl shadow-xl border border-blue-50 overflow-hidden"
       >
         <div className="p-8">
           <AnimatePresence>
@@ -449,7 +449,7 @@ interface SuccessViewProps {
 
 const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => {
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-8 bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-blue-50">
+    <div className="max-w-4xl mx-auto mt-10 p-8 bg-white rounded-2xl shadow-xl border border-blue-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -515,6 +515,7 @@ const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       onChange={handleChange}
       required
       options={[
+        { value: "", label: "Please select gender" },
         { value: "Male", label: "Male" },
         { value: "Female", label: "Female" },
         { value: "Other", label: "Other" },
@@ -543,6 +544,7 @@ const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange }) => 
       onChange={handleChange}
       required
       options={[
+        { value: "", label: "Please select delivery type" },
         { value: "Delivery", label: "Delivery" },
         { value: "Return", label: "Return" },
         { value: "Both", label: "Both" }
@@ -562,6 +564,7 @@ const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       onChange={handleChange}
       required
       options={[
+        { value: "", label: "Please select routing mode" },
         { value: "auto", label: "Automatic" },
         { value: "manual", label: "Manual" }
       ]}
@@ -575,6 +578,7 @@ const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       onChange={handleChange}
       required
       options={[
+        { value: "", label: "Please select routing mode" },
         { value: "auto", label: "Automatic" },
         { value: "manual", label: "Manual" }
       ]}
@@ -644,7 +648,7 @@ const WorkScheduleSection: React.FC<WorkScheduleProps> = ({
 
       <div className="mb-4">
         <h3 className="font-medium text-gray-800 mb-2">
-          Selected Days:
+          Please select work schedule for this week:
         </h3>
         <div className="flex flex-wrap gap-2">
           {days.filter(day => day.selected).length > 0 ? (
@@ -661,7 +665,7 @@ const WorkScheduleSection: React.FC<WorkScheduleProps> = ({
                 </motion.span>
               ))
           ) : (
-            <span className="text-gray-500">No days selected</span>
+            <span className="text-gray-500">No days selected yet</span>
           )}
         </div>
       </div>
@@ -677,6 +681,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.current_address}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -685,6 +690,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.permanent_adress}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -693,6 +699,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.servicing_state}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -701,6 +708,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.servicing_city}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -709,6 +717,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.servicing_zip}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -717,6 +726,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.permanent_address_state}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -725,6 +735,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.permanent_address_city}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
     <FormField
@@ -733,6 +744,7 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
       type="text"
       value={form.permanent_address_zip}
       onChange={handleChange}
+      required
       icon={<MapPin className="w-4 h-4" />}
     />
   </FormSection>
