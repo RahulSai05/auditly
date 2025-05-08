@@ -54,8 +54,7 @@ const AdminLayout = () => {
       setIsAdmin(userData["User Type"].includes("admin"));
       setIsReportUser(userData["User Type"].includes("reports_user"));
       setIsInspectionUser(userData["User Type"].includes("inpection_user"));
-      setIsManager(userData["User Type"].includes("manager"));
-      
+      setIsManager(userData.is_manager);      
     }
   }, [userData]);
 
