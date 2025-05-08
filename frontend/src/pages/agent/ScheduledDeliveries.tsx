@@ -106,7 +106,7 @@ const ScheduledDeliveries: React.FC = () => {
   }, []);
 
   const toggleOrderExpansion = (orderId: number) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+    setExpandedOrderId(prevId => prevId === orderId ? null : orderId);
   };
 
   const formatDate = (dateString: string) => {
