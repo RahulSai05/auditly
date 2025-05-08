@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -6,12 +7,18 @@ import {
   MapPin, 
   Calendar, 
   Truck,
-  CheckCircle,
+  CheckCircle2,
   ClipboardList,
   Route,
   ChevronDown,
   ChevronUp,
-  Navigation2
+  Navigation2,
+  Loader2,
+  AlertCircle,
+  XCircle,
+  Mail,
+  ShieldCheck,
+  RefreshCw
 } from "lucide-react";
 
 // Types
@@ -66,6 +73,7 @@ interface FormSectionProps {
   title: string;
   children: React.ReactNode;
   icon?: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
 // FormField Component
@@ -173,22 +181,44 @@ const FormField: React.FC<FormFieldProps> = ({
 };
 
 // FormSection Component
-const FormSection: React.FC<FormSectionProps> = ({ title, children, icon }) => {
+const FormSection: React.FC<FormSectionProps> = ({ title, children, icon, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      className="space-y-4"
+      className="space-y-4 bg-gray-50 rounded-xl p-4"
     >
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
-        {icon}
-        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-      </div>
+      <motion.button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-5 h-5 text-gray-500" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-500" />
+        )}
+      </motion.button>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
-        {children}
-      </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -204,7 +234,6 @@ const RequestAccess: React.FC = () => {
     { id: 6, name: "Saturday", selected: false },
     { id: 7, name: "Sunday", selected: false },
   ]);
-  const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     agent_name: "",
@@ -356,89 +385,127 @@ const RequestAccess: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6">
-      <FormHeader />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 overflow-hidden"
+        >
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 10 }}
+                  className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+                >
+                  <Users className="w-6 h-6 text-blue-600" />
+                </motion.div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Create New Agent
+                </h1>
+              </div>
+            </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-2xl shadow-xl border border-blue-50 overflow-hidden"
-      >
-        <div className="p-8">
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600"
-              >
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-100 text-red-800"
+                >
+                  <XCircle className="w-5 h-5" />
+                  <span className="font-medium">{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <BasicInfoSection form={form} handleChange={handleChange} />
-            <DeliveryTypeSection form={form} handleChange={handleChange} />
-            <RoutingModeSection form={form} handleChange={handleChange} />
-            
-            <WorkScheduleSection 
-              days={days}
-              isExpanded={isScheduleExpanded}
-              toggleExpanded={() => setIsScheduleExpanded(!isScheduleExpanded)}
-              toggleDaySelection={toggleDaySelection}
-            />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <BasicInfoSection form={form} handleChange={handleChange} icon={<User className="w-5 h-5 text-blue-500" />} />
+              <DeliveryTypeSection form={form} handleChange={handleChange} icon={<Truck className="w-5 h-5 text-blue-500" />} />
+              <RoutingModeSection form={form} handleChange={handleChange} icon={<Route className="w-5 h-5 text-blue-500" />} />
+              
+              <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
+                <div className="col-span-2 space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {days.map((day) => (
+                      <motion.div
+                        key={day.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => toggleDaySelection(day.id)}
+                        className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
+                          day.selected
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
+                        }`}
+                      >
+                        {day.name}
+                      </motion.div>
+                    ))}
+                  </div>
 
-            <AddressInfoSection form={form} handleChange={handleChange} />
-            <AdditionalInfoSection form={form} handleChange={handleChange} />
+                  <div>
+                    <h3 className="font-medium text-gray-800 mb-2">
+                      Selected Work Days:
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {days.filter(day => day.selected).length > 0 ? (
+                        days
+                          .filter(day => day.selected)
+                          .map(day => (
+                            <motion.span
+                              key={day.id}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                            >
+                              {day.name}
+                            </motion.span>
+                          ))
+                      ) : (
+                        <span className="text-gray-500">No days selected yet</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </FormSection>
 
-            <SubmitButton loading={loading} />
-          </form>
-        </div>
-      </motion.div>
+              <AddressInfoSection form={form} handleChange={handleChange} icon={<MapPin className="w-5 h-5 text-blue-500" />} />
+              <AdditionalInfoSection form={form} handleChange={handleChange} icon={<ClipboardList className="w-5 h-5 text-blue-500" />} />
+
+              <div className="pt-6">
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={loading}
+                  className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      >
+                        <Loader2 className="w-5 h-5" />
+                      </motion.div>
+                      <span>Creating Agent...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-5 h-5" />
+                      <span>Create Agent</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+      </div>
     </div>
-  );
-};
-
-// Sub-components
-const FormHeader: React.FC = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center mb-12"
-    >
-      <motion.div
-        initial={{ scale: 0.8, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{
-          type: "spring",
-          stiffness: 200,
-          damping: 20,
-        }}
-        className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
-      >
-        <Users className="w-10 h-10 text-blue-600" />
-      </motion.div>
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="text-4xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700"
-      >
-        Create New Agent
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="text-xl text-gray-600 max-w-2xl mx-auto"
-      >
-        Register a new delivery agent to your system
-      </motion.p>
-    </motion.div>
   );
 };
 
@@ -449,44 +516,47 @@ interface SuccessViewProps {
 
 const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => {
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-8 bg-white rounded-2xl shadow-xl border border-blue-50">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center"
-      >
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 20,
-          }}
-          className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 overflow-hidden p-8 text-center"
         >
-          <CheckCircle className="w-10 h-10 text-green-600" />
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 200,
+              damping: 20,
+            }}
+            className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+          >
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          </motion.div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Agent Created Successfully!
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
+            The new agent has been successfully registered in the system.
+          </p>
+          {successData && (
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 max-w-md mx-auto">
+              <p className="text-blue-700 font-medium">Agent ID: {successData.agent_id}</p>
+            </div>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={resetForm}
+            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
+          >
+            <Users className="w-5 h-5" />
+            Create Another Agent
+          </motion.button>
         </motion.div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-700">
-          Agent Created Successfully!
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-          The new agent has been successfully registered in the system.
-        </p>
-        {successData && (
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
-            <p className="text-blue-700 font-medium">Agent ID: {successData.agent_id}</p>
-          </div>
-        )}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={resetForm}
-          className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
-        >
-          Create Another Agent
-        </motion.button>
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -494,10 +564,11 @@ const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => 
 interface SectionProps {
   form: FormState;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  icon?: React.ReactNode;
 }
 
-const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
-  <FormSection title="Basic Information" icon={<User className="w-5 h-5" />}>
+const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
+  <FormSection title="Basic Information" icon={icon}>
     <FormField
       label="Agent Name"
       name="agent_name"
@@ -534,8 +605,8 @@ const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
   </FormSection>
 );
 
-const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
-  <FormSection title="Delivery Type" icon={<Truck className="w-5 h-5" />}>
+const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
+  <FormSection title="Delivery Type" icon={icon}>
     <FormField
       label="Delivery Type"
       name="delivery_type"
@@ -554,8 +625,8 @@ const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange }) => 
   </FormSection>
 );
 
-const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
-  <FormSection title="Routing Mode" icon={<Route className="w-5 h-5" />}>
+const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
+  <FormSection title="Routing Mode" icon={icon}>
     <FormField
       label="Pickup Routing Mode"
       name="pickup_routing_mode"
@@ -587,94 +658,8 @@ const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange }) => (
   </FormSection>
 );
 
-interface WorkScheduleProps {
-  days: DayOption[];
-  isExpanded: boolean;
-  toggleExpanded: () => void;
-  toggleDaySelection: (dayId: number) => void;
-}
-
-const WorkScheduleSection: React.FC<WorkScheduleProps> = ({ 
-  days, 
-  isExpanded, 
-  toggleExpanded, 
-  toggleDaySelection 
-}) => (
-  <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5" />}>
-    <div className="col-span-2">
-      <motion.button
-        type="button"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={toggleExpanded}
-        className="w-full flex justify-between items-center px-4 py-3 bg-blue-50 rounded-lg mb-4"
-      >
-        <span className="font-medium text-gray-800">
-          Select Working Days
-        </span>
-        {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-600" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-gray-600" />
-        )}
-      </motion.button>
-
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4"
-          >
-            {days.map((day) => (
-              <motion.div
-                key={day.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => toggleDaySelection(day.id)}
-                className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-                  day.selected
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-              >
-                {day.name}
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="mb-4">
-        <h3 className="font-medium text-gray-800 mb-2">
-          Please select work schedule for this week:
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {days.filter(day => day.selected).length > 0 ? (
-            days
-              .filter(day => day.selected)
-              .map(day => (
-                <motion.span
-                  key={day.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                >
-                  {day.name}
-                </motion.span>
-              ))
-          ) : (
-            <span className="text-gray-500">No days selected yet</span>
-          )}
-        </div>
-      </div>
-    </div>
-  </FormSection>
-);
-
-const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
-  <FormSection title="Address Information" icon={<MapPin className="w-5 h-5" />}>
+const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
+  <FormSection title="Address Information" icon={icon}>
     <FormField
       label="Current Address"
       name="current_address"
@@ -750,8 +735,8 @@ const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
   </FormSection>
 );
 
-const AdditionalInfoSection: React.FC<SectionProps> = ({ form, handleChange }) => (
-  <FormSection title="Additional Information" icon={<ClipboardList className="w-5 h-5" />}>
+const AdditionalInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
+  <FormSection title="Additional Information" icon={icon}>
     <FormField
       label="Additional Info 1"
       name="additional_info_1"
@@ -777,34 +762,6 @@ const AdditionalInfoSection: React.FC<SectionProps> = ({ form, handleChange }) =
       icon={<ClipboardList className="w-4 h-4" />}
     />
   </FormSection>
-);
-
-interface SubmitButtonProps {
-  loading: boolean;
-}
-
-const SubmitButton: React.FC<SubmitButtonProps> = ({ loading }) => (
-  <div className="pt-6">
-    <motion.button
-      type="submit"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      disabled={loading}
-      className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
-    >
-      {loading ? (
-        <>
-          <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-          <span>Creating Agent...</span>
-        </>
-      ) : (
-        <>
-          <Users className="w-5 h-5" />
-          <span>Create Agent</span>
-        </>
-      )}
-    </motion.button>
-  </div>
 );
 
 export default RequestAccess;
