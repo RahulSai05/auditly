@@ -9,6 +9,7 @@ import {
   Box,
   Home,
   Mail,
+  ChevronDown,
   CreditCard,
   Hash,
   Tag,
