@@ -230,15 +230,10 @@ export default function App(): JSX.Element {
             navigate("/login");
           }
         } else {
-          console.log("Invalid user state");
-          localStorage.removeItem("token");
-          localStorage.removeItem("usertype");
-          const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-          const isauthroute = authRoutes.includes(location.pathname);
-          if (!isauthroute) {
-            console.log("here logged in")
-            navigate("/login");
-          }
+           console.log("Invalid user state");
+           localStorage.removeItem("token");
+           localStorage.removeItem("usertype");
+           navigate("/login", { replace: true });
         }
       } catch (error) {
         console.error("Error checking user validity:", error);
