@@ -673,7 +673,7 @@ const RequestAccess: React.FC = () => {
           additional_info_2: "",
           additional_info_3: ""
         });
-        setDays(days.map(day => ({ ...day, selected: false }));
+        setDays(days.map(day => ({ ...day, selected: false })));
       }}
     />;
   }
