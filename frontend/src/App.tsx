@@ -37,6 +37,7 @@ import UserPermissionRequests from "./pages/agent/UserPermissionRequests";
 import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
 import ScheduledPickups from "./pages/agent/ScheduledPickups";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
+import LoadingScreen from "./components/LoadingScreen";
 import ApiEndpoint from "./pages/admin/ApiEndpoint";
 import Login from "./components/auth/Login";
 import Unauthorized from "./components/auth/Unauthorized";
@@ -127,6 +128,9 @@ export default function App(): JSX.Element {
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
+
+  const [checkingUserValidity, setCheckingUserValidity] = useState(true);
+
 
   useEffect(() => {
     const localUser = localStorage.getItem("token");
@@ -238,7 +242,9 @@ export default function App(): JSX.Element {
         }
       } catch (error) {
         console.error("Error checking user validity:", error);
-      }
+      } finally {
+      setCheckingUserValidity(false); // Always stop loading after check
+        }
     };
 
     const timer = setTimeout(() => {
@@ -262,6 +268,11 @@ export default function App(): JSX.Element {
   useEffect(() => {
     console.log(itemData);
   }, [itemData]);
+
+  if (checkingUserValidity) {
+  return <LoadingScreen />;
+}
+
 
   return (
     <>
