@@ -2462,7 +2462,6 @@ async def get_powerbi_table_data(request: GetPowerBITableData, db: Session = Dep
     }
 
     response = requests.post(url, headers=headers, json=dax_query)
-    print(response)
     response_table = response.json()["results"][0]["tables"][0]["rows"]
     bi_response_mapping = response_table.pop(0)
     availabe_column_name = [k for k,v in power_bi_user_mapping.items()] #columns which user has saved in the frotned from powerbi
@@ -2574,7 +2573,6 @@ def manage_cron_job(action: str, user_id: int, mapping_name: str, cron_expressio
     new_crontab = ""
     cron_entry = f"{cron_expression} {command}" if cron_expression else ""
     entry_exists = cron_entry in current_crontab if cron_expression else False
-    print(cron_entry)
     # Process based on action
     if action == 'add':
         if entry_exists:
@@ -2802,7 +2800,6 @@ def upload_sale_items_json(data: DatabaseJsonSaleItem, db: Session = Depends(get
             db.commit()
             added += 1
             added_sale_item = db.query(SaleItemData).filter(SaleItemData.original_sales_order_number ==  row.original_sales_order_number).first()
-            print(added_sale_item)
             _assign_sales_order(db,added_sale_item.id)
         except Exception as e:
             skipped.append({
@@ -2856,20 +2853,18 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
     skipped = []
 
     for row in data.json_data:
-        try:
+        # try:
             return_item = ReturnItemData(**row.dict())
-            print(row)
             db.add(return_item)
             db.commit()
             added += 1
             added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row.original_sales_order_number).first()
-            print(added_return_item)
             _assign_return_order(db,added_return_item.id)
-        except Exception as e:
-            skipped.append({
-                "row_data": row.dict(),
-                "error": str(e)
-            })
+        # except Exception as e:
+        #     skipped.append({
+        #         "row_data": row.dict(),
+        #         "error": str(e)
+        #     })
 
 
     return {
@@ -2933,7 +2928,6 @@ def _check_connection_status(access_token):
     "https://api.powerbi.com/v1.0/myorg/groups",
     headers=headers
     )
-    print(response)
     if response.status_code == 200:
         return "Active"
     elif response.status_code == 401 or response.status_code == 403:
@@ -3138,32 +3132,38 @@ def _assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
     elif sale_order.status == "Deliverd":
         return_message = "Already Deliverd"
     else:
-        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == sale_order.shipped_to_zip).filter((Agent.delivery_type == "Delivery") | (Agent.delivery_type == "Both"))
+        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == sale_order.shipped_to_zip).filter((Agent.delivery_type == "Delivery") | (Agent.delivery_type == "Both")).filter(Agent.delivery_routing_mode == 0)
+        agent_minimum_order_number = 100
+        agent_id_min = None
         for agent in availabe_agent:
             if agent.approved_by_auditly_user_id is not None and str(datetime.today().isoweekday()) in agent.work_schedule["days"].split(","):
-                sale_order.delivery_agent_id = agent.agent_id
-                sale_order.status = "Agent Assigned"
-                db.commit()
-                return_message = "Agent Assigned"
-                break
-
+                    if db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).count() < agent_minimum_order_number:
+                        agent_minimum_order_number = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).count()
+                        agent_id_min = agent.agent_id
+            sale_order.delivery_agent_id = agent_id_min
+            sale_order.status = "Agent Assigned"
+            db.commit()
+            return_message = "Agent Assigned"
     return return_message
 
 def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
     return_order = db.query(ReturnItemData).filter(ReturnItemData.id == return_order_id).first()
     return_message = ""
     if return_order.status == "Agent Assigned":
-        return_message = "Agent Already Assigned"
+        return_message = "Agent Already Assigned`"
     elif return_order.status == "Picked Up":
         return_message = "Already Picked Up"
     else:
-        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == return_order.return_zip).filter((Agent.delivery_type == "Return") | (Agent.delivery_type == "Both"))
+        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == return_order.return_zip).filter((Agent.delivery_type == "Return") | (Agent.delivery_type == "Both")).filter(Agent.pickup_routing_mode == 0)
+        agent_minimum_order_number = 100
+        agent_id_min = None
         for agent in availabe_agent:
             if agent.approved_by_auditly_user_id is not None and str(datetime.today().isoweekday()) in agent.work_schedule["days"].split(","):
-                return_order.return_agent_id = agent.agent_id
-                return_order.status = "Agent Assigned"
-                db.commit()
-                return_message = "Agent Assigned"
-                break
-
+                if db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).count() < agent_minimum_order_number:
+                    agent_minimum_order_number = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).count()
+                    agent_id_min = agent.agent_id
+        return_order.return_agent_id = agent_id_min
+        return_order.status = "Agent Assigned"
+        db.commit()
+        return_message = "Agent Assigned"
     return return_message
