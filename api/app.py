@@ -3219,53 +3219,73 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
         for order in orders
     ]
 
-
 @app.get("/api/agent/return-orders/{agent_id}")
 def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
-    orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
+    # Get all return orders for the agent
+    return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
 
-    if not orders:
+    if not return_orders:
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
 
-    return [
-        {
-            "id": order.id,
-            "item_id": order.item_id,
-            "original_sales_order_number": order.original_sales_order_number,
-            "original_sales_order_line": order.return_order_line,  # Using return_order_line as original_sales_order_line
-            "ordered_qty": order.return_qty,
-            "serial_number": order.serial_number if hasattr(order, "serial_number") else None,
-            "sscc_number": None,  # Not in ReturnItemData model
-            "tag_number": None,   # Not in ReturnItemData model
-            "vendor_item_number": None,  # Not in ReturnItemData model
-            "shipped_from_warehouse": order.return_warehouse,
-            "shipped_to_person": "Return Customer",  # Default value
-            "shipped_to_billing_address": None,  # Not in ReturnItemData model
-            "account_number": None,  # Not in ReturnItemData model
-            "customer_email": None,  # Not in ReturnItemData model
-            "shipped_to_apt_number": None,  # Not in ReturnItemData model
-            "shipped_to_street": order.return_street,
-            "shipped_to_city": order.return_city,
-            "shipped_to_zip": order.return_zip,
-            "shipped_to_state": order.return_state,
-            "shipped_to_country": order.return_country,
-            "dimension_depth": None,  # Not in ReturnItemData model
-            "dimension_length": None,  # Not in ReturnItemData model
-            "dimension_breadth": None,  # Not in ReturnItemData model
-            "dimension_weight": None,  # Not in ReturnItemData model
-            "dimension_volume": None,  # Not in ReturnItemData model
-            "dimension_size": None,  # Not in ReturnItemData model
-            "date_purchased": order.date_purchased,
-            "date_shipped": order.date_shipped,
-            "date_delivered": order.date_delivered,
-            "status": "Return Requested",  # Default status for returns
+    result = []
+    
+    for return_order in return_orders:
+        # Try to find matching sales order
+        sales_order = db.query(SaleItemData).filter(
+            SaleItemData.original_sales_order_number == return_order.original_sales_order_number,
+            SaleItemData.original_sales_order_line == return_order.return_order_line
+        ).first()
+
+        # Build the order object with merged data
+        order_data = {
+            "id": return_order.id,
+            "item_id": return_order.item_id,
+            "original_sales_order_number": return_order.original_sales_order_number,
+            "original_sales_order_line": return_order.return_order_line,
+            "ordered_qty": return_order.return_qty,
+            "serial_number": return_order.serial_number if hasattr(return_order, "serial_number") else None,
+            "sscc_number": sales_order.sscc_number if sales_order else None,
+            "tag_number": sales_order.tag_number if sales_order else None,
+            "vendor_item_number": sales_order.vendor_item_number if sales_order else None,
+            "shipped_from_warehouse": return_order.return_warehouse,
+            "shipped_to_person": sales_order.shipped_to_person if sales_order else "Return Customer",
+            "shipped_to_billing_address": sales_order.shipped_to_billing_address if sales_order else None,
+            "account_number": sales_order.account_number if sales_order else None,
+            "customer_email": sales_order.customer_email if sales_order else None,
+            "shipped_to_apt_number": sales_order.shipped_to_apt_number if sales_order else None,
+            "shipped_to_street": return_order.return_street or (sales_order.shipped_to_street if sales_order else None),
+            "shipped_to_city": return_order.return_city or (sales_order.shipped_to_city if sales_order else None),
+            "shipped_to_zip": return_order.return_zip or (sales_order.shipped_to_zip if sales_order else None),
+            "shipped_to_state": return_order.return_state or (sales_order.shipped_to_state if sales_order else None),
+            "shipped_to_country": return_order.return_country or (sales_order.shipped_to_country if sales_order else None),
+            "dimension_depth": sales_order.dimension_depth if sales_order else None,
+            "dimension_length": sales_order.dimension_length if sales_order else None,
+            "dimension_breadth": sales_order.dimension_breadth if sales_order else None,
+            "dimension_weight": sales_order.dimension_weight if sales_order else None,
+            "dimension_volume": sales_order.dimension_volume if sales_order else None,
+            "dimension_size": sales_order.dimension_size if sales_order else None,
+            "date_purchased": return_order.date_purchased or (sales_order.date_purchased if sales_order else None),
+            "date_shipped": return_order.date_shipped or (sales_order.date_shipped if sales_order else None),
+            "date_delivered": return_order.date_delivered or (sales_order.date_delivered if sales_order else None),
+            "status": return_order.status or "Return Requested",
             "delivery_agent_id": agent_id,
             "item": {
-                "item_number": order.item.item_number if order.item else None,
-                "item_description": order.item.item_description if order.item else None,
-                "category": order.item.category if order.item else None,
-                "configuration": order.item.configuration if order.item else None
+                "item_number": return_order.item.item_number if return_order.item else None,
+                "item_description": return_order.item.item_description if return_order.item else None,
+                "category": return_order.item.category if return_order.item else None,
+                "configuration": return_order.item.configuration if return_order.item else None
+            },
+            # Additional return-specific fields that might be useful
+            "return_specific": {
+                "return_order_number": return_order.return_order_number,
+                "return_condition": return_order.return_condition,
+                "return_carrier": return_order.return_carrier,
+                "return_destination": return_order.return_destination,
+                "return_created_date": return_order.return_created_date,
+                "return_received_date": return_order.return_received_date
             }
         }
-        for order in orders
-    ]
+        
+        result.append(order_data)
+
+    return result
