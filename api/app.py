@@ -24,7 +24,7 @@ from settings import ENV
 from io import StringIO
 from datetime import datetime, timedelta, timezone, date
 from secret import get_secret
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, conint
 from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
@@ -361,7 +361,35 @@ def update_work_schedule(request: UpdateScheduleRequest, db: Session = Depends(g
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
+    
+class UpdateRoutingModesRequest(BaseModel):
+    agent_id: int
+    pickup_routing_mode: Optional[conint(ge=0, le=1)] = None  # Accepts only 0 or 1
+    delivery_routing_mode: Optional[conint(ge=0, le=1)] = None
 
+@app.post("/api/update-routing-modes")
+def update_routing_modes(request: UpdateRoutingModesRequest, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    try:
+        if request.pickup_routing_mode is not None:
+            agent.pickup_routing_mode = bool(request.pickup_routing_mode)
+        if request.delivery_routing_mode is not None:
+            agent.delivery_routing_mode = bool(request.delivery_routing_mode)
+
+        db.commit()
+        return {
+            "message": "Routing modes updated successfully",
+            "agent_id": agent.agent_id,
+            "pickup_routing_mode": int(agent.pickup_routing_mode),
+            "delivery_routing_mode": int(agent.delivery_routing_mode)
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error updating routing modes: {e}")
+    
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
     customer_item_data_id: int,  
