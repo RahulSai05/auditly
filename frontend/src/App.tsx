@@ -214,14 +214,9 @@ export default function App(): JSX.Element {
             console.log("User authorized with exact permissions:", isAuthorized);
 
             if (!isAuthorized) {
-              localStorage.removeItem("token");
-              localStorage.removeItem("usertype");
-              const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-              const isauthroute = authRoutes.includes(location.pathname);
-              if (isauthroute) {
-                console.log("Asd")
-                navigate("/login");
-              }
+                localStorage.removeItem("token");
+                localStorage.removeItem("usertype");
+                navigate("/login", { replace: true });
             }
           } else if (!userExists) {
             console.log("User does not exist");
