@@ -3167,3 +3167,78 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
         db.commit()
         return_message = "Agent Assigned"
     return return_message
+
+
+@app.get("/api/agent/orders/{agent_id}")
+def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
+    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).all()
+
+    if not orders:
+        raise HTTPException(status_code=404, detail="No orders found for this agent")
+
+    return [
+        {
+            "serial_number": order.serial_number,
+            "original_sales_order_number": order.original_sales_order_number,
+            "original_sales_order_line": order.original_sales_order_line,
+            "sscc_number": order.sscc_number,
+            "shipped_to_person": order.shipped_to_person,
+            "shipped_to_billing_address": order.shipped_to_billing_address,
+            "account_number": order.account_number,
+            "customer_email": order.customer_email,
+            "shipped_to_apt_number": order.shipped_to_apt_number,
+            "shipped_to_street": order.shipped_to_street,
+            "shipped_to_city": order.shipped_to_city,
+            "shipped_to_zip": order.shipped_to_zip,
+            "shipped_to_state": order.shipped_to_state,
+            "shipped_to_country": order.shipped_to_country,
+            "date_purchased": order.date_purchased,
+            "date_shipped": order.date_shipped,
+            "item": {
+                "item_number": order.item.item_number if order.item else None,
+                "item_description": order.item.item_description if order.item else None,
+                "category": order.item.category if order.item else None,
+                "configuration": order.item.configuration if order.item else None
+            }
+        }
+        for order in orders
+    ]
+
+
+@app.get("/api/agent/return-orders/{agent_id}")
+def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
+    orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
+
+    if not orders:
+        raise HTTPException(status_code=404, detail="No return orders found for this agent")
+
+    return [
+        {
+            "serial_number": order.serial_number if hasattr(order, "serial_number") else None,
+            "original_sales_order_number": order.original_sales_order_number,
+            "return_order_number": order.return_order_number,
+            "return_order_line": order.return_order_line,
+            "return_qty": order.return_qty,
+            "return_condition": order.return_condition,
+            "return_destination": order.return_destination,
+            "return_carrier": order.return_carrier,
+            "return_warehouse": order.return_warehouse,
+            "return_house_number": order.return_house_number,
+            "return_street": order.return_street,
+            "return_city": order.return_city,
+            "return_zip": order.return_zip,
+            "return_state": order.return_state,
+            "return_country": order.return_country,
+            "date_purchased": order.date_purchased,
+            "date_shipped": order.date_shipped,
+            "date_delivered": order.date_delivered,
+            "return_created_date": order.return_created_date,
+            "item": {
+                "item_number": order.item.item_number if order.item else None,
+                "item_description": order.item.item_description if order.item else None,
+                "category": order.item.category if order.item else None,
+                "configuration": order.item.configuration if order.item else None
+            }
+        }
+        for order in orders
+    ]
