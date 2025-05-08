@@ -33,8 +33,8 @@ import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import Schedule from "./pages/agent/Schedule";
-import AssignDeliveries from ".pages/manager/AssignDeliveries",
-import AssignPickups from ".pages/manager/AssignPickups",
+import AssignDeliveries from ".pages/manager/AssignDeliveries";
+import AssignPickups from ".pages/manager/AssignPickups";
 import UserPermissionRequests from "./pages/agent/UserPermissionRequests";
 import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
 import ScheduledPickups from "./pages/agent/ScheduledPickups";
