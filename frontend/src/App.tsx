@@ -70,10 +70,12 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
+  if (!userData) return null;
+
   const isAdmin = userData && Array.isArray(userData["User Type"]) &&
     userData["User Type"].includes("admin");
 
-  return isAdmin ? <>{children}</> : <Navigate to="/unauthorized" />;
+  return isAdmin ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
@@ -82,10 +84,12 @@ const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
+  if (!userData) return null;
+
   const isReportUser = userData && Array.isArray(userData["User Type"]) &&
     userData["User Type"].includes("reports_user");
 
-  return (isReportUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
+  return (isReportUser) ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
@@ -93,6 +97,8 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
+
+  if (!userData) return null;
 
   const isInspectionUser = userData && Array.isArray(userData["User Type"]) &&
     userData["User Type"].includes("inpection_user");
@@ -261,7 +267,7 @@ export default function App(): JSX.Element {
 
   if (checkingUserValidity) {
   return <LoadingScreen />;
-}
+  }
 
 
   return (
