@@ -33,6 +33,8 @@ import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import Schedule from "./pages/agent/Schedule";
+import AssignDeliveries from ".pages/manager/AssignDeliveries",
+import AssignPickups from ".pages/manager/AssignPickups",
 import UserPermissionRequests from "./pages/agent/UserPermissionRequests";
 import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
 import ScheduledPickups from "./pages/agent/ScheduledPickups";
@@ -376,6 +378,16 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/customer-serial-Upload" element={
             <InspectionRoute>
               <CustomerSerialUpload />
+            </InspectionRoute>
+          } />
+          <Route path="/manager/assign-deliveries" element={
+            <InspectionRoute>
+              <AssignDeliveries />
+            </InspectionRoute>
+          } />
+          <Route path="/manager/assign-pickups" element={
+            <InspectionRoute>
+              <AssignPickups />
             </InspectionRoute>
           } />
           <Route path="/admin/agent/schedule" element={
