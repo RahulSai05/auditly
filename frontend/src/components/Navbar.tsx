@@ -166,6 +166,15 @@ export function Navbar() {
     </motion.li>
   );
 
+  console.log("Debug:", {
+    isInspectionUser,
+    isAdmin,
+    isAgent,
+    isManager,
+    localAgentId: localStorage.getItem("agentId"),
+    localManagerId: localStorage.getItem("managerId"),
+  });
+
   return (
     <header className="sticky top-0 border-b py-4 px-6 shadow-sm relative bg-white/95 backdrop-blur-lg z-50">
       <div className="container mx-auto flex justify-between items-center">
