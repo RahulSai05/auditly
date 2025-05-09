@@ -1841,7 +1841,7 @@ def get_full_return_data(db: Session = Depends(get_db)):
 
 
 
-@router.get("/api/users")
+@app.get("/api/users")
 async def get_users(db: Session = Depends(get_db)):
     try:
         # LEFT JOIN Agent and AgentManager tables to get agent_id and manager_id
