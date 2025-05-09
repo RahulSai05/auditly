@@ -42,9 +42,11 @@ export function Navbar() {
       setIsAdmin(userData["User Type"].includes("admin"));
       setIsReportUser(userData["User Type"].includes("reports_user"));
       setIsInspectionUser(userData["User Type"].includes("inpection_user"));
-      setIsAgent(userData.is_agent);
+      setIsAgent(localStorage.getItem("agentId") !== null);
       setIsManager(userData.is_manager);
     }
+    setIsAgent(localStorage.getItem("agentId") !== null);
+    setIsManager(localStorage.getItem("managerId") !== null);
   }, [userData]);
 
   useEffect(() => {
