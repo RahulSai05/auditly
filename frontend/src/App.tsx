@@ -125,6 +125,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 export default function App(): JSX.Element {
   const itemData = useSelector((state: RootState) => state.ids);
+  const managerId = useSelector((state: RootState) => state.ids.managerId); 
   const location = useLocation();
   const dispatch = useDispatch();
 
@@ -173,6 +174,16 @@ export default function App(): JSX.Element {
               localStorage.removeItem("agentId");
               dispatch(setAgentId(null));
             }
+
+            if (userExistsData.manager_id) {
+              localStorage.setItem("managerId", userExistsData.manager_id.toString());
+              dispatch(setManagerId(userExistsData.manager_id));
+              console.log("Manager ID set:", userExistsData.manager_id);
+            } else {
+              localStorage.removeItem("managerId");
+              dispatch(setManagerId(null));
+            }
+            
 
             const requiredUserTypes = userData["User Type"];
             let isAuthorized = true;

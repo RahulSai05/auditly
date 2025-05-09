@@ -16,6 +16,7 @@ interface ItemState {
   inspectionData: any;
   item_id: number | null;
   agentId: number | null;
+  managerId: number | null;
   powerBiUsers: PowerBiUser[];
   powerBiUsersLoading: boolean;
   powerBiUsersError: string | null;
@@ -28,6 +29,7 @@ const initialState: ItemState = {
   inspectionData: [],
   item_id: null,
   agentId: null,
+  managerId: null,
   powerBiUsers: [],
   powerBiUsersLoading: false,
   powerBiUsersError: null,
@@ -130,11 +132,18 @@ const itemSlice = createSlice({
       } else {
         localStorage.removeItem("agentId");
       }
+    },
+    setManagerId: (state, action: PayloadAction<number | null>) => {
+      state.managerId = action.payload;
+      if (action.payload !== null) {
+        localStorage.setItem("managerId", action.payload.toString());
+      } else {
+        localStorage.removeItem("managerId");
+      }
     }
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Power BI Users
       .addCase(fetchPowerBiUsers.pending, (state) => {
         state.powerBiUsersLoading = true;
         state.powerBiUsersError = null;
@@ -147,7 +156,6 @@ const itemSlice = createSlice({
         state.powerBiUsersLoading = false;
         state.powerBiUsersError = action.payload as string;
       })
-      // Delete Power BI User
       .addCase(deletePowerBiUser.fulfilled, (state, action) => {
         state.powerBiUsers = state.powerBiUsers.filter(
           user => user.power_bi_email !== action.payload
@@ -155,6 +163,7 @@ const itemSlice = createSlice({
       });
   },
 });
+
 
 export const {
   addItem,
