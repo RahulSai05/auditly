@@ -51,7 +51,7 @@ import EditProfile from "./components/auth/EditProfile";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import { RootState } from "./store/store";
-import { setAgentId } from "./store/slices/itemSlice";
+import { setAgentId, setManagerId } from "./store/slices/itemSlice";
 
 
 // Type definitions
