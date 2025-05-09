@@ -162,9 +162,9 @@ export default function App(): JSX.Element {
           let userExistsData = userExists
             ? data.data.filter((user: any) => user?.user_name === userData["User Name"])[0]
             : null;
-
+            
+          console.log("API returned userExistsData:", userExistsData);
           if (userExists && userExistsData) {
-            // Check if user has EXACTLY the permissions specified in User Type array (no more, no less)
 
             if (userExistsData.agent_id) {
               localStorage.setItem("agentId", userExistsData.agent_id.toString());
