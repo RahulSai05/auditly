@@ -173,6 +173,7 @@ export const {
   setCustomerId,
   setItemId,
   setAgentId,
+  setManagerId
 } = itemSlice.actions;
 
 export const selectPowerBiUsers = (state: RootState) => state.ids.powerBiUsers;
