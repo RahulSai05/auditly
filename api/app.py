@@ -29,7 +29,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent, AgentManager
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -390,6 +390,144 @@ def update_routing_modes(request: UpdateRoutingModesRequest, db: Session = Depen
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error updating routing modes: {e}")
     
+
+class ManagerCreate(BaseModel):
+    manager_name: str
+    state: Optional[str] = None
+    city: Optional[str] = None
+    zip: Optional[str] = None
+    address: Optional[str] = None
+    is_verified: Optional[bool] = False
+    dob: Optional[date] = None
+    gender: Optional[str] = None  # 'Male', 'Female', 'Other', etc.
+    work_schedule: Optional[dict] = None
+    company_id: Optional[int] = None
+    manager_user_mapping_id: Optional[int] = None
+    additional_info_1: Optional[str] = None
+    additional_info_2: Optional[str] = None
+
+@app.post("/api/create-manager/")
+def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
+    new_manager = AgentManager(
+        manager_name=manager.manager_name,
+        state=manager.state,
+        city=manager.city,
+        zip=manager.zip,
+        address=manager.address,
+        is_verified=manager.is_verified,
+        dob=manager.dob,
+        gender=manager.gender,
+        work_schedule=manager.work_schedule,
+        company_id=manager.company_id,
+        manager_user_mapping_id=manager.manager_user_mapping_id,
+        additional_info_1=manager.additional_info_1,
+        additional_info_2=manager.additional_info_2
+    )
+
+    db.add(new_manager)
+    db.commit()
+    db.refresh(new_manager)
+    return {
+        "message": "Manager created successfully",
+        "manager_id": new_manager.manager_id
+    }   
+
+@app.get("/api/pending-manager-approval")
+def pending_manager_approval(db: Session = Depends(get_db)):
+    managers = db.query(AgentManager, AuditlyUser).join(
+        AuditlyUser, AgentManager.manager_user_mapping_id == AuditlyUser.auditly_user_id
+    ).filter(
+        AuditlyUser.is_manager == False  # assumes you have this field in your AuditlyUser model
+    ).all()
+
+    result = [
+        {
+            "manager": {
+                "manager_id": manager.manager_id,
+                "manager_name": manager.manager_name,
+                "state": manager.state,
+                "city": manager.city,
+                "zip": manager.zip,
+                "address": manager.address,
+                "is_verified": manager.is_verified,
+                "gender": manager.gender,
+                "dob": manager.dob,
+                "created_at": manager.created_at,
+                "updated_at": manager.updated_at,
+            },
+            "user": {
+                "auditly_user_id": user.auditly_user_id,
+                "auditly_user_name": user.auditly_user_name,
+                "email": user.email,
+                "user_type": user.user_type,
+                "is_manager": user.is_manager,
+                "is_inspection_user": user.is_inspection_user,
+                "is_admin": user.is_admin,
+            }
+        }
+        for manager, user in managers
+    ]
+    return {"managers": result}
+
+class ManagerApprovalRequest(BaseModel):
+    manager_id: int
+    approver_id: int
+
+@app.post("/api/approve-manager")
+def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_db)):
+    approver = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.approver_id).first()
+    if not approver:
+        raise HTTPException(status_code=404, detail="AuditlyUser not found")
+
+    manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+
+    user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == manager.manager_user_mapping_id).first()
+    user.is_manager = True
+
+    manager.approved_by_auditly_user_id = request.approver_id  # make sure this column exists in Manager model
+
+    db.commit()
+    return {"message": "Manager approved and user updated successfully"}
+    
+class ManagerStateRequest(BaseModel):
+    manager_id: int
+
+@app.post("/api/items-by-manager-state")
+def get_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+    manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+
+    state = manager.state
+
+    sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == state).all()
+    return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == state).all()
+
+    return {
+        "manager_state": state,
+        "sale_items": [
+            {
+                "id": item.id,
+                "sales_order": item.original_sales_order_number,
+                "serial_number": item.serial_number,
+                "shipped_to_state": item.shipped_to_state,
+                "status": item.status
+            } for item in sale_items
+        ],
+        "return_items": [
+            {
+                "id": item.id,
+                "return_order": item.return_order_number,
+                "item_id": item.item_id,
+                "return_state": item.return_state,
+                "status": item.status
+            } for item in return_items
+        ]
+    }
+   
+
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
     customer_item_data_id: int,  
@@ -3317,3 +3455,80 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
         result.append(order_data)
 
     return result
+
+
+class SalesOrderAgentFilterRequest(BaseModel):
+    sales_order_id: int
+
+@app.post("/api/eligible-delivery-agents")
+def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: Session = Depends(get_db)):
+    sale_order = db.query(SaleItemData).filter(SaleItemData.id == request.sales_order_id).first()
+
+    if not sale_order:
+        raise HTTPException(status_code=404, detail="Sales order not found")
+
+    zip_code = sale_order.shipped_to_zip
+    today = str(datetime.today().isoweekday())  # Monday = 1, Sunday = 7
+
+    agents = db.query(Agent).filter(
+        Agent.servicing_zip == str(zip_code),
+        Agent.delivery_type.in_(["Delivery", "Both"]),
+        Agent.delivery_routing_mode == True,  # Manual mode
+        Agent.approved_by_auditly_user_id.isnot(None)
+    ).all()
+
+    eligible_agents = []
+    for agent in agents:
+        if agent.work_schedule and "days" in agent.work_schedule:
+            working_days = agent.work_schedule["days"].split(",")
+            if today in working_days:
+                eligible_agents.append({
+                    "agent_id": agent.agent_id,
+                    "agent_name": agent.agent_name,
+                    "servicing_zip": agent.servicing_zip,
+                    "delivery_type": agent.delivery_type,
+                    "gender": agent.gender,
+                    "is_verified": agent.is_verified,
+                    "work_schedule": agent.work_schedule
+                })
+
+    return {"eligible_agents": eligible_agents}
+
+
+class ReturnOrderAgentFilterRequest(BaseModel):
+    return_order_id: int
+
+@app.post("/api/eligible-return-agents")
+def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: Session = Depends(get_db)):
+    return_order = db.query(ReturnItemData).filter(ReturnItemData.id == request.return_order_id).first()
+
+    if not return_order:
+        raise HTTPException(status_code=404, detail="Return order not found")
+
+    return_zip = return_order.return_zip
+    today = str(datetime.today().isoweekday())  # 1=Monday, ..., 7=Sunday
+
+    agents = db.query(Agent).filter(
+        Agent.servicing_zip == str(return_zip),
+        Agent.delivery_type.in_(["Return", "Both"]),
+        Agent.pickup_routing_mode == True,  # manual
+        Agent.approved_by_auditly_user_id.isnot(None)
+    ).all()
+
+    eligible_agents = []
+    for agent in agents:
+        if agent.work_schedule and "days" in agent.work_schedule:
+            working_days = agent.work_schedule["days"].split(",")
+            if today in working_days:
+                eligible_agents.append({
+                    "agent_id": agent.agent_id,
+                    "agent_name": agent.agent_name,
+                    "servicing_zip": agent.servicing_zip,
+                    "delivery_type": agent.delivery_type,
+                    "gender": agent.gender,
+                    "is_verified": agent.is_verified,
+                    "work_schedule": agent.work_schedule
+                })
+
+    return {"eligible_agents": eligible_agents}
+   

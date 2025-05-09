@@ -349,17 +349,27 @@ class Agent(Base):
 
     agent_to_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
 
-class AgentSchedule(Base):
-    __tablename__ = "agent_schedule"
+class AgentManager(Base):
+    __tablename__ = 'agent_manager'
 
-    schedule_id = Column(Integer, primary_key=True, autoincrement=True)
-    agent_id = Column(Integer, ForeignKey("agent.agent_id"))
-    day_of_week = Column(Enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'))
-    start_time = Column(Time)
-    end_time = Column(Time)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    manager_id = Column(Integer, primary_key=True, autoincrement=True)
+    manager_name = Column(String(100))
+    state = Column(String(50))
+    city = Column(String(50))
+    zip = Column(String(10))
+    address = Column(Text)
+    is_verified = Column(Boolean, default=False)
+    dob = Column(Date)
+    gender = Column(String(10))
+    work_schedule = Column(JSON)
+    company_id = Column(Integer)
+    manager_user_mapping_id = Column(Integer)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    additional_info_1 = Column(Text)
+    additional_info_2 = Column(Text)
+    manager_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+
 
 
 class UserManager(Base):
