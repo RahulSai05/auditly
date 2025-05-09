@@ -354,20 +354,24 @@ class AgentManager(Base):
 
     manager_id = Column(Integer, primary_key=True, autoincrement=True)
     manager_name = Column(String(100))
-    state = Column(String(50))
-    city = Column(String(50))
-    zip = Column(String(10))
+    servicing_state = Column(String(50))
+    servicing_city = Column(String(50))
+    servicing_zip = Column(String(20))
+    permanent_address = Column(Text)
+    permanent_address_state = Column(String(50))
+    permanent_address_city = Column(String(50))
+    permanent_address_zip = Column(String(20))
     address = Column(Text)
     is_verified = Column(Boolean, default=False)
     dob = Column(Date)
     gender = Column(String(10))
     work_schedule = Column(JSON)
     company_id = Column(Integer)
-    manager_user_mapping_id = Column(Integer)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     additional_info_1 = Column(Text)
     additional_info_2 = Column(Text)
+
     manager_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
 
 

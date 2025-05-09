@@ -393,9 +393,13 @@ def update_routing_modes(request: UpdateRoutingModesRequest, db: Session = Depen
 
 class ManagerCreate(BaseModel):
     manager_name: str
-    state: Optional[str] = None
-    city: Optional[str] = None
-    zip: Optional[str] = None
+    servicing_state: Optional[str] = None
+    servicing_city: Optional[str] = None
+    servicing_zip: Optional[str] = None
+    permanent_address: Optional[str] = None
+    permanent_address_state: Optional[str] = None
+    permanent_address_city: Optional[str] = None
+    permanent_address_zip: Optional[str] = None
     address: Optional[str] = None
     is_verified: Optional[bool] = False
     dob: Optional[date] = None
@@ -406,13 +410,18 @@ class ManagerCreate(BaseModel):
     additional_info_1: Optional[str] = None
     additional_info_2: Optional[str] = None
 
+
 @app.post("/api/create-manager/")
 def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
     new_manager = AgentManager(
         manager_name=manager.manager_name,
-        state=manager.state,
-        city=manager.city,
-        zip=manager.zip,
+        servicing_state=manager.servicing_state,
+        servicing_city=manager.servicing_city,
+        servicing_zip=manager.servicing_zip,
+        permanent_address=manager.permanent_address,
+        permanent_address_state=manager.permanent_address_state,
+        permanent_address_city=manager.permanent_address_city,
+        permanent_address_zip=manager.permanent_address_zip,
         address=manager.address,
         is_verified=manager.is_verified,
         dob=manager.dob,
@@ -430,14 +439,15 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
     return {
         "message": "Manager created successfully",
         "manager_id": new_manager.manager_id
-    }   
+    }
+
 
 @app.get("/api/pending-manager-approval")
 def pending_manager_approval(db: Session = Depends(get_db)):
     managers = db.query(AgentManager, AuditlyUser).join(
         AuditlyUser, AgentManager.manager_user_mapping_id == AuditlyUser.auditly_user_id
     ).filter(
-        AuditlyUser.is_manager == False  # assumes you have this field in your AuditlyUser model
+        AuditlyUser.is_manager == False  # assumes this field exists
     ).all()
 
     result = [
@@ -445,9 +455,13 @@ def pending_manager_approval(db: Session = Depends(get_db)):
             "manager": {
                 "manager_id": manager.manager_id,
                 "manager_name": manager.manager_name,
-                "state": manager.state,
-                "city": manager.city,
-                "zip": manager.zip,
+                "servicing_state": manager.servicing_state,
+                "servicing_city": manager.servicing_city,
+                "servicing_zip": manager.servicing_zip,
+                "permanent_address": manager.permanent_address,
+                "permanent_address_state": manager.permanent_address_state,
+                "permanent_address_city": manager.permanent_address_city,
+                "permanent_address_zip": manager.permanent_address_zip,
                 "address": manager.address,
                 "is_verified": manager.is_verified,
                 "gender": manager.gender,
@@ -468,6 +482,7 @@ def pending_manager_approval(db: Session = Depends(get_db)):
         for manager, user in managers
     ]
     return {"managers": result}
+
 
 class ManagerApprovalRequest(BaseModel):
     manager_id: int
@@ -500,13 +515,13 @@ def get_items_by_manager_state(request: ManagerStateRequest, db: Session = Depen
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
 
-    state = manager.state
+    servicing_state = manager.servicing_state
 
-    sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == state).all()
-    return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == state).all()
+    sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == servicing_state).all()
+    return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == servicing_state).all()
 
     return {
-        "manager_state": state,
+        "manager_state": servicing_state,
         "sale_items": [
             {
                 "id": item.id,
