@@ -509,8 +509,8 @@ def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_d
 class ManagerStateRequest(BaseModel):
     manager_id: int
 
-@app.post("/api/items-by-manager-state")
-def get_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+@app.post("/api/sale-items-by-manager-state")
+def get_sale_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
@@ -518,7 +518,6 @@ def get_items_by_manager_state(request: ManagerStateRequest, db: Session = Depen
     servicing_state = manager.servicing_state
 
     sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == servicing_state).all()
-    return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == servicing_state).all()
 
     return {
         "manager_state": servicing_state,
@@ -526,21 +525,65 @@ def get_items_by_manager_state(request: ManagerStateRequest, db: Session = Depen
             {
                 "id": item.id,
                 "sales_order": item.original_sales_order_number,
+                "order_line": item.original_sales_order_line,
                 "serial_number": item.serial_number,
+                "sscc_number": item.sscc_number,
+                "account_number": item.account_number,
+                "customer_email": item.customer_email,
+                "shipped_to_city": item.shipped_to_city,
                 "shipped_to_state": item.shipped_to_state,
-                "status": item.status
+                "shipped_to_zip": item.shipped_to_zip,
+                "status": item.status,
+                "date_purchased": item.date_purchased,
+                "date_shipped": item.date_shipped,
+                "date_delivered": item.date_delivered,
+                "item": {
+                    "item_number": item.item.item_number if item.item else None,
+                    "description": item.item.item_description if item.item else None,
+                    "category": item.item.category if item.item else None
+                }
             } for item in sale_items
-        ],
+        ]
+    }
+
+@app.post("/api/return-items-by-manager-state")
+def get_return_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+    manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+
+    servicing_state = manager.servicing_state
+
+    return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == servicing_state).all()
+
+    return {
+        "manager_state": servicing_state,
         "return_items": [
             {
                 "id": item.id,
                 "return_order": item.return_order_number,
+                "order_line": item.return_order_line,
                 "item_id": item.item_id,
+                "return_condition": item.return_condition,
+                "return_carrier": item.return_carrier,
+                "return_destination": item.return_destination,
                 "return_state": item.return_state,
-                "status": item.status
+                "return_zip": item.return_zip,
+                "status": item.status,
+                "date_purchased": item.date_purchased,
+                "date_shipped": item.date_shipped,
+                "date_delivered": item.date_delivered,
+                "return_created_date": item.return_created_date,
+                "return_received_date": item.return_received_date,
+                "item": {
+                    "item_number": item.item.item_number if item.item else None,
+                    "description": item.item.item_description if item.item else None,
+                    "category": item.item.category if item.item else None
+                }
             } for item in return_items
         ]
     }
+
    
 
 @app.post("/api/upload-customer-images")
