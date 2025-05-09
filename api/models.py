@@ -372,6 +372,7 @@ class AgentManager(Base):
     additional_info_1 = Column(Text)
     additional_info_2 = Column(Text)
 
+    approved_by_auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'), nullable=True)
     manager_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
 
 

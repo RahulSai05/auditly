@@ -1841,15 +1841,57 @@ def get_full_return_data(db: Session = Depends(get_db)):
 
 
 
+# @app.get("/api/users")
+# async def get_users(db: Session = Depends(get_db)):
+#     try:
+#         # LEFT JOIN Agent and AgentManager tables to get agent_id and manager_id
+#         users_with_roles = (
+#             db.query(
+#                 AuditlyUser,
+#                 Agent.agent_id,
+#                 AgentManager.manager_id
+#             )
+#             .outerjoin(Agent, Agent.agent_to_user_mapping_id == AuditlyUser.auditly_user_id)
+#             .outerjoin(AgentManager, AgentManager.manager_user_mapping_id == AuditlyUser.auditly_user_id)
+#             .all()
+#         )
+
+#         result = []
+#         for user, agent_id, manager_id in users_with_roles:
+#             result.append({
+#                 "user_id": user.auditly_user_id,
+#                 "user_name": user.auditly_user_name,
+#                 "first_name": user.first_name,
+#                 "last_name": user.last_name,
+#                 "gender": user.gender,
+#                 "email": user.email,
+#                 "is_reports_user": user.is_reports_user,
+#                 "is_admin": user.is_admin,
+#                 "is_inpection_user": user.is_inspection_user,
+#                 "is_manager": user.is_manager,
+#                 "is_agent": user.is_agent,
+#                 "user_company": user.user_company,
+#                 "agent_id": agent_id,
+#                 "manager_id": manager_id 
+#             })
+
+#         return {
+#             "message": "Users retrieved successfully.",
+#             "data": result
+#         }
+
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
+
 @app.get("/api/users")
-async def get_users(db: Session = Depends(get_db)):
+def get_users(db: Session = Depends(get_db)):
     try:
-        # LEFT JOIN Agent and AgentManager tables to get agent_id and manager_id
         users_with_roles = (
             db.query(
                 AuditlyUser,
                 Agent.agent_id,
-                AgentManager.manager_id
+                AgentManager.manager_id,
+                AgentManager.approved_by_auditly_user_id
             )
             .outerjoin(Agent, Agent.agent_to_user_mapping_id == AuditlyUser.auditly_user_id)
             .outerjoin(AgentManager, AgentManager.manager_user_mapping_id == AuditlyUser.auditly_user_id)
@@ -1857,7 +1899,9 @@ async def get_users(db: Session = Depends(get_db)):
         )
 
         result = []
-        for user, agent_id, manager_id in users_with_roles:
+        for user, agent_id, manager_id, approved_by in users_with_roles:
+            is_manager = approved_by is not None  # Only mark as manager if approved
+
             result.append({
                 "user_id": user.auditly_user_id,
                 "user_name": user.auditly_user_name,
@@ -1868,11 +1912,11 @@ async def get_users(db: Session = Depends(get_db)):
                 "is_reports_user": user.is_reports_user,
                 "is_admin": user.is_admin,
                 "is_inpection_user": user.is_inspection_user,
-                "is_manager": user.is_manager,
+                "is_manager": is_manager,
                 "is_agent": user.is_agent,
                 "user_company": user.user_company,
                 "agent_id": agent_id,
-                "manager_id": manager_id 
+                "manager_id": manager_id
             })
 
         return {
@@ -1882,7 +1926,6 @@ async def get_users(db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
-
 
 @app.post("/api/onboard")
 async def onboard(request: Onboard, db: Session = Depends(get_db)):   
