@@ -114,9 +114,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isLoggedIn = localStorage.getItem("token") !== null;
   const isauthroute = authRoutes.includes(location.pathname);
 
-  if (checkingUserValidity) {
-    return <LoadingScreen />;
-  }
 
   if (!isLoggedIn && !isAuthRoute) {
     return <Navigate to="/login" replace />;
@@ -126,7 +123,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 };
 
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-
+const isAuthPage = authRoutes.includes(location.pathname);
+if (checkingUserValidity && !isAuthPage) {
+  return <LoadingScreen />;
+}
 export default function App(): JSX.Element {
   const itemData = useSelector((state: RootState) => state.ids);
   const managerId = useSelector((state: RootState) => state.ids.managerId); 
@@ -282,24 +282,16 @@ export default function App(): JSX.Element {
     return () => clearTimeout(timer); // Cleanup timeout
   }, [location.pathname, userData]); // Ensure fresh userData
 
-
-
-
-
-
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-
-
-
   const isAuthPage = authRoutes.includes(location.pathname);
 
-  if (checkingUserValidity) {
+  // ✅ Only render LoadingScreen if checking user and it's not an auth page
+  if (checkingUserValidity && !isAuthPage) {
     return <LoadingScreen />;
   }
-  
   const shouldHideNavbarAndFooter = isAuthPage;
-
+  
   
 
 
