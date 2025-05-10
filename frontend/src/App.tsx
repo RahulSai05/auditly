@@ -122,6 +122,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return <>{children}</>;
 };
 
+
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
 
 export default function App(): JSX.Element {
@@ -129,8 +130,6 @@ export default function App(): JSX.Element {
   const managerId = useSelector((state: RootState) => state.ids.managerId); 
   const location = useLocation();
   const dispatch = useDispatch();
-
-
   const navigate = useNavigate();
   
   if (!location.pathname) {
@@ -144,7 +143,10 @@ export default function App(): JSX.Element {
 
   const [checkingUserValidity, setCheckingUserValidity] = useState(true);
 
-
+  if (authRoutes.includes(location.pathname) && checkingUserValidity) {
+    return null; // 🛑 Prevent flash of Navbar/Footer on auth routes
+  }
+  
   useEffect(() => {
     const localUser = localStorage.getItem("token");
     setUserData(localUser ? JSON.parse(localUser) : null);
@@ -280,7 +282,6 @@ export default function App(): JSX.Element {
 
 
   // List of routes where Navbar and Footer should be hidden
-  const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   // const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
   // const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
