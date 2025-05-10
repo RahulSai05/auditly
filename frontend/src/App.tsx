@@ -1047,4 +1047,4 @@ export default function App(): JSX.Element {
     )}
     {!shouldHideNavbarAndFooter && <Footer />}
   </>
-);
+);}
