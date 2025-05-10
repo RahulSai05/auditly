@@ -656,14 +656,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
 
 export default function App(): JSX.Element {
-  const itemData = useSelector((state: RootState) => state.ids);
-  const managerId = useSelector((state: RootState) => state.ids.managerId); 
   const location = useLocation();
   const dispatch = useDispatch();
-
-
   const navigate = useNavigate();
-
+  const itemData = useSelector((state: RootState) => state.ids);
 
   const [userData, setUserData] = useState<UserData | null>(() => {
     const userDataString = localStorage.getItem("token");
@@ -672,157 +668,70 @@ export default function App(): JSX.Element {
 
   const [checkingUserValidity, setCheckingUserValidity] = useState(true);
 
-
+  // ✅ Sync userData when pathname changes
   useEffect(() => {
     const localUser = localStorage.getItem("token");
     setUserData(localUser ? JSON.parse(localUser) : null);
-  }, [location.pathname]); // Sync state with localStorage
+  }, [location.pathname]);
 
-  useEffect(() => {
-    console.log("Updated userData:", userData);
-  }, [userData]); // Log changes
-
+  // ✅ Validate token and user access
   useEffect(() => {
     const checkUserValidity = async () => {
       try {
-
         if (authRoutes.includes(location.pathname)) {
-          setCheckingUserValidity(false); // Skip validation for auth pages
+          setCheckingUserValidity(false);
           return;
         }
-        
+
         const res = await fetch("https://auditlyai.com/api/users");
         const data = await res.json();
 
         if (data.data && userData) {
-          const userExists = data.data.some((user: any) => user?.user_name === userData["User Name"]);
+          const userExistsData = data.data.find(
+            (user: any) => user?.user_name === userData["User Name"]
+          );
 
-          let userExistsData = userExists
-            ? data.data.filter((user: any) => user?.user_name === userData["User Name"])[0]
-            : null;
-            
-          console.log("API returned userExistsData:", userExistsData);
-          if (userExists && userExistsData) {
+          if (!userExistsData) throw new Error("User not found");
 
-            if (userExistsData.agent_id) {
-              localStorage.setItem("agentId", userExistsData.agent_id.toString());
-              dispatch(setAgentId(userExistsData.agent_id));
-              console.log("Agent ID set:", userExistsData.agent_id);
-            } else {
-              localStorage.removeItem("agentId");
-              dispatch(setAgentId(null));
-            }
+          dispatch(setAgentId(userExistsData.agent_id || null));
+          dispatch(setManagerId(userExistsData.manager_id || null));
 
-            if (userExistsData.manager_id) {
-              localStorage.setItem("managerId", userExistsData.manager_id.toString());
-              dispatch(setManagerId(userExistsData.manager_id));
-              console.log("Manager ID set:", userExistsData.manager_id);
-            } else {
-              localStorage.removeItem("managerId");
-              dispatch(setManagerId(null));
-            }
-            
+          const roles = userData["User Type"];
+          const isAuthorized = roles.every((role: string) => {
+            if (role === "admin") return userExistsData.is_admin;
+            if (role === "reports_user") return userExistsData.is_reports_user;
+            if (role === "inpection_user") return userExistsData.is_inpection_user;
+            return false;
+          });
 
-            const requiredUserTypes = userData["User Type"];
-            let isAuthorized = true;
-
-            // Check all required permissions are present
-            for (let i = 0; i < requiredUserTypes.length; i++) {
-              const userType = requiredUserTypes[i];
-
-              if (userType === "reports_user" && !userExistsData.is_reports_user) {
-                console.log("Missing required permission: reports_user");
-                isAuthorized = false;
-                break;
-              } else if (userType === "admin" && !userExistsData.is_admin) {
-                console.log("Missing required permission: admin");
-                isAuthorized = false;
-                break;
-              } else if (userType === "inpection_user" && !userExistsData.is_inpection_user) {
-                console.log("Missing required permission: inpection_user");
-                isAuthorized = false;
-                break;
-              }
-            }
-
-            // Check no additional permissions are present
-            if (isAuthorized) {
-              // Check if user has reports_user permission
-              if (userExistsData.is_reports_user && !requiredUserTypes.includes("reports_user")) {
-                console.log("User has unauthorized permission: reports_user");
-                isAuthorized = false;
-              }
-
-              // Check if user has admin permission
-              if (userExistsData.is_admin && !requiredUserTypes.includes("admin")) {
-                console.log("User has unauthorized permission: admin");
-                isAuthorized = false;
-              }
-
-              // Check if user has inpection_user permission
-              if (userExistsData.is_inpection_user && !requiredUserTypes.includes("inpection_user")) {
-                console.log("User has unauthorized permission: inpection_user");
-                isAuthorized = false;
-              }
-            }
-
-            console.log("User exists data:", userExistsData);
-            console.log("User types required:", userData["User Type"]);
-            console.log("User authorized with exact permissions:", isAuthorized);
-
-            if (!isAuthorized) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("usertype");
-                navigate("/login", { replace: true });
-            }
-          } else if (!userExists) {
-            console.log("User does not exist");
-            localStorage.removeItem("token");
-            localStorage.removeItem("usertype");
-            navigate("/login");
-          }
+          if (!isAuthorized) throw new Error("Unauthorized roles");
         } else {
-           console.log("Invalid user state");
-           localStorage.removeItem("token");
-           localStorage.removeItem("usertype");
-           navigate("/login", { replace: true });
+          throw new Error("Invalid user state");
         }
       } catch (error) {
-        console.error("Error checking user validity:", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("usertype");
+        navigate("/login", { replace: true });
       } finally {
-      setCheckingUserValidity(false); // Always stop loading after check
-        }
+        setCheckingUserValidity(false);
+      }
     };
 
-    const timer = setTimeout(() => {
-      console.log("Checking user validity...");
-      checkUserValidity();
-    }, 200);
+    const timer = setTimeout(checkUserValidity, 200);
+    return () => clearTimeout(timer);
+  }, [location.pathname, userData]);
 
-    return () => clearTimeout(timer); // Cleanup timeout
-  }, [location.pathname, userData]); // Ensure fresh userData
-
-
-
-
-
-
-  // List of routes where Navbar and Footer should be hidden
-  // const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
-  // const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
+  // ✅ Conditionally hide Navbar/Footer
   const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
-
-
-
-  useEffect(() => {
-    console.log(itemData);
-  }, [itemData]);
+  // ✅ 💥 MAIN FIX: block rendering until user is validated
+  if (checkingUserValidity && !authRoutes.includes(location.pathname)) {
+    return <LoadingScreen />;
+  }
   
   return (
     <>      
       {!shouldHideNavbarAndFooter && <Navbar />}
-      {!checkingUserValidity && (
       <Routes>
         {/* Public Routes - No Authentication Required */}
         <Route path="/login" element={<Login />} />
@@ -1044,7 +953,7 @@ export default function App(): JSX.Element {
         {/* Catch-all redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-    )}
     {!shouldHideNavbarAndFooter && <Footer />}
   </>
-);}
+);
+}
