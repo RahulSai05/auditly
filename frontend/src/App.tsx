@@ -132,7 +132,10 @@ export default function App(): JSX.Element {
 
 
   const navigate = useNavigate();
-
+  
+  if (!location.pathname) {
+    return null;
+  }
 
   const [userData, setUserData] = useState<UserData | null>(() => {
     const userDataString = localStorage.getItem("token");
@@ -289,7 +292,7 @@ export default function App(): JSX.Element {
     console.log(itemData);
   }, [itemData]);
 
-  if (checkingUserValidity && !authRoutes.includes(location.pathname)) {
+  if (checkingUserValidity || location.pathname === "") {
     return <LoadingScreen />;
   }
   
