@@ -1169,32 +1169,62 @@
 // // }
 
 
-import { Route, Routes, useNavigate, useLocation, Navigate } from "react-router-dom";
+
+import { Route, Routes, useNavigate, useLocation, Navigate, Outlet, useFetcher } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState, ReactNode } from "react";
-import {
-  Home, HelpCenter, Options, GetAll,
-  Dashboard, DashboardTables, ItemUpload, ItemImageUpload,
-  ItemImages, MappingRules, AdminLayout, ItemReturn,
-  CustomerSerials, ReturnDetails, AuditlyInspection,
-  UserMaintenance, CustomerSerialUpload, EmailConfigurations,
-  Inbound, Outbound, Schedule, AssignDeliveries,
-  AssignPickups, UserPermissionRequests, ScheduledDeliveries,
-  ScheduledPickups, ApiConfigurations, ApiEndpoint,
-  Onboard, InspectionData, RequestAccess,
-  Details, Inspection, UploadMedia, Compare, Review
-} from "./pages"; // adjust based on your import structure
-import {
-  Login, Unauthorized, Register, AuthSuccess,
-  ForgotPassword, ResetPassword, EditProfile
-} from "./components/auth"; // adjust based on your structure
+// Import all your page components as before
+import Home from "./pages/Home";
+import HelpCenter from "./pages/HelpCenter";
+import Options from "./pages/Options";
+import GetAll from "./pages/manual/GetAll";
+import Details from "./pages/manual/return /Details";
+import Inspection from "./pages/manual/return /Inspection";
+import UploadMedia from "./pages/manual/return /Uploadmedia";
+import Compare from "./pages/manual/return /Compare";
+import Review from "./pages/manual/return /Review";
 import Done from "./pages/manual/return /Done";
 import Scan from "./pages/auto/Scan";
+import Onboard from "./pages/inspection/Onboard";
+import InspectionData from "./pages/inspection/InspectionData";
+import RequestAccess from "./pages/inspection/RequestAccess";
+import Dashboard from "./pages/admin/Dashboard";
+import DashboardTables from "./pages/admin/DashboardTables";
+import ItemUpload from "./pages/admin/ItemUpload";
+import ItemImageUpload from "./pages/admin/ItemImageUpload";
+import ItemImages from "./pages/admin/ItemImages";
+import MappingRules from "./pages/admin/MappingRules";
+import AdminLayout from "./components/AdminLayout";
+import ItemReturn from "./pages/admin/ItemReturn";
+import CustomerSerials from "./pages/admin/CustomerSerials";
+import ReturnDetails from "./components/ReturnDetails";
+import AuditlyInspection from "./pages/admin/AuditlyInspection";
+import UserMaintenance from "./pages/admin/UserMaintenance";
+import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
+import EmailConfigurations from "./pages/admin/EmailConfigurations";
+import Inbound from "./pages/admin/Inbound";
+import Outbound from "./pages/admin/Outbound";
+import Schedule from "./pages/agent/Schedule";
+import AssignDeliveries from "./pages/manager/AssignDeliveries";
+import AssignPickups from "./pages/manager/AssignPickups";
+import UserPermissionRequests from "./pages/agent/UserPermissionRequests";
+import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
+import ScheduledPickups from "./pages/agent/ScheduledPickups";
+import ApiConfigurations from "./pages/admin/ApiConfigurations";
+import LoadingScreen from "./components/LoadingScreen";
+import ApiEndpoint from "./pages/admin/ApiEndpoint";
+import Login from "./components/auth/Login";
+import Unauthorized from "./components/auth/Unauthorized";
+import Register from "./components/auth/Register";
+import AuthSuccess from "./components/auth/AuthSuccess";
+import ForgotPassword from "./components/auth/Forgot";
+import ResetPassword from "./components/auth/Reset";
+import EditProfile from "./components/auth/EditProfile";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
-import LoadingScreen from "./components/LoadingScreen";
 import { RootState } from "./store/store";
 import { setAgentId, setManagerId } from "./store/slices/itemSlice";
+
 
 // User type and route protection setup
 interface UserData {
