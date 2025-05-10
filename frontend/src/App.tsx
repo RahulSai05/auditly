@@ -529,10 +529,9 @@
 // }
 
 
-import { Route, Routes, useNavigate, useLocation, Navigate, Outlet, useFetcher } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState, ReactNode } from "react";
-// Import all your page components as before
 import Home from "./pages/Home";
 import HelpCenter from "./pages/HelpCenter";
 import Options from "./pages/Options";
@@ -584,7 +583,6 @@ import Footer from "./components/Footer";
 import { RootState } from "./store/store";
 import { setAgentId, setManagerId } from "./store/slices/itemSlice";
 
-
 // Type definitions
 interface UserData {
   "User Type": string[];
@@ -595,61 +593,32 @@ interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-
 // Protected route components
 const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
-  if (!userData) return null;
-
-  const isAdmin = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("admin");
-
+  const userData = JSON.parse(localStorage.getItem("token") || "null");
+  const isAdmin = userData?.["User Type"]?.includes("admin");
   return isAdmin ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const ReportsRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
-  if (!userData) return null;
-
-  const isReportUser = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("reports_user");
-
-  return (isReportUser) ? <>{children}</> : <Navigate to="/login" />;
+  const userData = JSON.parse(localStorage.getItem("token") || "null");
+  const isReportUser = userData?.["User Type"]?.includes("reports_user");
+  return isReportUser ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [userData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
-  });
-
-  if (!userData) return null;
-
-  const isInspectionUser = userData && Array.isArray(userData["User Type"]) &&
-    userData["User Type"].includes("inpection_user");
-
-  return (isInspectionUser) ? <>{children}</> : <Navigate to="/unauthorized" />;
+  const userData = JSON.parse(localStorage.getItem("token") || "null");
+  const isInspectionUser = userData?.["User Type"]?.includes("inspection_user"); // Fixed typo
+  return isInspectionUser ? <>{children}</> : <Navigate to="/unauthorized" replace />;
 };
 
-// Auth verification component
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const isLoggedIn = localStorage.getItem("token") !== null;
+  const isLoggedIn = !!localStorage.getItem("token");
   const location = useLocation();
-
-  const isauthroute = authRoutes.includes(location.pathname);
-
-  if (!isLoggedIn && !isauthroute) {
+  const isAuthRoute = authRoutes.includes(location.pathname);
+  if (!isLoggedIn && !isAuthRoute) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-
   return <>{children}</>;
 };
 
@@ -657,303 +626,158 @@ const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"
 
 export default function App(): JSX.Element {
   const location = useLocation();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const itemData = useSelector((state: RootState) => state.ids);
-
   const [userData, setUserData] = useState<UserData | null>(() => {
-    const userDataString = localStorage.getItem("token");
-    return userDataString ? JSON.parse(userDataString) : null;
+    const stored = localStorage.getItem("token");
+    return stored ? JSON.parse(stored) : null;
   });
+  const [isValidating, setIsValidating] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  const [checkingUserValidity, setCheckingUserValidity] = useState(true);
-
-  // ✅ Sync userData when pathname changes
+  // Sync userData with localStorage
   useEffect(() => {
-    const localUser = localStorage.getItem("token");
-    setUserData(localUser ? JSON.parse(localUser) : null);
+    const local = localStorage.getItem("token");
+    setUserData(local ? JSON.parse(local) : null);
   }, [location.pathname]);
 
-  // ✅ Validate token and user access
+  // Validate user on mount and route change
   useEffect(() => {
-    const checkUserValidity = async () => {
+    const validateUser = async () => {
+      if (authRoutes.includes(location.pathname)) {
+        setIsValidating(false);
+        setIsAuthenticated(false); // No need to validate auth routes
+        return;
+      }
+
       try {
-        if (authRoutes.includes(location.pathname)) {
-          setCheckingUserValidity(false);
-          return;
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token");
         }
 
         const res = await fetch("https://auditlyai.com/api/users");
+        if (!res.ok) throw new Error("Failed to fetch user data");
         const data = await res.json();
 
-        if (data.data && userData) {
-          const userExistsData = data.data.find(
-            (user: any) => user?.user_name === userData["User Name"]
-          );
+        if (!data.data || !userData) throw new Error("Invalid state");
 
-          if (!userExistsData) throw new Error("User not found");
+        const userExists = data.data.find((u: any) => u.user_name === userData["User Name"]);
+        if (!userExists) throw new Error("User not found");
 
-          dispatch(setAgentId(userExistsData.agent_id || null));
-          dispatch(setManagerId(userExistsData.manager_id || null));
+        // Update Redux store with agent/manager IDs
+        dispatch(setAgentId(userExists.agent_id || null));
+        dispatch(setManagerId(userExists.manager_id || null));
 
-          const roles = userData["User Type"];
-          const isAuthorized = roles.every((role: string) => {
-            if (role === "admin") return userExistsData.is_admin;
-            if (role === "reports_user") return userExistsData.is_reports_user;
-            if (role === "inpection_user") return userExistsData.is_inpection_user;
-            return false;
-          });
+        // Validate user permissions
+        const required = userData["User Type"];
+        const permsOk = required.every((role: string) =>
+          role === "admin" ? userExists.is_admin :
+          role === "reports_user" ? userExists.is_reports_user :
+          role === "inspection_user" ? userExists.is_inspection_user : false // Fixed typo
+        );
 
-          if (!isAuthorized) throw new Error("Unauthorized roles");
-        } else {
-          throw new Error("Invalid user state");
-        }
-      } catch (error) {
+        if (!permsOk) throw new Error("Unauthorized roles");
+
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.warn("Validation error:", err);
         localStorage.removeItem("token");
         localStorage.removeItem("usertype");
+        setIsAuthenticated(false);
         navigate("/login", { replace: true });
       } finally {
-        setCheckingUserValidity(false);
+        setIsValidating(false);
       }
     };
 
-    const timer = setTimeout(checkUserValidity, 200);
-    return () => clearTimeout(timer);
-  }, [location.pathname, userData]);
+    setIsValidating(true);
+    validateUser(); // Removed setTimeout for immediate validation
+  }, [location.pathname, userData, dispatch, navigate]);
 
-  // ✅ Conditionally hide Navbar/Footer
-  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
+  // Log itemData changes (for debugging)
+  useEffect(() => {
+    console.log("itemData:", itemData);
+  }, [itemData]);
 
-  // ✅ 💥 MAIN FIX: block rendering until user is validated
-  if (checkingUserValidity && !authRoutes.includes(location.pathname)) {
+  // Show loading screen while validating
+  if (isValidating) {
     return <LoadingScreen />;
   }
-  
+
+  // Redirect to login if not authenticated and not on an auth route
+  if (isAuthenticated === false && !authRoutes.includes(location.pathname)) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const hideLayout = authRoutes.includes(location.pathname);
+
   return (
-    <>      
-      {!shouldHideNavbarAndFooter && <Navbar />}
+    <>
+      {!hideLayout && <Navbar />}
       <Routes>
-        {/* Public Routes - No Authentication Required */}
+        {/* Public Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/auth/success" element={<AuthSuccess />} /> 
+        <Route path="/auth/success" element={<AuthSuccess />} />
 
-        {/* Protected Routes with AdminLayout - Authentication Required */}
-        <Route element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }>
-          {/* Admin Only Routes */}
-          <Route path="/admin/settings/connectors/inbound" element={
-            <AdminRoute>
-              <Inbound />
-            </AdminRoute>
-          } />
-          <Route path="/admin/agent/permission-requests" element={
-            <UserPermissionRequests>
-              <ScheduledDeliveries />
-            </UserPermissionRequests>
-          } />
-          <Route path="/admin/settings/connectors/outbound" element={
-            <AdminRoute>
-              <Outbound />
-            </AdminRoute>
-          } />
-          <Route path="/admin/settings/mapping-rules" element={
-            <AdminRoute>
-              <MappingRules />
-            </AdminRoute>
-          } />
-          <Route path="/admin/settings/api-configurations" element={
-            <AdminRoute>
-              <ApiConfigurations />
-            </AdminRoute>
-          } />
-          <Route path="/admin/settings/api-endpoint" element={
-            <AdminRoute>
-              <ApiEndpoint />
-            </AdminRoute>
-          } />
-          <Route path="/admin/settings/email-configurations" element={
-            <AdminRoute>
-              <EmailConfigurations />
-            </AdminRoute>
-          } />
-          <Route path="/admin/settings/users-maintenance" element={
-            <AdminRoute>
-              <UserMaintenance />
-            </AdminRoute>
-          } />
+        {/* Protected App Routes */}
+        <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+          {/* Admin Routes */}
+          <Route path="/admin/settings/connectors/inbound" element={<AdminRoute><Inbound /></AdminRoute>} />
+          <Route path="/admin/agent/permission-requests" element={<UserPermissionRequests><ScheduledDeliveries /></UserPermissionRequests>} />
+          <Route path="/admin/settings/connectors/outbound" element={<AdminRoute><Outbound /></AdminRoute>} />
+          <Route path="/admin/settings/mapping-rules" element={<AdminRoute><MappingRules /></AdminRoute>} />
+          <Route path="/admin/settings/api-configurations" element={<AdminRoute><ApiConfigurations /></AdminRoute>} />
+          <Route path="/admin/settings/api-endpoint" element={<AdminRoute><ApiEndpoint /></AdminRoute>} />
+          <Route path="/admin/settings/email-configurations" element={<AdminRoute><EmailConfigurations /></AdminRoute>} />
+          <Route path="/admin/settings/users-maintenance" element={<AdminRoute><UserMaintenance /></AdminRoute>} />
 
-          {/* Reports User Routes (Reports users and Admins) */}
-          <Route path="/admin/reports/items" element={
-            <ReportsRoute>
-              <DashboardTables />
-            </ReportsRoute>
-          } />
-          <Route path="/admin/reports/customer-serials" element={
-            <ReportsRoute>
-              <CustomerSerials />
-            </ReportsRoute>
-          } />
-          <Route path="/admin/reports/returns" element={
-            <ReportsRoute>
-              <ReturnDetails />
-            </ReportsRoute>
-          } />
-          //-here
-          <Route path="/admin/reports/item-images" element={
-            <ReportsRoute>
-              <ItemImages />
-            </ReportsRoute>
-          } />
-          <Route path="/admin/reports/audity-inspections" element={
-            <ReportsRoute>
-              <AuditlyInspection />
-            </ReportsRoute>
-          } />
+          {/* Reports Routes */}
+          <Route path="/admin/reports/items" element={<ReportsRoute><DashboardTables /></ReportsRoute>} />
+          <Route path="/admin/reports/customer-serials" element={<ReportsRoute><CustomerSerials /></ReportsRoute>} />
+          <Route path="/admin/reports/returns" element={<ReportsRoute><ReturnDetails /></ReportsRoute>} />
+          <Route path="/admin/reports/item-images" element={<ReportsRoute><ItemImages /></ReportsRoute>} />
+          <Route path="/admin/reports/audity-inspections" element={<ReportsRoute><AuditlyInspection /></ReportsRoute>} />
 
-          {/* Inspection User Routes (Inspection users and Admins) */}
-          <Route path="/admin/dashboard" element={
-            <InspectionRoute>
-              <Dashboard />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/settings/Item-master-upload" element={
-            <InspectionRoute>
-              <ItemUpload />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/settings/customer-serial-Upload" element={
-            <InspectionRoute>
-              <CustomerSerialUpload />
-            </InspectionRoute>
-          } />
-          <Route path="/manager/assign-deliveries" element={
-            <InspectionRoute>
-              <AssignDeliveries />
-            </InspectionRoute>
-          } />
-          <Route path="/manager/assign-pickups" element={
-            <InspectionRoute>
-              <AssignPickups />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/agent/schedule" element={
-            <InspectionRoute>
-              <Schedule />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/agent/scheduled-deliveries" element={
-            <InspectionRoute>
-              <ScheduledDeliveries />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/agent/scheduled-pickups" element={
-            <InspectionRoute>
-              <ScheduledPickups />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/settings/Item-Image-Upload" element={
-            <InspectionRoute>
-              <ItemImageUpload />
-            </InspectionRoute>
-          } />
-          <Route path="/admin/settings/Return-Upload" element={
-            <InspectionRoute>
-              <ItemReturn />
-            </InspectionRoute>
-          } />
-
-
+          {/* Inspection Routes */}
+          <Route path="/admin/dashboard" element={<InspectionRoute><Dashboard /></InspectionRoute>} />
+          <Route path="/admin/settings/Item-master-upload" element={<InspectionRoute><ItemUpload /></InspectionRoute>} />
+          <Route path="/admin/settings/customer-serial-Upload" element={<InspectionRoute><CustomerSerialUpload /></InspectionRoute>} />
+          <Route path="/manager/assign-deliveries" element={<InspectionRoute><AssignDeliveries /></InspectionRoute>} />
+          <Route path="/manager/assign-pickups" element={<InspectionRoute><AssignPickups /></InspectionRoute>} />
+          <Route path="/admin/agent/schedule" element={<InspectionRoute><Schedule /></InspectionRoute>} />
+          <Route path="/admin/agent/scheduled-deliveries" element={<InspectionRoute><ScheduledDeliveries /></InspectionRoute>} />
+          <Route path="/admin/agent/scheduled-pickups" element={<InspectionRoute><ScheduledPickups /></InspectionRoute>} />
+          <Route path="/admin/settings/Item-Image-Upload" element={<InspectionRoute><ItemImageUpload /></InspectionRoute>} />
+          <Route path="/admin/settings/Return-Upload" element={<InspectionRoute><ItemReturn /></InspectionRoute>} />
         </Route>
 
-        {/* Other Protected Routes outside AdminLayout */}
-        <Route path="/edit-profile" element={
-          <ProtectedRoute>
-            <EditProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/onboard" element={
-          <ProtectedRoute>
-            <Onboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/inspection-data" element={
-          <ProtectedRoute>
-            <InspectionData />
-          </ProtectedRoute>
-        } />
+        {/* Other Protected Routes */}
+        <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+        <Route path="/onboard" element={<ProtectedRoute><Onboard /></ProtectedRoute>} />
+        <Route path="/inspection-data" element={<ProtectedRoute><InspectionData /></ProtectedRoute>} />
 
         {/* Standard Inspection User Routes */}
-        <Route path="/" element={
-          <InspectionRoute>
-            <Home />
-          </InspectionRoute>
-        } />
-        <Route path="/options" element={
-          <InspectionRoute>
-            <Options />
-          </InspectionRoute>
-        } />
-        <Route path="/help-center" element={
-          <InspectionRoute>
-            <HelpCenter />
-          </InspectionRoute>
-        } />
-        <Route path="/option/manual" element={
-          <InspectionRoute>
-            <GetAll />
-          </InspectionRoute>
-        } />
-        <Route path="/return/details" element={
-          <InspectionRoute>
-            <Details />
-          </InspectionRoute>
-        } />
-        <Route path="/return/inspection" element={
-          <InspectionRoute>
-            <Inspection />
-          </InspectionRoute>
-        } />
-        <Route path="/return/upload-media" element={
-          <InspectionRoute>
-            <UploadMedia />
-          </InspectionRoute>
-        } />
-        <Route path="/return/compare" element={
-          <InspectionRoute>
-            <Compare />
-          </InspectionRoute>
-        } />
-        <Route path="/return/review" element={
-          <InspectionRoute>
-            <Review />
-          </InspectionRoute>
-        } />
-        <Route path="/return/done" element={
-          <InspectionRoute>
-            <Done />
-          </InspectionRoute>
-        } />
-        <Route path="/request-access" element={
-          <InspectionRoute>
-            <RequestAccess />
-          </InspectionRoute>
-        } />
-        <Route path="/auto/scan" element={
-          <InspectionRoute>
-            <Scan />
-          </InspectionRoute>
-        } />
-        {/* Catch-all redirect to home */}
+        <Route path="/" element={<InspectionRoute><Home /></InspectionRoute>} />
+        <Route path="/options" element={<InspectionRoute><Options /></InspectionRoute>} />
+        <Route path="/help-center" element={<InspectionRoute><HelpCenter /></InspectionRoute>} />
+        <Route path="/option/manual" element={<InspectionRoute><GetAll /></InspectionRoute>} />
+        <Route path="/return/details" element={<InspectionRoute><Details /></InspectionRoute>} />
+        <Route path="/return/inspection" element={<InspectionRoute><Inspection /></InspectionRoute>} />
+        <Route path="/return/upload-media" element={<InspectionRoute><UploadMedia /></InspectionRoute>} />
+        <Route path="/return/compare" element={<InspectionRoute><Compare /></InspectionRoute>} />
+        <Route path="/return/review" element={<InspectionRoute><Review /></InspectionRoute>} />
+        <Route path="/return/done" element={<InspectionRoute><Done /></InspectionRoute>} />
+        <Route path="/request-access" element={<InspectionRoute><RequestAccess /></InspectionRoute>} />
+        <Route path="/auto/scan" element={<InspectionRoute><Scan /></InspectionRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-    {!shouldHideNavbarAndFooter && <Footer />}
-  </>
-);
+      </Routes>
+      {!hideLayout && <Footer />}
+    </>
+  );
 }
