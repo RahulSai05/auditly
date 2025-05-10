@@ -1415,6 +1415,49 @@ const FormField: React.FC<FormFieldProps> = ({
   );
 };
 
+// FormSection Component
+const FormSection: React.FC<FormSectionProps> = ({ title, children, icon, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 100, damping: 15 }}
+      className="space-y-4 bg-gray-50 rounded-xl p-4"
+    >
+      <motion.button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-5 h-5 text-gray-500" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-500" />
+        )}
+      </motion.button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
 // Main Component
 const RequestAccess: React.FC = () => {
   const [days, setDays] = useState<DayOption[]>([
@@ -1495,7 +1538,158 @@ const RequestAccess: React.FC = () => {
     }
   }, [isAgent, role]);
 
-  // ... (keep all your existing toggleDaySelection, handleAgentChange, handleManagerChange functions)
+  const toggleDaySelection = (dayId: number) => {
+    if (role === 'agent' && isAgent) return; // Prevent changes if agent is disabled
+    
+    const updatedDays = days.map(day => 
+      day.id === dayId ? { ...day, selected: !day.selected } : day
+    );
+    setDays(updatedDays);
+    
+    const selectedDays = updatedDays
+      .filter(day => day.selected)
+      .map(day => day.id)
+      .sort((a, b) => a - b)
+      .join(",");
+    
+    const workSchedule = JSON.stringify({ days: selectedDays });
+    
+    if (role === 'agent') {
+      setAgentForm(prev => ({
+        ...prev,
+        work_schedule: workSchedule
+      }));
+    } else {
+      setManagerForm(prev => ({
+        ...prev,
+        work_schedule: workSchedule
+      }));
+    }
+  };
+
+  const handleAgentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    if (isAgent) return; // Prevent changes if agent is disabled
+    
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setAgentForm({
+      ...agentForm,
+      [name]: type === "checkbox" ? checked : value
+    });
+  };
+
+  const handleManagerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setManagerForm({
+      ...managerForm,
+      [name]: type === "checkbox" ? checked : value
+    });
+  };
+
+  const handleSubmitAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isAgent) return; // Prevent submission if agent is disabled
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const payload = {
+        agent_name: agentForm.agent_name,
+        current_address: agentForm.current_address || null,
+        delivery_type: agentForm.delivery_type,
+        pickup_routing_mode: agentForm.pickup_routing_mode === "manual" ? 1 : 0,
+        delivery_routing_mode: agentForm.delivery_routing_mode === "manual" ? 1 : 0,
+        servicing_state: agentForm.servicing_state || null,
+        servicing_city: agentForm.servicing_city || null,
+        servicing_zip: agentForm.servicing_zip || null,
+        permanent_adress: agentForm.permanent_adress || null,
+        permanent_address_state: agentForm.permanent_address_state || null,
+        permanent_address_city: agentForm.permanent_address_city || null,
+        permanent_address_zip: agentForm.permanent_address_zip || null,
+        gender: agentForm.gender,
+        dob: agentForm.dob || null,
+        work_schedule: agentForm.work_schedule ? JSON.parse(agentForm.work_schedule) : null,
+        agent_to_user_mapping_id: agentForm.agent_to_user_mapping_id ? parseInt(agentForm.agent_to_user_mapping_id) : null,
+        additional_info_1: agentForm.additional_info_1 || null,
+        additional_info_2: agentForm.additional_info_2 || null,
+        additional_info_3: agentForm.additional_info_3 || null
+      };
+
+      const response = await fetch("/api/create-agent/", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create agent');
+      }
+
+      const data = await response.json();
+      setSuccessData({ id: data.agent_id, type: 'agent' });
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Failed to submit request:", error);
+      setError(error instanceof Error ? error.message : 'Failed to create agent');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitManager = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const payload = {
+        manager_name: managerForm.manager_name,
+        servicing_state: managerForm.servicing_state || null,
+        servicing_city: managerForm.servicing_city || null,
+        servicing_zip: managerForm.servicing_zip || null,
+        permanent_address: managerForm.permanent_address || null,
+        permanent_address_state: managerForm.permanent_address_state || null,
+        permanent_address_city: managerForm.permanent_address_city || null,
+        permanent_address_zip: managerForm.permanent_address_zip || null,
+        address: managerForm.address || null,
+        dob: managerForm.dob || null,
+        gender: managerForm.gender || null,
+        work_schedule: managerForm.work_schedule ? JSON.parse(managerForm.work_schedule) : null,
+        manager_user_mapping_id: managerForm.manager_user_mapping_id ? parseInt(managerForm.manager_user_mapping_id) : null,
+        additional_info_1: managerForm.additional_info_1 || null,
+        additional_info_2: managerForm.additional_info_2 || null
+      };
+
+      const response = await fetch("/api/create-manager/", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create manager');
+      }
+
+      const data = await response.json();
+      setSuccessData({ id: data.manager_id, type: 'manager' });
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Failed to submit request:", error);
+      setError(error instanceof Error ? error.message : 'Failed to create manager');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (submitted) {
     return <SuccessView 
@@ -1504,7 +1698,45 @@ const RequestAccess: React.FC = () => {
         setSubmitted(false);
         setSuccessData(null);
         setRole(isAgent ? 'manager' : null);
-        // ... (keep your existing reset logic)
+        setAgentForm({
+          agent_name: "",
+          current_address: "",
+          delivery_type: "",
+          pickup_routing_mode: "",
+          delivery_routing_mode: "",
+          servicing_state: "",
+          servicing_city: "",
+          servicing_zip: "",
+          permanent_adress: "",
+          permanent_address_state: "",
+          permanent_address_city: "",
+          permanent_address_zip: "",
+          gender: "",
+          dob: "",
+          work_schedule: "",
+          agent_to_user_mapping_id: localStorage.getItem("userId") || "",
+          additional_info_1: "",
+          additional_info_2: "",
+          additional_info_3: ""
+        });
+        setManagerForm({
+          manager_name: "",
+          servicing_state: "",
+          servicing_city: "",
+          servicing_zip: "",
+          permanent_address: "",
+          permanent_address_state: "",
+          permanent_address_city: "",
+          permanent_address_zip: "",
+          address: "",
+          dob: "",
+          gender: "",
+          work_schedule: "",
+          manager_user_mapping_id: localStorage.getItem("userId") || "",
+          additional_info_1: "",
+          additional_info_2: ""
+        });
+        setDays(days.map(day => ({ ...day, selected: false })));
       }}
     />;
   }
@@ -1822,6 +2054,224 @@ const RequestAccess: React.FC = () => {
   );
 };
 
+// Section Components (BasicInfoSection, DeliveryTypeSection, etc.)
+// These should be updated to accept the disabled prop and pass it to FormField
+const BasicInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+  <FormSection title="Basic Information" icon={icon}>
+    <FormField
+      label={disabled ? "Agent Name (You are already an agent)" : "Agent Name"}
+      name="agent_name"
+      type="text"
+      value={form.agent_name}
+      onChange={handleChange}
+      required
+      icon={<User className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Gender"
+      name="gender"
+      type="select"
+      value={form.gender}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "", label: "Please select gender" },
+        { value: "Male", label: "Male" },
+        { value: "Female", label: "Female" },
+        { value: "Other", label: "Other" },
+        { value: "Prefer not to say", label: "Prefer not to say" }
+      ]}
+      icon={<Users className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Date of Birth"
+      name="dob"
+      type="date"
+      value={form.dob}
+      onChange={handleChange}
+      icon={<Calendar className="w-4 h-4" />}
+      disabled={disabled}
+    />
+  </FormSection>
+);
+
+const DeliveryTypeSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+  <FormSection title="Delivery Type" icon={icon}>
+    <FormField
+      label="Delivery Type"
+      name="delivery_type"
+      type="select"
+      value={form.delivery_type}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "", label: "Please select delivery type" },
+        { value: "Delivery", label: "Delivery" },
+        { value: "Return", label: "Return" },
+        { value: "Both", label: "Both" }
+      ]}
+      icon={<Truck className="w-4 h-4" />}
+      disabled={disabled}
+    />
+  </FormSection>
+);
+
+const RoutingModeSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+  <FormSection title="Routing Mode" icon={icon}>
+    <FormField
+      label="Pickup Routing Mode"
+      name="pickup_routing_mode"
+      type="select"
+      value={form.pickup_routing_mode}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "", label: "Please select routing mode" },
+        { value: "auto", label: "Automatic" },
+        { value: "manual", label: "Manual" }
+      ]}
+      icon={<Navigation2 className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Delivery Routing Mode"
+      name="delivery_routing_mode"
+      type="select"
+      value={form.delivery_routing_mode}
+      onChange={handleChange}
+      required
+      options={[
+        { value: "", label: "Please select routing mode" },
+        { value: "auto", label: "Automatic" },
+        { value: "manual", label: "Manual" }
+      ]}
+      icon={<Truck className="w-4 h-4" />}
+      disabled={disabled}
+    />
+  </FormSection>
+);
+
+const AddressInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+  <FormSection title="Address Information" icon={icon}>
+    <FormField
+      label={form.hasOwnProperty('current_address') ? "Current Address" : "Address"}
+      name={form.hasOwnProperty('current_address') ? 'current_address' : 'address'}
+      type="text"
+      value={form.hasOwnProperty('current_address') ? form.current_address : form.address}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Permanent Address"
+      name={form.hasOwnProperty('permanent_adress') ? 'permanent_adress' : 'permanent_address'}
+      type="text"
+      value={form.hasOwnProperty('permanent_adress') ? form.permanent_adress : form.permanent_address}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Servicing State"
+      name="servicing_state"
+      type="text"
+      value={form.servicing_state}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Servicing City"
+      name="servicing_city"
+      type="text"
+      value={form.servicing_city}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Servicing Zip Code"
+      name="servicing_zip"
+      type="text"
+      value={form.servicing_zip}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Permanent Address State"
+      name="permanent_address_state"
+      type="text"
+      value={form.permanent_address_state}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Permanent Address City"
+      name="permanent_address_city"
+      type="text"
+      value={form.permanent_address_city}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Permanent Address Zip Code"
+      name="permanent_address_zip"
+      type="text"
+      value={form.permanent_address_zip}
+      onChange={handleChange}
+      required
+      icon={<MapPin className="w-4 h-4" />}
+      disabled={disabled}
+    />
+  </FormSection>
+);
+
+const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean, isAgent?: boolean}> = ({ form, handleChange, icon, disabled = false, isAgent = true }) => (
+  <FormSection title="Additional Information" icon={icon}>
+    <FormField
+      label="Additional Info 1"
+      name="additional_info_1"
+      type="text"
+      value={form.additional_info_1}
+      onChange={handleChange}
+      icon={<ClipboardList className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    <FormField
+      label="Additional Info 2"
+      name="additional_info_2"
+      type="text"
+      value={form.additional_info_2}
+      onChange={handleChange}
+      icon={<ClipboardList className="w-4 h-4" />}
+      disabled={disabled}
+    />
+    {isAgent && (
+      <FormField
+        label="Additional Info 3"
+        name="additional_info_3"
+        type="text"
+        value={form.additional_info_3}
+        onChange={handleChange}
+        icon={<ClipboardList className="w-4 h-4" />}
+        disabled={disabled}
+      />
+    )}
+  </FormSection>
+);
+
 interface SuccessViewProps {
   successData: SuccessData | null;
   resetForm: () => void;
@@ -1839,11 +2289,6 @@ const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => 
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 20,
-            }}
             className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
           >
             <ShieldCheck className="w-10 h-10 text-green-600" />
@@ -1851,25 +2296,25 @@ const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => 
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Application Submitted Successfully!
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto mb-4">
+          <p className="text-gray-600 mb-6">
             Your request for {successData?.type === 'agent' ? 'agent' : 'manager'} access has been submitted.
             Our team will review your application and get back to you soon.
           </p>
           
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 mb-6 max-w-md mx-auto">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 mb-6">
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 {successData?.type === 'agent' ? (
-                  <User className="w-5 h-5 text-blue-600" />
+                  <User className="w-6 h-6 text-blue-600" />
                 ) : (
-                  <UserCog className="w-5 h-5 text-blue-600" />
+                  <UserCog className="w-6 h-6 text-blue-600" />
                 )}
               </div>
               <h3 className="font-bold text-gray-800">
                 {successData?.type === 'agent' ? 'Agent' : 'Manager'} ID: {successData?.id}
               </h3>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 mt-2">
               Please keep this reference ID for future communication.
             </p>
           </div>
@@ -1881,8 +2326,8 @@ const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => 
               onClick={resetForm}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
             >
-              <Users className="w-5 h-5" />
-              Request Another Access
+              <RefreshCw className="w-5 h-5" />
+              Submit Another Request
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -1899,211 +2344,5 @@ const SuccessView: React.FC<SuccessViewProps> = ({ successData, resetForm }) => 
     </div>
   );
 };
-
-interface SectionProps {
-  form: any;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-  icon?: React.ReactNode;
-  isAgent?: boolean;
-}
-
-const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-  <FormSection title="Basic Information" icon={icon}>
-    <FormField
-      label="Agent Name"
-      name="agent_name"
-      type="text"
-      value={form.agent_name}
-      onChange={handleChange}
-      required
-      icon={<User className="w-4 h-4" />}
-    />
-    <FormField
-      label="Gender"
-      name="gender"
-      type="select"
-      value={form.gender}
-      onChange={handleChange}
-      required
-      options={[
-        { value: "", label: "Please select gender" },
-        { value: "Male", label: "Male" },
-        { value: "Female", label: "Female" },
-        { value: "Other", label: "Other" },
-        { value: "Prefer not to say", label: "Prefer not to say" }
-      ]}
-      icon={<Users className="w-4 h-4" />}
-    />
-    <FormField
-      label="Date of Birth"
-      name="dob"
-      type="date"
-      value={form.dob}
-      onChange={handleChange}
-      icon={<Calendar className="w-4 h-4" />}
-    />
-  </FormSection>
-);
-
-const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-  <FormSection title="Delivery Type" icon={icon}>
-    <FormField
-      label="Delivery Type"
-      name="delivery_type"
-      type="select"
-      value={form.delivery_type}
-      onChange={handleChange}
-      required
-      options={[
-        { value: "", label: "Please select delivery type" },
-        { value: "Delivery", label: "Delivery" },
-        { value: "Return", label: "Return" },
-        { value: "Both", label: "Both" }
-      ]}
-      icon={<Truck className="w-4 h-4" />}
-    />
-  </FormSection>
-);
-
-const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-  <FormSection title="Routing Mode" icon={icon}>
-    <FormField
-      label="Pickup Routing Mode"
-      name="pickup_routing_mode"
-      type="select"
-      value={form.pickup_routing_mode}
-      onChange={handleChange}
-      required
-      options={[
-        { value: "", label: "Please select routing mode" },
-        { value: "auto", label: "Automatic" },
-        { value: "manual", label: "Manual" }
-      ]}
-      icon={<Navigation2 className="w-4 h-4" />}
-    />
-    <FormField
-      label="Delivery Routing Mode"
-      name="delivery_routing_mode"
-      type="select"
-      value={form.delivery_routing_mode}
-      onChange={handleChange}
-      required
-      options={[
-        { value: "", label: "Please select routing mode" },
-        { value: "auto", label: "Automatic" },
-        { value: "manual", label: "Manual" }
-      ]}
-      icon={<Truck className="w-4 h-4" />}
-    />
-  </FormSection>
-);
-
-const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-  <FormSection title="Address Information" icon={icon}>
-    <FormField
-      label="Current Address"
-      name={form.hasOwnProperty('current_address') ? 'current_address' : 'address'}
-      type="text"
-      value={form.hasOwnProperty('current_address') ? form.current_address : form.address}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Permanent Address"
-      name={form.hasOwnProperty('permanent_adress') ? 'permanent_adress' : 'permanent_address'}
-      type="text"
-      value={form.hasOwnProperty('permanent_adress') ? form.permanent_adress : form.permanent_address}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Servicing State"
-      name="servicing_state"
-      type="text"
-      value={form.servicing_state}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Servicing City"
-      name="servicing_city"
-      type="text"
-      value={form.servicing_city}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Servicing Zip Code"
-      name="servicing_zip"
-      type="text"
-      value={form.servicing_zip}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Permanent Address State"
-      name="permanent_address_state"
-      type="text"
-      value={form.permanent_address_state}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Permanent Address City"
-      name="permanent_address_city"
-      type="text"
-      value={form.permanent_address_city}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-    <FormField
-      label="Permanent Address Zip Code"
-      name="permanent_address_zip"
-      type="text"
-      value={form.permanent_address_zip}
-      onChange={handleChange}
-      required
-      icon={<MapPin className="w-4 h-4" />}
-    />
-  </FormSection>
-);
-
-const AdditionalInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon, isAgent = true }) => (
-  <FormSection title="Additional Information" icon={icon}>
-    <FormField
-      label="Additional Info 1"
-      name="additional_info_1"
-      type="text"
-      value={form.additional_info_1}
-      onChange={handleChange}
-      icon={<ClipboardList className="w-4 h-4" />}
-    />
-    <FormField
-      label="Additional Info 2"
-      name="additional_info_2"
-      type="text"
-      value={form.additional_info_2}
-      onChange={handleChange}
-      icon={<ClipboardList className="w-4 h-4" />}
-    />
-    {isAgent && (
-      <FormField
-        label="Additional Info 3"
-        name="additional_info_3"
-        type="text"
-        value={form.additional_info_3}
-        onChange={handleChange}
-        icon={<ClipboardList className="w-4 h-4" />}
-      />
-    )}
-  </FormSection>
-);
 
 export default RequestAccess;
