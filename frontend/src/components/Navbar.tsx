@@ -603,6 +603,13 @@ export function Navbar() {
                 {isInspectionUser && (
                   <NavLink to="/admin/settings/item-master-upload" icon={FileUp}>Manual Data Ingestion</NavLink>
                 )}
+                {isAgent && (
+                  <NavLink to="/admin/agent/schedule" icon={UserCog}>Agent Dashboard</NavLink>
+                )}
+
+                {isManager && (
+                  <NavLink to="/manager/assign-deliveries" icon={Shield}>Manager Dashboard</NavLink>
+                )}
                 <NavLink to="/help-center" icon={MessageCircleQuestion}>Help Center</NavLink>
 
                 {/* Notification Bell */}
