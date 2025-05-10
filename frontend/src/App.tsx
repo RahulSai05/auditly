@@ -110,23 +110,20 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 // Auth verification component
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const location = useLocation();
   const isLoggedIn = localStorage.getItem("token") !== null;
+  const location = useLocation();
+
   const isauthroute = authRoutes.includes(location.pathname);
 
-
-  if (!isLoggedIn && !isAuthRoute) {
-    return <Navigate to="/login" replace />;
+  if (!isLoggedIn && !isauthroute) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
 };
 
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-const isAuthPage = authRoutes.includes(location.pathname);
-if (checkingUserValidity && !isAuthPage) {
-  return <LoadingScreen />;
-}
+
 export default function App(): JSX.Element {
   const itemData = useSelector((state: RootState) => state.ids);
   const managerId = useSelector((state: RootState) => state.ids.managerId); 
@@ -151,25 +148,17 @@ export default function App(): JSX.Element {
   }, [location.pathname]); // Sync state with localStorage
 
   useEffect(() => {
+    console.log("Updated userData:", userData);
   }, [userData]); // Log changes
 
   useEffect(() => {
     const checkUserValidity = async () => {
-      setCheckingUserValidity(true); 
-
       try {
 
         if (authRoutes.includes(location.pathname)) {
           setCheckingUserValidity(false); // Skip validation for auth pages
           return;
         }
-
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login", { replace: true });
-          return;
-        }
-
         
         const res = await fetch("https://auditlyai.com/api/users");
         const data = await res.json();
@@ -282,16 +271,27 @@ export default function App(): JSX.Element {
     return () => clearTimeout(timer); // Cleanup timeout
   }, [location.pathname, userData]); // Ensure fresh userData
 
+
+
+
+
+
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
-  const isAuthPage = authRoutes.includes(location.pathname);
+  // const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
+  // const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
+  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
 
-  // ✅ Only render LoadingScreen if checking user and it's not an auth page
-  if (checkingUserValidity && !isAuthPage) {
+
+
+
+  useEffect(() => {
+    console.log(itemData);
+  }, [itemData]);
+
+  if (checkingUserValidity && !authRoutes.includes(location.pathname)) {
     return <LoadingScreen />;
   }
-  const shouldHideNavbarAndFooter = isAuthPage;
-  
   
 
 
@@ -527,6 +527,3 @@ export default function App(): JSX.Element {
     </>
   );
 }
-
-
-
