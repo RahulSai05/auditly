@@ -113,7 +113,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isLoggedIn = localStorage.getItem("token") !== null;
   const location = useLocation();
 
-  const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   const isauthroute = authRoutes.includes(location.pathname);
 
   if (!isLoggedIn && !isauthroute) {
@@ -122,6 +121,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   return <>{children}</>;
 };
+
+const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
 
 export default function App(): JSX.Element {
   const itemData = useSelector((state: RootState) => state.ids);
@@ -153,6 +154,12 @@ export default function App(): JSX.Element {
   useEffect(() => {
     const checkUserValidity = async () => {
       try {
+
+        if (authRoutes.includes(location.pathname)) {
+          setCheckingUserValidity(false); // Skip validation for auth pages
+          return;
+        }
+        
         const res = await fetch("https://auditlyai.com/api/users");
         const data = await res.json();
 
@@ -272,7 +279,9 @@ export default function App(): JSX.Element {
   // List of routes where Navbar and Footer should be hidden
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   // const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
-  const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
+  // const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
+  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
+
 
 
 
@@ -280,9 +289,10 @@ export default function App(): JSX.Element {
     console.log(itemData);
   }, [itemData]);
 
-  if (checkingUserValidity) {
-  return <LoadingScreen />;
+  if (checkingUserValidity && !authRoutes.includes(location.pathname)) {
+    return <LoadingScreen />;
   }
+  
 
 
   return (
