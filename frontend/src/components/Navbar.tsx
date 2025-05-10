@@ -402,7 +402,7 @@ export function Navbar() {
         .then((data) => {
           const thisUser = data.data.find((u) => u.user_id == userId);
           if (thisUser) {
-            setIsAgent(!!thisUser.agent_id);
+            setIsAgent(thisUser.is_agent);  
             setIsManager(thisUser.is_manager); // ← approved manager only
             setIsAdmin(thisUser.is_admin);
             setIsReportUser(thisUser.is_reports_user);
