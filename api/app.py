@@ -483,28 +483,6 @@ def pending_manager_approval(db: Session = Depends(get_db)):
     ]
     return {"managers": result}
 
-
-# class ManagerApprovalRequest(BaseModel):
-#     manager_id: int
-#     approver_id: int
-
-# @app.post("/api/approve-manager")
-# def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_db)):
-#     approver = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.approver_id).first()
-#     if not approver:
-#         raise HTTPException(status_code=404, detail="AuditlyUser not found")
-
-#     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
-#     if not manager:
-#         raise HTTPException(status_code=404, detail="Manager not found")
-
-#     user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == manager.manager_user_mapping_id).first()
-#     user.is_manager = True
-
-#     manager.approved_by_auditly_user_id = request.approver_id  # make sure this column exists in Manager model
-
-#     db.commit()
-#     return {"message": "Manager approved and user updated successfully"}
     
 class ManagerApprovalRequest(BaseModel):
     manager_id: int
