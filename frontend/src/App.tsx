@@ -1182,12 +1182,14 @@ import {
   AssignPickups, UserPermissionRequests, ScheduledDeliveries,
   ScheduledPickups, ApiConfigurations, ApiEndpoint,
   Onboard, InspectionData, RequestAccess,
-  Details, Inspection, UploadMedia, Compare, Review, Done, Scan
+  Details, Inspection, UploadMedia, Compare, Review
 } from "./pages"; // adjust based on your import structure
 import {
   Login, Unauthorized, Register, AuthSuccess,
   ForgotPassword, ResetPassword, EditProfile
 } from "./components/auth"; // adjust based on your structure
+import Done from "./pages/manual/return /Done";
+import Scan from "./pages/auto/Scan";
 import { Navbar } from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
