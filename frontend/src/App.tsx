@@ -110,13 +110,16 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 // Auth verification component
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const isLoggedIn = localStorage.getItem("token") !== null;
   const location = useLocation();
-
+  const isLoggedIn = localStorage.getItem("token") !== null;
   const isauthroute = authRoutes.includes(location.pathname);
 
-  if (!isLoggedIn && !isauthroute) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (checkingUserValidity) {
+    return <LoadingScreen />;
+  }
+
+  if (!isLoggedIn && !isAuthRoute) {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -152,12 +155,21 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     const checkUserValidity = async () => {
+      setCheckingUserValidity(true); 
+
       try {
 
         if (authRoutes.includes(location.pathname)) {
           setCheckingUserValidity(false); // Skip validation for auth pages
           return;
         }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login", { replace: true });
+          return;
+        }
+
         
         const res = await fetch("https://auditlyai.com/api/users");
         const data = await res.json();
@@ -523,3 +535,6 @@ export default function App(): JSX.Element {
     </>
   );
 }
+
+
+
