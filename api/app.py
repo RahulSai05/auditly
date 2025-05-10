@@ -1375,7 +1375,7 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
                     key for key, val in {
                         "reports_user": user_data.is_reports_user,
                         "admin": user_data.is_admin,
-                        "inpection_user": user_data.is_inspection_user
+                        "inspection_user": user_data.is_inspection_user
                     }.items() if val
                 ],
                 "is_admin": user_data.is_admin,
@@ -1872,7 +1872,7 @@ def get_full_return_data(db: Session = Depends(get_db)):
 #                 "email": user.email,
 #                 "is_reports_user": user.is_reports_user,
 #                 "is_admin": user.is_admin,
-#                 "is_inpection_user": user.is_inspection_user,
+#                 "is_inspection_user": user.is_inspection_user,
 #                 "is_manager": user.is_manager,
 #                 "is_agent": user.is_agent,
 #                 "user_company": user.user_company,
@@ -1916,7 +1916,7 @@ def get_users(db: Session = Depends(get_db)):
                 "email": user.email,
                 "is_reports_user": user.is_reports_user,
                 "is_admin": user.is_admin,
-                "is_inpection_user": user.is_inspection_user,
+                "is_inspection_user": user.is_inspection_user,
                 "is_manager": is_manager,
                 "is_agent": user.is_agent,
                 "user_company": user.user_company,

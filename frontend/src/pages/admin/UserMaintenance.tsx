@@ -12,7 +12,7 @@ interface User {
   email: string;
   user_company: string;
   is_admin: boolean;
-  is_inpection_user: boolean;
+  is_inspection_user: boolean;
   is_reports_user: boolean;
 }
 
@@ -113,7 +113,7 @@ const UserMaintenance: React.FC = () => {
 
   // Check if at least one role is selected
   const hasAtLeastOneRole = (user: User): boolean => {
-    return user.is_admin || user.is_reports_user || user.is_inpection_user;
+    return user.is_admin || user.is_reports_user || user.is_inspection_user;
   };
 
   // Check if at least one role has changed
@@ -121,7 +121,7 @@ const UserMaintenance: React.FC = () => {
     return (
       original.is_admin !== updated.is_admin ||
       original.is_reports_user !== updated.is_reports_user ||
-      original.is_inpection_user !== updated.is_inpection_user
+      original.is_inspection_user !== updated.is_inspection_user
     );
   };
 
@@ -148,7 +148,7 @@ const UserMaintenance: React.FC = () => {
       const updateData: UpdateUserRequest = {
         modifier_user_id: userId, // Always use 36 as per requirement
         target_user_id: selectedUser.user_id || 0,
-        is_inspection_user: updatedUser.is_inpection_user,
+        is_inspection_user: updatedUser.is_inspection_user,
         is_admin: updatedUser.is_admin,
         is_reports_user: updatedUser.is_reports_user,
       };
@@ -473,12 +473,12 @@ const UserMaintenance: React.FC = () => {
                             type="checkbox"
                             checked={
                               selectedUser?.user_id === user.user_id
-                                ? updatedUser?.is_inpection_user
-                                : user.is_inpection_user
+                                ? updatedUser?.is_inspection_user
+                                : user.is_inspection_user
                             }
                             onChange={() => {
                               if (selectedUser?.user_id === user.user_id) {
-                                handleCheckboxChange("is_inpection_user");
+                                handleCheckboxChange("is_inspection_user");
                               }
                             }}
                             disabled={

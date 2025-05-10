@@ -42,7 +42,7 @@ const Login = () => {
       const userTypeArray = Array.isArray(userData["User Type"]) ? userData["User Type"] : [];
       setIsAdmin(userTypeArray.includes("admin"));
       setIsReportUser(userTypeArray.includes("reports_user"));
-      setIsInspectionUser(userTypeArray.includes("inpection_user"));
+      setIsInspectionUser(userTypeArray.includes("inspection_user"));
 
       // Redirect based on the user role
       if (isAdmin && isInspectionUser && isReportUser) {

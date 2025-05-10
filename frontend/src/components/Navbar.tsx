@@ -41,7 +41,7 @@
 //     if (userData && Array.isArray(userData["User Type"])) {
 //       setIsAdmin(userData["User Type"].includes("admin"));
 //       setIsReportUser(userData["User Type"].includes("reports_user"));
-//       setIsInspectionUser(userData["User Type"].includes("inpection_user"));
+//       setIsInspectionUser(userData["User Type"].includes("inspection_user"));
 //       setIsAgent(localStorage.getItem("agentId") !== null);
 //       setIsManager(userData.is_manager);
 //     }
@@ -406,7 +406,7 @@ export function Navbar() {
             setIsManager(thisUser.is_manager); // ← approved manager only
             setIsAdmin(thisUser.is_admin);
             setIsReportUser(thisUser.is_reports_user);
-            setIsInspectionUser(thisUser.is_inpection_user);
+            setIsInspectionUser(thisUser.is_inspection_user);
           }
         })
         .catch((err) => console.error("Error fetching user info:", err));

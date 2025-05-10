@@ -4,7 +4,7 @@ import type { RootState } from "../store";
 interface UserData {
   user_id?: number;
   "User ID"?: number; // For /verify-login-opt API
-  is_inpection_user?: boolean;
+  is_inspection_user?: boolean;
   is_agent?: boolean;
   is_admin?: boolean;
   is_reports_user?: boolean;  // Add this for completeness
@@ -31,7 +31,7 @@ const authSlice = createSlice({
       const apiData = action.payload;
       state.user = {
         user_id: apiData.user_id || apiData["User ID"],
-        is_inpection_user: apiData.is_inpection_user || apiData["User Type"]?.includes("inpection_user"),
+        is_inspection_user: apiData.is_inspection_user || apiData["User Type"]?.includes("inspection_user"),
         is_agent: apiData.is_agent || apiData["User Type"]?.includes("agent"),
         is_admin: apiData.is_admin || apiData["User Type"]?.includes("admin"),
       };
@@ -49,7 +49,7 @@ export const { loginUser, logoutUser } = authSlice.actions;
 // Selectors
 export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectIsInspectionUser = (state: RootState) => 
-  state.auth.user?.is_inpection_user || false;
+  state.auth.user?.is_inspection_user || false;
 export const selectIsAgent = (state: RootState) => 
   state.auth.user?.is_agent || false;
 
