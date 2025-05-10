@@ -280,8 +280,7 @@ export default function App(): JSX.Element {
   const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
   // const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
   // const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
-  const shouldHideNavbarAndFooter = authRoutes.includes(location.pathname);
-
+  const shouldHideNavbarAndFooter = checkingUserValidity || authRoutes.includes(location.pathname);
 
 
 
