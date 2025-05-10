@@ -1834,7 +1834,7 @@ const RequestAccess: React.FC = () => {
                   )}
                 </motion.div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  {role === 'agent' ? 'Create New Agent' : 'Create New Manager'}
+                  {role === 'agent' ? 'Request Agent Access' : 'Request Manager Access'}
                 </h1>
               </div>
               <button
