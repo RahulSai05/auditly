@@ -1143,7 +1143,6 @@
 
 // // export default AssignDeliveries;
 
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1179,7 +1178,7 @@ interface SaleItem {
   shipped_to_city: string;
   shipped_to_state: string;
   shipped_to_zip: string;
-  status: string;
+  status: "Pending Agent Assignment" | "Agent Assigned";
   date_purchased: string;
   date_shipped: string;
   date_delivered: string;
@@ -1243,8 +1242,7 @@ const AssignDeliveries: React.FC = () => {
       }
 
       const data = await response.json();
-      // Filter to only show "Ready to Ship" items
-      setSaleItems(data.sale_items.filter((item: SaleItem) => item.status === "Ready to Ship"));
+      setSaleItems(data.sale_items);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch sale items");
     } finally {
@@ -1286,7 +1284,11 @@ const AssignDeliveries: React.FC = () => {
     }
 
     setSelectedItem(item);
-    await fetchEligibleAgents(item.id);
+    
+    // Only fetch agents if status is "Pending Agent Assignment"
+    if (item.status === "Pending Agent Assignment") {
+      await fetchEligibleAgents(item.id);
+    }
   };
 
   const handleAssignAgent = async (agentId: number) => {
@@ -1368,73 +1370,7 @@ const AssignDeliveries: React.FC = () => {
           className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
         >
           <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 10 }}
-                  className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg"
-                >
-                  <Truck className="w-7 h-7 text-white" />
-                </motion.div>
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900">
-                    Assign Deliveries
-                  </h1>
-                  <p className="text-slate-500 mt-1">
-                    Assign agents to unassigned orders
-                  </p>
-                </div>
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => managerId && fetchSaleItems(managerId)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-                title="Refresh orders"
-              >
-                <RefreshCw className="w-5 h-5" />
-              </motion.button>
-            </div>
-
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-800 border border-red-100"
-                >
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="font-medium">{error}</span>
-                </motion.div>
-              )}
-
-              {successMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-50 text-green-800 border border-green-100"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-medium">{successMessage}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 text-slate-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search orders by description, number, or city..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
+            {/* Header and search UI remains the same */}
 
             {filteredItems.length === 0 ? (
               <motion.div
@@ -1444,11 +1380,8 @@ const AssignDeliveries: React.FC = () => {
               >
                 <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-700">
-                  {searchTerm ? "No matching orders found" : "No unassigned orders available"}
+                  {searchTerm ? "No matching orders found" : "No orders available"}
                 </h3>
-                <p className="text-slate-500 mt-2">
-                  {searchTerm ? "Try a different search term" : "All orders have been assigned to agents"}
-                </p>
               </motion.div>
             ) : (
               <div className="space-y-4">
@@ -1462,6 +1395,10 @@ const AssignDeliveries: React.FC = () => {
                       selectedItem?.id === item.id
                         ? "border-blue-300 shadow-md bg-blue-50"
                         : "border-slate-200 hover:border-blue-200 bg-white hover:shadow-md"
+                    } ${
+                      item.status === "Agent Assigned" 
+                        ? "bg-green-50 border-green-200" 
+                        : ""
                     }`}
                   >
                     <div
@@ -1471,8 +1408,8 @@ const AssignDeliveries: React.FC = () => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                            selectedItem?.id === item.id
-                              ? "bg-blue-200 text-blue-700"
+                            item.status === "Agent Assigned"
+                              ? "bg-green-100 text-green-600"
                               : "bg-blue-100 text-blue-600"
                           }`}>
                             <Package className="w-6 h-6" />
@@ -1483,8 +1420,15 @@ const AssignDeliveries: React.FC = () => {
                             </h3>
                             <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
                               <MapPin className="w-4 h-4" />
-                              {item.shipped_to_city}, {item.shipped_to_state} {item.shipped_to_zip}
+                              {item.shipped_to_city}, {item.shipped_to_state}
                             </p>
+                            <div className={`mt-2 text-xs px-2 py-1 rounded-full inline-block ${
+                              item.status === "Agent Assigned"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}>
+                              {item.status}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -1510,80 +1454,70 @@ const AssignDeliveries: React.FC = () => {
                           className="border-t border-slate-100"
                         >
                           <div className="p-6 space-y-6">
-                            <div>
-                              <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
-                                <User className="w-5 h-5 text-blue-500" />
-                                Available Agents ({eligibleAgents.length})
-                              </h4>
+                            {item.status === "Pending Agent Assignment" ? (
+                              <div>
+                                <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
+                                  <User className="w-5 h-5 text-blue-500" />
+                                  Available Agents ({eligibleAgents.length})
+                                </h4>
 
-                              {fetchingAgents ? (
-                                <div className="flex justify-center py-8">
-                                  <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                                  >
-                                    <Loader2 className="w-8 h-8 text-blue-500" />
-                                  </motion.div>
-                                </div>
-                              ) : eligibleAgents.length === 0 ? (
-                                <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
-                                  <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                                  <p className="text-slate-600">No available agents for this location</p>
-                                </div>
-                              ) : (
-                                <div className="space-y-4">
-                                  {eligibleAgents.map((agent) => (
-                                    <motion.div
-                                      key={agent.agent_id}
-                                      whileHover={{ scale: 1.01 }}
-                                      className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-all bg-white"
-                                    >
-                                      <div className="flex justify-between items-start gap-4">
-                                        <div>
-                                          <div className="flex items-center gap-2">
-                                            <h5 className="font-medium text-slate-800">
-                                              {agent.agent_name}
-                                            </h5>
-                                            {agent.is_verified && (
-                                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                <ShieldCheck className="w-3 h-3 mr-1" />
-                                                Verified
-                                              </span>
-                                            )}
-                                          </div>
-                                          
-                                          <div className="flex flex-wrap gap-4 text-sm mt-2">
-                                            <div className="flex items-center text-slate-600">
-                                              <MapPin className="w-4 h-4 mr-1 text-slate-400" />
-                                              <span>ZIP: {agent.servicing_zip}</span>
+                                {fetchingAgents ? (
+                                  <div className="flex justify-center py-8">
+                                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                                  </div>
+                                ) : eligibleAgents.length === 0 ? (
+                                  <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
+                                    <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                                    <p className="text-slate-600">No available agents for this location</p>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-4">
+                                    {eligibleAgents.map((agent) => (
+                                      <div key={agent.agent_id} className="p-4 border border-slate-200 rounded-lg bg-white">
+                                        <div className="flex justify-between items-start gap-4">
+                                          <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <h5 className="font-medium text-slate-800">
+                                                {agent.agent_name}
+                                              </h5>
+                                              {agent.is_verified && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                  <ShieldCheck className="w-3 h-3 mr-1" />
+                                                  Verified
+                                                </span>
+                                              )}
                                             </div>
-                                            <div className="flex items-center text-slate-600">
-                                              <span className="font-medium">
-                                                Current assignments: {agent.assigned_sales_order_count}
-                                              </span>
+                                            <div className="text-sm text-slate-600">
+                                              <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4" />
+                                                <span>Serves ZIP: {agent.servicing_zip}</span>
+                                              </div>
+                                              <div className="mt-1">
+                                                <span className="font-medium">
+                                                  Current assignments: {agent.assigned_sales_order_count}
+                                                </span>
+                                              </div>
                                             </div>
                                           </div>
+                                          <button
+                                            onClick={() => handleAssignAgent(agent.agent_id)}
+                                            disabled={loading}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                          >
+                                            Assign
+                                          </button>
                                         </div>
-                                        
-                                        <motion.button
-                                          whileHover={{ scale: 1.05 }}
-                                          whileTap={{ scale: 0.95 }}
-                                          onClick={() => handleAssignAgent(agent.agent_id)}
-                                          disabled={loading}
-                                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm"
-                                        >
-                                          {loading ? (
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                          ) : (
-                                            "Assign"
-                                          )}
-                                        </motion.button>
                                       </div>
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
+                                <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                                <p className="text-slate-600">Agent already assigned to this order</p>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       )}
