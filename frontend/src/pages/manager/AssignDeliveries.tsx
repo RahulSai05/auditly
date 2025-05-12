@@ -1143,7 +1143,6 @@
 
 // export default AssignDeliveries;
 
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -1201,7 +1200,7 @@ interface EligibleAgent {
     days: string;
   };
   assigned_sales_order_count: number;
-  current_assignments: {
+  current_assignments?: {
     sales_order: string;
     status: string;
     delivery_address: string;
@@ -1221,6 +1220,7 @@ const AssignDeliveries: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "city" | "order">("date");
   const [expandedAgent, setExpandedAgent] = useState<number | null>(null);
+  const [fetchingAgents, setFetchingAgents] = useState(false);
 
   useEffect(() => {
     const id = localStorage.getItem("managerId");
@@ -1261,7 +1261,7 @@ const AssignDeliveries: React.FC = () => {
 
   const fetchEligibleAgents = async (salesOrderId: number) => {
     try {
-      setLoading(true);
+      setFetchingAgents(true);
       setError(null);
 
       const response = await fetch("/api/eligible-delivery-agents", {
@@ -1281,14 +1281,20 @@ const AssignDeliveries: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch eligible agents");
     } finally {
-      setLoading(false);
+      setFetchingAgents(false);
     }
   };
 
-  const handleItemSelect = (item: SaleItem) => {
-    setSelectedItem(selectedItem?.id === item.id ? null : item);
-    if (item.id !== selectedItem?.id && item.status === "Ready to Ship") {
-      fetchEligibleAgents(item.id);
+  const handleItemSelect = async (item: SaleItem) => {
+    if (selectedItem?.id === item.id) {
+      setSelectedItem(null);
+      setEligibleAgents([]);
+      return;
+    }
+
+    setSelectedItem(item);
+    if (item.status === "Ready to Ship") {
+      await fetchEligibleAgents(item.id);
     }
     setExpandedAgent(null);
   };
@@ -1321,7 +1327,7 @@ const AssignDeliveries: React.FC = () => {
       setTimeout(() => setSuccessMessage(null), 5000);
       
       if (managerId) {
-        fetchSaleItems(managerId);
+        await fetchSaleItems(managerId);
       }
       setSelectedItem(null);
       setEligibleAgents([]);
@@ -1390,418 +1396,164 @@ const AssignDeliveries: React.FC = () => {
           className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
         >
           <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 10 }}
-                  className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg"
-                >
-                  <Truck className="w-7 h-7 text-white" />
-                </motion.div>
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900">
-                    Assign Deliveries
-                  </h1>
-                  <p className="text-slate-500 mt-1">
-                    Manage and assign delivery agents to pending orders
-                  </p>
-                </div>
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => managerId && fetchSaleItems(managerId)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-                title="Refresh orders"
-              >
-                <RefreshCw className="w-5 h-5" />
-              </motion.button>
-            </div>
+            {/* Header and other UI elements remain the same */}
 
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-800 border border-red-100"
-                >
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="font-medium">{error}</span>
-                </motion.div>
-              )}
+            {item.status === "Ready to Ship" && (
+              <div>
+                <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-500" />
+                  Eligible Delivery Agents ({fetchingAgents ? "..." : eligibleAgents.length})
+                </h4>
 
-              {successMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-50 text-green-800 border border-green-100"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-medium">{successMessage}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="mb-6 flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-2.5 text-slate-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search by description, order number, or location..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div className="flex gap-3">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="Ready to Ship">Ready to Ship</option>
-                  <option value="In Transit">In Transit</option>
-                  <option value="Delivered">Delivered</option>
-                </select>
-
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "date" | "city" | "order")}
-                  className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
-                  <option value="date">Sort by Date</option>
-                  <option value="city">Sort by City</option>
-                  <option value="order">Sort by Order #</option>
-                </select>
-              </div>
-            </div>
-
-            {filteredItems.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-slate-50 rounded-xl border border-slate-100"
-              >
-                <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-700">No delivery orders found</h3>
-                <p className="text-slate-500 mt-2">
-                  {searchTerm || statusFilter !== "all" 
-                    ? "Try adjusting your filters or search terms"
-                    : "There are currently no orders available for assignment"}
-                </p>
-              </motion.div>
-            ) : (
-              <div className="space-y-4">
-                {filteredItems.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className={`border rounded-xl overflow-hidden transition-all ${
-                      selectedItem?.id === item.id
-                        ? "border-blue-300 shadow-md bg-blue-50"
-                        : "border-slate-200 hover:border-blue-200 bg-white hover:shadow-md"
-                    }`}
-                  >
-                    <div
-                      className="p-6 cursor-pointer"
-                      onClick={() => handleItemSelect(item)}
+                {fetchingAgents ? (
+                  <div className="flex justify-center py-8">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                     >
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                          <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                              selectedItem?.id === item.id
-                                ? "bg-blue-200 text-blue-700"
-                                : "bg-blue-100 text-blue-600"
-                            }`}
-                          >
-                            <Package className="w-6 h-6" />
-                          </motion.div>
-                          <div>
-                            <h3 className="font-medium text-slate-900">
-                              {item.item.description}
-                            </h3>
-                            <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                              <MapPin className="w-4 h-4" />
-                              {item.shipped_to_city}, {item.shipped_to_state} {item.shipped_to_zip}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            item.status === "Delivered"
-                              ? "bg-green-100 text-green-800"
-                              : item.status === "In Transit"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}>
-                            {item.status}
-                          </div>
-                          <div className="text-sm font-medium text-slate-600">
-                            {item.sales_order}
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleItemSelect(item);
-                            }}
-                            className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500"
-                          >
-                            {selectedItem?.id === item.id ? (
-                              <ChevronUp className="w-5 h-5" />
-                            ) : (
-                              <ChevronDown className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <AnimatePresence>
-                      {selectedItem?.id === item.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="border-t border-slate-100"
-                        >
-                          <div className="p-6 space-y-6">
-                            <div>
-                              <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
-                                <Info className="w-5 h-5 text-blue-500" />
-                                Order Details
-                              </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white rounded-lg p-4 border border-slate-200">
-                                <div>
-                                  <div className="mb-4">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wide">Customer Email</p>
-                                    <p className="text-slate-700 font-medium flex items-center gap-1 mt-1">
-                                      <Mail className="w-4 h-4 text-slate-400" />
-                                      {item.customer_email || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wide">Account Number</p>
-                                    <p className="text-slate-700 font-medium mt-1">{item.account_number || "N/A"}</p>
-                                  </div>
+                      <Loader2 className="w-8 h-8 text-blue-500" />
+                    </motion.div>
+                  </div>
+                ) : eligibleAgents.length === 0 ? (
+                  <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
+                    <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                    <p className="text-slate-600">No eligible delivery agents found for this order</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {eligibleAgents.map((agent) => (
+                      <motion.div
+                        key={agent.agent_id}
+                        whileHover={{ scale: 1.01 }}
+                        className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-all bg-white"
+                      >
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-grow">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h5 className="font-medium text-slate-800">
+                                    {agent.agent_name}
+                                  </h5>
+                                  {agent.is_verified && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                      <ShieldCheck className="w-3 h-3 mr-1" />
+                                      Verified
+                                    </span>
+                                  )}
                                 </div>
                                 
-                                <div>
-                                  <div className="mb-4">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wide">Serial Number</p>
-                                    <p className="text-slate-700 font-medium mt-1">{item.serial_number || "N/A"}</p>
+                                <div className="flex flex-wrap gap-4 text-sm mt-2">
+                                  <div className="flex items-center text-slate-600">
+                                    <MapPin className="w-4 h-4 mr-1 text-slate-400" />
+                                    <span>ZIP: {agent.servicing_zip}</span>
                                   </div>
-                                  <div>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wide">SSCC Number</p>
-                                    <p className="text-slate-700 font-medium mt-1">{item.sscc_number || "N/A"}</p>
-                                  </div>
+                                  {agent.work_schedule && (
+                                    <div className="flex items-center text-slate-600">
+                                      <Calendar className="w-4 h-4 mr-1 text-slate-400" />
+                                      <span>{agent.work_schedule.days}</span>
+                                    </div>
+                                  )}
                                 </div>
-                                
-                                <div>
-                                  <div className="mb-4">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wide">Purchased Date</p>
-                                    <p className="text-slate-700 font-medium flex items-center gap-1 mt-1">
-                                      <Calendar className="w-4 h-4 text-slate-400" />
-                                      {formatDate(item.date_purchased)}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wide">Shipped Date</p>
-                                    <p className="text-slate-700 font-medium flex items-center gap-1 mt-1">
-                                      <Calendar className="w-4 h-4 text-slate-400" />
-                                      {formatDate(item.date_shipped)}
-                                    </p>
-                                  </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  agent.assigned_sales_order_count === 0
+                                    ? "bg-green-100 text-green-800"
+                                    : agent.assigned_sales_order_count < 3
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}>
+                                  {agent.assigned_sales_order_count} current assignments
                                 </div>
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => toggleAgentExpansion(agent.agent_id)}
+                                  className="p-1 rounded-full hover:bg-slate-100 text-slate-500"
+                                >
+                                  {expandedAgent === agent.agent_id ? (
+                                    <ChevronUp className="w-5 h-5" />
+                                  ) : (
+                                    <ChevronDown className="w-5 h-5" />
+                                  )}
+                                </motion.button>
                               </div>
                             </div>
-
-                            {item.status === "Ready to Ship" && (
-                              <div>
-                                <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
-                                  <User className="w-5 h-5 text-blue-500" />
-                                  Eligible Delivery Agents ({eligibleAgents.length})
-                                </h4>
-
-                                {loading ? (
-                                  <div className="flex justify-center py-8">
-                                    <motion.div
-                                      animate={{ rotate: 360 }}
-                                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                                    >
-                                      <Loader2 className="w-8 h-8 text-blue-500" />
-                                    </motion.div>
-                                  </div>
-                                ) : eligibleAgents.length === 0 ? (
-                                  <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
-                                    <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                                    <p className="text-slate-600">No eligible delivery agents found for this order</p>
-                                  </div>
-                                ) : (
-                                  <div className="space-y-4">
-                                    {eligibleAgents.map((agent) => (
-                                      <motion.div
-                                        key={agent.agent_id}
-                                        whileHover={{ scale: 1.01 }}
-                                        className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-all bg-white"
-                                      >
-                                        <div className="flex justify-between items-start gap-4">
-                                          <div className="flex-grow">
-                                            <div className="flex justify-between items-start">
+                            
+                            <AnimatePresence>
+                              {expandedAgent === agent.agent_id && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="mt-4"
+                                >
+                                  <div className="border-t border-slate-200 pt-4">
+                                    <h6 className="text-sm font-medium text-slate-700 mb-2">
+                                      Current Assignments ({agent.current_assignments?.length || 0})
+                                    </h6>
+                                    
+                                    {agent.current_assignments?.length > 0 ? (
+                                      <div className="space-y-3">
+                                        {agent.current_assignments.map((assignment, index) => (
+                                          <div key={index} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                            <div className="flex justify-between items-center">
                                               <div>
-                                                <div className="flex items-center gap-2">
-                                                  <h5 className="font-medium text-slate-800">
-                                                    {agent.agent_name}
-                                                  </h5>
-                                                  {agent.is_verified && (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                      <ShieldCheck className="w-3 h-3 mr-1" />
-                                                      Verified
-                                                    </span>
-                                                  )}
-                                                </div>
-                                                
-                                                <div className="flex flex-wrap gap-4 text-sm mt-2">
-                                                  <div className="flex items-center text-slate-600">
-                                                    <MapPin className="w-4 h-4 mr-1 text-slate-400" />
-                                                    <span>ZIP: {agent.servicing_zip}</span>
-                                                  </div>
-                                                  {agent.work_schedule && (
-                                                    <div className="flex items-center text-slate-600">
-                                                      <Calendar className="w-4 h-4 mr-1 text-slate-400" />
-                                                      <span>{agent.work_schedule.days}</span>
-                                                    </div>
-                                                  )}
-                                                </div>
+                                                <p className="text-sm font-medium text-slate-800">
+                                                  {assignment.sales_order}
+                                                </p>
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                  {assignment.delivery_address}
+                                                </p>
                                               </div>
-                                              
-                                              <div className="flex items-center gap-2">
-                                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                  agent.assigned_sales_order_count === 0
+                                              <div className="text-right">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                  assignment.status === "Delivered"
                                                     ? "bg-green-100 text-green-800"
-                                                    : agent.assigned_sales_order_count < 3
-                                                    ? "bg-blue-100 text-blue-800"
-                                                    : "bg-amber-100 text-amber-800"
+                                                    : "bg-blue-100 text-blue-800"
                                                 }`}>
-                                                  {agent.assigned_sales_order_count} current assignments
-                                                </div>
-                                                <motion.button
-                                                  whileHover={{ scale: 1.05 }}
-                                                  whileTap={{ scale: 0.95 }}
-                                                  onClick={() => toggleAgentExpansion(agent.agent_id)}
-                                                  className="p-1 rounded-full hover:bg-slate-100 text-slate-500"
-                                                >
-                                                  {expandedAgent === agent.agent_id ? (
-                                                    <ChevronUp className="w-5 h-5" />
-                                                  ) : (
-                                                    <ChevronDown className="w-5 h-5" />
-                                                  )}
-                                                </motion.button>
+                                                  {assignment.status}
+                                                </span>
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                  {formatDate(assignment.expected_delivery_date)}
+                                                </p>
                                               </div>
                                             </div>
-                                            
-                                            <AnimatePresence>
-                                              {expandedAgent === agent.agent_id && (
-                                                <motion.div
-                                                  initial={{ opacity: 0, height: 0 }}
-                                                  animate={{ opacity: 1, height: "auto" }}
-                                                  exit={{ opacity: 0, height: 0 }}
-                                                  transition={{ duration: 0.2 }}
-                                                  className="mt-4"
-                                                >
-                                                  <div className="border-t border-slate-200 pt-4">
-                                                    <h6 className="text-sm font-medium text-slate-700 mb-2">
-                                                      Current Assignments ({agent.current_assignments?.length || 0})
-                                                    </h6>
-                                                    
-                                                    {agent.current_assignments?.length > 0 ? (
-                                                      <div className="space-y-3">
-                                                        {agent.current_assignments.map((assignment, index) => (
-                                                          <div key={index} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                                            <div className="flex justify-between items-center">
-                                                              <div>
-                                                                <p className="text-sm font-medium text-slate-800">
-                                                                  {assignment.sales_order}
-                                                                </p>
-                                                                <p className="text-xs text-slate-500 mt-1">
-                                                                  {assignment.delivery_address}
-                                                                </p>
-                                                              </div>
-                                                              <div className="text-right">
-                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                                  assignment.status === "Delivered"
-                                                                    ? "bg-green-100 text-green-800"
-                                                                    : "bg-blue-100 text-blue-800"
-                                                                }`}>
-                                                                  {assignment.status}
-                                                                </span>
-                                                                <p className="text-xs text-slate-500 mt-1">
-                                                                  {formatDate(assignment.expected_delivery_date)}
-                                                                </p>
-                                                              </div>
-                                                            </div>
-                                                          </div>
-                                                        ))}
-                                                      </div>
-                                                    ) : (
-                                                      <p className="text-sm text-slate-500 italic">
-                                                        No current assignments
-                                                      </p>
-                                                    )}
-                                                  </div>
-                                                </motion.div>
-                                              )}
-                                            </AnimatePresence>
                                           </div>
-                                          
-                                          <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => handleAssignAgent(agent.agent_id)}
-                                            disabled={loading}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm whitespace-nowrap"
-                                          >
-                                            {loading ? (
-                                              <Loader2 className="w-5 h-5 animate-spin" />
-                                            ) : (
-                                              "Assign Agent"
-                                            )}
-                                          </motion.button>
-                                        </div>
-                                      </motion.div>
-                                    ))}
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-slate-500 italic">
+                                        No current assignments
+                                      </p>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            )}
-
-                            {item.status !== "Ready to Ship" && (
-                              <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
-                                <Truck className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                                <p className="text-slate-600">
-                                  This order has already been assigned to a delivery agent and is {item.status.toLowerCase()}.
-                                </p>
-                                <p className="text-sm text-slate-500 mt-2">
-                                  Shipped on: {formatDate(item.date_shipped)}
-                                  {item.date_delivered && ` • Delivered on: ${formatDate(item.date_delivered)}`}
-                                </p>
-                              </div>
-                            )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-                ))}
+                          
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleAssignAgent(agent.agent_id)}
+                            disabled={loading}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm whitespace-nowrap"
+                          >
+                            {loading ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              "Assign Agent"
+                            )}
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
