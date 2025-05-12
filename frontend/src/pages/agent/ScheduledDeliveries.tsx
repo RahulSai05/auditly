@@ -561,24 +561,28 @@ const ScheduledDeliveries: React.FC = () => {
   };
 
   const filteredOrders = orders
-    .filter((order) => {
-      const matchesSearch = searchTerm.toLowerCase() === "" || 
-        (
-          order.item?.item_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.original_sales_order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.shipped_to_city.toLowerCase().includes(searchTerm.toLowerCase())
-        );  
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortBy === "date") {
-        return new Date(b.date_shipped).getTime() - new Date(a.date_shipped).getTime();
-      } else if (sortBy === "city") {
-        return a.shipped_to_city.localeCompare(b.shipped_to_city);
-      } else {
-        return a.status.localeCompare(b.status);
-      }
-    });
+  .filter((order) => {
+    const matchesSearch = searchTerm.toLowerCase() === "" || 
+      (
+        order.item?.item_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.original_sales_order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.shipped_to_city?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  })
+  .sort((a, b) => {
+    if (sortBy === "date") {
+      return new Date(b.date_shipped).getTime() - new Date(a.date_shipped).getTime();
+    } else if (sortBy === "city") {
+      return a.shipped_to_city.localeCompare(b.shipped_to_city);
+    } else {
+      return a.status.localeCompare(b.status);
+    }
+  });
+
 
   if (loading && orders.length === 0) {
     return (
