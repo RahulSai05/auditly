@@ -1398,7 +1398,8 @@ const AssignDeliveries: React.FC = () => {
           <div className="p-8">
             {/* Header and other UI elements remain the same */}
 
-            {item.status === "Ready to Ship" && (
+            {/* {item.status === "Ready to Ship" && ( */}
+            {selectedItem?.status === "Ready to Ship" && (
               <div>
                 <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
                   <User className="w-5 h-5 text-blue-500" />
