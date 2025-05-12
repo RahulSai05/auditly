@@ -563,12 +563,11 @@ const ScheduledDeliveries: React.FC = () => {
   const filteredOrders = orders
     .filter((order) => {
       const matchesSearch = searchTerm.toLowerCase() === "" || 
-        (order.item?.item_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.original_sales_order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.shipped_to_city.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-      
+        (
+          order.item?.item_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.original_sales_order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.shipped_to_city.toLowerCase().includes(searchTerm.toLowerCase())
+        );  
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
