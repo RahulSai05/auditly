@@ -3541,41 +3541,6 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
 class SalesOrderAgentFilterRequest(BaseModel):
     sales_order_id: int
 
-# @app.post("/api/eligible-delivery-agents")
-# def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: Session = Depends(get_db)):
-#     sale_order = db.query(SaleItemData).filter(SaleItemData.id == request.sales_order_id).first()
-
-#     if not sale_order:
-#         raise HTTPException(status_code=404, detail="Sales order not found")
-
-#     zip_code = sale_order.shipped_to_zip
-#     today = str(datetime.today().isoweekday())  # Monday = 1, Sunday = 7
-
-#     agents = db.query(Agent).filter(
-#         Agent.servicing_zip == str(zip_code),
-#         Agent.delivery_type.in_(["Delivery", "Both"]),
-#         Agent.delivery_routing_mode == True,  # Manual mode
-#         Agent.approved_by_auditly_user_id.isnot(None)
-#     ).all()
-
-#     eligible_agents = []
-#     for agent in agents:
-#         if agent.work_schedule and "days" in agent.work_schedule:
-#             working_days = agent.work_schedule["days"].split(",")
-#             if today in working_days:
-#                 eligible_agents.append({
-#                     "agent_id": agent.agent_id,
-#                     "agent_name": agent.agent_name,
-#                     "servicing_zip": agent.servicing_zip,
-#                     "delivery_type": agent.delivery_type,
-#                     "gender": agent.gender,
-#                     "is_verified": agent.is_verified,
-#                     "work_schedule": agent.work_schedule
-#                 })
-
-#     return {"eligible_agents": eligible_agents}
-
-
 @app.post("/api/eligible-delivery-agents")
 def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: Session = Depends(get_db)):
     sale_order = db.query(SaleItemData).filter(SaleItemData.id == request.sales_order_id).first()
