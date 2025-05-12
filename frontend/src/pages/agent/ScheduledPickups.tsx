@@ -80,7 +80,7 @@ const ScheduledPickups: React.FC = () => {
         throw new Error("Agent ID not found");
       }
 
-      const response = await fetch(`/api/agent/pickup-orders/${agentId}`);
+      const response = await fetch(`/api/agent/return-orders/${agentId}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch pickup orders: ${response.statusText}`);
       }

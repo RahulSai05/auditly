@@ -88,7 +88,7 @@ const ScheduledDeliveries: React.FC = () => {
         throw new Error("Agent ID not found");
       }
 
-      const response = await fetch(`/api/agent/orders/${agentId}`);
+      const response = await fetch(`/api/agent/sales-orders/${agentId}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch orders: ${response.statusText}`);
       }

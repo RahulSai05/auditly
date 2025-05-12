@@ -3416,7 +3416,7 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
     return return_message
 
 
-@app.get("/api/agent/orders/{agent_id}")
+@app.get("/api/agent/sales-orders/{agent_id}")
 def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
     orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).all()
 
