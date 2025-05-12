@@ -37,7 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional
-from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData
+from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData, func
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
@@ -3541,6 +3541,41 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
 class SalesOrderAgentFilterRequest(BaseModel):
     sales_order_id: int
 
+# @app.post("/api/eligible-delivery-agents")
+# def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: Session = Depends(get_db)):
+#     sale_order = db.query(SaleItemData).filter(SaleItemData.id == request.sales_order_id).first()
+
+#     if not sale_order:
+#         raise HTTPException(status_code=404, detail="Sales order not found")
+
+#     zip_code = sale_order.shipped_to_zip
+#     today = str(datetime.today().isoweekday())  # Monday = 1, Sunday = 7
+
+#     agents = db.query(Agent).filter(
+#         Agent.servicing_zip == str(zip_code),
+#         Agent.delivery_type.in_(["Delivery", "Both"]),
+#         Agent.delivery_routing_mode == True,  # Manual mode
+#         Agent.approved_by_auditly_user_id.isnot(None)
+#     ).all()
+
+#     eligible_agents = []
+#     for agent in agents:
+#         if agent.work_schedule and "days" in agent.work_schedule:
+#             working_days = agent.work_schedule["days"].split(",")
+#             if today in working_days:
+#                 eligible_agents.append({
+#                     "agent_id": agent.agent_id,
+#                     "agent_name": agent.agent_name,
+#                     "servicing_zip": agent.servicing_zip,
+#                     "delivery_type": agent.delivery_type,
+#                     "gender": agent.gender,
+#                     "is_verified": agent.is_verified,
+#                     "work_schedule": agent.work_schedule
+#                 })
+
+#     return {"eligible_agents": eligible_agents}
+
+
 @app.post("/api/eligible-delivery-agents")
 def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: Session = Depends(get_db)):
     sale_order = db.query(SaleItemData).filter(SaleItemData.id == request.sales_order_id).first()
@@ -3554,7 +3589,7 @@ def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: 
     agents = db.query(Agent).filter(
         Agent.servicing_zip == str(zip_code),
         Agent.delivery_type.in_(["Delivery", "Both"]),
-        Agent.delivery_routing_mode == True,  # Manual mode
+        Agent.delivery_routing_mode == True,
         Agent.approved_by_auditly_user_id.isnot(None)
     ).all()
 
@@ -3563,6 +3598,10 @@ def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: 
         if agent.work_schedule and "days" in agent.work_schedule:
             working_days = agent.work_schedule["days"].split(",")
             if today in working_days:
+                assigned_orders_count = db.query(func.count(SaleItemData.id)).filter(
+                    SaleItemData.delivery_agent_id == agent.agent_id
+                ).scalar()
+
                 eligible_agents.append({
                     "agent_id": agent.agent_id,
                     "agent_name": agent.agent_name,
@@ -3570,7 +3609,8 @@ def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: 
                     "delivery_type": agent.delivery_type,
                     "gender": agent.gender,
                     "is_verified": agent.is_verified,
-                    "work_schedule": agent.work_schedule
+                    "work_schedule": agent.work_schedule,
+                    "assigned_sales_order_count": assigned_orders_count
                 })
 
     return {"eligible_agents": eligible_agents}
@@ -3578,7 +3618,7 @@ def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: 
 
 class ReturnOrderAgentFilterRequest(BaseModel):
     return_order_id: int
-
+   
 @app.post("/api/eligible-return-agents")
 def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: Session = Depends(get_db)):
     return_order = db.query(ReturnItemData).filter(ReturnItemData.id == request.return_order_id).first()
@@ -3587,20 +3627,26 @@ def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: S
         raise HTTPException(status_code=404, detail="Return order not found")
 
     return_zip = return_order.return_zip
-    today = str(datetime.today().isoweekday())  # 1=Monday, ..., 7=Sunday
+    today = str(datetime.today().isoweekday())  # 1 = Monday, ..., 7 = Sunday
 
     agents = db.query(Agent).filter(
         Agent.servicing_zip == str(return_zip),
         Agent.delivery_type.in_(["Return", "Both"]),
-        Agent.pickup_routing_mode == True,  # manual
+        Agent.pickup_routing_mode == True,
         Agent.approved_by_auditly_user_id.isnot(None)
     ).all()
 
     eligible_agents = []
     for agent in agents:
+        # Check if agent works today
         if agent.work_schedule and "days" in agent.work_schedule:
             working_days = agent.work_schedule["days"].split(",")
             if today in working_days:
+                # Count assigned return orders
+                assigned_orders_count = db.query(func.count(ReturnItemData.id)).filter(
+                    ReturnItemData.return_agent_id == agent.agent_id
+                ).scalar()
+
                 eligible_agents.append({
                     "agent_id": agent.agent_id,
                     "agent_name": agent.agent_name,
@@ -3608,8 +3654,54 @@ def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: S
                     "delivery_type": agent.delivery_type,
                     "gender": agent.gender,
                     "is_verified": agent.is_verified,
-                    "work_schedule": agent.work_schedule
+                    "work_schedule": agent.work_schedule,
+                    "assigned_return_order_count": assigned_orders_count
                 })
 
     return {"eligible_agents": eligible_agents}
-   
+
+class SalesAgentAssignmentRequest(BaseModel):
+    order_id: int
+    agent_id: int
+
+@app.post("/api/assign-manual-agent-sales-order")
+def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = Depends(get_db)):
+    order = db.query(SaleItemData).filter(SaleItemData.id == request.order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Sale item not found")
+
+    order.delivery_agent_id = request.agent_id
+    order.status = "Assigned to Agent"
+
+    db.commit()
+    db.refresh(order)
+
+    return {
+        "message": "Agent assigned successfully",
+        "order_id": order.id,
+        "assigned_agent_id": order.delivery_agent_id
+    }
+
+class ReturnAgentAssignmentRequest(BaseModel):
+    order_id: int  # This will be return order ID here
+    agent_id: int
+
+@app.post("/api/assign-manual-agent-return-order")
+def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Session = Depends(get_db)):
+    return_order = db.query(ReturnItemData).filter(ReturnItemData.id == request.order_id).first()
+
+    if not return_order:
+        raise HTTPException(status_code=404, detail="Return order not found")
+
+    return_order.return_agent_id = request.agent_id
+    return_order.status = "Assigned to Agent"
+
+    db.commit()
+    db.refresh(return_order)
+
+    return {
+        "message": "Return agent assigned successfully",
+        "return_order_id": return_order.id,
+        "assigned_agent_id": return_order.return_agent_id
+    }
