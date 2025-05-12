@@ -132,16 +132,30 @@ const AssignPickups: React.FC = () => {
 
   const handleAssignAgent = async (agentId: number) => {
     if (!selectedItem) return;
-
+  
     try {
       setLoading(true);
       setError(null);
-
-      // In a real implementation, you would call an API to assign the agent
-      // This is just a simulation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setSuccessMessage(`Agent ${agentId} assigned to return order ${selectedItem.return_order}`);
+  
+      // Call the API to assign the return agent
+      const response = await fetch("/api/assign-manual-agent-return-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: selectedItem.id,
+          agent_id: agentId
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to assign return agent");
+      }
+  
+      const data = await response.json();
+      setSuccessMessage(data.message || `Agent ${agentId} assigned to return order ${selectedItem.return_order}`);
       setTimeout(() => setSuccessMessage(null), 3000);
       
       // Refresh the list
@@ -151,7 +165,7 @@ const AssignPickups: React.FC = () => {
       setSelectedItem(null);
       setEligibleAgents([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to assign agent");
+      setError(err instanceof Error ? err.message : "Failed to assign return agent");
       setTimeout(() => setError(null), 3000);
     } finally {
       setLoading(false);

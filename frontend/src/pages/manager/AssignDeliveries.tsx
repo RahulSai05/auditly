@@ -133,16 +133,30 @@ const AssignDeliveries: React.FC = () => {
 
   const handleAssignAgent = async (agentId: number) => {
     if (!selectedItem) return;
-
+  
     try {
       setLoading(true);
       setError(null);
-
-      // In a real implementation, you would call an API to assign the agent
-      // This is just a simulation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setSuccessMessage(`Agent ${agentId} assigned to sales order ${selectedItem.sales_order}`);
+  
+      // Call the API to assign the agent
+      const response = await fetch("/api/assign-manual-agent-sales-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: selectedItem.id,
+          agent_id: agentId
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to assign agent");
+      }
+  
+      const data = await response.json();
+      setSuccessMessage(data.message || `Agent ${agentId} assigned to sales order ${selectedItem.sales_order}`);
       setTimeout(() => setSuccessMessage(null), 3000);
       
       // Refresh the list
@@ -158,7 +172,7 @@ const AssignDeliveries: React.FC = () => {
       setLoading(false);
     }
   };
-
+  
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {

@@ -3705,3 +3705,33 @@ def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Sess
         "return_order_id": return_order.id,
         "assigned_agent_id": return_order.return_agent_id
     }
+
+
+class ManagerStateFilterRequest(BaseModel):
+    state: str
+
+@app.post("/api/available-managers-by-state")
+def get_available_managers(request: ManagerStateFilterRequest, db: Session = Depends(get_db)):
+    managers = db.query(AgentManager).filter(
+        AgentManager.servicing_state == request.state,
+        AgentManager.approved_by_auditly_user_id.isnot(None),
+        AgentManager.is_verified == True
+    ).all()
+
+    if not managers:
+        return {"managers": []}
+
+    return {
+        "managers": [
+            {
+                "manager_id": m.manager_id,
+                "manager_name": m.manager_name,
+                "servicing_state": m.servicing_state,
+                "servicing_city": m.servicing_city,
+                "servicing_zip": m.servicing_zip,
+                "gender": m.gender,
+                "work_schedule": m.work_schedule
+            }
+            for m in managers
+        ]
+    }
