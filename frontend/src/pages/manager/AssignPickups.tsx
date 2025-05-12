@@ -13,7 +13,6 @@
 //   Calendar,
 //   Info,
 //   ShieldCheck,
-//   Clock,
 //   AlertCircle,
 //   Search,
 //   RefreshCw,
@@ -29,12 +28,14 @@
 //   return_destination: string;
 //   return_state: string;
 //   return_zip: string;
-//   status: string;
+//   status: "Pending Agent Assignment" | "Agent Assigned" | "Completed";
 //   date_purchased: string;
 //   date_shipped: string;
 //   date_delivered: string;
 //   return_created_date: string;
 //   return_received_date: string;
+//   assigned_agent_id?: number;
+//   assigned_agent_name?: string;
 //   item: {
 //     item_number: string;
 //     description: string;
@@ -137,10 +138,13 @@
 //     }
 
 //     setSelectedItem(item);
-//     await fetchEligibleAgents(item.id);
+    
+//     if (item.status === "Pending Agent Assignment") {
+//       await fetchEligibleAgents(item.id);
+//     }
 //   };
 
-//   const handleAssignAgent = async (agentId: number) => {
+//   const handleAssignAgent = async (agentId: number, agentName: string) => {
 //     if (!selectedItem) return;
   
 //     try {
@@ -164,13 +168,21 @@
 //       }
   
 //       const data = await response.json();
-//       setSuccessMessage(`Successfully assigned agent to return order ${selectedItem.return_order}`);
+//       setSuccessMessage(`Successfully assigned ${agentName} to return order ${selectedItem.return_order}`);
 //       setTimeout(() => setSuccessMessage(null), 5000);
       
 //       if (managerId) {
 //         await fetchReturnItems(managerId);
 //       }
-//       setSelectedItem(null);
+      
+//       // Update the selected item to show the assigned agent
+//       setSelectedItem({
+//         ...selectedItem,
+//         status: "Agent Assigned",
+//         assigned_agent_id: agentId,
+//         assigned_agent_name: agentName
+//       });
+      
 //       setEligibleAgents([]);
 //     } catch (err) {
 //       setError(err instanceof Error ? err.message : "Failed to assign return agent");
@@ -332,7 +344,9 @@
 //                             <div className={`mt-2 text-xs px-2 py-1 rounded-full inline-block ${
 //                               item.status === "Completed"
 //                                 ? "bg-green-100 text-green-800"
-//                                 : "bg-blue-100 text-blue-800"
+//                                 : item.status === "Agent Assigned"
+//                                 ? "bg-blue-100 text-blue-800"
+//                                 : "bg-yellow-100 text-yellow-800"
 //                             }`}>
 //                               {item.status}
 //                             </div>
@@ -361,110 +375,133 @@
 //                           className="border-t border-slate-100"
 //                         >
 //                           <div className="p-6 space-y-6">
-//                             <div>
-//                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-//                                 <div className="space-y-2">
-//                                   <h4 className="font-medium text-slate-800 flex items-center gap-2">
-//                                     <Info className="w-5 h-5 text-blue-500" />
-//                                     Return Details
-//                                   </h4>
-//                                   <div className="bg-slate-50 p-4 rounded-lg">
-//                                     <div className="grid grid-cols-2 gap-4">
-//                                       <div>
-//                                         <p className="text-xs text-slate-500">Condition</p>
-//                                         <p className="text-sm font-medium text-slate-800">{item.return_condition}</p>
-//                                       </div>
-//                                       <div>
-//                                         <p className="text-xs text-slate-500">Carrier</p>
-//                                         <p className="text-sm font-medium text-slate-800">{item.return_carrier}</p>
-//                                       </div>
-//                                       <div>
-//                                         <p className="text-xs text-slate-500">Destination</p>
-//                                         <p className="text-sm font-medium text-slate-800">{item.return_destination}</p>
-//                                       </div>
-//                                       <div>
-//                                         <p className="text-xs text-slate-500">Created Date</p>
-//                                         <p className="text-sm font-medium text-slate-800">{formatDate(item.return_created_date)}</p>
-//                                       </div>
+//                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//                               <div className="space-y-2">
+//                                 <h4 className="font-medium text-slate-800 flex items-center gap-2">
+//                                   <Info className="w-5 h-5 text-blue-500" />
+//                                   Return Details
+//                                 </h4>
+//                                 <div className="bg-slate-50 p-4 rounded-lg">
+//                                   <div className="grid grid-cols-2 gap-4">
+//                                     <div>
+//                                       <p className="text-xs text-slate-500">Item Number</p>
+//                                       <p className="text-sm font-medium text-slate-800">{item.item.item_number}</p>
 //                                     </div>
-//                                   </div>
-//                                 </div>
-//                                 <div className="space-y-2">
-//                                   <h4 className="font-medium text-slate-800 flex items-center gap-2">
-//                                     <Calendar className="w-5 h-5 text-blue-500" />
-//                                     Timeline
-//                                   </h4>
-//                                   <div className="bg-slate-50 p-4 rounded-lg">
-//                                     <div className="space-y-3">
-//                                       <div>
-//                                         <p className="text-xs text-slate-500">Purchased</p>
-//                                         <p className="text-sm font-medium text-slate-800">{formatDate(item.date_purchased)}</p>
-//                                       </div>
-//                                       <div>
-//                                         <p className="text-xs text-slate-500">Return Initiated</p>
-//                                         <p className="text-sm font-medium text-slate-800">{formatDate(item.return_created_date)}</p>
-//                                       </div>
+//                                     <div>
+//                                       <p className="text-xs text-slate-500">Condition</p>
+//                                       <p className="text-sm font-medium text-slate-800">{item.return_condition}</p>
+//                                     </div>
+//                                     <div>
+//                                       <p className="text-xs text-slate-500">Carrier</p>
+//                                       <p className="text-sm font-medium text-slate-800">{item.return_carrier}</p>
+//                                     </div>
+//                                     <div>
+//                                       <p className="text-xs text-slate-500">Destination</p>
+//                                       <p className="text-sm font-medium text-slate-800">{item.return_destination}</p>
 //                                     </div>
 //                                   </div>
 //                                 </div>
 //                               </div>
 
-//                               <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
-//                                 <User className="w-5 h-5 text-blue-500" />
-//                                 Available Agents ({eligibleAgents.length})
-//                               </h4>
-
-//                               {fetchingAgents ? (
-//                                 <div className="flex justify-center py-8">
-//                                   <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-//                                 </div>
-//                               ) : eligibleAgents.length === 0 ? (
-//                                 <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
-//                                   <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-//                                   <p className="text-slate-600">No available agents for this location</p>
-//                                 </div>
-//                               ) : (
-//                                 <div className="space-y-4">
-//                                   {eligibleAgents.map((agent) => (
-//                                     <div key={agent.agent_id} className="p-4 border border-slate-200 rounded-lg bg-white">
-//                                       <div className="flex justify-between items-start gap-4">
-//                                         <div>
-//                                           <div className="flex items-center gap-2 mb-2">
-//                                             <h5 className="font-medium text-slate-800">
-//                                               {agent.agent_name}
-//                                             </h5>
-//                                             {agent.is_verified && (
-//                                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-//                                                 <ShieldCheck className="w-3 h-3 mr-1" />
-//                                                 Verified
-//                                               </span>
-//                                             )}
-//                                           </div>
-//                                           <div className="text-sm text-slate-600">
-//                                             <div className="flex items-center gap-2">
-//                                               <MapPin className="w-4 h-4" />
-//                                               <span>Serves ZIP: {agent.servicing_zip}</span>
-//                                             </div>
-//                                             <div className="mt-1">
-//                                               <span className="font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-//                                                 Current assignments: {agent.assigned_return_order_count}
-//                                               </span>
-//                                             </div>
-//                                           </div>
-//                                         </div>
-//                                         <button
-//                                           onClick={() => handleAssignAgent(agent.agent_id)}
-//                                           disabled={loading}
-//                                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-//                                         >
-//                                           Assign
-//                                         </button>
-//                                       </div>
+//                               <div className="space-y-2">
+//                                 <h4 className="font-medium text-slate-800 flex items-center gap-2">
+//                                   <Calendar className="w-5 h-5 text-blue-500" />
+//                                   Timeline
+//                                 </h4>
+//                                 <div className="bg-slate-50 p-4 rounded-lg">
+//                                   <div className="space-y-3">
+//                                     <div>
+//                                       <p className="text-xs text-slate-500">Purchased</p>
+//                                       <p className="text-sm font-medium text-slate-800">{formatDate(item.date_purchased)}</p>
 //                                     </div>
-//                                   ))}
+//                                     <div>
+//                                       <p className="text-xs text-slate-500">Return Initiated</p>
+//                                       <p className="text-sm font-medium text-slate-800">{formatDate(item.return_created_date)}</p>
+//                                     </div>
+//                                     {item.date_delivered && (
+//                                       <div>
+//                                         <p className="text-xs text-slate-500">Delivered</p>
+//                                         <p className="text-sm font-medium text-slate-800">{formatDate(item.date_delivered)}</p>
+//                                       </div>
+//                                     )}
+//                                   </div>
 //                                 </div>
-//                               )}
+//                               </div>
 //                             </div>
+
+//                             {item.status === "Pending Agent Assignment" ? (
+//                               <div>
+//                                 <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2">
+//                                   <User className="w-5 h-5 text-blue-500" />
+//                                   Available Agents ({eligibleAgents.length})
+//                                 </h4>
+
+//                                 {fetchingAgents ? (
+//                                   <div className="flex justify-center py-8">
+//                                     <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+//                                   </div>
+//                                 ) : eligibleAgents.length === 0 ? (
+//                                   <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
+//                                     <User className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+//                                     <p className="text-slate-600">No available agents for this location</p>
+//                                   </div>
+//                                 ) : (
+//                                   <div className="space-y-4">
+//                                     {eligibleAgents.map((agent) => (
+//                                       <div key={agent.agent_id} className="p-4 border border-slate-200 rounded-lg bg-white">
+//                                         <div className="flex justify-between items-start gap-4">
+//                                           <div>
+//                                             <div className="flex items-center gap-2 mb-2">
+//                                               <h5 className="font-medium text-slate-800">
+//                                                 {agent.agent_name}
+//                                               </h5>
+//                                               {agent.is_verified && (
+//                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+//                                                   <ShieldCheck className="w-3 h-3 mr-1" />
+//                                                   Verified
+//                                                 </span>
+//                                               )}
+//                                             </div>
+//                                             <div className="text-sm text-slate-600">
+//                                               <div className="flex items-center gap-2">
+//                                                 <MapPin className="w-4 h-4" />
+//                                                 <span>Serves ZIP: {agent.servicing_zip}</span>
+//                                               </div>
+//                                               <div className="mt-1">
+//                                                 <span className="font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+//                                                   Current assignments: {agent.assigned_return_order_count}
+//                                                 </span>
+//                                               </div>
+//                                             </div>
+//                                           </div>
+//                                           <button
+//                                             onClick={() => handleAssignAgent(agent.agent_id, agent.agent_name)}
+//                                             disabled={loading}
+//                                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+//                                           >
+//                                             Assign
+//                                           </button>
+//                                         </div>
+//                                       </div>
+//                                     ))}
+//                                   </div>
+//                                 )}
+//                               </div>
+//                             ) : (
+//                               <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
+//                                 <div className="flex flex-col items-center">
+//                                   <CheckCircle2 className="w-12 h-12 text-blue-400 mb-3" />
+//                                   <h4 className="font-medium text-slate-800 mb-1">
+//                                     {item.assigned_agent_name 
+//                                       ? `Assigned to ${item.assigned_agent_name}`
+//                                       : "Agent assigned"}
+//                                   </h4>
+//                                   <p className="text-slate-600">
+//                                     This return pickup has been assigned to an agent
+//                                   </p>
+//                                 </div>
+//                               </div>
+//                             )}
 //                           </div>
 //                         </motion.div>
 //                       )}
@@ -481,7 +518,6 @@
 // };
 
 // export default AssignPickups;
-
 
 
 import React, { useState, useEffect } from "react";
@@ -551,6 +587,8 @@ const AssignPickups: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"date" | "state" | "order">("date");
   const [fetchingAgents, setFetchingAgents] = useState(false);
 
   useEffect(() => {
@@ -687,12 +725,26 @@ const AssignPickups: React.FC = () => {
     });
   };
 
-  const filteredItems = returnItems.filter((item) => {
-    return searchTerm.toLowerCase() === "" || 
-      item.item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.return_order.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.return_state.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const filteredItems = returnItems
+    .filter((item) => {
+      const matchesSearch = searchTerm.toLowerCase() === "" || 
+        item.item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.return_order.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.return_state.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === "date") {
+        return new Date(b.return_created_date).getTime() - new Date(a.return_created_date).getTime();
+      } else if (sortBy === "state") {
+        return a.return_state.localeCompare(b.return_state);
+      } else {
+        return a.return_order.localeCompare(b.return_order);
+      }
+    });
 
   if (loading && returnItems.length === 0) {
     return (
@@ -768,14 +820,37 @@ const AssignPickups: React.FC = () => {
                 />
               </div>
               
-              <button
-                onClick={() => managerId && fetchReturnItems(managerId)}
-                disabled={loading}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 flex items-center gap-2"
-              >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
+              <div className="flex gap-3">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="Pending Agent Assignment">Pending Assignment</option>
+                  <option value="Agent Assigned">Agent Assigned</option>
+                  <option value="Completed">Completed</option>
+                </select>
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "date" | "state" | "order")}
+                  className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="date">Sort by Date</option>
+                  <option value="state">Sort by State</option>
+                  <option value="order">Sort by Order #</option>
+                </select>
+
+                <button
+                  onClick={() => managerId && fetchReturnItems(managerId)}
+                  disabled={loading}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
             </div>
 
             {filteredItems.length === 0 ? (
@@ -786,13 +861,13 @@ const AssignPickups: React.FC = () => {
               >
                 <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-700">
-                  {searchTerm 
+                  {searchTerm || statusFilter !== "all" 
                     ? "No matching returns found" 
                     : "No returns available"}
                 </h3>
                 <p className="text-slate-500 mt-2">
-                  {searchTerm
-                    ? "Try adjusting your search terms"
+                  {searchTerm || statusFilter !== "all"
+                    ? "Try adjusting your filters or search terms"
                     : "All returns have been processed"}
                 </p>
               </motion.div>
@@ -830,9 +905,7 @@ const AssignPickups: React.FC = () => {
                             <div className={`mt-2 text-xs px-2 py-1 rounded-full inline-block ${
                               item.status === "Completed"
                                 ? "bg-green-100 text-green-800"
-                                : item.status === "Agent Assigned"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-yellow-100 text-yellow-800"
+                                : "bg-blue-100 text-blue-800"
                             }`}>
                               {item.status}
                             </div>
