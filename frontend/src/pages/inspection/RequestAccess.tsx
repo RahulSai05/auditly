@@ -740,7 +740,9 @@ const RequestAccess: React.FC = () => {
                   handleChange={handleAgentChange} 
                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />}
                   disabled={accessStatus?.is_agent}
+                  isAgent={true}
                 />
+
 
                 <div className="pt-6">
                   {accessStatus?.is_agent ? (
@@ -814,14 +816,13 @@ const RequestAccess: React.FC = () => {
                   handleChange={handleManagerChange} 
                   icon={<MapPin className="w-5 h-5 text-blue-500" />}
                 />
-                
-                <AdditionalInfoSection 
+
+               <AdditionalInfoSection 
                   form={managerForm} 
                   handleChange={handleManagerChange} 
                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />}
                   isAgent={false}
-                  />
-
+                />
                 <div className="pt-6">
                   <motion.button
                     type="submit"
@@ -1041,7 +1042,13 @@ const AddressInfoSection: React.FC<{form: any, handleChange: any, icon?: React.R
   </FormSection>
 );
 
-const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean, accessStatus?.is_agent?: boolean}> = ({ form, handleChange, icon, disabled = false, accessStatus?.is_agent = true }) => (
+const AdditionalInfoSection: React.FC<{ 
+  form: any, 
+  handleChange: any, 
+  icon?: React.ReactNode, 
+  disabled?: boolean, 
+  isAgent?: boolean 
+}> = ({ form, handleChange, icon, disabled = false, isAgent = true }) => (
   <FormSection title="Additional Information" icon={icon}>
     <FormField
       label="Additional Info 1"
@@ -1061,7 +1068,7 @@ const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: Reac
       icon={<ClipboardList className="w-4 h-4" />}
       disabled={disabled}
     />
-    {accessStatus?.is_agent && (
+    {isAgent && (
       <FormField
         label="Additional Info 3"
         name="additional_info_3"
@@ -1074,6 +1081,7 @@ const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: Reac
     )}
   </FormSection>
 );
+
 
 interface SuccessViewProps {
   successData: SuccessData | null;
