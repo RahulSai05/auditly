@@ -87,6 +87,7 @@
 //   rows?: number;
 //   icon?: React.ReactNode;
 //   readOnly?: boolean;
+//   disabled?: boolean;
 // }
 
 // interface FormSectionProps {
@@ -109,7 +110,8 @@
 //   colSpan = false,
 //   rows = 3,
 //   icon,
-//   readOnly = false
+//   readOnly = false,
+//   disabled = false
 // }) => {
 //   if (type === "checkbox") {
 //     return (
@@ -125,12 +127,13 @@
 //             name={name}
 //             checked={value}
 //             onChange={onChange}
-//             className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+//             disabled={disabled}
+//             className={`h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
 //           />
 //         </div>
 //         <div className="flex items-center gap-2">
 //           {icon && <span className="text-blue-500">{icon}</span>}
-//           <label htmlFor={name} className="text-gray-700 font-medium">
+//           <label htmlFor={name} className={`text-gray-700 font-medium ${disabled ? 'opacity-50' : ''}`}>
 //             {label}
 //           </label>
 //         </div>
@@ -144,14 +147,14 @@
 //       animate={{ opacity: 1, y: 0 }}
 //       className={colSpan ? "col-span-2" : ""}
 //     >
-//       <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+//       <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-1 ${disabled ? 'opacity-50' : ''}`}>
 //         {label}
 //         {required && <span className="text-red-500 ml-1">*</span>}
 //       </label>
       
 //       <div className="relative">
 //         {icon && (
-//           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+//           <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${disabled ? 'text-blue-200' : 'text-blue-400'}`}>
 //             {icon}
 //           </div>
 //         )}
@@ -163,7 +166,8 @@
 //             value={value}
 //             onChange={onChange}
 //             required={required}
-//             className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white`}
+//             disabled={disabled}
+//             className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
 //           >
 //             {options.map((option) => (
 //               <option key={option.value} value={option.value}>
@@ -180,7 +184,8 @@
 //             required={required}
 //             rows={rows}
 //             placeholder={placeholder}
-//             className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white`}
+//             disabled={disabled}
+//             className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
 //           />
 //         ) : (
 //           <input
@@ -192,7 +197,8 @@
 //             required={required}
 //             placeholder={placeholder}
 //             readOnly={readOnly}
-//             className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 bg-white ${readOnly ? 'bg-gray-100' : ''}`}
+//             disabled={disabled}
+//             className={`w-full border border-gray-300 rounded-lg ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all duration-200 ${disabled || readOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
 //           />
 //         )}
 //       </div>
@@ -301,6 +307,9 @@
 //   const [error, setError] = useState<string | null>(null);
 //   const [successData, setSuccessData] = useState<SuccessData | null>(null);
 
+//   // Check if user is already an agent
+//   const isAgent = localStorage.getItem("agentId") !== null;
+
 //   useEffect(() => {
 //     const userId = localStorage.getItem("userId");
 //     if (userId) {
@@ -313,9 +322,16 @@
 //         manager_user_mapping_id: userId
 //       }));
 //     }
-//   }, []);
+
+//     // If user is an agent, automatically show manager form
+//     if (isAgent && !role) {
+//       setRole('manager');
+//     }
+//   }, [isAgent, role]);
 
 //   const toggleDaySelection = (dayId: number) => {
+//     if (role === 'agent' && isAgent) return; // Prevent changes if agent is disabled
+    
 //     const updatedDays = days.map(day => 
 //       day.id === dayId ? { ...day, selected: !day.selected } : day
 //     );
@@ -343,6 +359,8 @@
 //   };
 
 //   const handleAgentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+//     if (isAgent) return; // Prevent changes if agent is disabled
+    
 //     const { name, value, type } = e.target;
 //     const checked = (e.target as HTMLInputElement).checked;
     
@@ -364,6 +382,8 @@
 
 //   const handleSubmitAgent = async (e: React.FormEvent) => {
 //     e.preventDefault();
+//     if (isAgent) return; // Prevent submission if agent is disabled
+    
 //     setLoading(true);
 //     setError(null);
     
@@ -468,7 +488,7 @@
 //       resetForm={() => {
 //         setSubmitted(false);
 //         setSuccessData(null);
-//         setRole(null);
+//         setRole(isAgent ? 'manager' : null);
 //         setAgentForm({
 //           agent_name: "",
 //           current_address: "",
@@ -524,11 +544,6 @@
 //             <motion.div
 //               initial={{ scale: 0.8 }}
 //               animate={{ scale: 1 }}
-//               transition={{
-//                 type: "spring",
-//                 stiffness: 200,
-//                 damping: 20,
-//               }}
 //               className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
 //             >
 //               <UserCheck className="w-10 h-10 text-blue-600" />
@@ -536,25 +551,36 @@
 //             <h2 className="text-2xl font-bold text-gray-900 mb-4">
 //               Request Access
 //             </h2>
-//             <p className="text-gray-600 mb-8">
-//               Please select the type of access you're requesting
-//             </p>
             
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//               <motion.button
-//                 whileHover={{ scale: 1.03 }}
-//                 whileTap={{ scale: 0.97 }}
-//                 onClick={() => setRole('agent')}
-//                 className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
-//               >
-//                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-//                   <User className="w-6 h-6 text-blue-600" />
-//                 </div>
-//                 <h3 className="font-bold text-lg text-gray-800 mb-2">Agent</h3>
-//                 <p className="text-gray-600 text-sm">
-//                   Deliver packages and manage deliveries
+//             {isAgent ? (
+//               <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+//                 <p className="text-blue-700">
+//                   You are already registered as an agent. You may request manager access below.
 //                 </p>
-//               </motion.button>
+//               </div>
+//             ) : (
+//               <p className="text-gray-600 mb-8">
+//                 Please select the type of access you're requesting
+//               </p>
+//             )}
+            
+//             <div className="grid grid-cols-1 gap-6">
+//               {!isAgent && (
+//                 <motion.button
+//                   whileHover={{ scale: 1.03 }}
+//                   whileTap={{ scale: 0.97 }}
+//                   onClick={() => setRole('agent')}
+//                   className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
+//                 >
+//                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+//                     <User className="w-6 h-6 text-blue-600" />
+//                   </div>
+//                   <h3 className="font-bold text-lg text-gray-800 mb-2">Agent</h3>
+//                   <p className="text-gray-600 text-sm">
+//                     Deliver packages and manage deliveries
+//                   </p>
+//                 </motion.button>
+//               )}
               
 //               <motion.button
 //                 whileHover={{ scale: 1.03 }}
@@ -599,7 +625,7 @@
 //                   )}
 //                 </motion.div>
 //                 <h1 className="text-2xl font-bold text-gray-800">
-//                   {role === 'agent' ? 'Create New Agent' : 'Create New Manager'}
+//                   {role === 'agent' ? 'Request Agent Access' : 'Request Manager Access'}
 //                 </h1>
 //               </div>
 //               <button
@@ -610,6 +636,15 @@
 //                 Change role
 //               </button>
 //             </div>
+
+//             {role === 'agent' && isAgent && (
+//               <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+//                 <p className="text-blue-700">
+//                   You are already registered as an agent. Please use the manager form below
+//                   to request manager access.
+//                 </p>
+//               </div>
+//             )}
 
 //             <AnimatePresence>
 //               {error && (
@@ -627,20 +662,117 @@
 
 //             {role === 'agent' ? (
 //               <form onSubmit={handleSubmitAgent} className="space-y-6">
+//                 {isAgent && (
+//                   <div className="p-4 bg-gray-100 rounded-lg mb-6">
+//                     <p className="text-gray-600">
+//                       You are already registered as an agent. To request manager access, 
+//                       please select "Manager" from the role selection above.
+//                     </p>
+//                   </div>
+//                 )}
+
 //                 <BasicInfoSection 
 //                   form={agentForm} 
 //                   handleChange={handleAgentChange} 
-//                   icon={<User className="w-5 h-5 text-blue-500" />} 
+//                   icon={<User className="w-5 h-5 text-blue-500" />}
+//                   disabled={isAgent}
 //                 />
+                
 //                 <DeliveryTypeSection 
 //                   form={agentForm} 
 //                   handleChange={handleAgentChange} 
-//                   icon={<Truck className="w-5 h-5 text-blue-500" />} 
+//                   icon={<Truck className="w-5 h-5 text-blue-500" />}
+//                   disabled={isAgent}
 //                 />
+                
 //                 <RoutingModeSection 
 //                   form={agentForm} 
 //                   handleChange={handleAgentChange} 
-//                   icon={<Route className="w-5 h-5 text-blue-500" />} 
+//                   icon={<Route className="w-5 h-5 text-blue-500" />}
+//                   disabled={isAgent}
+//                 />
+                
+//                 <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
+//                   <div className="col-span-2 space-y-4">
+//                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+//                       {days.map((day) => (
+//                         <motion.div
+//                           key={day.id}
+//                           whileHover={{ scale: !isAgent ? 1.02 : 1 }}
+//                           whileTap={{ scale: !isAgent ? 0.98 : 1 }}
+//                           onClick={() => !isAgent && toggleDaySelection(day.id)}
+//                           className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
+//                             day.selected
+//                               ? "bg-blue-600 text-white"
+//                               : isAgent 
+//                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+//                                 : "bg-gray-100 hover:bg-gray-200"
+//                           }`}
+//                         >
+//                           {day.name}
+//                         </motion.div>
+//                       ))}
+//                     </div>
+//                   </div>
+//                 </FormSection>
+
+//                 <AddressInfoSection 
+//                   form={agentForm} 
+//                   handleChange={handleAgentChange} 
+//                   icon={<MapPin className="w-5 h-5 text-blue-500" />}
+//                   disabled={isAgent}
+//                 />
+                
+//                 <AdditionalInfoSection 
+//                   form={agentForm} 
+//                   handleChange={handleAgentChange} 
+//                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />}
+//                   disabled={isAgent}
+//                 />
+
+//                 <div className="pt-6">
+//                   {isAgent ? (
+//                     <button
+//                       type="button"
+//                       className="w-full md:w-auto bg-gray-400 text-white px-8 py-4 rounded-xl cursor-not-allowed font-medium flex items-center justify-center gap-2"
+//                     >
+//                       <User className="w-5 h-5" />
+//                       <span>You are already an agent</span>
+//                     </button>
+//                   ) : (
+//                     <motion.button
+//                       type="submit"
+//                       whileHover={{ scale: 1.02 }}
+//                       whileTap={{ scale: 0.98 }}
+//                       disabled={loading}
+//                       className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+//                     >
+//                       {loading ? (
+//                         <>
+//                           <motion.div
+//                             animate={{ rotate: 360 }}
+//                             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+//                           >
+//                             <Loader2 className="w-5 h-5" />
+//                           </motion.div>
+//                           <span>Creating Agent...</span>
+//                         </>
+//                       ) : (
+//                         <>
+//                           <User className="w-5 h-5" />
+//                           <span>Create Agent</span>
+//                         </>
+//                       )}
+//                     </motion.button>
+//                   )}
+//                 </div>
+//               </form>
+//             ) : (
+//               <form onSubmit={handleSubmitManager} className="space-y-6">
+//                 <BasicInfoSection 
+//                   form={managerForm} 
+//                   handleChange={handleManagerChange} 
+//                   icon={<User className="w-5 h-5 text-blue-500" />}
 //                 />
                 
 //                 <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
@@ -662,226 +794,19 @@
 //                         </motion.div>
 //                       ))}
 //                     </div>
-
-//                     <div>
-//                       <h3 className="font-medium text-gray-800 mb-2">
-//                         Selected Work Days:
-//                       </h3>
-//                       <div className="flex flex-wrap gap-2">
-//                         {days.filter(day => day.selected).length > 0 ? (
-//                           days
-//                             .filter(day => day.selected)
-//                             .map(day => (
-//                               <motion.span
-//                                 key={day.id}
-//                                 initial={{ opacity: 0, scale: 0.9 }}
-//                                 animate={{ opacity: 1, scale: 1 }}
-//                                 className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-//                               >
-//                                 {day.name}
-//                               </motion.span>
-//                             ))
-//                         ) : (
-//                           <span className="text-gray-500">No days selected yet</span>
-//                         )}
-//                       </div>
-//                     </div>
 //                   </div>
 //                 </FormSection>
 
 //                 <AddressInfoSection 
-//                   form={agentForm} 
-//                   handleChange={handleAgentChange} 
-//                   icon={<MapPin className="w-5 h-5 text-blue-500" />} 
+//                   form={managerForm} 
+//                   handleChange={handleManagerChange} 
+//                   icon={<MapPin className="w-5 h-5 text-blue-500" />}
 //                 />
-//                 <AdditionalInfoSection 
-//                   form={agentForm} 
-//                   handleChange={handleAgentChange} 
-//                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />} 
-//                   isAgent={true}
-//                 />
-
-//                 <div className="pt-6">
-//                   <motion.button
-//                     type="submit"
-//                     whileHover={{ scale: 1.02 }}
-//                     whileTap={{ scale: 0.98 }}
-//                     disabled={loading}
-//                     className="w-full md:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
-//                   >
-//                     {loading ? (
-//                       <>
-//                         <motion.div
-//                           animate={{ rotate: 360 }}
-//                           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-//                         >
-//                           <Loader2 className="w-5 h-5" />
-//                         </motion.div>
-//                         <span>Creating Agent...</span>
-//                       </>
-//                     ) : (
-//                       <>
-//                         <User className="w-5 h-5" />
-//                         <span>Create Agent</span>
-//                       </>
-//                     )}
-//                   </motion.button>
-//                 </div>
-//               </form>
-//             ) : (
-//               <form onSubmit={handleSubmitManager} className="space-y-6">
-//                 <FormSection title="Basic Information" icon={<User className="w-5 h-5 text-blue-500" />}>
-//                   <FormField
-//                     label="Manager Name"
-//                     name="manager_name"
-//                     type="text"
-//                     value={managerForm.manager_name}
-//                     onChange={handleManagerChange}
-//                     required
-//                     icon={<User className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Gender"
-//                     name="gender"
-//                     type="select"
-//                     value={managerForm.gender}
-//                     onChange={handleManagerChange}
-//                     options={[
-//                       { value: "", label: "Please select gender" },
-//                       { value: "Male", label: "Male" },
-//                       { value: "Female", label: "Female" },
-//                       { value: "Other", label: "Other" },
-//                       { value: "Prefer not to say", label: "Prefer not to say" }
-//                     ]}
-//                     icon={<Users className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Date of Birth"
-//                     name="dob"
-//                     type="date"
-//                     value={managerForm.dob}
-//                     onChange={handleManagerChange}
-//                     icon={<Calendar className="w-4 h-4" />}
-//                   />
-//                 </FormSection>
-
-//                 <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
-//                   <div className="col-span-2 space-y-4">
-//                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-//                       {days.map((day) => (
-//                         <motion.div
-//                           key={day.id}
-//                           whileHover={{ scale: 1.02 }}
-//                           whileTap={{ scale: 0.98 }}
-//                           onClick={() => toggleDaySelection(day.id)}
-//                           className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-//                             day.selected
-//                               ? "bg-blue-600 text-white"
-//                               : "bg-gray-100 hover:bg-gray-200"
-//                           }`}
-//                         >
-//                           {day.name}
-//                         </motion.div>
-//                       ))}
-//                     </div>
-
-//                     <div>
-//                       <h3 className="font-medium text-gray-800 mb-2">
-//                         Selected Work Days:
-//                       </h3>
-//                       <div className="flex flex-wrap gap-2">
-//                         {days.filter(day => day.selected).length > 0 ? (
-//                           days
-//                             .filter(day => day.selected)
-//                             .map(day => (
-//                               <motion.span
-//                                 key={day.id}
-//                                 initial={{ opacity: 0, scale: 0.9 }}
-//                                 animate={{ opacity: 1, scale: 1 }}
-//                                 className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-//                               >
-//                                 {day.name}
-//                               </motion.span>
-//                             ))
-//                         ) : (
-//                           <span className="text-gray-500">No days selected yet</span>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </FormSection>
-
-//                 <FormSection title="Address Information" icon={<MapPin className="w-5 h-5 text-blue-500" />}>
-//                   <FormField
-//                     label="Current Address"
-//                     name="address"
-//                     type="text"
-//                     value={managerForm.address}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Permanent Address"
-//                     name="permanent_address"
-//                     type="text"
-//                     value={managerForm.permanent_address}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Servicing State"
-//                     name="servicing_state"
-//                     type="text"
-//                     value={managerForm.servicing_state}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Servicing City"
-//                     name="servicing_city"
-//                     type="text"
-//                     value={managerForm.servicing_city}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Servicing Zip Code"
-//                     name="servicing_zip"
-//                     type="text"
-//                     value={managerForm.servicing_zip}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Permanent Address State"
-//                     name="permanent_address_state"
-//                     type="text"
-//                     value={managerForm.permanent_address_state}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Permanent Address City"
-//                     name="permanent_address_city"
-//                     type="text"
-//                     value={managerForm.permanent_address_city}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                   <FormField
-//                     label="Permanent Address Zip Code"
-//                     name="permanent_address_zip"
-//                     type="text"
-//                     value={managerForm.permanent_address_zip}
-//                     onChange={handleManagerChange}
-//                     icon={<MapPin className="w-4 h-4" />}
-//                   />
-//                 </FormSection>
-
+                
 //                 <AdditionalInfoSection 
 //                   form={managerForm} 
 //                   handleChange={handleManagerChange} 
-//                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />} 
+//                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />}
 //                   isAgent={false}
 //                 />
 
@@ -920,6 +845,224 @@
 //   );
 // };
 
+// // Section Components (BasicInfoSection, DeliveryTypeSection, etc.)
+// // These should be updated to accept the disabled prop and pass it to FormField
+// const BasicInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+//   <FormSection title="Basic Information" icon={icon}>
+//     <FormField
+//       label={disabled ? "Agent Name (You are already an agent)" : "Agent Name"}
+//       name="agent_name"
+//       type="text"
+//       value={form.agent_name}
+//       onChange={handleChange}
+//       required
+//       icon={<User className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Gender"
+//       name="gender"
+//       type="select"
+//       value={form.gender}
+//       onChange={handleChange}
+//       required
+//       options={[
+//         { value: "", label: "Please select gender" },
+//         { value: "Male", label: "Male" },
+//         { value: "Female", label: "Female" },
+//         { value: "Other", label: "Other" },
+//         { value: "Prefer not to say", label: "Prefer not to say" }
+//       ]}
+//       icon={<Users className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Date of Birth"
+//       name="dob"
+//       type="date"
+//       value={form.dob}
+//       onChange={handleChange}
+//       icon={<Calendar className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//   </FormSection>
+// );
+
+// const DeliveryTypeSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+//   <FormSection title="Delivery Type" icon={icon}>
+//     <FormField
+//       label="Delivery Type"
+//       name="delivery_type"
+//       type="select"
+//       value={form.delivery_type}
+//       onChange={handleChange}
+//       required
+//       options={[
+//         { value: "", label: "Please select delivery type" },
+//         { value: "Delivery", label: "Delivery" },
+//         { value: "Return", label: "Return" },
+//         { value: "Both", label: "Both" }
+//       ]}
+//       icon={<Truck className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//   </FormSection>
+// );
+
+// const RoutingModeSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+//   <FormSection title="Routing Mode" icon={icon}>
+//     <FormField
+//       label="Pickup Routing Mode"
+//       name="pickup_routing_mode"
+//       type="select"
+//       value={form.pickup_routing_mode}
+//       onChange={handleChange}
+//       required
+//       options={[
+//         { value: "", label: "Please select routing mode" },
+//         { value: "auto", label: "Automatic" },
+//         { value: "manual", label: "Manual" }
+//       ]}
+//       icon={<Navigation2 className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Delivery Routing Mode"
+//       name="delivery_routing_mode"
+//       type="select"
+//       value={form.delivery_routing_mode}
+//       onChange={handleChange}
+//       required
+//       options={[
+//         { value: "", label: "Please select routing mode" },
+//         { value: "auto", label: "Automatic" },
+//         { value: "manual", label: "Manual" }
+//       ]}
+//       icon={<Truck className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//   </FormSection>
+// );
+
+// const AddressInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean}> = ({ form, handleChange, icon, disabled = false }) => (
+//   <FormSection title="Address Information" icon={icon}>
+//     <FormField
+//       label={form.hasOwnProperty('current_address') ? "Current Address" : "Address"}
+//       name={form.hasOwnProperty('current_address') ? 'current_address' : 'address'}
+//       type="text"
+//       value={form.hasOwnProperty('current_address') ? form.current_address : form.address}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Permanent Address"
+//       name={form.hasOwnProperty('permanent_adress') ? 'permanent_adress' : 'permanent_address'}
+//       type="text"
+//       value={form.hasOwnProperty('permanent_adress') ? form.permanent_adress : form.permanent_address}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Servicing State"
+//       name="servicing_state"
+//       type="text"
+//       value={form.servicing_state}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Servicing City"
+//       name="servicing_city"
+//       type="text"
+//       value={form.servicing_city}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Servicing Zip Code"
+//       name="servicing_zip"
+//       type="text"
+//       value={form.servicing_zip}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Permanent Address State"
+//       name="permanent_address_state"
+//       type="text"
+//       value={form.permanent_address_state}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Permanent Address City"
+//       name="permanent_address_city"
+//       type="text"
+//       value={form.permanent_address_city}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Permanent Address Zip Code"
+//       name="permanent_address_zip"
+//       type="text"
+//       value={form.permanent_address_zip}
+//       onChange={handleChange}
+//       required
+//       icon={<MapPin className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//   </FormSection>
+// );
+
+// const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean, isAgent?: boolean}> = ({ form, handleChange, icon, disabled = false, isAgent = true }) => (
+//   <FormSection title="Additional Information" icon={icon}>
+//     <FormField
+//       label="Additional Info 1"
+//       name="additional_info_1"
+//       type="text"
+//       value={form.additional_info_1}
+//       onChange={handleChange}
+//       icon={<ClipboardList className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     <FormField
+//       label="Additional Info 2"
+//       name="additional_info_2"
+//       type="text"
+//       value={form.additional_info_2}
+//       onChange={handleChange}
+//       icon={<ClipboardList className="w-4 h-4" />}
+//       disabled={disabled}
+//     />
+//     {isAgent && (
+//       <FormField
+//         label="Additional Info 3"
+//         name="additional_info_3"
+//         type="text"
+//         value={form.additional_info_3}
+//         onChange={handleChange}
+//         icon={<ClipboardList className="w-4 h-4" />}
+//         disabled={disabled}
+//       />
+//     )}
+//   </FormSection>
+// );
+
 // interface SuccessViewProps {
 //   successData: SuccessData | null;
 //   resetForm: () => void;
@@ -937,11 +1080,6 @@
 //           <motion.div
 //             initial={{ scale: 0.8 }}
 //             animate={{ scale: 1 }}
-//             transition={{
-//               type: "spring",
-//               stiffness: 200,
-//               damping: 20,
-//             }}
 //             className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
 //           >
 //             <ShieldCheck className="w-10 h-10 text-green-600" />
@@ -949,25 +1087,25 @@
 //           <h2 className="text-2xl font-bold text-gray-900 mb-4">
 //             Application Submitted Successfully!
 //           </h2>
-//           <p className="text-gray-600 max-w-2xl mx-auto mb-4">
+//           <p className="text-gray-600 mb-6">
 //             Your request for {successData?.type === 'agent' ? 'agent' : 'manager'} access has been submitted.
 //             Our team will review your application and get back to you soon.
 //           </p>
           
-//           <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 mb-6 max-w-md mx-auto">
-//             <div className="flex items-center justify-center gap-3 mb-3">
-//               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+//           <div className="bg-blue-50 border border-blue-100 rounded-lg p-6 mb-6">
+//             <div className="flex items-center justify-center gap-3">
+//               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
 //                 {successData?.type === 'agent' ? (
-//                   <User className="w-5 h-5 text-blue-600" />
+//                   <User className="w-6 h-6 text-blue-600" />
 //                 ) : (
-//                   <UserCog className="w-5 h-5 text-blue-600" />
+//                   <UserCog className="w-6 h-6 text-blue-600" />
 //                 )}
 //               </div>
 //               <h3 className="font-bold text-gray-800">
 //                 {successData?.type === 'agent' ? 'Agent' : 'Manager'} ID: {successData?.id}
 //               </h3>
 //             </div>
-//             <p className="text-sm text-gray-600">
+//             <p className="text-sm text-gray-600 mt-2">
 //               Please keep this reference ID for future communication.
 //             </p>
 //           </div>
@@ -979,8 +1117,8 @@
 //               onClick={resetForm}
 //               className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
 //             >
-//               <Users className="w-5 h-5" />
-//               Request Another Access
+//               <RefreshCw className="w-5 h-5" />
+//               Submit Another Request
 //             </motion.button>
 //             <motion.button
 //               whileHover={{ scale: 1.05 }}
@@ -998,213 +1136,8 @@
 //   );
 // };
 
-// interface SectionProps {
-//   form: any;
-//   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-//   icon?: React.ReactNode;
-//   isAgent?: boolean;
-// }
-
-// const BasicInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-//   <FormSection title="Basic Information" icon={icon}>
-//     <FormField
-//       label="Agent Name"
-//       name="agent_name"
-//       type="text"
-//       value={form.agent_name}
-//       onChange={handleChange}
-//       required
-//       icon={<User className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Gender"
-//       name="gender"
-//       type="select"
-//       value={form.gender}
-//       onChange={handleChange}
-//       required
-//       options={[
-//         { value: "", label: "Please select gender" },
-//         { value: "Male", label: "Male" },
-//         { value: "Female", label: "Female" },
-//         { value: "Other", label: "Other" },
-//         { value: "Prefer not to say", label: "Prefer not to say" }
-//       ]}
-//       icon={<Users className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Date of Birth"
-//       name="dob"
-//       type="date"
-//       value={form.dob}
-//       onChange={handleChange}
-//       icon={<Calendar className="w-4 h-4" />}
-//     />
-//   </FormSection>
-// );
-
-// const DeliveryTypeSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-//   <FormSection title="Delivery Type" icon={icon}>
-//     <FormField
-//       label="Delivery Type"
-//       name="delivery_type"
-//       type="select"
-//       value={form.delivery_type}
-//       onChange={handleChange}
-//       required
-//       options={[
-//         { value: "", label: "Please select delivery type" },
-//         { value: "Delivery", label: "Delivery" },
-//         { value: "Return", label: "Return" },
-//         { value: "Both", label: "Both" }
-//       ]}
-//       icon={<Truck className="w-4 h-4" />}
-//     />
-//   </FormSection>
-// );
-
-// const RoutingModeSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-//   <FormSection title="Routing Mode" icon={icon}>
-//     <FormField
-//       label="Pickup Routing Mode"
-//       name="pickup_routing_mode"
-//       type="select"
-//       value={form.pickup_routing_mode}
-//       onChange={handleChange}
-//       required
-//       options={[
-//         { value: "", label: "Please select routing mode" },
-//         { value: "auto", label: "Automatic" },
-//         { value: "manual", label: "Manual" }
-//       ]}
-//       icon={<Navigation2 className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Delivery Routing Mode"
-//       name="delivery_routing_mode"
-//       type="select"
-//       value={form.delivery_routing_mode}
-//       onChange={handleChange}
-//       required
-//       options={[
-//         { value: "", label: "Please select routing mode" },
-//         { value: "auto", label: "Automatic" },
-//         { value: "manual", label: "Manual" }
-//       ]}
-//       icon={<Truck className="w-4 h-4" />}
-//     />
-//   </FormSection>
-// );
-
-// const AddressInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon }) => (
-//   <FormSection title="Address Information" icon={icon}>
-//     <FormField
-//       label="Current Address"
-//       name={form.hasOwnProperty('current_address') ? 'current_address' : 'address'}
-//       type="text"
-//       value={form.hasOwnProperty('current_address') ? form.current_address : form.address}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Permanent Address"
-//       name={form.hasOwnProperty('permanent_adress') ? 'permanent_adress' : 'permanent_address'}
-//       type="text"
-//       value={form.hasOwnProperty('permanent_adress') ? form.permanent_adress : form.permanent_address}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Servicing State"
-//       name="servicing_state"
-//       type="text"
-//       value={form.servicing_state}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Servicing City"
-//       name="servicing_city"
-//       type="text"
-//       value={form.servicing_city}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Servicing Zip Code"
-//       name="servicing_zip"
-//       type="text"
-//       value={form.servicing_zip}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Permanent Address State"
-//       name="permanent_address_state"
-//       type="text"
-//       value={form.permanent_address_state}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Permanent Address City"
-//       name="permanent_address_city"
-//       type="text"
-//       value={form.permanent_address_city}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Permanent Address Zip Code"
-//       name="permanent_address_zip"
-//       type="text"
-//       value={form.permanent_address_zip}
-//       onChange={handleChange}
-//       required
-//       icon={<MapPin className="w-4 h-4" />}
-//     />
-//   </FormSection>
-// );
-
-// const AdditionalInfoSection: React.FC<SectionProps> = ({ form, handleChange, icon, isAgent = true }) => (
-//   <FormSection title="Additional Information" icon={icon}>
-//     <FormField
-//       label="Additional Info 1"
-//       name="additional_info_1"
-//       type="text"
-//       value={form.additional_info_1}
-//       onChange={handleChange}
-//       icon={<ClipboardList className="w-4 h-4" />}
-//     />
-//     <FormField
-//       label="Additional Info 2"
-//       name="additional_info_2"
-//       type="text"
-//       value={form.additional_info_2}
-//       onChange={handleChange}
-//       icon={<ClipboardList className="w-4 h-4" />}
-//     />
-//     {isAgent && (
-//       <FormField
-//         label="Additional Info 3"
-//         name="additional_info_3"
-//         type="text"
-//         value={form.additional_info_3}
-//         onChange={handleChange}
-//         icon={<ClipboardList className="w-4 h-4" />}
-//       />
-//     )}
-//   </FormSection>
-// );
-
 // export default RequestAccess;
+
 
 
 import React, { useState, useEffect } from "react";
@@ -1518,6 +1451,8 @@ const RequestAccess: React.FC = () => {
 
   // Check if user is already an agent
   const isAgent = localStorage.getItem("agentId") !== null;
+  const isManager = localStorage.getItem("managerId") !== null;
+
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -1790,21 +1725,23 @@ const RequestAccess: React.FC = () => {
                   </p>
                 </motion.button>
               )}
-              
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setRole('manager')}
-                className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
-              >
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <UserCog className="w-6 h-6 text-blue-600" />
-                </div>
-                <h3 className="font-bold text-lg text-gray-800 mb-2">Manager</h3>
-                <p className="text-gray-600 text-sm">
-                  Oversee agents and manage operations
-                </p>
-              </motion.button>
+              {!isManager && !isAgent && (
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setRole('manager')}
+                  className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
+                >
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <UserCog className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-bold text-lg text-gray-800 mb-2">Manager</h3>
+                  <p className="text-gray-600 text-sm">
+                    Oversee agents and manage operations
+                  </p>
+                </motion.button>
+              )}
+            </div>
             </div>
           </motion.div>
         </div>
