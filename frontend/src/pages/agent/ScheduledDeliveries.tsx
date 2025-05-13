@@ -85,7 +85,7 @@ const ScheduledDeliveries: React.FC = () => {
       
       const agentId = localStorage.getItem("agentId");
       if (!agentId) {
-        throw new Error("Agent ID not found");
+        throw new Error("Pleaes re-login!");
       }
 
       const response = await fetch(`/api/agent/sales-orders/${agentId}`);
