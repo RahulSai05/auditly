@@ -570,39 +570,40 @@ const RequestAccess: React.FC = () => {
 
             
             <div className="grid grid-cols-1 gap-6">
-              {!isAgent && (
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setRole('agent')}
-                  className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
-                >
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                    <User className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-800 mb-2">Agent</h3>
-                  <p className="text-gray-600 text-sm">
-                    Deliver packages and manage deliveries
-                  </p>
-                </motion.button>
-              )}
-              {!isManager && (
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setRole('manager')}
-                  className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
-                >
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                    <UserCog className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-800 mb-2">Manager</h3>
-                  <p className="text-gray-600 text-sm">
-                    Oversee agents and manage operations
-                  </p>
-                </motion.button>
-              )}
-            </div>
+            {(!isAgent || isManager) && (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setRole('agent')}
+                className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <User className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">Agent</h3>
+                <p className="text-gray-600 text-sm">
+                  Deliver packages and manage deliveries
+                </p>
+              </motion.button>
+            )}
+
+            {(!isManager || isAgent) && (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setRole('manager')}
+                className="bg-white border-2 border-blue-100 rounded-xl p-6 hover:border-blue-300 transition-all flex flex-col items-center"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <UserCog className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">Manager</h3>
+                <p className="text-gray-600 text-sm">
+                  Oversee agents and manage operations
+                </p>
+              </motion.button>
+            )}
+          </div>
           </motion.div>
         </div>
       </div>
