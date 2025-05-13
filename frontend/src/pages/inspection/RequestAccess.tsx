@@ -88,6 +88,7 @@ interface FormFieldProps {
   icon?: React.ReactNode;
   readOnly?: boolean;
   disabled?: boolean;
+  isAgent?: boolean;
 }
 
 interface FormSectionProps {
@@ -207,6 +208,7 @@ const FormField: React.FC<FormFieldProps> = ({
 };
 
 // FormSection Component
+const [accessStatus, setAccessStatus] = useState<{ is_agent: boolean; is_manager: boolean } | null>(null);
 const FormSection: React.FC<FormSectionProps> = ({ title, children, icon, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -307,27 +309,30 @@ const RequestAccess: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
 
-  // Check if user is already an agent
-  const isAgent = localStorage.getItem("agentId") !== null;
-  const isManager = localStorage.getItem("managerId") !== null;
-
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
+  
     if (userId) {
-      setAgentForm(prev => ({
-        ...prev,
-        agent_to_user_mapping_id: userId
-      }));
-      setManagerForm(prev => ({
-        ...prev,
-        manager_user_mapping_id: userId
-      }));
+      setAgentForm(prev => ({ ...prev, agent_to_user_mapping_id: userId }));
+      setManagerForm(prev => ({ ...prev, manager_user_mapping_id: userId }));
+  
+      fetch(`/api/users/access-status/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          setAccessStatus({
+            is_agent: data.is_agent,
+            is_manager: data.is_manager
+          });
+        })
+        .catch(err => {
+          console.error("Error fetching access status:", err);
+        });
     }
   }, []);
-
+  
   const toggleDaySelection = (dayId: number) => {
-    if (role === 'agent' && isAgent) return; // Prevent changes if agent is disabled
+    if (role === 'agent' && accessStatus?.is_agent) return; // Prevent changes if agent is disabled
     
     const updatedDays = days.map(day => 
       day.id === dayId ? { ...day, selected: !day.selected } : day
@@ -356,7 +361,7 @@ const RequestAccess: React.FC = () => {
   };
 
   const handleAgentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    if (isAgent) return; // Prevent changes if agent is disabled
+    if (accessStatus?.is_agent) return; // Prevent changes if agent is disabled
     
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
@@ -379,7 +384,7 @@ const RequestAccess: React.FC = () => {
 
   const handleSubmitAgent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isAgent) return; // Prevent submission if agent is disabled
+    if (accessStatus?.is_agent) return; // Prevent submission if agent is disabled
     
     setLoading(true);
     setError(null);
@@ -485,7 +490,7 @@ const RequestAccess: React.FC = () => {
       resetForm={() => {
         setSubmitted(false);
         setSuccessData(null);
-        setRole(isAgent ? 'manager' : null);
+        setRole(accessStatus?.is_agent ? 'manager' : null);
         setAgentForm({
           agent_name: "",
           current_address: "",
@@ -550,17 +555,17 @@ const RequestAccess: React.FC = () => {
             </h2>
 
             <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-              {isAgent && !isManager && (
+              {accessStatus?.is_agent && !accessStatus?.is_manager && (
                 <p className="text-blue-700">
                   You are already registered as an agent. You may request manager access below.
                 </p>
               )}
-              {isManager && !isAgent && (
+              {accessStatus?.is_manager && !accessStatus?.is_agent && (
                 <p className="text-blue-700">
                   You are already registered as a manager. You may request agent access below.
                 </p>
               )}
-              {isAgent && isManager && (
+              {accessStatus?.is_agent && accessStatus?.is_manager && (
                 <p className="text-blue-700">
                   You are already registered as both an agent and a manager. No further access requests are needed.
                 </p>
@@ -570,7 +575,7 @@ const RequestAccess: React.FC = () => {
 
             
             <div className="grid grid-cols-1 gap-6">
-            {(!isAgent || isManager) && (
+            {(!accessStatus?.is_agent || accessStatus?.is_manager) && (
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -587,7 +592,7 @@ const RequestAccess: React.FC = () => {
               </motion.button>
             )}
 
-            {(!isManager || isAgent) && (
+            {(!accessStatus?.is_manager || accessStatus?.is_agent) && (
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -644,7 +649,7 @@ const RequestAccess: React.FC = () => {
               </button>
             </div>
 
-            {role === 'agent' && isAgent && (
+            {role === 'agent' && accessStatus?.is_agent && (
               <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <p className="text-blue-700">
                   You are already registered as an agent. Please use the manager form below
@@ -669,7 +674,7 @@ const RequestAccess: React.FC = () => {
 
             {role === 'agent' ? (
               <form onSubmit={handleSubmitAgent} className="space-y-6">
-                {isAgent && (
+                {accessStatus?.is_agent && (
                   <div className="p-4 bg-gray-100 rounded-lg mb-6">
                     <p className="text-gray-600">
                       You are already registered as an agent. To request manager access, 
@@ -682,21 +687,21 @@ const RequestAccess: React.FC = () => {
                   form={agentForm} 
                   handleChange={handleAgentChange} 
                   icon={<User className="w-5 h-5 text-blue-500" />}
-                  disabled={isAgent}
+                  disabled={accessStatus?.is_agent}
                 />
                 
                 <DeliveryTypeSection 
                   form={agentForm} 
                   handleChange={handleAgentChange} 
                   icon={<Truck className="w-5 h-5 text-blue-500" />}
-                  disabled={isAgent}
+                  disabled={accessStatus?.is_agent}
                 />
                 
                 <RoutingModeSection 
                   form={agentForm} 
                   handleChange={handleAgentChange} 
                   icon={<Route className="w-5 h-5 text-blue-500" />}
-                  disabled={isAgent}
+                  disabled={accessStatus?.is_agent}
                 />
                 
                 <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
@@ -705,13 +710,13 @@ const RequestAccess: React.FC = () => {
                       {days.map((day) => (
                         <motion.div
                           key={day.id}
-                          whileHover={{ scale: !isAgent ? 1.02 : 1 }}
-                          whileTap={{ scale: !isAgent ? 0.98 : 1 }}
-                          onClick={() => !isAgent && toggleDaySelection(day.id)}
+                          whileHover={{ scale: !accessStatus?.is_agent ? 1.02 : 1 }}
+                          whileTap={{ scale: !accessStatus?.is_agent ? 0.98 : 1 }}
+                          onClick={() => !accessStatus?.is_agent && toggleDaySelection(day.id)}
                           className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
                             day.selected
                               ? "bg-blue-600 text-white"
-                              : isAgent 
+                              : accessStatus?.is_agent 
                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                 : "bg-gray-100 hover:bg-gray-200"
                           }`}
@@ -727,18 +732,18 @@ const RequestAccess: React.FC = () => {
                   form={agentForm} 
                   handleChange={handleAgentChange} 
                   icon={<MapPin className="w-5 h-5 text-blue-500" />}
-                  disabled={isAgent}
+                  disabled={accessStatus?.is_agent}
                 />
                 
                 <AdditionalInfoSection 
                   form={agentForm} 
                   handleChange={handleAgentChange} 
                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />}
-                  disabled={isAgent}
+                  disabled={accessStatus?.is_agent}
                 />
 
                 <div className="pt-6">
-                  {isAgent ? (
+                  {accessStatus?.is_agent ? (
                     <button
                       type="button"
                       className="w-full md:w-auto bg-gray-400 text-white px-8 py-4 rounded-xl cursor-not-allowed font-medium flex items-center justify-center gap-2"
@@ -815,7 +820,7 @@ const RequestAccess: React.FC = () => {
                   handleChange={handleManagerChange} 
                   icon={<ClipboardList className="w-5 h-5 text-blue-500" />}
                   isAgent={false}
-                />
+                  />
 
                 <div className="pt-6">
                   <motion.button
@@ -1036,7 +1041,7 @@ const AddressInfoSection: React.FC<{form: any, handleChange: any, icon?: React.R
   </FormSection>
 );
 
-const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean, isAgent?: boolean}> = ({ form, handleChange, icon, disabled = false, isAgent = true }) => (
+const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: React.ReactNode, disabled?: boolean, accessStatus?.is_agent?: boolean}> = ({ form, handleChange, icon, disabled = false, accessStatus?.is_agent = true }) => (
   <FormSection title="Additional Information" icon={icon}>
     <FormField
       label="Additional Info 1"
@@ -1056,7 +1061,7 @@ const AdditionalInfoSection: React.FC<{form: any, handleChange: any, icon?: Reac
       icon={<ClipboardList className="w-4 h-4" />}
       disabled={disabled}
     />
-    {isAgent && (
+    {accessStatus?.is_agent && (
       <FormField
         label="Additional Info 3"
         name="additional_info_3"
