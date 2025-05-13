@@ -1700,7 +1700,7 @@ const RequestAccess: React.FC = () => {
               )}
               {isManager && (
                 <p className="text-blue-700">
-                  You are already registered as a manager. You do not need to request access again.
+                  You are already registered as a manager.  You may request agent access below.
                 </p>
               )}
             </div>
