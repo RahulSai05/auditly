@@ -1742,7 +1742,6 @@ const RequestAccess: React.FC = () => {
                 </motion.button>
               )}
             </div>
-            </div>
           </motion.div>
         </div>
       </div>
