@@ -208,7 +208,8 @@ const FormField: React.FC<FormFieldProps> = ({
 };
 
 // FormSection Component
-const [accessStatus, setAccessStatus] = useState<{ is_agent: boolean; is_manager: boolean } | null>(null);
+const RequestAccess: React.FC = () => {
+  const [accessStatus, setAccessStatus] = useState<{ is_agent: boolean; is_manager: boolean } | null>(null);
   const FormSection: React.FC<FormSectionProps> = ({ title, children, icon, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -249,6 +250,7 @@ const [accessStatus, setAccessStatus] = useState<{ is_agent: boolean; is_manager
       </AnimatePresence>
     </motion.div>
   );
+}
 };
 
 // Main Component
