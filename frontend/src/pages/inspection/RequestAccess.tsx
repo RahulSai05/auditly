@@ -532,6 +532,19 @@ const RequestAccess: React.FC = () => {
       }}
     />;
   }
+  if (accessStatus === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        >
+          <Loader2 className="w-6 h-6 text-blue-500" />
+        </motion.div>
+        <span className="ml-3 text-gray-600 text-lg">Checking access...</span>
+      </div>
+    );
+  }  
 
   if (!role) {
     return (
