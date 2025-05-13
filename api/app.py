@@ -3107,12 +3107,6 @@ def upload_return_items_json(data: DatabaseJsonReturnItem, db: Session = Depends
             added += 1
             added_return_item = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == row.original_sales_order_number).first()
             _assign_return_order(db,added_return_item.id)
-        # except Exception as e:
-        #     skipped.append({
-        #         "row_data": row.dict(),
-        #         "error": str(e)
-        #     })
-
 
     return {
         "message": f"{added} return items inserted successfully.",
@@ -3373,7 +3367,7 @@ async def delete_power_bi_user(request: PowerBiUserDeleteRequest, db: Session = 
 
 def _assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
     sale_order = db.query(SaleItemData).filter(SaleItemData.id == sales_order_id).first()
-    return_message = ""
+    return_message = "Agent not available"
     if sale_order.status == "Agent Assigned":
         return_message = "Agent Already Assigned"
     elif sale_order.status == "Deliverd":
@@ -3387,6 +3381,7 @@ def _assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
                     if db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).count() < agent_minimum_order_number:
                         agent_minimum_order_number = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).count()
                         agent_id_min = agent.agent_id
+        if agent_id_min != None:
             sale_order.delivery_agent_id = agent_id_min
             sale_order.status = "Agent Assigned"
             db.commit()
@@ -3395,7 +3390,7 @@ def _assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
 
 def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
     return_order = db.query(ReturnItemData).filter(ReturnItemData.id == return_order_id).first()
-    return_message = ""
+    return_message = "Agent not available"
     if return_order.status == "Agent Assigned":
         return_message = "Agent Already Assigned`"
     elif return_order.status == "Picked Up":
@@ -3409,10 +3404,11 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
                 if db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).count() < agent_minimum_order_number:
                     agent_minimum_order_number = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).count()
                     agent_id_min = agent.agent_id
-        return_order.return_agent_id = agent_id_min
-        return_order.status = "Agent Assigned"
-        db.commit()
-        return_message = "Agent Assigned"
+        if agent_id_min != None:
+            return_order.return_agent_id = agent_id_min
+            return_order.status = "Agent Assigned"
+            db.commit()
+            return_message = "Agent Assigned"
     return return_message
 
 
@@ -3649,7 +3645,7 @@ def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = De
     }
 
 class ReturnAgentAssignmentRequest(BaseModel):
-    order_id: int  # This will be return order ID here
+    order_id: int
     agent_id: int
 
 @app.post("/api/assign-manual-agent-return-order")
