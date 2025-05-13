@@ -1890,26 +1890,29 @@ def get_users(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
     
-
 @app.get("/api/users/access-status/{user_id}")
 def get_user_access_status(user_id: int, db: Session = Depends(get_db)):
     try:
         # Fetch agent info
         agent = db.query(Agent).filter(Agent.agent_to_user_mapping_id == user_id).first()
         is_agent = agent is not None and agent.approved_by_auditly_user_id is not None
+        pending_agent = agent is not None and agent.approved_by_auditly_user_id is None
 
         # Fetch manager info
         manager = db.query(AgentManager).filter(AgentManager.manager_user_mapping_id == user_id).first()
         is_manager = manager is not None and manager.approved_by_auditly_user_id is not None
+        pending_manager = manager is not None and manager.approved_by_auditly_user_id is None
 
         return {
             "message": "Access status retrieved successfully.",
             "data": {
                 "user_id": user_id,
                 "is_agent": is_agent,
-                "agent_id": agent.agent_id if agent and is_agent else None,
+                "pending_agent": pending_agent,
+                "agent_id": agent.agent_id if agent else None,
                 "is_manager": is_manager,
-                "manager_id": manager.manager_id if manager and is_manager else None,
+                "pending_manager": pending_manager,
+                "manager_id": manager.manager_id if manager else None,
             }
         }
     except Exception as e:
