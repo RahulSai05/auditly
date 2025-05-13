@@ -1691,17 +1691,25 @@ const RequestAccess: React.FC = () => {
               Request Access
             </h2>
             
-            {isAgent ? (
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+            {(isAgent || isManager) ? (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+              {isAgent && !isManager && (
                 <p className="text-blue-700">
                   You are already registered as an agent. You may request manager access below.
                 </p>
-              </div>
-            ) : (
-              <p className="text-gray-600 mb-8">
-                Please select the type of access you're requesting
-              </p>
-            )}
+              )}
+              {isManager && (
+                <p className="text-blue-700">
+                  You are already registered as a manager. You do not need to request access again.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-600 mb-8">
+              Please select the type of access you're requesting
+            </p>
+          )}
+
             
             <div className="grid grid-cols-1 gap-6">
               {!isAgent && (
