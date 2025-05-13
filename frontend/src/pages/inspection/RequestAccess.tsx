@@ -208,9 +208,7 @@ const FormField: React.FC<FormFieldProps> = ({
 };
 
 // FormSection Component
-const RequestAccess: React.FC = () => {
-  const [accessStatus, setAccessStatus] = useState<{ is_agent: boolean; is_manager: boolean } | null>(null);
-  const FormSection: React.FC<FormSectionProps> = ({ title, children, icon, defaultOpen = true }) => {
+const FormSection: React.FC<FormSectionProps> = ({ title, children, icon, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -250,7 +248,6 @@ const RequestAccess: React.FC = () => {
       </AnimatePresence>
     </motion.div>
   );
-}
 };
 
 // Main Component
