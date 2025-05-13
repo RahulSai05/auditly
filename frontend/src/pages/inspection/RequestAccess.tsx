@@ -307,7 +307,7 @@ const RequestAccess: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
-
+  const [accessStatus, setAccessStatus] = useState<{ is_agent: boolean; is_manager: boolean } | null>(null);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
