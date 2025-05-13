@@ -1466,12 +1466,7 @@ const RequestAccess: React.FC = () => {
         manager_user_mapping_id: userId
       }));
     }
-
-    // If user is an agent, automatically show manager form
-    if (isAgent && !role) {
-      setRole('manager');
-    }
-  }, [isAgent, role]);
+  }, []);
 
   const toggleDaySelection = (dayId: number) => {
     if (role === 'agent' && isAgent) return; // Prevent changes if agent is disabled
