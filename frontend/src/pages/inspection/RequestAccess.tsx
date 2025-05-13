@@ -1720,7 +1720,7 @@ const RequestAccess: React.FC = () => {
                   </p>
                 </motion.button>
               )}
-              {!isManager && !isAgent && (
+              {!isManager && (
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
