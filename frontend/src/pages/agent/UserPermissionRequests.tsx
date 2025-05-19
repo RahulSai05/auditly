@@ -1151,16 +1151,13 @@ const toggleExpand = (id: number, type: ApprovalType, state?: string) => {
     setExpandedId(null);
   } else {
     setExpandedId(id);
-    setSelectedManagerId('');
-    
     if (type === 'agent' && cleanState) {
-      console.log("Calling fetchManagersForAgent for state:", cleanState);
-      fetchManagersForAgent(id, cleanState);  // ✅ Fetch here!
+      console.log("Calling fetchAvailableManagers for state:", cleanState); // ✅ Appears
+      fetchAvailableManagers(cleanState); // ✅ NOW it works
     }
+    setSelectedManagerId('');
   }
 };
-
-
 
 const fetchManagersForAgent = async (agentId: number, state: string) => {
   console.log(`Fetching managers for agent ${agentId} in state: ${state}`);
@@ -1562,13 +1559,14 @@ const fetchManagersForAgent = async (agentId: number, state: string) => {
                               </div>
 
                               {isAgent && (
-                                <div className="mt-6">
-                                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Assign Manager
-                                  </label>
+                              <div className="mt-6">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                  Assign Manager
+                                </label>
 
-                                  {(managerOptions[id]?.length ?? 0) > 0 ? (
+                                {(managerOptions[id]?.length ?? 0) > 0 ? (
                                   <select
+                                    onClick={() => fetchManagersForAgent(id, (data as Agent).servicing_state)}
                                     value={selectedManagerId}
                                     onChange={(e) => setSelectedManagerId(e.target.value)}
                                     className="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -1588,7 +1586,8 @@ const fetchManagersForAgent = async (agentId: number, state: string) => {
                                     No managers available in {data.servicing_state}.
                                   </div>
                                 )}
-
+                              </div>
+                            )}
 
 
                               <div className="mt-8 flex justify-end">
