@@ -1555,7 +1555,7 @@ const UserPermissionRequests = () => {
                                           key={manager.manager_id}
                                           value={manager.manager_id.toString()}
                                         >
-                                          {manager.manager_name} ({manager.servicing_city}, {manager.servicing_state})
+                                          {manager.manager_name || `Manager #${manager.manager_id}`} ({manager.servicing_city}, {manager.servicing_state})
                                         </option>
                                       ))}
                                     </select>
