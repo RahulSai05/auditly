@@ -3683,3 +3683,40 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
             for m in managers
         ]
     }
+
+class ManagerAssignmentRequest(BaseModel):
+    agent_id: int
+    manager_id: str 
+
+@app.post("/api/assign-managers-to-agent")
+def assign_managers_to_agent(request: ManagerAssignmentRequest, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    try:
+        # Validate IDs are integers
+        ids = [int(mid.strip()) for mid in request.manager_id.split(",") if mid.strip().isdigit()]
+        if not ids:
+            raise ValueError("No valid manager IDs provided")
+
+        # Validate against UserManager
+        existing = db.query(AgentManager.manager_id).filter(AgentManager.manager_id.in_(ids)).all()
+        existing_ids = set(mid for (mid,) in existing)
+        invalid = set(ids) - existing_ids
+
+        if invalid:
+            raise HTTPException(status_code=400, detail=f"Invalid manager IDs: {', '.join(map(str, invalid))}")
+
+        agent.manager_id = {"manager_id": request.manager_id}
+        db.commit()
+
+        return {
+            "message": "Manager IDs saved as JSON successfully",
+            "agent_id": agent.agent_id,
+            "manager_id_json": agent.manager_id
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error: {e}")
+
