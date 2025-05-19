@@ -1064,29 +1064,6 @@ const UserPermissionRequests = () => {
     }
   };
 
-
-  const fetchAvailableManagers = async (state: string) => {
-    console.log("Fetching available managers for:", state); // ✅
-    try {
-      const response = await fetch('/api/available-managers-by-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state }),
-      });
-  
-      console.log("Response status:", response.status); // ✅
-  
-      if (!response.ok) throw new Error('Failed to fetch managers');
-      const data = await response.json();
-      console.log("Fetched managers:", data); // ✅
-      setAvailableManagers(data.managers || []);
-    } catch (err) {
-      console.error("Error fetching managers:", err); // ✅
-      setError(err instanceof Error ? err.message : 'Failed to fetch managers');
-    }
-  };
-  
-
   const handleApprove = async (id: number, type: ApprovalType) => {
     if (type === 'agent' && !selectedManagerId && availableManagers.length > 0) {
       setError('Please select a manager for this agent');
