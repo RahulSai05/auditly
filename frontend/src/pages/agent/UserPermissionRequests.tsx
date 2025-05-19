@@ -1152,11 +1152,13 @@ const UserPermissionRequests = () => {
     } else {
       setExpandedId(id);
       if (type === 'agent' && cleanState) {
+        console.log("Calling fetchAvailableManagers for state:", cleanState);
         fetchAvailableManagers(cleanState);
       }
       setSelectedManagerId('');
     }
   };
+  
   
   
   
