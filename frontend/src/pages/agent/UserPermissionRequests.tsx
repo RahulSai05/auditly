@@ -1142,12 +1142,12 @@ const UserPermissionRequests = () => {
     } else {
       setExpandedId(id);
       if (type === 'agent' && state) {
-        fetchAvailableManagers(state);
+        fetchAvailableManagers(state); 
       }
       setSelectedManagerId('');
     }
   };
-
+  
   useEffect(() => {
     fetchPendingApprovals();
   }, []);
