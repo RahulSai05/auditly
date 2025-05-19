@@ -1031,6 +1031,7 @@ const UserPermissionRequests = () => {
   const [selectedManagerId, setSelectedManagerId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [verificationFilter, setVerificationFilter] = useState<"all" | "verified" | "unverified">("all");
+  const [managerOptions, setManagerOptions] = useState<Record<number, Manager[]>>({});
 
   const fetchPendingApprovals = async () => {
     console.log("Fetching approvals...");  // ✅ Debug log
@@ -1155,6 +1156,25 @@ const toggleExpand = (id: number, type: ApprovalType, state?: string) => {
       fetchAvailableManagers(cleanState); // ✅ NOW it works
     }
     setSelectedManagerId('');
+  }
+};
+
+const fetchManagersForAgent = async (agentId: number, state: string) => {
+  console.log(`Fetching managers for agent ${agentId} in state: ${state}`);
+  try {
+    const response = await fetch('/api/available-managers-by-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state }),
+    });
+
+    const data = await response.json();
+    setManagerOptions(prev => ({
+      ...prev,
+      [agentId]: data.managers || [],
+    }));
+  } catch (err) {
+    console.error("Error fetching managers:", err);
   }
 };
 
@@ -1543,27 +1563,22 @@ const toggleExpand = (id: number, type: ApprovalType, state?: string) => {
                                   <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Assign Manager
                                   </label>
-                                  {availableManagers.length > 0 ? (
-                                    <select
-                                      value={selectedManagerId}
-                                      onChange={(e) => setSelectedManagerId(e.target.value)}
-                                      className="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                    >
-                                      <option value="">Select a manager</option>
-                                      {availableManagers.map((manager) => (
-                                        <option
-                                          key={manager.manager_id}
-                                          value={manager.manager_id.toString()}
-                                        >
-                                          {manager.manager_name || `Manager #${manager.manager_id}`} ({manager.servicing_city}, {manager.servicing_state})
-                                        </option>
-                                      ))}
-                                    </select>
-                                  ) : (
-                                    <div className="p-3 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-100">
-                                      No managers available in {data.servicing_state}. Agent will be approved without manager assignment.
-                                    </div>
-                                  )}
+                                  <select
+                                    onClick={() => fetchManagersForAgent(id, (data as Agent).servicing_state)}
+                                    value={selectedManagerId}
+                                    onChange={(e) => setSelectedManagerId(e.target.value)}
+                                    className="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                  >
+                                    <option value="">Select a manager</option>
+                                    {(managerOptions[id] || []).map((manager) => (
+                                      <option
+                                        key={manager.manager_id}
+                                        value={manager.manager_id.toString()}
+                                      >
+                                        {manager.manager_name || `Manager #${manager.manager_id}`} ({manager.servicing_city}, {manager.servicing_state})
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
                               )}
 
