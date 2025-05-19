@@ -1066,19 +1066,26 @@ const UserPermissionRequests = () => {
 
 
   const fetchAvailableManagers = async (state: string) => {
+    console.log("Fetching available managers for:", state); // ✅
     try {
       const response = await fetch('/api/available-managers-by-state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ state }),
       });
+  
+      console.log("Response status:", response.status); // ✅
+  
       if (!response.ok) throw new Error('Failed to fetch managers');
       const data = await response.json();
+      console.log("Fetched managers:", data); // ✅
       setAvailableManagers(data.managers || []);
     } catch (err) {
+      console.error("Error fetching managers:", err); // ✅
       setError(err instanceof Error ? err.message : 'Failed to fetch managers');
     }
   };
+  
 
   const handleApprove = async (id: number, type: ApprovalType) => {
     if (type === 'agent' && !selectedManagerId && availableManagers.length > 0) {
@@ -1137,16 +1144,21 @@ const UserPermissionRequests = () => {
   };
 
   const toggleExpand = (id: number, type: ApprovalType, state?: string) => {
+    const cleanState = state?.trim();
+    console.log("Toggling expand for:", { id, type, cleanState });
+  
     if (expandedId === id) {
       setExpandedId(null);
     } else {
       setExpandedId(id);
-      if (type === 'agent' && state) {
-        fetchAvailableManagers(state); 
+      if (type === 'agent' && cleanState) {
+        fetchAvailableManagers(cleanState);
       }
       setSelectedManagerId('');
     }
   };
+  
+  
   
   useEffect(() => {
     fetchPendingApprovals();
@@ -1348,8 +1360,10 @@ const UserPermissionRequests = () => {
                     >
                       <div
                         className="p-6 cursor-pointer"
-                        onClick={() => toggleExpand(id, activeTab, data.servicing_state)}
-                      >
+                        onClick={() => {
+                          console.log("Expand clicked, state is:", data.servicing_state); // ✅
+                          toggleExpand(id, activeTab, data.servicing_state);
+                        }}                      >
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-4">
                             <motion.div
