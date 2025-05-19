@@ -3663,7 +3663,6 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
     managers = db.query(AgentManager).filter(
         AgentManager.servicing_state == request.state,
         AgentManager.approved_by_auditly_user_id.isnot(None),
-        AgentManager.is_verified == True
     ).all()
 
     if not managers:
