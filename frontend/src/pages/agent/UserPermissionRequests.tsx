@@ -1563,24 +1563,32 @@ const fetchManagersForAgent = async (agentId: number, state: string) => {
                                   <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Assign Manager
                                   </label>
-                                  <select
-                                    onClick={() => fetchManagersForAgent(id, (data as Agent).servicing_state)}
-                                    value={selectedManagerId}
-                                    onChange={(e) => setSelectedManagerId(e.target.value)}
-                                    className="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                  >
-                                    <option value="">Select a manager</option>
-                                    {(managerOptions[id] || []).map((manager) => (
-                                      <option
-                                        key={manager.manager_id}
-                                        value={manager.manager_id.toString()}
-                                      >
-                                        {manager.manager_name || `Manager #${manager.manager_id}`} ({manager.servicing_city}, {manager.servicing_state})
-                                      </option>
-                                    ))}
-                                  </select>
+
+                                  {(managerOptions[id]?.length ?? 0) > 0 ? (
+                                    <select
+                                      onClick={() => fetchManagersForAgent(id, (data as Agent).servicing_state)}
+                                      value={selectedManagerId}
+                                      onChange={(e) => setSelectedManagerId(e.target.value)}
+                                      className="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                      <option value="">Select a manager</option>
+                                      {managerOptions[id].map((manager) => (
+                                        <option
+                                          key={manager.manager_id}
+                                          value={manager.manager_id.toString()}
+                                        >
+                                          {manager.manager_name || `Manager #${manager.manager_id}`} ({manager.servicing_city}, {manager.servicing_state})
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <div className="p-3 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-100">
+                                      No managers available in {data.servicing_state}.
+                                    </div>
+                                  )}
                                 </div>
                               )}
+
 
                               <div className="mt-8 flex justify-end">
                                 <motion.button
