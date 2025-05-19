@@ -1033,22 +1033,28 @@ const UserPermissionRequests = () => {
   const [verificationFilter, setVerificationFilter] = useState<"all" | "verified" | "unverified">("all");
 
   const fetchPendingApprovals = async () => {
+    console.log("Fetching approvals...");  // ✅ Debug log
     try {
       setLoading(true);
       const [agentsResponse, managersResponse] = await Promise.all([
         fetch('/api/pending-agent-approval'),
         fetch('/api/pending-manager-approval')
       ]);
-
+      console.log("Agent API status:", agentsResponse.status); // ✅ Debug log
+      console.log("Manager API status:", managersResponse.status); // ✅ Debug log
+  
       if (!agentsResponse.ok || !managersResponse.ok) {
         throw new Error('Failed to fetch approval requests');
       }
-
+  
       const [agentsData, managersData] = await Promise.all([
         agentsResponse.json(),
         managersResponse.json()
       ]);
-
+  
+      console.log("Fetched agent data:", agentsData); // ✅ Debug log
+      console.log("Fetched manager data:", managersData); // ✅ Debug log
+  
       setPendingAgents(agentsData.agents || []);
       setPendingManagers(managersData.managers || []);
     } catch (err) {
@@ -1057,6 +1063,7 @@ const UserPermissionRequests = () => {
       setLoading(false);
     }
   };
+
 
   const fetchAvailableManagers = async (state: string) => {
     try {
