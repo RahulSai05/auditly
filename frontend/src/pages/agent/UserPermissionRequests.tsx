@@ -1143,21 +1143,44 @@ const UserPermissionRequests = () => {
     }
   };
 
-  const toggleExpand = (id: number, type: ApprovalType, state?: string) => {
-    const cleanState = state?.trim();
-    console.log("Toggling expand for:", { id, type, cleanState });
-  
-    if (expandedId === id) {
-      setExpandedId(null);
-    } else {
-      setExpandedId(id);
-      if (type === 'agent' && cleanState) {
-        console.log("Calling fetchAvailableManagers for state:", cleanState);
-        fetchAvailableManagers(cleanState);
-      }
-      setSelectedManagerId('');
+
+const fetchAvailableManagers = async (state: string) => {
+  console.log("Fetching available managers for:", state); // ✅ This should now log
+  try {
+    const response = await fetch('/api/available-managers-by-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state }),
+    });
+
+    console.log("Response status:", response.status); // ✅ Confirm this too
+
+    if (!response.ok) throw new Error('Failed to fetch managers');
+    const data = await response.json();
+    console.log("Fetched managers:", data); // ✅ Check this in devtools
+    setAvailableManagers(data.managers || []);
+  } catch (err) {
+    console.error("Error fetching managers:", err);
+    setError(err instanceof Error ? err.message : 'Failed to fetch managers');
+  }
+};
+
+const toggleExpand = (id: number, type: ApprovalType, state?: string) => {
+  const cleanState = state?.trim();
+  console.log("Toggling expand for:", { id, type, cleanState });
+
+  if (expandedId === id) {
+    setExpandedId(null);
+  } else {
+    setExpandedId(id);
+    if (type === 'agent' && cleanState) {
+      console.log("Calling fetchAvailableManagers for state:", cleanState); // ✅ Appears
+      fetchAvailableManagers(cleanState); // ✅ NOW it works
     }
-  };
+    setSelectedManagerId('');
+  }
+};
+
   
   
   
