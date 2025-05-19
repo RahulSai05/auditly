@@ -12,10 +12,11 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://auditlyai.com:8000',
+        target: 'http://localhost:8000', // or 'http://auditlyai.com:8000' in production
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, '/api'),
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
     },
+    allowedHosts: ['auditlyai.com'], // ✅ Add this line
   },
 });
