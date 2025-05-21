@@ -332,24 +332,29 @@ const AssignPickups: React.FC = () => {
             </div>
 
             {filteredItems.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-slate-50 rounded-xl border border-slate-100"
-              >
-                <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-700">
-                  {searchTerm || statusFilter !== "all" 
-                    ? "No matching returns found" 
-                    : "No returns available"}
-                </h3>
-                <p className="text-slate-500 mt-2">
-                  {searchTerm || statusFilter !== "all"
-                    ? "Try adjusting your filters or search terms"
-                    : "All returns have been processed"}
-                </p>
-              </motion.div>
-            ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16 bg-slate-50 rounded-xl border border-slate-100"
+                >
+                  <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-700">
+                    {returnItems.length === 0
+                      ? "No returns found for your region"
+                      : searchTerm || statusFilter !== "all"
+                      ? "No matching return pickups"
+                      : "All returns have been assigned"}
+                  </h3>
+                  <p className="text-slate-500 mt-2">
+                    {returnItems.length === 0
+                      ? "There are currently no return pickups pending in the states you manage."
+                      : searchTerm || statusFilter !== "all"
+                      ? "Try clearing filters or updating your search."
+                      : "You’re all caught up! Every return order has been assigned or completed."}
+                  </p>
+                </motion.div>
+              ) : (
+
               <div className="space-y-4">
                 {filteredItems.map((item) => (
                   <motion.div

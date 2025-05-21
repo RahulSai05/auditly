@@ -315,24 +315,29 @@ const AssignDeliveries: React.FC = () => {
             </div>
 
             {filteredItems.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16 bg-slate-50 rounded-xl border border-slate-100"
-              >
-                <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-700">
-                  {searchTerm || statusFilter !== "all" 
-                    ? "No matching orders found" 
-                    : "No orders available"}
-                </h3>
-                <p className="text-slate-500 mt-2">
-                  {searchTerm || statusFilter !== "all"
-                    ? "Try adjusting your filters or search terms"
-                    : "All orders have been processed"}
-                </p>
-              </motion.div>
-            ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16 bg-slate-50 rounded-xl border border-slate-100"
+                >
+                  <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-700">
+                    {saleItems.length === 0
+                      ? "No orders found for your region"
+                      : searchTerm || statusFilter !== "all"
+                      ? "No matching results"
+                      : "All deliveries are already assigned"}
+                  </h3>
+                  <p className="text-slate-500 mt-2">
+                    {saleItems.length === 0
+                      ? "There are no pending or completed sales orders for your managed states."
+                      : searchTerm || statusFilter !== "all"
+                      ? "Try clearing your search or changing filters to see available orders."
+                      : "You're all caught up! No pending orders remain."}
+                  </p>
+                </motion.div>
+              ) : (
+
               <div className="space-y-4">
                 {filteredItems.map((item) => (
                   <motion.div
