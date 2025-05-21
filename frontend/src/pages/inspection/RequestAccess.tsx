@@ -2683,7 +2683,7 @@ interface AgentFormState {
   delivery_routing_mode: string;
   servicing_state: string;
   servicing_city: string;
-  servicing_zip: string[];
+  servicing_zip: string | string[];  
   permanent_address: string;
   permanent_address_state: string;
   permanent_address_city: string;
@@ -2701,11 +2701,12 @@ interface ManagerFormState {
   name: string;
   servicing_state: string;
   servicing_city: string;
-  servicing_zip: string[];
+  servicing_zip: string | string[];
   permanent_address: string;
   permanent_address_state: string;
   permanent_address_city: string;
   permanent_address_zip: string;
+  manager_grade: "c1" | "c2" | "c3" | "";
   address: string;
   dob: string;
   gender: string;
@@ -2744,6 +2745,13 @@ interface FormSectionProps {
   icon?: React.ReactNode;
   defaultOpen?: boolean;
 }
+
+const allowCommaKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === ",") {
+    e.stopPropagation(); // stop others from interfering
+    return; // allow it to proceed
+  }
+};
 
 const FormField: React.FC<FormFieldProps> = ({
   label,
@@ -2945,6 +2953,7 @@ const RequestAccess: React.FC = () => {
     address: "",
     dob: "",
     gender: "",
+    manager_grade: "", 
     work_schedule: "",
     manager_user_mapping_id: "",
     additional_info_1: "",
@@ -3018,51 +3027,28 @@ const RequestAccess: React.FC = () => {
 
   const handleAgentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (accessStatus?.is_agent || accessStatus?.pending_agent) return;
-    
+  
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    // Special handling for servicing_zip
-    if (name === "servicing_zip") {
-      const zipList = value
-        .split(",")
-        .map(zip => zip.trim())
-        .filter(zip => zip.length > 0);
-      setAgentForm({
-        ...agentForm,
-        servicing_zip: zipList
-      });
-    } else {
-      setAgentForm({
-        ...agentForm,
-        [name]: type === "checkbox" ? checked : value
-      });
-    }
+  
+    setAgentForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
-
+  
   const handleManagerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (accessStatus?.is_manager || accessStatus?.pending_manager) return;
-    
+  
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    // Special handling for servicing_zip
-    if (name === "servicing_zip") {
-      const zipList = value
-        .split(",")
-        .map(zip => zip.trim())
-        .filter(zip => zip.length > 0);
-      setManagerForm({
-        ...managerForm,
-        servicing_zip: zipList
-      });
-    } else {
-      setManagerForm({
-        ...managerForm,
-        [name]: type === "checkbox" ? checked : value
-      });
-    }
+  
+    setManagerForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
+  
 
   const handleSubmitAgent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3080,8 +3066,9 @@ const RequestAccess: React.FC = () => {
         delivery_routing_mode: agentForm.delivery_routing_mode === "manual" ? 1 : 0,
         servicing_state: agentForm.servicing_state || null,
         servicing_city: agentForm.servicing_city || null,
-        servicing_zip: agentForm.servicing_zip.length > 0 ? agentForm.servicing_zip : null,
-        permanent_address: agentForm.permanent_address || null,
+        servicing_zip: typeof agentForm.servicing_zip === "string"
+        ? agentForm.servicing_zip.split(",").map(zip => zip.trim()).filter(zip => zip)
+        : agentForm.servicing_zip,        permanent_address: agentForm.permanent_address || null,
         permanent_address_state: agentForm.permanent_address_state || null,
         permanent_address_city: agentForm.permanent_address_city || null,
         permanent_address_zip: agentForm.permanent_address_zip || null,
@@ -3126,16 +3113,18 @@ const RequestAccess: React.FC = () => {
     
     try {
       const payload = {
-        name: managerForm.name,
+        manager_name: managerForm.name,
         servicing_state: managerForm.servicing_state || null,
         servicing_city: managerForm.servicing_city || null,
-        servicing_zip: managerForm.servicing_zip.length > 0 ? managerForm.servicing_zip : null,
-        permanent_address: managerForm.permanent_address || null,
+        servicing_zip: typeof managerForm.servicing_zip === "string"
+        ? managerForm.servicing_zip.split(",").map(zip => zip.trim()).filter(zip => zip)
+        : managerForm.servicing_zip,        permanent_address: managerForm.permanent_address || null,
         permanent_address_state: managerForm.permanent_address_state || null,
         permanent_address_city: managerForm.permanent_address_city || null,
         permanent_address_zip: managerForm.permanent_address_zip || null,
         address: managerForm.address || null,
         dob: managerForm.dob || null,
+        manager_grade: managerForm.manager_grade, 
         gender: managerForm.gender || null,
         work_schedule: managerForm.work_schedule || { days: "" },
         manager_user_mapping_id: managerForm.manager_user_mapping_id ? parseInt(managerForm.manager_user_mapping_id) : null,
@@ -3474,12 +3463,17 @@ const RequestAccess: React.FC = () => {
                     label="Servicing Zip Codes (comma-separated)"
                     name="servicing_zip"
                     type="text"
-                    value={agentForm.servicing_zip.join(", ")}
+                    value={Array.isArray(agentForm.servicing_zip) 
+                      ? agentForm.servicing_zip.join(", ") 
+                      : agentForm.servicing_zip}
                     onChange={handleAgentChange}
+                    onKeyDown={allowCommaKey} // ✅ this line
                     required
                     icon={<MapPin className="w-4 h-4" />}
+                    placeholder="e.g. 75001, 75002, 75003"
                     disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
                   />
+
                 </FormSection>
 
                 <FormSection title="Permanent Address" icon={<Home className="w-5 h-5 text-blue-500" />}>
@@ -3578,8 +3572,26 @@ const RequestAccess: React.FC = () => {
                   icon={<User className="w-5 h-5 text-blue-500" />}
                   disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
                 />
+                  <FormSection title="Manager Details" icon={<Briefcase className="w-5 h-5 text-blue-500" />}>
+                    <FormField
+                      label="Manager Grade"
+                      name="manager_grade"
+                      type="select"
+                      value={managerForm.manager_grade}
+                      onChange={handleManagerChange}
+                      required
+                      options={[
+                        { value: "", label: "Select Grade" },
+                        { value: "c1", label: "C1" },
+                        { value: "c2", label: "C2" },
+                        { value: "c3", label: "C3" }
+                      ]}
+                      icon={<Briefcase className="w-4 h-4" />}
+                      disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                    />
+                  </FormSection>
                 
-                <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
+                  <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
                   <div className="col-span-2 space-y-4">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                       {days.map((day) => (
@@ -3644,12 +3656,17 @@ const RequestAccess: React.FC = () => {
                     label="Servicing Zip Codes (comma-separated)"
                     name="servicing_zip"
                     type="text"
-                    value={managerForm.servicing_zip.join(", ")}
+                    value={Array.isArray(managerForm.servicing_zip) 
+                      ? managerForm.servicing_zip.join(", ") 
+                      : managerForm.servicing_zip}
                     onChange={handleManagerChange}
+                    onKeyDown={allowCommaKey} // ✅ this line
                     required
                     icon={<MapPin className="w-4 h-4" />}
+                    placeholder="e.g. 75001, 75002, 75003"
                     disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
                   />
+
                 </FormSection>
 
                 <FormSection title="Permanent Address" icon={<Home className="w-5 h-5 text-blue-500" />}>
