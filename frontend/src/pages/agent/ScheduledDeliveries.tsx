@@ -89,9 +89,17 @@ const ScheduledDeliveries: React.FC = () => {
       }
 
       const response = await fetch(`/api/agent/sales-orders/${agentId}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch orders: ${response.statusText}`);
+      if (response.status === 404) {
+        // No orders assigned — not an error
+        setOrders([]);
+        return;
       }
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch orders: ${response.status} - ${errorText}`);
+      }
+      
 
       const data = await response.json();
       setOrders(data);

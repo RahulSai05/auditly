@@ -77,14 +77,21 @@ const ScheduledPickups: React.FC = () => {
       
       const agentId = localStorage.getItem("agentId");
       if (!agentId) {
-        throw new Error("Agent ID not found");
+        throw new Error("Agent ID not found. Please log in again.");
       }
-
+  
       const response = await fetch(`/api/agent/return-orders/${agentId}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch pickup orders: ${response.statusText}`);
+  
+      if (response.status === 404) {
+        setOrders([]); 
+        return;
       }
-
+  
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(`Failed to fetch pickup orders: ${response.status} - ${message}`);
+      }
+  
       const data = await response.json();
       setOrders(data);
     } catch (err) {
@@ -94,6 +101,7 @@ const ScheduledPickups: React.FC = () => {
       setRefreshing(false);
     }
   };
+  
 
   const handleRefresh = () => {
     setRefreshing(true);
