@@ -263,6 +263,7 @@ def pending_agent_approval(db: Session = Depends(get_db)):
                 "agent_name": agent.agent_name,
                 "delivery_type": agent.delivery_type,
                 "current_address": agent.current_address,
+                "servicing_zip": agent.servicing_zip,
                 "servicing_state": agent.servicing_state,
                 "servicing_city": agent.servicing_city,
                 "is_verified": agent.is_verified,
