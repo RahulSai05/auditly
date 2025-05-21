@@ -28,7 +28,7 @@ interface Agent {
   current_address: string;
   servicing_state: string;
   servicing_city: string;
-  servicing_zip?: string;
+  servicing_zip?: string | string[];
   is_verified: boolean;
   delivery_type?: string;
   created_at: string;
@@ -42,7 +42,7 @@ interface Manager {
   manager_name: string;
   servicing_state: string;
   servicing_city: string;
-  servicing_zip?: string;
+  servicing_zip?: string | string[];
   permanent_address: string;
   is_verified: boolean;
   created_at: string;
@@ -469,7 +469,7 @@ const UserPermissionRequests = () => {
                               <MapPin className="w-4 h-4" />
                               <span>
                                 {data.servicing_city}, {data.servicing_state}
-                                {data.servicing_zip && `, ${data.servicing_zip}`}
+                                {data.servicing_zip && `, ${Array.isArray(data.servicing_zip) ? data.servicing_zip.join(", ") : data.servicing_zip}`}
                               </span>
                             </div>
                             {data.is_verified && (

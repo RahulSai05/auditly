@@ -486,7 +486,7 @@ def pending_manager_approval(db: Session = Depends(get_db)):
                 "manager_name": manager.manager_name,
                 "servicing_state": manager.servicing_state,
                 "servicing_city": manager.servicing_city,
-                "servicing_zip": manager.zip_codes,
+                "servicing_zip": manager.servicing_zip,
                 "permanent_address": manager.permanent_address,
                 "permanent_address_state": manager.permanent_address_state,
                 "permanent_address_city": manager.permanent_address_city,
