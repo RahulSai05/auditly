@@ -28,3 +28,24 @@ dist-ssr
 node_modules/
 *.tsbuildinfo
 *.map
+
+# Dependency folders
+node_modules/
+dist/
+build/
+
+# TypeScript and Vite outputs
+*.tsbuildinfo
+*.map
+
+# VS Code settings
+.vscode/
+*.code-workspace
+
+# Mac system files
+.DS_Store
+
+# Logs and temp
+*.log
+tmp/
+.cache/
