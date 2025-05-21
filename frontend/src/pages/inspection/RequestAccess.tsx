@@ -2683,7 +2683,7 @@ interface AgentFormState {
   delivery_routing_mode: string;
   servicing_state: string;
   servicing_city: string;
-  servicing_zip: string | string[];  
+  servicing_zip: string;
   permanent_address: string;
   permanent_address_state: string;
   permanent_address_city: string;
@@ -2701,7 +2701,7 @@ interface ManagerFormState {
   name: string;
   servicing_state: string;
   servicing_city: string;
-  servicing_zip: string | string[];
+  servicing_zip: string;
   permanent_address: string;
   permanent_address_state: string;
   permanent_address_city: string;
