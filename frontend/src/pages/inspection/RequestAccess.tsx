@@ -3066,9 +3066,7 @@ const RequestAccess: React.FC = () => {
         delivery_routing_mode: agentForm.delivery_routing_mode === "manual" ? 1 : 0,
         servicing_state: agentForm.servicing_state || null,
         servicing_city: agentForm.servicing_city || null,
-        servicing_zip: typeof agentForm.servicing_zip === "string"
-        ? agentForm.servicing_zip.split(",").map(zip => zip.trim()).filter(zip => zip)
-        : agentForm.servicing_zip,        permanent_address: agentForm.permanent_address || null,
+        servicing_zip: agentForm.servicing_zip.split(",").map(zip => zip.trim()).filter(zip => zip),
         permanent_address_state: agentForm.permanent_address_state || null,
         permanent_address_city: agentForm.permanent_address_city || null,
         permanent_address_zip: agentForm.permanent_address_zip || null,
@@ -3116,9 +3114,7 @@ const RequestAccess: React.FC = () => {
         manager_name: managerForm.name,
         servicing_state: managerForm.servicing_state || null,
         servicing_city: managerForm.servicing_city || null,
-        servicing_zip: typeof managerForm.servicing_zip === "string"
-        ? managerForm.servicing_zip.split(",").map(zip => zip.trim()).filter(zip => zip)
-        : managerForm.servicing_zip,        permanent_address: managerForm.permanent_address || null,
+        servicing_zip: managerForm.servicing_zip.split(",").map(zip => zip.trim()).filter(zip => zip),
         permanent_address_state: managerForm.permanent_address_state || null,
         permanent_address_city: managerForm.permanent_address_city || null,
         permanent_address_zip: managerForm.permanent_address_zip || null,
