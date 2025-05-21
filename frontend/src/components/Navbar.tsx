@@ -403,7 +403,7 @@ export function Navbar() {
           const thisUser = data.data.find((u) => u.user_id == userId);
           if (thisUser) {
             setIsAgent(thisUser.is_agent);  
-            setIsManager(thisUser.is_manager); // ← approved manager only
+            setIsManager(thisUser.is_manager);
             setIsAdmin(thisUser.is_admin);
             setIsReportUser(thisUser.is_reports_user);
             setIsInspectionUser(thisUser.is_inspection_user);
@@ -597,7 +597,7 @@ export function Navbar() {
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
                 {/* {isInspectionUser && !isAdmin && !isAgent && !isManager && ( */}
-                {isInspectionUser && (!isAdmin && (!isAgent || !isManager)) && (
+                {isReportUser && (!isAdmin && (!isAgent || !isManager)) && (
                   <NavLink to="/request-access" icon={ShieldUser}>Request Privilege</NavLink>
                 )}
                 {isInspectionUser && (

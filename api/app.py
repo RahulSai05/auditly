@@ -202,7 +202,7 @@ class AgentCreate(BaseModel):
     delivery_routing_mode: Optional[bool] = False
     servicing_state: Optional[str] = None
     servicing_city: Optional[str] = None
-    servicing_zip: Optional[str] = None
+    servicing_zip:  Optional[list] = None
     permanent_adress: Optional[str] = None
     permanent_address_state: Optional[str] = None
     permanent_address_city: Optional[str] = None
@@ -285,34 +285,61 @@ def pending_agent_approval(db: Session = Depends(get_db)):
     ]
     return {"agents": result}
 
-
-
 class AgentApprovalRequest(BaseModel):
     agent_id: int
     approver_id: int
+    manager_ids: List[int]  # ✅ correct name for matching frontend payload
 
 @app.post("/api/approve-agent")
 def approve_agent(request: AgentApprovalRequest, db: Session = Depends(get_db)):
-    # Fetch user
-    approver = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == request.approver_id).first()
+    # Validate approver user
+    approver = db.query(AuditlyUser).filter(
+        AuditlyUser.auditly_user_id == request.approver_id
+    ).first()
     if not approver:
-        raise HTTPException(status_code=404, detail="AuditlyUser not found")
+        raise HTTPException(status_code=404, detail="Approver not found")
 
-    # Fetch agent
-    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    # Validate agent
+    agent = db.query(Agent).filter(
+        Agent.agent_id == request.agent_id
+    ).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    # Update user
-    user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == agent.agent_to_user_mapping_id).first()
-    user.is_agent = True
+    # Validate linked AuditlyUser
+    user = db.query(AuditlyUser).filter(
+        AuditlyUser.auditly_user_id == agent.agent_to_user_mapping_id
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Agent user not found")
 
-    # Update agent
+    # ✅ Validate manager IDs using AgentManager
+    invalid_managers = []
+    for mid in request.manager_ids:
+        if not db.query(AgentManager).filter(AgentManager.manager_id == mid).first():
+            invalid_managers.append(str(mid))
+
+    if invalid_managers:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invalid manager IDs: {', '.join(invalid_managers)}"
+        )
+
+    # ✅ Update user roles
+    user.is_agent = True
+    user.is_inspection_user = True
+
+    # ✅ Update agent approval and store JSON of managers
     agent.approved_by_auditly_user_id = request.approver_id
+    agent.manager_id = request.manager_ids
 
     db.commit()
-    return {"message": "Agent approved and user updated successfully"}
 
+    return {
+        "message": "Agent approved and managers assigned",
+        "agent_id": agent.agent_id,
+        "manager_ids": request.manager_ids
+    }
 
 class AgentScheduleCheckRequest(BaseModel):
     agent_id: int
@@ -395,7 +422,7 @@ class ManagerCreate(BaseModel):
     manager_name: str
     servicing_state: Optional[str] = None
     servicing_city: Optional[str] = None
-    servicing_zip: Optional[str] = None
+    servicing_zip: Optional[list] = None
     permanent_address: Optional[str] = None
     permanent_address_state: Optional[str] = None
     permanent_address_city: Optional[str] = None
@@ -403,6 +430,7 @@ class ManagerCreate(BaseModel):
     address: Optional[str] = None
     is_verified: Optional[bool] = False
     dob: Optional[date] = None
+    manager_grade: str
     gender: Optional[str] = None  # 'Male', 'Female', 'Other', etc.
     work_schedule: Optional[dict] = None
     company_id: Optional[int] = None
@@ -426,6 +454,7 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
         is_verified=manager.is_verified,
         dob=manager.dob,
         gender=manager.gender,
+        manager_grade=manager.manager_grade,
         work_schedule=manager.work_schedule,
         company_id=manager.company_id,
         manager_user_mapping_id=manager.manager_user_mapping_id,
@@ -506,7 +535,8 @@ def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="User linked to manager not found")
 
     user.is_manager = True
-    manager.approved_by_auditly_user_id = request.approver_id  # This line stores the approver
+    user.is_inspection_user = True
+    manager.approved_by_auditly_user_id = request.approver_id
 
     db.commit()
     return {"message": "Manager approved, role updated, and approver recorded successfully"}
@@ -3360,7 +3390,8 @@ def _assign_sales_order(db: Session = Depends(get_db), sales_order_id = None):
     elif sale_order.status == "Deliverd":
         return_message = "Already Deliverd"
     else:
-        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == sale_order.shipped_to_zip).filter((Agent.delivery_type == "Delivery") | (Agent.delivery_type == "Both")).filter(Agent.delivery_routing_mode == 0)
+        availabe_agent = db.query(Agent).filter(func.JSON_CONTAINS(Agent.servicing_zip, f'"{sale_order.shipped_to_zip}"')
+).filter((Agent.delivery_type == "Delivery") | (Agent.delivery_type == "Both")).filter(Agent.delivery_routing_mode == 0)
         agent_minimum_order_number = 100
         agent_id_min = None
         for agent in availabe_agent:
@@ -3383,7 +3414,7 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
     elif return_order.status == "Picked Up":
         return_message = "Already Picked Up"
     else:
-        availabe_agent = db.query(Agent).filter(Agent.servicing_zip == return_order.return_zip).filter((Agent.delivery_type == "Return") | (Agent.delivery_type == "Both")).filter(Agent.pickup_routing_mode == 0)
+        availabe_agent = db.query(Agent).filter(func.JSON_CONTAINS(Agent.servicing_zip, f'"{return_order.return_zip}"')).filter((Agent.delivery_type == "Return") | (Agent.delivery_type == "Both")).filter(Agent.pickup_routing_mode == 0)
         agent_minimum_order_number = 100
         agent_id_min = None
         for agent in availabe_agent:
@@ -3535,7 +3566,7 @@ def get_eligible_agents_for_delivery(request: SalesOrderAgentFilterRequest, db: 
     today = str(datetime.today().isoweekday())  # Monday = 1, Sunday = 7
 
     agents = db.query(Agent).filter(
-        Agent.servicing_zip == str(zip_code),
+        func.JSON_CONTAINS(Agent.servicing_zip, f'"{zip_code}"'),
         Agent.delivery_type.in_(["Delivery", "Both"]),
         Agent.delivery_routing_mode == True,
         Agent.approved_by_auditly_user_id.isnot(None)
@@ -3578,7 +3609,7 @@ def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: S
     today = str(datetime.today().isoweekday())  # 1 = Monday, ..., 7 = Sunday
 
     agents = db.query(Agent).filter(
-        Agent.servicing_zip == str(return_zip),
+        func.JSON_CONTAINS(Agent.servicing_zip, f'"{return_zip}"'),
         Agent.delivery_type.in_(["Return", "Both"]),
         Agent.pickup_routing_mode == True,
         Agent.approved_by_auditly_user_id.isnot(None)
@@ -3682,6 +3713,34 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
             for m in managers
         ]
     }
+
+class ManagerZipFilterRequest(BaseModel):
+    zip_code: str
+
+@app.post("/api/available-managers-by-zip")
+def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
+    managers = db.query(AgentManager).filter(
+        AgentManager.servicing_zip.contains(f'"{request.zip_code}"'),
+        AgentManager.approved_by_auditly_user_id.isnot(None),
+        AgentManager.manager_grade.in_(["c1", "c2", "c3"])
+    ).all()
+
+    grouped = {"c1": [], "c2": [], "c3": []}
+
+    for m in managers:
+        manager_info = {
+            "manager_id": m.manager_id,
+            "manager_name": m.manager_name,
+            "servicing_state": m.servicing_state,
+            "servicing_city": m.servicing_city,
+            "servicing_zip": m.servicing_zip,
+            "gender": m.gender,
+            "work_schedule": m.work_schedule
+        }
+        grouped[m.manager_grade].append(manager_info)
+
+    return {"managers": grouped}
+
 
 class ManagerAssignmentRequest(BaseModel):
     agent_id: int
