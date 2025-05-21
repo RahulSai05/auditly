@@ -254,18 +254,23 @@ const ScheduledDeliveries: React.FC = () => {
                 className="text-center py-16 bg-gray-50 rounded-xl border border-gray-100"
               >
                 <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-700">
-                  {searchTerm || statusFilter !== "all" 
-                    ? "No matching orders found" 
-                    : "No orders available"}
+                <h3 className="text-lg font-semibold text-gray-700">
+                  {orders.length === 0
+                    ? "No deliveries assigned yet"
+                    : searchTerm || statusFilter !== "all"
+                    ? "No matching deliveries found"
+                    : "All deliveries are complete"}
                 </h3>
                 <p className="text-gray-500 mt-2">
-                  {searchTerm || statusFilter !== "all"
-                    ? "Try adjusting your filters or search terms"
-                    : "All orders have been processed"}
+                  {orders.length === 0
+                    ? "You currently have no scheduled deliveries. Check back later."
+                    : searchTerm || statusFilter !== "all"
+                    ? "Try adjusting filters or updating your search."
+                    : "You're all caught up! All deliveries have been handled."}
                 </p>
               </motion.div>
             ) : (
+
               <div className="space-y-4">
                 {filteredOrders.map((order) => (
                   <motion.div
