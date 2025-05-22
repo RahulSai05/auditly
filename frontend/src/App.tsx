@@ -564,8 +564,10 @@ import Inbound from "./pages/admin/Inbound";
 import Outbound from "./pages/admin/Outbound";
 import Schedule from "./pages/agent/Schedule";
 import AssignDeliveries from "./pages/manager/AssignDeliveries";
+import ManagerTeamView from "./pages/manager/ManagerTeamView";
 import AssignPickups from "./pages/manager/AssignPickups";
 import UserPermissionRequests from "./pages/agent/UserPermissionRequests";
+import AgentManagerList from "./pages/agent/AgentManagerList";
 import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
 import ScheduledPickups from "./pages/agent/ScheduledPickups";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
@@ -850,9 +852,14 @@ export default function App(): JSX.Element {
             </AdminRoute>
           } />
           <Route path="/admin/agent/permission-requests" element={
-            <UserPermissionRequests>
-              <ScheduledDeliveries />
-            </UserPermissionRequests>
+            <AdminRoute>
+              <UserPermissionRequests />
+            </AdminRoute>
+          } />
+          <Route path="/admin/agent/agent-manger-list" element={
+            <AdminRoute>
+              <AgentManagerList />
+            </AdminRoute>
           } />
           <Route path="/admin/settings/connectors/outbound" element={
             <AdminRoute>
@@ -936,6 +943,11 @@ export default function App(): JSX.Element {
           <Route path="/manager/assign-deliveries" element={
             <InspectionRoute>
               <AssignDeliveries />
+            </InspectionRoute>
+          } />
+          <Route path="/manager/team-view" element={
+            <InspectionRoute>
+              <ManagerTeamView />
             </InspectionRoute>
           } />
           <Route path="/manager/assign-pickups" element={

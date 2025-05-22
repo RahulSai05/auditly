@@ -3782,3 +3782,118 @@ def assign_managers_to_agent(request: ManagerAssignmentRequest, db: Session = De
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {e}")
 
+
+
+@app.get("/api/agents-managers/all")
+def get_all_agents_and_managers(db: Session = Depends(get_db)):
+    agents = db.query(Agent).all()
+    managers = db.query(AgentManager).all()
+    result = []
+
+    # Map manager_id → manager_name for lookup
+    manager_id_name_map = {m.manager_id: m.manager_name for m in managers}
+
+    # 1. Agents
+    for agent in agents:
+        # Resolve roles
+        is_agent = True
+        is_manager = any(m.manager_user_mapping_id == agent.agent_to_user_mapping_id for m in managers)
+        agent_roles = "Both" if is_agent and is_manager else "Agent"
+
+        # Resolve manager names from agent.manager_id (JSON field)
+        manager_names = []
+        if agent.manager_id:
+            try:
+                for mid in agent.manager_id:
+                    if mid in manager_id_name_map:
+                        manager_names.append(manager_id_name_map[mid])
+            except Exception:
+                pass
+
+        result.append({
+            "agent_name": agent.agent_name,
+            "agent_roles": agent_roles,
+            "manager": ", ".join(manager_names) if manager_names else None,
+            "agent_servicing_zip": ", ".join(agent.servicing_zip) if agent.servicing_zip else None,
+            "agent_servicing_city": agent.servicing_city,
+            "agent_servicing_state": agent.servicing_state,
+            "agent_servicing_country": "USA"
+        })
+
+    # 2. Standalone Managers not already listed as agents
+    listed_names = {entry["agent_name"] for entry in result}
+    for manager in managers:
+        if manager.manager_name not in listed_names:
+            result.append({
+                "agent_name": manager.manager_name,
+                "agent_roles": "Manager",
+                "manager": manager.manager_name,
+                "agent_servicing_zip": ", ".join(manager.servicing_zip) if manager.servicing_zip else None,
+                "agent_servicing_city": manager.servicing_city,
+                "agent_servicing_state": manager.servicing_state,
+                "agent_servicing_country": "USA"
+            })
+
+    if not result:
+        raise HTTPException(status_code=404, detail="No agents or managers found")
+
+    return result
+
+@app.get("/api/agents-managers/assigned-to/{manager_id}")
+def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
+    all_users = db.query(AuditlyUser).all()
+    agents = db.query(Agent).filter(Agent.manager_id.isnot(None)).all()
+    managers = db.query(AgentManager).all()
+
+    manager_map = {m.manager_id: m.manager_name for m in managers}
+    user_roles_map = {
+        u.auditly_user_id: {
+            "is_agent": u.is_agent,
+            "is_manager": u.is_manager,
+            "name": u.auditly_user_name
+        }
+        for u in all_users
+    }
+
+    result = []
+
+    # 1. Agents reporting to this manager
+    for agent in agents:
+        if not isinstance(agent.manager_id, list):
+            continue
+        if manager_id in agent.manager_id:
+            user_info = user_roles_map.get(agent.agent_to_user_mapping_id)
+            role = "Both" if user_info and user_info["is_agent"] and user_info["is_manager"] else (
+                "Agent" if user_info and user_info["is_agent"] else "Unknown"
+            )
+            managers_for_agent = [manager_map[mid] for mid in agent.manager_id if mid in manager_map]
+            result.append({
+                "agent_name": agent.agent_name,
+                "agent_roles": role,
+                "manager": ", ".join(managers_for_agent),
+                "agent_servicing_zip": ", ".join(agent.servicing_zip) if agent.servicing_zip else None,
+                "agent_servicing_city": agent.servicing_city,
+                "agent_servicing_state": agent.servicing_state,
+                "agent_servicing_country": "USA"
+            })
+
+    # 2. Managers who themselves report to this manager
+    for m in managers:
+        if m.manager_id == manager_id:
+            user_info = user_roles_map.get(m.manager_user_mapping_id)
+            if not user_info:
+                continue
+            result.append({
+                "agent_name": m.manager_name,
+                "agent_roles": "Manager",
+                "manager": manager_map.get(m.manager_id),
+                "agent_servicing_zip": ", ".join(m.servicing_zip) if m.servicing_zip else None,
+                "agent_servicing_city": m.servicing_city,
+                "agent_servicing_state": m.servicing_state,
+                "agent_servicing_country": "USA"
+            })
+
+    if not result:
+        raise HTTPException(status_code=404, detail="No assignments found for this manager")
+
+    return result

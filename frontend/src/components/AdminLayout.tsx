@@ -461,6 +461,25 @@ const AdminLayout = () => {
                     </NavLink>
                   </motion.li>
 
+                  <motion.li variants={itemVariants}>
+                    <NavLink
+                      to="/admin/agent/agent-manger-list"
+                      className={({ isActive }) =>
+                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                      }
+                      onClick={handleLinkClick}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <ClipboardIcon className="w-5 h-5 mr-2" />
+                      </motion.div>
+                      Agent Manager List
+                    </NavLink>
+                  </motion.li>
+
+
 
                     {[
                       {
@@ -845,6 +864,18 @@ const AdminLayout = () => {
             >
               <Users className="w-5 h-5 mr-2" />
               Assign Pickups
+            </NavLink>
+          </motion.li>
+          <motion.li variants={itemVariants}>
+            <NavLink
+              to="/manager/team-view"
+              className={({ isActive }) =>
+                `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+              }
+              onClick={handleLinkClick}
+            >
+              <ClipboardIcon className="w-5 h-5 mr-2" />
+             Team Assignment
             </NavLink>
           </motion.li>
         </motion.ul>
