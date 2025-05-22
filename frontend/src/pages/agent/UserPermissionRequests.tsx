@@ -711,6 +711,7 @@ import {
   MapPin,
   Mail,
   RefreshCw,
+  Info,
   ChevronDown,
   ChevronUp,
   UserCheck,
