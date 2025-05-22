@@ -3433,8 +3433,7 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
 
 @app.get("/api/agent/sales-orders/{agent_id}")
 def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
-    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).all()
-
+    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).fitler(SaleItemData.delivery_agent_type == "Agent").all()
     if not orders:
         raise HTTPException(status_code=404, detail="No orders found for this agent")
 
@@ -3484,7 +3483,7 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
 @app.get("/api/agent/return-orders/{agent_id}")
 def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
     # Get all return orders for the agent
-    return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
+    return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).filter(ReturnItemData.return_agent_type == "Agent").all()
 
     if not return_orders:
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
@@ -3643,6 +3642,7 @@ def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: S
 class SalesAgentAssignmentRequest(BaseModel):
     order_id: int
     agent_id: int
+    agent_type: str
 
 @app.post("/api/assign-manual-agent-sales-order")
 def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = Depends(get_db)):
@@ -3652,6 +3652,7 @@ def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = De
         raise HTTPException(status_code=404, detail="Sale item not found")
 
     order.delivery_agent_id = request.agent_id
+    order.delivery_agent_type = request.agent_type
     order.status = "Assigned to Agent"
 
     db.commit()
@@ -3666,6 +3667,7 @@ def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = De
 class ReturnAgentAssignmentRequest(BaseModel):
     order_id: int
     agent_id: int
+    agent_type: str
 
 @app.post("/api/assign-manual-agent-return-order")
 def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Session = Depends(get_db)):
@@ -3675,6 +3677,7 @@ def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Sess
         raise HTTPException(status_code=404, detail="Return order not found")
 
     return_order.return_agent_id = request.agent_id
+    return_order.return_agent_type = request.agent_type
     return_order.status = "Assigned to Agent"
 
     db.commit()
