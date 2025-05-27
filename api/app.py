@@ -37,7 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional
-from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData, func
+from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData, func, and_
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
@@ -289,7 +289,7 @@ def pending_agent_approval(db: Session = Depends(get_db)):
 class AgentApprovalRequest(BaseModel):
     agent_id: int
     approver_id: int
-    manager_ids: List[int]  # ✅ correct name for matching frontend payload
+    manager_ids: List[str]  # ✅ correct name for matching frontend payload
 
 @app.post("/api/approve-agent")
 def approve_agent(request: AgentApprovalRequest, db: Session = Depends(get_db)):
@@ -471,13 +471,15 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
         "manager_id": new_manager.manager_id
     }
 
-
 @app.get("/api/pending-manager-approval")
 def pending_manager_approval(db: Session = Depends(get_db)):
     managers = db.query(AgentManager, AuditlyUser).join(
         AuditlyUser, AgentManager.manager_user_mapping_id == AuditlyUser.auditly_user_id
     ).filter(
-        AuditlyUser.is_manager == False  # assumes this field exists
+        and_(
+            AuditlyUser.is_manager == False,
+            AgentManager.approved_by_auditly_user_id.is_(None)
+        )
     ).all()
 
     result = [
@@ -493,6 +495,7 @@ def pending_manager_approval(db: Session = Depends(get_db)):
                 "permanent_address_city": manager.permanent_address_city,
                 "permanent_address_zip": manager.permanent_address_zip,
                 "address": manager.address,
+                "manager_grade": manager.manager_grade,
                 "is_verified": manager.is_verified,
                 "gender": manager.gender,
                 "dob": manager.dob,
@@ -512,11 +515,11 @@ def pending_manager_approval(db: Session = Depends(get_db)):
         for manager, user in managers
     ]
     return {"managers": result}
-
     
 class ManagerApprovalRequest(BaseModel):
     manager_id: int
     approver_id: int
+    reporting_manager_id: Optional[List[str]] = None
 
 @app.post("/api/approve-manager")
 def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_db)):
@@ -538,6 +541,7 @@ def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_d
     user.is_manager = True
     user.is_inspection_user = True
     manager.approved_by_auditly_user_id = request.approver_id
+    manager.reporting_manager_id = request.reporting_manager_id if request.reporting_manager_id is not None else []
 
     db.commit()
     return {"message": "Manager approved, role updated, and approver recorded successfully"}
@@ -3433,7 +3437,7 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
 
 @app.get("/api/agent/sales-orders/{agent_id}")
 def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
-    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).fitler(SaleItemData.delivery_agent_type == "Agent").all()
+    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).filter(SaleItemData.delivery_agent_type == "Agent").all()
     if not orders:
         raise HTTPException(status_code=404, detail="No orders found for this agent")
 
@@ -3720,11 +3724,22 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
 
 class ManagerZipFilterRequest(BaseModel):
     zip_code: str
+    servicing_city: str
+    servicing_state: str
 
 @app.post("/api/available-managers-by-zip")
 def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
+    # managers = db.query(AgentManager).filter(AgentManager.servicing_city == request.servicing_city, AgentManager.servicing_state == request.servicing_state).filter(
+    #     # AgentManager.servicing_zip.contains(f'"{request.zip_code}"'),
+    #     AgentManager.approved_by_auditly_user_id.isnot(None),
+    #     AgentManager.manager_grade.in_(["c1", "c2", "c3"])
+    # ).all()
+
     managers = db.query(AgentManager).filter(
-        AgentManager.servicing_zip.contains(f'"{request.zip_code}"'),
+        or_(
+            AgentManager.servicing_city == request.servicing_city,
+            AgentManager.servicing_state == request.servicing_state
+        ),
         AgentManager.approved_by_auditly_user_id.isnot(None),
         AgentManager.manager_grade.in_(["c1", "c2", "c3"])
     ).all()
@@ -3739,6 +3754,7 @@ def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session 
             "servicing_city": m.servicing_city,
             "servicing_zip": m.servicing_zip,
             "gender": m.gender,
+            "manager_grade": m.manager_grade,
             "work_schedule": m.work_schedule
         }
         grouped[m.manager_grade].append(manager_info)
@@ -3843,9 +3859,8 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
 def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
     all_users = db.query(AuditlyUser).all()
     agents = db.query(Agent).filter(Agent.manager_id.isnot(None)).all()
-    managers = db.query(AgentManager).all()
+    managers = db.query(AgentManager).filter(AgentManager.reporting_manager_id.isnot(None)).all()
 
-    manager_map = {m.manager_id: m.manager_name for m in managers}
     user_roles_map = {
         u.auditly_user_id: {
             "is_agent": u.is_agent,
@@ -3857,36 +3872,49 @@ def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
 
     result = []
 
-    # 1. Agents reporting to this manager
+    # 🔹 AGENTS reporting to this manager
     for agent in agents:
-        if not isinstance(agent.manager_id, list):
+        try:
+            raw_mgr_ids = agent.manager_id if isinstance(agent.manager_id, list) else json.loads(agent.manager_id)
+            mgr_ids = [int(mid) for mid in raw_mgr_ids]
+        except Exception as e:
+            logging.warning(f"Invalid manager_id for agent {agent.agent_id}: {agent.manager_id}")
             continue
-        if manager_id in agent.manager_id:
+
+        if manager_id in mgr_ids:
             user_info = user_roles_map.get(agent.agent_to_user_mapping_id)
             role = "Both" if user_info and user_info["is_agent"] and user_info["is_manager"] else (
                 "Agent" if user_info and user_info["is_agent"] else "Unknown"
             )
-            managers_for_agent = [manager_map[mid] for mid in agent.manager_id if mid in manager_map]
             result.append({
+                "agent_id": agent.agent_id,
                 "agent_name": agent.agent_name,
                 "agent_roles": role,
-                "manager": ", ".join(managers_for_agent),
+                "manager_id": manager_id,
                 "agent_servicing_zip": ", ".join(agent.servicing_zip) if agent.servicing_zip else None,
                 "agent_servicing_city": agent.servicing_city,
                 "agent_servicing_state": agent.servicing_state,
                 "agent_servicing_country": "USA"
             })
 
-    # 2. Managers who themselves report to this manager
+    # 🔹 MANAGERS reporting to this manager
     for m in managers:
-        if m.manager_id == manager_id:
+        try:
+            raw_reporting_ids = m.reporting_manager_id if isinstance(m.reporting_manager_id, list) else json.loads(m.reporting_manager_id)
+            reporting_ids = [int(rid) for rid in raw_reporting_ids]
+        except Exception as e:
+            logging.warning(f"Invalid reporting_manager_id for manager {m.manager_id}: {m.reporting_manager_id}")
+            continue
+
+        if manager_id in reporting_ids:
             user_info = user_roles_map.get(m.manager_user_mapping_id)
             if not user_info:
                 continue
             result.append({
+                "manager_id": m.manager_id,
                 "agent_name": m.manager_name,
                 "agent_roles": "Manager",
-                "manager": manager_map.get(m.manager_id),
+                "manager": manager_id,
                 "agent_servicing_zip": ", ".join(m.servicing_zip) if m.servicing_zip else None,
                 "agent_servicing_city": m.servicing_city,
                 "agent_servicing_state": m.servicing_state,
@@ -3894,6 +3922,7 @@ def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
             })
 
     if not result:
-        raise HTTPException(status_code=404, detail="No assignments found for this manager")
+        raise HTTPException(status_code=404, detail="No agents or managers found reporting to this manager")
 
     return result
+    

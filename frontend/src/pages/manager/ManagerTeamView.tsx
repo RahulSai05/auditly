@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -37,8 +37,11 @@ const ManagerTeamView: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<"all" | "agent" | "manager" | "both">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Get manager_id from localStorage or context in a real app
-  const managerId = 1; // Replace with actual manager ID in your implementation
+  const managerId = useMemo(() => {
+    const stored = localStorage.getItem("managerId");
+    return stored ? parseInt(stored, 10) : null;
+  }, []);
+  
 
   const fetchTeamMembers = async () => {
     try {
@@ -63,9 +66,11 @@ const ManagerTeamView: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTeamMembers();
+    if (managerId !== null) {
+      fetchTeamMembers();
+    }
   }, [managerId]);
-
+  
   const filteredMembers = teamMembers.filter((member) => {
     const matchesSearch = searchTerm.toLowerCase() === "" || 
       member.agent_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

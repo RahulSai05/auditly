@@ -3422,97 +3422,108 @@ const RequestAccess: React.FC = () => {
                 </FormSection>
 
                 <FormSection title="Current Address" icon={<Briefcase className="w-5 h-5 text-blue-500" />}>
-                  <FormField
-                    label="Current Address"
-                    name="current_address"
-                    type="text"
-                    value={agentForm.current_address}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
-                </FormSection>
+                <FormField
+                  label="Current Address"
+                  name="current_address"
+                  type="text"
+                  value={agentForm.current_address}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 123 Main St, Apt 4B"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
 
-                <FormSection title="Servicing Area" icon={<Briefcase className="w-5 h-5 text-blue-500" />}>
-                  <FormField
-                    label="Servicing State"
-                    name="servicing_state"
-                    type="text"
-                    value={agentForm.servicing_state}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
-                  <FormField
-                    label="Servicing City"
-                    name="servicing_city"
-                    type="text"
-                    value={agentForm.servicing_city}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
-                  <FormField
-                    label="Servicing Zip Codes (comma-separated)"
-                    name="servicing_zip"
-                    type="text"
-                    value={Array.isArray(agentForm.servicing_zip) 
-                      ? agentForm.servicing_zip.join(", ") 
-                      : agentForm.servicing_zip}
-                    onChange={handleAgentChange}
-                    onKeyDown={allowCommaKey} // ✅ this line
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    placeholder="e.g. 75001, 75002, 75003"
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
+                <FormField
+                  label="Servicing State"
+                  name="servicing_state"
+                  type="text"
+                  value={agentForm.servicing_state}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. TX, CA, NY"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
+
+                <FormField
+                  label="Servicing City"
+                  name="servicing_city"
+                  type="text"
+                  value={agentForm.servicing_city}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. Dallas, Austin, Houston"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
+
+                <FormField
+                  label="Servicing Zip Codes (comma-separated)"
+                  name="servicing_zip"
+                  type="text"
+                  value={Array.isArray(agentForm.servicing_zip) 
+                    ? agentForm.servicing_zip.join(", ") 
+                    : agentForm.servicing_zip}
+                  onChange={handleAgentChange}
+                  onKeyDown={allowCommaKey}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 75001, 75002, 75003"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
 
                 </FormSection>
 
                 <FormSection title="Permanent Address" icon={<Home className="w-5 h-5 text-blue-500" />}>
-                  <FormField
-                    label="Permanent Address"
-                    name="permanent_address"
-                    type="text"
-                    value={agentForm.permanent_address}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
-                  <FormField
-                    label="Permanent Address State"
-                    name="permanent_address_state"
-                    type="text"
-                    value={agentForm.permanent_address_state}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
-                  <FormField
-                    label="Permanent Address City"
-                    name="permanent_address_city"
-                    type="text"
-                    value={agentForm.permanent_address_city}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
-                  <FormField
-                    label="Permanent Address Zip Code"
-                    name="permanent_address_zip"
-                    type="text"
-                    value={agentForm.permanent_address_zip}
-                    onChange={handleAgentChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
-                  />
+                  
+                <FormField
+                  label="Permanent Address"
+                  name="permanent_address"
+                  type="text"
+                  value={agentForm.permanent_address}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 456 Oak Ave, Suite 200"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
+
+                <FormField
+                  label=" Address State"
+                  name="permanent_address_state"
+                  type="text"
+                  value={agentForm.permanent_address_state}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. TX, CA, NY"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
+
+                <FormField
+                  label="Permanent Address City"
+                  name="permanent_address_city"
+                  type="text"
+                  value={agentForm.permanent_address_city}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. Dallas, Austin, Houston"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
+
+                <FormField
+                  label="Permanent Address Zip Code"
+                  name="permanent_address_zip"
+                  type="text"
+                  value={agentForm.permanent_address_zip}
+                  onChange={handleAgentChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 75001"
+                  disabled={accessStatus?.is_agent || accessStatus?.pending_agent}
+                />
                 </FormSection>
                 
                 <AdditionalInfoSection 
@@ -3548,12 +3559,12 @@ const RequestAccess: React.FC = () => {
                           >
                             <Loader2 className="w-5 h-5" />
                           </motion.div>
-                          <span>Creating Agent...</span>
+                          <span>Submitting Request...</span>
                         </>
                       ) : (
                         <>
                           <User className="w-5 h-5" />
-                          <span>Create Agent</span>
+                          <span>Submit Request</span>
                         </>
                       )}
                     </motion.button>
@@ -3569,22 +3580,22 @@ const RequestAccess: React.FC = () => {
                   disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
                 />
                   <FormSection title="Manager Details" icon={<Briefcase className="w-5 h-5 text-blue-500" />}>
-                    <FormField
-                      label="Manager Grade"
-                      name="manager_grade"
-                      type="select"
-                      value={managerForm.manager_grade}
-                      onChange={handleManagerChange}
-                      required
-                      options={[
-                        { value: "", label: "Select Grade" },
-                        { value: "c1", label: "C1" },
-                        { value: "c2", label: "C2" },
-                        { value: "c3", label: "C3" }
-                      ]}
-                      icon={<Briefcase className="w-4 h-4" />}
-                      disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                    />
+                  <FormField
+                    label="Manager Grade"
+                    name="manager_grade"
+                    type="select"
+                    value={managerForm.manager_grade}
+                    onChange={handleManagerChange}
+                    required
+                    options={[
+                      { value: "", label: "Select Grade" },
+                      { value: "c1", label: "C1 - Manager for a city" },
+                      { value: "c2", label: "C2 - Manager for a state" },
+                      { value: "c3", label: "C3 - Manager for a country" }
+                    ]}
+                    icon={<Briefcase className="w-4 h-4" />}
+                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                  />
                   </FormSection>
                 
                   <FormSection title="Work Schedule" icon={<Calendar className="w-5 h-5 text-blue-500" />}>
@@ -3615,97 +3626,107 @@ const RequestAccess: React.FC = () => {
                 </FormSection>
 
                 <FormSection title="Current Address" icon={<Briefcase className="w-5 h-5 text-blue-500" />}>
-                  <FormField
-                    label="Address"
-                    name="address"
-                    type="text"
-                    value={managerForm.address}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
-                </FormSection>
+                <FormField
+                  label="Current Address"
+                  name="address"
+                  type="text"
+                  value={managerForm.address}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 123 Main St, Apt 4B"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
 
-                <FormSection title="Servicing Area" icon={<Briefcase className="w-5 h-5 text-blue-500" />}>
-                  <FormField
-                    label="Servicing State"
-                    name="servicing_state"
-                    type="text"
-                    value={managerForm.servicing_state}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
-                  <FormField
-                    label="Servicing City"
-                    name="servicing_city"
-                    type="text"
-                    value={managerForm.servicing_city}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
-                  <FormField
-                    label="Servicing Zip Codes (comma-separated)"
-                    name="servicing_zip"
-                    type="text"
-                    value={Array.isArray(managerForm.servicing_zip) 
-                      ? managerForm.servicing_zip.join(", ") 
-                      : managerForm.servicing_zip}
-                    onChange={handleManagerChange}
-                    onKeyDown={allowCommaKey} // ✅ this line
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    placeholder="e.g. 75001, 75002, 75003"
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
+                <FormField
+                  label="Servicing State"
+                  name="servicing_state"
+                  type="text"
+                  value={managerForm.servicing_state}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. TX, CA, NY"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
+
+                <FormField
+                  label="Servicing City"
+                  name="servicing_city"
+                  type="text"
+                  value={managerForm.servicing_city}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. Dallas, Austin, Houston"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
+
+                <FormField
+                  label="Servicing Zip Codes (comma-separated)"
+                  name="servicing_zip"
+                  type="text"
+                  value={Array.isArray(managerForm.servicing_zip) 
+                    ? managerForm.servicing_zip.join(", ") 
+                    : managerForm.servicing_zip}
+                  onChange={handleManagerChange}
+                  onKeyDown={allowCommaKey}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 75001, 75002, 75003"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
 
                 </FormSection>
 
                 <FormSection title="Permanent Address" icon={<Home className="w-5 h-5 text-blue-500" />}>
-                  <FormField
-                    label="Permanent Address"
-                    name="permanent_address"
-                    type="text"
-                    value={managerForm.permanent_address}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
-                  <FormField
-                    label="Permanent Address State"
-                    name="permanent_address_state"
-                    type="text"
-                    value={managerForm.permanent_address_state}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
-                  <FormField
-                    label="Permanent Address City"
-                    name="permanent_address_city"
-                    type="text"
-                    value={managerForm.permanent_address_city}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
-                  <FormField
-                    label="Permanent Address Zip Code"
-                    name="permanent_address_zip"
-                    type="text"
-                    value={managerForm.permanent_address_zip}
-                    onChange={handleManagerChange}
-                    required
-                    icon={<MapPin className="w-4 h-4" />}
-                    disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
-                  />
+                <FormField
+                  label="Permanent Address"
+                  name="permanent_address"
+                  type="text"
+                  value={managerForm.permanent_address}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 456 Oak Ave, Suite 200"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
+
+                <FormField
+                  label="Permanent Address State"
+                  name="permanent_address_state"
+                  type="text"
+                  value={managerForm.permanent_address_state}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. TX, CA, NY"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
+
+                <FormField
+                  label="Permanent Address City"
+                  name="permanent_address_city"
+                  type="text"
+                  value={managerForm.permanent_address_city}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. Dallas, Austin, Houston"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
+
+                <FormField
+                  label="Permanent Address Zip Code"
+                  name="permanent_address_zip"
+                  type="text"
+                  value={managerForm.permanent_address_zip}
+                  onChange={handleManagerChange}
+                  required
+                  icon={<MapPin className="w-4 h-4" />}
+                  placeholder="e.g. 75001"
+                  disabled={accessStatus?.is_manager || accessStatus?.pending_manager}
+                />
                 </FormSection>
 
                 <AdditionalInfoSection 
@@ -3741,12 +3762,12 @@ const RequestAccess: React.FC = () => {
                           >
                             <Loader2 className="w-5 h-5" />
                           </motion.div>
-                          <span>Creating Manager...</span>
+                          <span>Submitting Request...</span>
                         </>
                       ) : (
                         <>
                           <UserCog className="w-5 h-5" />
-                          <span>Create Manager</span>
+                          <span>Submit Request</span>
                         </>
                       )}
                     </motion.button>
