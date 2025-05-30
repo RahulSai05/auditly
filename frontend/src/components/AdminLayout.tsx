@@ -463,6 +463,24 @@ const AdminLayout = () => {
 
                   <motion.li variants={itemVariants}>
                     <NavLink
+                      to="/admin/agent/language-settings"
+                      className={({ isActive }) =>
+                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                      }
+                      onClick={handleLinkClick}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Code className="w-5 h-5 mr-2" />
+                      </motion.div>
+                      Language Settings
+                    </NavLink>
+                  </motion.li>
+
+                  <motion.li variants={itemVariants}>
+                    <NavLink
                       to="/admin/agent/agent-manger-list"
                       className={({ isActive }) =>
                         `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
@@ -778,6 +796,18 @@ const AdminLayout = () => {
             >
               <Clock className="w-5 h-5 mr-2" />
               Schedule
+            </NavLink>
+          </motion.li>
+          <motion.li variants={itemVariants}>
+            <NavLink
+              to="/admin/agent/pick-orders"
+              className={({ isActive }) =>
+                `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+              }
+              onClick={handleLinkClick}
+            >
+              <ClipboardIcon className="w-5 h-5 mr-2" />
+              Pick Orders
             </NavLink>
           </motion.li>
           <motion.li variants={itemVariants}>

@@ -427,12 +427,15 @@ class ManagerCreate(BaseModel):
     permanent_address: Optional[str] = None
     permanent_address_state: Optional[str] = None
     permanent_address_city: Optional[str] = None
+    delivery_type: str
+    pickup_routing_mode: Optional[bool] = False
+    delivery_routing_mode: Optional[bool] = False
     permanent_address_zip: Optional[str] = None
     address: Optional[str] = None
     is_verified: Optional[bool] = False
     dob: Optional[date] = None
     manager_grade: str
-    gender: Optional[str] = None  # 'Male', 'Female', 'Other', etc.
+    gender: Optional[str] = None
     work_schedule: Optional[dict] = None
     company_id: Optional[int] = None
     manager_user_mapping_id: Optional[int] = None
@@ -466,10 +469,44 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
     db.add(new_manager)
     db.commit()
     db.refresh(new_manager)
+    
+    agent_exists = db.query(Agent).filter(Agent.agent_to_user_mapping_id == manager.manager_user_mapping_id).first()
+    if not agent_exists:
+        new_agent = Agent(
+            agent_name=manager.manager_name,
+            current_address=manager.address,
+            delivery_type=manager.delivery_type,
+            pickup_routing_mode=manager.pickup_routing_mode,
+            delivery_routing_mode=manager.delivery_routing_mode,
+            servicing_state=manager.servicing_state,
+            servicing_city=manager.servicing_city,
+            servicing_zip=manager.servicing_zip,
+            permanent_adress=manager.permanent_address,
+            permanent_address_state=manager.permanent_address_state,
+            permanent_address_city=manager.permanent_address_city,
+            permanent_address_zip=manager.permanent_address_zip,
+            is_verified=manager.is_verified,
+            gender=manager.gender,
+            dob=manager.dob,
+            work_schedule=manager.work_schedule,
+            company_id=manager.company_id,
+            agent_to_user_mapping_id=manager.manager_user_mapping_id,
+            additional_info_1=manager.additional_info_1,
+            additional_info_2=manager.additional_info_2,
+        )
+
+        db.add(new_agent)
+        db.commit()
+        db.refresh(new_agent)
+        agent_id = new_agent.agent_id
+    else:
+        agent_id = agent_exists.agent_id
     return {
         "message": "Manager created successfully",
-        "manager_id": new_manager.manager_id
+        "manager_id": new_manager.manager_id,
+        "agent_id": agent_id
     }
+
 
 @app.get("/api/pending-manager-approval")
 def pending_manager_approval(db: Session = Depends(get_db)):
@@ -583,6 +620,97 @@ def get_sale_items_by_manager_state(request: ManagerStateRequest, db: Session = 
                     "category": item.item.category if item.item else None
                 }
             } for item in sale_items
+        ]
+    }
+
+@app.get("/api/agent-zip-codes/{agent_id}")
+def get_agent_zip_codes(agent_id: int, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == agent_id).first()
+
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    return {
+        "agent_id": agent.agent_id,
+        "agent_name": agent.agent_name,
+        "servicing_zip": agent.servicing_zip or []
+    }
+
+class SaleItemByZip(BaseModel):
+    agent_id: int
+    zip_code: list
+
+@app.post("/api/sale-items-by-zip")
+def get_sale_items_by_zip(request: SaleItemByZip, db: Session = Depends(get_db)):
+
+    sale_items = db.query(SaleItemData).filter(
+    SaleItemData.shipped_to_zip.in_(request.zip_code),
+    SaleItemData.delivery_agent_id.is_(None)  
+).all()
+    return {
+        "delivery_zip": request.zip_code,
+        "sale_items": [
+            {
+                "id": item.id,
+                "sales_order": item.original_sales_order_number,
+                "order_line": item.original_sales_order_line,
+                "serial_number": item.serial_number,
+                "sscc_number": item.sscc_number,
+                "account_number": item.account_number,
+                "customer_email": item.customer_email,
+                "shipped_to_city": item.shipped_to_city,
+                "shipped_to_state": item.shipped_to_state,
+                "shipped_to_zip": item.shipped_to_zip,
+                "status": item.status,
+                "date_purchased": item.date_purchased,
+                "date_shipped": item.date_shipped,
+                "date_delivered": item.date_delivered,
+                "item": {
+                    "item_number": item.item.item_number if item.item else None,
+                    "description": item.item.item_description if item.item else None,
+                    "category": item.item.category if item.item else None
+                }
+            } for item in sale_items
+        ]
+    }
+
+class ReturnItemByZip(BaseModel):
+    agent_id: int
+    zip_code: list[int]
+
+@app.post("/api/return-items-by-zip")
+def get_return_items_by_zip(request: ReturnItemByZip, db: Session = Depends(get_db)):
+    return_items = db.query(ReturnItemData).filter(
+    ReturnItemData.return_zip.in_(request.zip_code),
+    ReturnItemData.return_agent_id.is_(None)  
+).all()
+    return {
+        "return_zip": request.zip_code,
+        "return_items": [
+            {
+                "id": item.id,
+                "return_order_number": item.return_order_number,
+                "return_order_line": item.return_order_line,
+                "original_sales_order_number": item.original_sales_order_number,
+                "return_qty": item.return_qty,
+                "return_condition": item.return_condition,
+                "return_carrier": item.return_carrier,
+                "return_warehouse": item.return_warehouse,
+                "return_city": item.return_city,
+                "return_state": item.return_state,
+                "return_zip": item.return_zip,
+                "status": item.status,
+                "date_purchased": item.date_purchased,
+                "date_shipped": item.date_shipped,
+                "date_delivered": item.date_delivered,
+                "return_created_date": item.return_created_date,
+                "return_received_date": item.return_received_date,
+                "item": {
+                    "item_number": item.item.item_number if item.item else None,
+                    "description": item.item.item_description if item.item else None,
+                    "category": item.item.category if item.item else None
+                }
+            } for item in return_items
         ]
     }
 
@@ -3437,7 +3565,8 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
 
 @app.get("/api/agent/sales-orders/{agent_id}")
 def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
-    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).filter(SaleItemData.delivery_agent_type == "Agent").all()
+    # orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).filter(SaleItemData.delivery_agent_type == "Agent").all()
+    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).all()
     if not orders:
         raise HTTPException(status_code=404, detail="No orders found for this agent")
 
@@ -3487,7 +3616,8 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
 @app.get("/api/agent/return-orders/{agent_id}")
 def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
     # Get all return orders for the agent
-    return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).filter(ReturnItemData.return_agent_type == "Agent").all()
+    # return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).filter(ReturnItemData.return_agent_type == "Agent").all()
+    return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
 
     if not return_orders:
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
@@ -3646,7 +3776,6 @@ def get_eligible_agents_for_return(request: ReturnOrderAgentFilterRequest, db: S
 class SalesAgentAssignmentRequest(BaseModel):
     order_id: int
     agent_id: int
-    agent_type: str
 
 @app.post("/api/assign-manual-agent-sales-order")
 def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = Depends(get_db)):
@@ -3656,7 +3785,6 @@ def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = De
         raise HTTPException(status_code=404, detail="Sale item not found")
 
     order.delivery_agent_id = request.agent_id
-    order.delivery_agent_type = request.agent_type
     order.status = "Assigned to Agent"
 
     db.commit()
@@ -3671,7 +3799,7 @@ def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = De
 class ReturnAgentAssignmentRequest(BaseModel):
     order_id: int
     agent_id: int
-    agent_type: str
+    # agent_type: str
 
 @app.post("/api/assign-manual-agent-return-order")
 def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Session = Depends(get_db)):
@@ -3681,7 +3809,7 @@ def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Sess
         raise HTTPException(status_code=404, detail="Return order not found")
 
     return_order.return_agent_id = request.agent_id
-    return_order.return_agent_type = request.agent_type
+    # return_order.return_agent_type = request.agent_type
     return_order.status = "Assigned to Agent"
 
     db.commit()
@@ -3722,19 +3850,60 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
         ]
     }
 
+
+
+# @app.post("/api/available-managers-by-zip")
+# def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
+#     # managers = db.query(AgentManager).filter(AgentManager.servicing_city == request.servicing_city, AgentManager.servicing_state == request.servicing_state).filter(
+#     #     # AgentManager.servicing_zip.contains(f'"{request.zip_code}"'),
+#     #     AgentManager.approved_by_auditly_user_id.isnot(None),
+#     #     AgentManager.manager_grade.in_(["c1", "c2", "c3"])
+#     # ).all()
+
+#     managers = db.query(AgentManager).filter(
+#         or_(
+#             AgentManager.servicing_city == request.servicing_city,
+#             AgentManager.servicing_state == request.servicing_state
+#         ),
+#         AgentManager.approved_by_auditly_user_id.isnot(None),
+#         AgentManager.manager_grade.in_(["c1", "c2", "c3"])
+#     ).all()
+
+#     grouped = {"c1": [], "c2": [], "c3": []}
+
+#     for m in managers:
+#         manager_info = {
+#             "manager_id": m.manager_id,
+#             "manager_name": m.manager_name,
+#             "servicing_state": m.servicing_state,
+#             "servicing_city": m.servicing_city,
+#             "servicing_zip": m.servicing_zip,
+#             "gender": m.gender,
+#             "manager_grade": m.manager_grade,
+#             "work_schedule": m.work_schedule
+#         }
+#         grouped[m.manager_grade].append(manager_info)
+
+#     return {"managers": grouped}
+
 class ManagerZipFilterRequest(BaseModel):
+    agent_id: Optional[int] = None
     zip_code: str
     servicing_city: str
     servicing_state: str
 
 @app.post("/api/available-managers-by-zip")
 def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
-    # managers = db.query(AgentManager).filter(AgentManager.servicing_city == request.servicing_city, AgentManager.servicing_state == request.servicing_state).filter(
-    #     # AgentManager.servicing_zip.contains(f'"{request.zip_code}"'),
-    #     AgentManager.approved_by_auditly_user_id.isnot(None),
-    #     AgentManager.manager_grade.in_(["c1", "c2", "c3"])
-    # ).all()
+    excluded_user_id = None
 
+    # Step 1: If agent_id is provided, fetch their user mapping ID
+    if request.agent_id:
+        agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+        excluded_user_id = agent.agent_to_user_mapping_id
+
+    # Step 2: Query eligible managers (based on city/state and grade)
     managers = db.query(AgentManager).filter(
         or_(
             AgentManager.servicing_city == request.servicing_city,
@@ -3742,10 +3911,16 @@ def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session 
         ),
         AgentManager.approved_by_auditly_user_id.isnot(None),
         AgentManager.manager_grade.in_(["c1", "c2", "c3"])
-    ).all()
+    )
 
+    # Step 3: If user_id to exclude is available, apply filter
+    if excluded_user_id is not None:
+        managers = managers.filter(AgentManager.manager_user_mapping_id != excluded_user_id)
+
+    managers = managers.all()
+
+    # Step 4: Group by manager_grade
     grouped = {"c1": [], "c2": [], "c3": []}
-
     for m in managers:
         manager_info = {
             "manager_id": m.manager_id,
@@ -3760,7 +3935,6 @@ def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session 
         grouped[m.manager_grade].append(manager_info)
 
     return {"managers": grouped}
-
 
 class ManagerAssignmentRequest(BaseModel):
     agent_id: int
@@ -3925,4 +4099,40 @@ def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No agents or managers found reporting to this manager")
 
     return result
-    
+
+
+class AgentOrderFetchRequest(BaseModel):
+    agent_id: int
+
+@app.post("/api/orders/for-agent/{agent_id}")
+def get_orders_for_agent(request: AgentOrderFetchRequest, db: Session = Depends(get_db)):
+    sales = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == request.agent_id).all()
+    returns = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == request.agent_id).all()
+
+    sales_data = [
+        {
+            "order_id": s.id,
+            "sales_order_number": s.original_sales_order_number,
+            "serial_number": s.serial_number,
+            "shipped_to_city": s.shipped_to_city,
+            "date_shipped": s.date_shipped,
+        }
+        for s in sales
+    ]
+
+    return_data = [
+        {
+            "return_order_id": r.id,
+            "return_order_number": r.return_order_number,
+            "return_condition": r.return_condition,
+            "return_city": r.return_city,
+            "date_shipped": r.date_shipped,
+        }
+        for r in returns
+    ]
+
+    return {
+        "agent_id": request.agent_id,
+        "sales_orders": sales_data,
+        "return_orders": return_data
+    }
