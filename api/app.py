@@ -3888,6 +3888,7 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
 
 class ManagerZipFilterRequest(BaseModel):
     agent_id: Optional[int] = None
+    manager_id: Optional[int] = None
     zip_code: str
     servicing_city: str
     servicing_state: str
@@ -3896,14 +3897,21 @@ class ManagerZipFilterRequest(BaseModel):
 def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
     excluded_user_id = None
 
-    # Step 1: If agent_id is provided, fetch their user mapping ID
+    # Step 1: Check if agent_id is provided
     if request.agent_id:
         agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
         excluded_user_id = agent.agent_to_user_mapping_id
 
-    # Step 2: Query eligible managers (based on city/state and grade)
+    # Step 2: Check if manager_id is provided (only if agent_id wasn't)
+    elif request.manager_id:
+        manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+        if not manager:
+            raise HTTPException(status_code=404, detail="Manager not found")
+        excluded_user_id = manager.manager_user_mapping_id
+
+    # Step 3: Query eligible managers (city or state match + approved)
     managers = db.query(AgentManager).filter(
         or_(
             AgentManager.servicing_city == request.servicing_city,
@@ -3913,13 +3921,13 @@ def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session 
         AgentManager.manager_grade.in_(["c1", "c2", "c3"])
     )
 
-    # Step 3: If user_id to exclude is available, apply filter
+    # Step 4: Exclude current user's mapping_id if available
     if excluded_user_id is not None:
         managers = managers.filter(AgentManager.manager_user_mapping_id != excluded_user_id)
 
     managers = managers.all()
 
-    # Step 4: Group by manager_grade
+    # Step 5: Group by manager_grade
     grouped = {"c1": [], "c2": [], "c3": []}
     for m in managers:
         manager_info = {

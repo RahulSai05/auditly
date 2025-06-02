@@ -126,18 +126,31 @@ const UserPermissionRequests = () => {
     }
   };
 
-  const fetchAvailableManagers = async (zipCode: string, id: number, city: string, state: string): Promise<boolean> => {
+  const fetchAvailableManagers = async (
+    zipCode: string,
+    id: number,
+    city: string,
+    state: string,
+    type: "agent" | "manager"
+  ): Promise<boolean> => {
     setIsFetchingManagers(true);
     try {
+      const requestBody: Record<string, any> = {
+        zip_code: zipCode,
+        servicing_city: city,
+        servicing_state: state,
+      };
+  
+      if (type === "agent") {
+        requestBody.agent_id = id;
+      } else {
+        requestBody.manager_id = id;
+      }
+  
       const response = await fetch("/api/available-managers-by-zip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          zip_code: zipCode,
-          servicing_city: city,
-          servicing_state: state,
-          agent_id: id
-        }),
+        body: JSON.stringify(requestBody),
       });
   
       if (!response.ok) throw new Error("Failed to fetch managers");
@@ -150,6 +163,7 @@ const UserPermissionRequests = () => {
   
       setPrimaryManagerMap((prev) => ({ ...prev, [id]: null }));
       setSecondaryManagerMap((prev) => ({ ...prev, [id]: null }));
+  
       return true;
     } catch (error) {
       console.error("Error fetching managers:", error);
@@ -158,6 +172,7 @@ const UserPermissionRequests = () => {
       setIsFetchingManagers(false);
     }
   };
+  
   
   
   const handleManagerSelect = (agentId: number, managerId: number) => {
@@ -261,6 +276,7 @@ const UserPermissionRequests = () => {
     }
   };
 
+  
   const toggleExpand = async (
     id: number,
     type: ApprovalType,
@@ -268,17 +284,18 @@ const UserPermissionRequests = () => {
     city?: string,
     state?: string
   ) => {
-      if (expandedId === id) {
+    if (expandedId === id) {
       setExpandedId(null);
     } else {
       setExpandedId(id);
       if (zipCodes && zipCodes.length > 0) {
         for (const zip of zipCodes) {
-          const success = await fetchAvailableManagers(zip, id, city!, state!);
+          const success = await fetchAvailableManagers(zip, id, city!, state!, type);
           if (
             success &&
             (managerGroups[id]?.c1?.length || managerGroups[id]?.c2?.length || managerGroups[id]?.c3?.length)
-          ) break; 
+          )
+            break;
         }
       }
     }
