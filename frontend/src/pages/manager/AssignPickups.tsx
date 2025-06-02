@@ -507,7 +507,14 @@ const AssignPickups: React.FC = () => {
                                             <div className="text-sm text-slate-600">
                                               <div className="flex items-center gap-2">
                                                 <MapPin className="w-4 h-4" />
-                                                <span>Serves ZIP: {agent.servicing_zip}</span>
+                                                <span>
+                                                  Serves ZIP:{" "}
+                                                  {Array.isArray(agent.servicing_zip)
+                                                    ? agent.servicing_zip.join(", ")
+                                                    : typeof agent.servicing_zip === "string"
+                                                    ? agent.servicing_zip
+                                                    : "N/A"}
+                                                </span>
                                               </div>
                                               <div className="mt-1">
                                                 <span className="font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
