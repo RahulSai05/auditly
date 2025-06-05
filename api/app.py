@@ -61,6 +61,8 @@ AZURE_CLIENT_ID="2146b62a-5753-4fd8-b359-6ad3e1e7b814"
 AZURE_CLIENT_SECRET="zmP8Q~nk07PYr1fBGpojD7hD7bCTt4SXuABErapM"
 AZURE_TENANT_ID="fc09811c-498c-4e79-b20f-ba5cfa421942"
 REDIRECT_URI= "http://localhost:8000/callback"
+GOOGLE_API_KEY = 'AIzaSyAe3LyRvX8fPEDuu7l_c-6kE88yEg37QTE'
+
 
 def get_db():
     """Provide a database session to the API endpoints."""
@@ -3615,15 +3617,13 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/agent/return-orders/{agent_id}")
 def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
-    # Get all return orders for the agent
-    # return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).filter(ReturnItemData.return_agent_type == "Agent").all()
     return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
 
     if not return_orders:
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
 
     result = []
-    
+    zip_list = []
     for return_order in return_orders:
         # Try to find matching sales order
         sales_order = db.query(SaleItemData).filter(
@@ -3682,7 +3682,8 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
         }
         
         result.append(order_data)
-
+        zip_list.append(return_order.return_zip or (sales_order.shipped_to_zip if sales_order else None))
+    result.append({"zip_list": zip_list})
     return result
 
 
@@ -3980,25 +3981,27 @@ def assign_managers_to_agent(request: ManagerAssignmentRequest, db: Session = De
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {e}")
 
-
-
 @app.get("/api/agents-managers/all")
 def get_all_agents_and_managers(db: Session = Depends(get_db)):
-    agents = db.query(Agent).all()
-    managers = db.query(AgentManager).all()
+    agents: List[Agent] = db.query(Agent).all()
+    managers: List[AgentManager] = db.query(AgentManager).all()
     result = []
 
-    # Map manager_id → manager_name for lookup
+    # Create lookup from manager_id to manager_name
     manager_id_name_map = {m.manager_id: m.manager_name for m in managers}
 
-    # 1. Agents
-    for agent in agents:
-        # Resolve roles
-        is_agent = True
-        is_manager = any(m.manager_user_mapping_id == agent.agent_to_user_mapping_id for m in managers)
-        agent_roles = "Both" if is_agent and is_manager else "Agent"
+    # Get manager_user_mapping_ids from AgentManager
+    manager_user_ids = {m.manager_user_mapping_id for m in managers}
 
-        # Resolve manager names from agent.manager_id (JSON field)
+    # Track which user mapping IDs have been processed to avoid duplicates
+    processed_user_ids = set()
+
+    for agent in agents:
+        agent_user_id = agent.agent_to_user_mapping_id
+        is_manager = agent_user_id in manager_user_ids
+        agent_roles = "Both" if is_manager else "Agent"
+
+        # Resolve manager names (if agent has manager_id list)
         manager_names = []
         if agent.manager_id:
             try:
@@ -4006,9 +4009,10 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
                     if mid in manager_id_name_map:
                         manager_names.append(manager_id_name_map[mid])
             except Exception:
-                pass
+                pass  # skip if manager_id is malformed
 
         result.append({
+            "agent_id": agent.agent_id,
             "agent_name": agent.agent_name,
             "agent_roles": agent_roles,
             "manager": ", ".join(manager_names) if manager_names else None,
@@ -4018,11 +4022,14 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
             "agent_servicing_country": "USA"
         })
 
-    # 2. Standalone Managers not already listed as agents
-    listed_names = {entry["agent_name"] for entry in result}
+        # Mark this user mapping ID as processed
+        processed_user_ids.add(agent_user_id)
+
+    # Add standalone managers who are not agents
     for manager in managers:
-        if manager.manager_name not in listed_names:
+        if manager.manager_user_mapping_id not in processed_user_ids:
             result.append({
+                "manager_id": manager.manager_id,
                 "agent_name": manager.manager_name,
                 "agent_roles": "Manager",
                 "manager": manager.manager_name,
@@ -4143,4 +4150,70 @@ def get_orders_for_agent(request: AgentOrderFetchRequest, db: Session = Depends(
         "agent_id": request.agent_id,
         "sales_orders": sales_data,
         "return_orders": return_data
+    }
+
+
+class AddServicingZipRequest(BaseModel):
+    agent_id: int
+    zip_codes: List[str] 
+    
+@app.put("/api/agent/add-servicing-zip")
+def add_servicing_zip(request: AddServicingZipRequest, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent.servicing_zip = request.zip_codes
+    db.commit()
+
+    return {
+        "message": "ZIP codes added successfully",
+        "updated_servicing_zip": agent.servicing_zip
+    }
+
+class ZipRequest(BaseModel):
+    zip_codes: List[str]
+
+def get_lat_lng(zip_code: str):
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={zip_code}&key={GOOGLE_API_KEY}"
+    res = requests.get(url).json()
+    if res["status"] != "OK":
+        raise HTTPException(status_code=400, detail=f"Could not geocode ZIP: {zip_code}")
+    location = res["results"][0]["geometry"]["location"]
+    return (location["lat"], location["lng"])
+
+@app.post("/api/best-route")
+def get_best_route(zip_data: ZipRequest):
+    if len(zip_data.zip_codes) < 2:
+        raise HTTPException(status_code=400, detail="At least 2 ZIP codes are required.")
+
+    # Step 1: Get coordinates for each ZIP
+    coordinates = [get_lat_lng(z) for z in zip_data.zip_codes]
+    origin = coordinates[0]
+    destination = coordinates[-1]
+    waypoints = coordinates[1:-1]
+
+    # Step 2: Prepare waypoint string
+    waypoints_str = "|".join([f"{lat},{lng}" for lat, lng in waypoints])
+
+    # Step 3: Google Directions API with optimize:true
+    url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin[0]},{origin[1]}&destination={destination[0]},{destination[1]}&waypoints=optimize:true|{waypoints_str}&key={GOOGLE_API_KEY}"
+    res = requests.get(url).json()
+
+    if res["status"] != "OK":
+        raise HTTPException(status_code=500, detail=f"Google API error: {res.get('error_message', 'Unknown')}")
+
+    optimized_order = res["routes"][0]["waypoint_order"]  # 0-based indices of waypoints
+    # Final ordered ZIPs: origin + optimized waypoints + destination
+    ordered_zip_codes = [zip_data.zip_codes[0]] + \
+                        [zip_data.zip_codes[i + 1] for i in optimized_order] + \
+                        [zip_data.zip_codes[-1]]
+
+    legs = res["routes"][0]["legs"]
+
+    return {
+        "ordered_zip_codes": ordered_zip_codes,
+        "total_distance_km": round(sum(leg["distance"]["value"] for leg in legs) / 1000, 2),
+        "total_duration_minutes": round(sum(leg["duration"]["value"] for leg in legs) / 60, 2),
+        "route_summary": res["routes"][0].get("summary", "")
     }
