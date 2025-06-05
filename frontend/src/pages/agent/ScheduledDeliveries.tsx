@@ -11,21 +11,13 @@ import {
   Mail,
   ChevronDown,
   ChevronUp,
-  CreditCard,
-  Hash,
-  Tag,
   Ruler,
-  Scale,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
+  Route,
+  Map,
   Loader2,
-  XCircle,
+  AlertCircle,
   RefreshCw,
   Search,
-  Filter,
-  Info,
-  ShieldCheck
 } from "lucide-react";
 
 interface Order {
@@ -58,14 +50,19 @@ interface Order {
   date_purchased: string;
   date_shipped: string;
   date_delivered: string;
-  status: "Pending" | "In Transit" | "Delivered" | "Failed";
-  delivery_agent_id: number;
   item?: {
-    item_number: string;
+    item_number: number;
     item_description: string;
     category: string;
     configuration: string;
   };
+}
+
+interface RouteResponse {
+  ordered_addresses: string[];
+  total_distance_km: number;
+  total_duration_minutes: number;
+  route_summary: string;
 }
 
 const ScheduledDeliveries: React.FC = () => {
@@ -75,8 +72,11 @@ const ScheduledDeliveries: React.FC = () => {
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState<"date" | "city" | "status">("date");
+  const [sortBy, setSortBy] = useState<"date" | "city">("date");
+  const [routeInfo, setRouteInfo] = useState<RouteResponse | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
+  const [addressMap, setAddressMap] = useState<Record<string, Order>>({});
 
   const fetchOrders = async () => {
     try {
@@ -85,12 +85,11 @@ const ScheduledDeliveries: React.FC = () => {
       
       const agentId = localStorage.getItem("agentId");
       if (!agentId) {
-        throw new Error("Pleaes re-login!");
+        throw new Error("Please re-login!");
       }
 
       const response = await fetch(`/api/agent/sales-orders/${agentId}`);
       if (response.status === 404) {
-        // No orders assigned — not an error
         setOrders([]);
         return;
       }
@@ -100,9 +99,13 @@ const ScheduledDeliveries: React.FC = () => {
         throw new Error(`Failed to fetch orders: ${response.status} - ${errorText}`);
       }
       
-
       const data = await response.json();
-      setOrders(data);
+      
+      // The last item in the array is the address list
+      const addressList = data[data.length - 1]?.address_list || [];
+      const ordersData = data.slice(0, -1); // All items except the last one are orders
+      
+      setOrders(ordersData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch orders");
     } finally {
@@ -111,9 +114,54 @@ const ScheduledDeliveries: React.FC = () => {
     }
   };
 
+  const fetchOptimizedRoute = async (addresses: string[]) => {
+    try {
+      setRouteLoading(true);
+      setRouteError(null);
+      setRouteInfo(null);
+      
+      const response = await fetch("/api/best-route", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ addresses }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch route: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      setRouteInfo(data);
+    } catch (err) {
+      setRouteError(err instanceof Error ? err.message : "Failed to fetch route");
+    } finally {
+      setRouteLoading(false);
+    }
+  };
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchOrders();
+  };
+
+  const handleOptimizeRoute = () => {
+    if (orders.length < 2) {
+      setRouteError("At least 2 deliveries are required to optimize route");
+      return;
+    }
+
+    const addressMap: Record<string, Order> = {};
+    const addresses = orders.map(order => {
+      const fullAddress = `${order.shipped_to_street}, ${order.shipped_to_city}, ${order.shipped_to_state}, ${order.shipped_to_zip}, ${order.shipped_to_country}`;
+      addressMap[fullAddress.toLowerCase()] = order;
+      return fullAddress;
+    });
+
+    setAddressMap(addressMap);
+    fetchOptimizedRoute(addresses);
   };
 
   useEffect(() => {
@@ -134,28 +182,22 @@ const ScheduledDeliveries: React.FC = () => {
   };
 
   const filteredOrders = orders
-  .filter((order) => {
-    const matchesSearch = searchTerm.toLowerCase() === "" || 
-      (
-        order.item?.item_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.original_sales_order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.shipped_to_city?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  })
-  .sort((a, b) => {
-    if (sortBy === "date") {
-      return new Date(b.date_shipped).getTime() - new Date(a.date_shipped).getTime();
-    } else if (sortBy === "city") {
-      return a.shipped_to_city.localeCompare(b.shipped_to_city);
-    } else {
-      return a.status.localeCompare(b.status);
-    }
-  });
-
+    .filter((order) => {
+      const matchesSearch = searchTerm.toLowerCase() === "" || 
+        (
+          order.item?.item_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.original_sales_order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.shipped_to_city?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "date") {
+        return new Date(b.date_shipped).getTime() - new Date(a.date_shipped).getTime();
+      } else {
+        return a.shipped_to_city.localeCompare(b.shipped_to_city);
+      }
+    });
 
   if (loading && orders.length === 0) {
     return (
@@ -207,6 +249,136 @@ const ScheduledDeliveries: React.FC = () => {
               )}
             </AnimatePresence>
 
+            {/* Route Optimization Section */}
+            <div className="mb-6 flex justify-end">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleOptimizeRoute}
+                disabled={routeLoading || orders.length < 2}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                  orders.length < 2 
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {routeLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Route className="w-5 h-5" />
+                )}
+                Optimize Delivery Route
+              </motion.button>
+            </div>
+
+            {/* Optimized Route Display */}
+            {routeInfo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-6 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+              >
+                <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <Map className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-medium text-gray-900">Optimized Delivery Route</h3>
+                  </div>
+                  <button 
+                    onClick={() => setRouteInfo(null)}
+                    className="text-gray-400 hover:text-gray-500 transition-colors"
+                    aria-label="Close route information"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                      <div className="flex items-center gap-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clipRule="evenodd" />
+                        </svg>
+                        <h4 className="font-medium text-gray-700">Route Summary</h4>
+                      </div>
+                      <p className="text-lg font-semibold text-gray-900">{routeInfo.route_summary || "Standard route"}</p>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                      <div className="flex items-center gap-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        <h4 className="font-medium text-gray-700">Total Distance</h4>
+                      </div>
+                      <p className="text-lg font-semibold text-gray-900">{routeInfo.total_distance_km} km</p>
+                    </div>
+
+                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                      <div className="flex items-center gap-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                        </svg>
+                        <h4 className="font-medium text-gray-700">Estimated Time</h4>
+                      </div>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {Math.floor(routeInfo.total_duration_minutes / 60)}h {Math.round(routeInfo.total_duration_minutes % 60)}m
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 pt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Delivery Sequence</h4>
+                    <div className="space-y-3">
+                      {routeInfo.ordered_addresses.map((address, index) => {
+                        const normalizedAddress = address.toLowerCase().trim();
+                        const matchedOrder = Object.entries(addressMap).find(([key]) =>
+                          normalizedAddress.includes(key.split(",")[0].toLowerCase().trim())
+                        );
+                        const order = matchedOrder ? matchedOrder[1] : undefined;
+
+                        return (
+                          <div key={index} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {order?.shipped_to_person || "Unknown Recipient"}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">{address}</p>
+                              {order && (
+                                <div className="mt-1">
+                                  <span className="text-xs text-gray-500">
+                                    Order: {order.original_sales_order_number}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {routeError && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-800 border border-red-100"
+              >
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">{routeError}</span>
+              </motion.div>
+            )}
+
             <div className="mb-6 flex flex-col sm:flex-row gap-4">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
@@ -221,25 +393,12 @@ const ScheduledDeliveries: React.FC = () => {
               
               <div className="flex gap-3">
                 <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="Pending">Pending</option>
-                  <option value="In Transit">In Transit</option>
-                  <option value="Delivered">Delivered</option>
-                  <option value="Failed">Failed</option>
-                </select>
-
-                <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "date" | "city" | "status")}
+                  onChange={(e) => setSortBy(e.target.value as "date" | "city")}
                   className="px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
                   <option value="date">Sort by Date</option>
                   <option value="city">Sort by City</option>
-                  <option value="status">Sort by Status</option>
                 </select>
 
                 <motion.button
@@ -265,20 +424,19 @@ const ScheduledDeliveries: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-700">
                   {orders.length === 0
                     ? "No deliveries assigned yet"
-                    : searchTerm || statusFilter !== "all"
+                    : searchTerm
                     ? "No matching deliveries found"
                     : "All deliveries are complete"}
                 </h3>
                 <p className="text-gray-500 mt-2">
                   {orders.length === 0
                     ? "You currently have no scheduled deliveries. Check back later."
-                    : searchTerm || statusFilter !== "all"
-                    ? "Try adjusting filters or updating your search."
+                    : searchTerm
+                    ? "Try adjusting your search."
                     : "You're all caught up! All deliveries have been handled."}
                 </p>
               </motion.div>
             ) : (
-
               <div className="space-y-4">
                 {filteredOrders.map((order) => (
                   <motion.div
@@ -307,17 +465,6 @@ const ScheduledDeliveries: React.FC = () => {
                               <MapPin className="w-4 h-4" />
                               {order.shipped_to_city}, {order.shipped_to_state}
                             </p>
-                            <div className={`mt-2 text-xs px-2 py-1 rounded-full inline-block ${
-                              order.status === "Delivered" 
-                                ? "bg-green-100 text-green-800" 
-                                : order.status === "In Transit"
-                                ? "bg-blue-100 text-blue-800"
-                                : order.status === "Failed"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                              {order.status}
-                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">

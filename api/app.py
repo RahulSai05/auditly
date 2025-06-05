@@ -3567,13 +3567,25 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
 
 @app.get("/api/agent/sales-orders/{agent_id}")
 def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
-    # orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).filter(SaleItemData.delivery_agent_type == "Agent").all()
     orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).all()
     if not orders:
         raise HTTPException(status_code=404, detail="No orders found for this agent")
 
-    return [
-        {
+    result = []
+    address_list = []
+
+    for order in orders:
+        # Compose full address
+        street = order.shipped_to_street or ""
+        city = order.shipped_to_city or ""
+        state = order.shipped_to_state or ""
+        zip_code = order.shipped_to_zip or ""
+        country = order.shipped_to_country or "USA"
+
+        full_address = f"{street}, {city}, {state}, {zip_code}, {country}".strip(", ")
+        address_list.append(full_address)
+
+        result.append({
             "id": order.id,
             "item_id": order.item_id,
             "serial_number": order.serial_number,
@@ -3589,11 +3601,11 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
             "account_number": order.account_number,
             "customer_email": order.customer_email,
             "shipped_to_apt_number": order.shipped_to_apt_number,
-            "shipped_to_street": order.shipped_to_street,
-            "shipped_to_city": order.shipped_to_city,
-            "shipped_to_zip": order.shipped_to_zip,
-            "shipped_to_state": order.shipped_to_state,
-            "shipped_to_country": order.shipped_to_country,
+            "shipped_to_street": street,
+            "shipped_to_city": city,
+            "shipped_to_zip": zip_code,
+            "shipped_to_state": state,
+            "shipped_to_country": country,
             "dimension_depth": order.dimension_depth,
             "dimension_length": order.dimension_length,
             "dimension_breadth": order.dimension_breadth,
@@ -3611,9 +3623,10 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
                 "category": order.item.category if order.item else None,
                 "configuration": order.item.configuration if order.item else None
             }
-        }
-        for order in orders
-    ]
+        })
+    result.append({"address_list": address_list})
+    return result
+
 
 @app.get("/api/agent/return-orders/{agent_id}")
 def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
@@ -3623,15 +3636,23 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
 
     result = []
-    zip_list = []
+    address_list = []
+
     for return_order in return_orders:
-        # Try to find matching sales order
         sales_order = db.query(SaleItemData).filter(
             SaleItemData.original_sales_order_number == return_order.original_sales_order_number,
             SaleItemData.original_sales_order_line == return_order.return_order_line
         ).first()
 
-        # Build the order object with merged data
+        street = return_order.return_street or (sales_order.shipped_to_street if sales_order else "")
+        city = return_order.return_city or (sales_order.shipped_to_city if sales_order else "")
+        state = return_order.return_state or (sales_order.shipped_to_state if sales_order else "")
+        zip_code = return_order.return_zip or (sales_order.shipped_to_zip if sales_order else "")
+        country = return_order.return_country or (sales_order.shipped_to_country if sales_order else "USA")
+
+        full_address = f"{street}, {city}, {state}, {zip_code}, {country}".strip(", ")
+        address_list.append(full_address)
+
         order_data = {
             "id": return_order.id,
             "item_id": return_order.item_id,
@@ -3648,11 +3669,11 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
             "account_number": sales_order.account_number if sales_order else None,
             "customer_email": sales_order.customer_email if sales_order else None,
             "shipped_to_apt_number": sales_order.shipped_to_apt_number if sales_order else None,
-            "shipped_to_street": return_order.return_street or (sales_order.shipped_to_street if sales_order else None),
-            "shipped_to_city": return_order.return_city or (sales_order.shipped_to_city if sales_order else None),
-            "shipped_to_zip": return_order.return_zip or (sales_order.shipped_to_zip if sales_order else None),
-            "shipped_to_state": return_order.return_state or (sales_order.shipped_to_state if sales_order else None),
-            "shipped_to_country": return_order.return_country or (sales_order.shipped_to_country if sales_order else None),
+            "shipped_to_street": street,
+            "shipped_to_city": city,
+            "shipped_to_zip": zip_code,
+            "shipped_to_state": state,
+            "shipped_to_country": country,
             "dimension_depth": sales_order.dimension_depth if sales_order else None,
             "dimension_length": sales_order.dimension_length if sales_order else None,
             "dimension_breadth": sales_order.dimension_breadth if sales_order else None,
@@ -3670,7 +3691,6 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
                 "category": return_order.item.category if return_order.item else None,
                 "configuration": return_order.item.configuration if return_order.item else None
             },
-            # Additional return-specific fields that might be useful
             "return_specific": {
                 "return_order_number": return_order.return_order_number,
                 "return_condition": return_order.return_condition,
@@ -3680,10 +3700,9 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
                 "return_received_date": return_order.return_received_date
             }
         }
-        
+
         result.append(order_data)
-        zip_list.append(return_order.return_zip or (sales_order.shipped_to_zip if sales_order else None))
-    result.append({"zip_list": zip_list})
+    result.append({"address_list": address_list})
     return result
 
 
@@ -4171,49 +4190,58 @@ def add_servicing_zip(request: AddServicingZipRequest, db: Session = Depends(get
         "updated_servicing_zip": agent.servicing_zip
     }
 
-class ZipRequest(BaseModel):
-    zip_codes: List[str]
 
-def get_lat_lng(zip_code: str):
-    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={zip_code}&key={GOOGLE_API_KEY}"
-    res = requests.get(url).json()
-    if res["status"] != "OK":
-        raise HTTPException(status_code=400, detail=f"Could not geocode ZIP: {zip_code}")
-    location = res["results"][0]["geometry"]["location"]
-    return (location["lat"], location["lng"])
+class AddressRequest(BaseModel):
+    addresses: List[str]
 
 @app.post("/api/best-route")
-def get_best_route(zip_data: ZipRequest):
-    if len(zip_data.zip_codes) < 2:
-        raise HTTPException(status_code=400, detail="At least 2 ZIP codes are required.")
+def get_best_route(data: AddressRequest):
+    if len(data.addresses) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 2 addresses are required."
+        )
 
-    # Step 1: Get coordinates for each ZIP
-    coordinates = [get_lat_lng(z) for z in zip_data.zip_codes]
-    origin = coordinates[0]
-    destination = coordinates[-1]
-    waypoints = coordinates[1:-1]
+    origin = data.addresses[0]
+    destination = data.addresses[-1]
+    waypoints = data.addresses[1:-1]
+    waypoints_str = "|".join(waypoints)
 
-    # Step 2: Prepare waypoint string
-    waypoints_str = "|".join([f"{lat},{lng}" for lat, lng in waypoints])
+    # Construct the URL
+    url = (
+        f"https://maps.googleapis.com/maps/api/directions/json"
+        f"?origin={origin}&destination={destination}"
+        f"&waypoints=optimize:true|{waypoints_str}"
+        f"&key={GOOGLE_API_KEY}"
+    )
 
-    # Step 3: Google Directions API with optimize:true
-    url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin[0]},{origin[1]}&destination={destination[0]},{destination[1]}&waypoints=optimize:true|{waypoints_str}&key={GOOGLE_API_KEY}"
-    res = requests.get(url).json()
+    try:
+        res = requests.get(url)
+        res_json = res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch route from Google Maps API")
 
-    if res["status"] != "OK":
-        raise HTTPException(status_code=500, detail=f"Google API error: {res.get('error_message', 'Unknown')}")
+    if res_json.get("status") != "OK":
+        raise HTTPException(
+            status_code=500,
+            detail=f"Google API error: {res_json.get('error_message') or res_json.get('status') or 'Unknown'}"
+        )
 
-    optimized_order = res["routes"][0]["waypoint_order"]  # 0-based indices of waypoints
-    # Final ordered ZIPs: origin + optimized waypoints + destination
-    ordered_zip_codes = [zip_data.zip_codes[0]] + \
-                        [zip_data.zip_codes[i + 1] for i in optimized_order] + \
-                        [zip_data.zip_codes[-1]]
+    try:
+        optimized_order = res_json["routes"][0]["waypoint_order"]
+        ordered_addresses = [origin] + [waypoints[i] for i in optimized_order] + [destination]
+        legs = res_json["routes"][0]["legs"]
 
-    legs = res["routes"][0]["legs"]
+        total_distance_km = round(sum(leg["distance"]["value"] for leg in legs) / 1000, 2)
+        total_duration_minutes = round(sum(leg["duration"]["value"] for leg in legs) / 60, 2)
+        route_summary = res_json["routes"][0].get("summary", "No route summary")
 
-    return {
-        "ordered_zip_codes": ordered_zip_codes,
-        "total_distance_km": round(sum(leg["distance"]["value"] for leg in legs) / 1000, 2),
-        "total_duration_minutes": round(sum(leg["duration"]["value"] for leg in legs) / 60, 2),
-        "route_summary": res["routes"][0].get("summary", "")
-    }
+        return {
+            "ordered_addresses": ordered_addresses,
+            "total_distance_km": total_distance_km,
+            "total_duration_minutes": total_duration_minutes,
+            "route_summary": route_summary
+        }
+
+    except Exception as parse_err:
+        raise HTTPException(status_code=500, detail="Error parsing route data from Google API response")
