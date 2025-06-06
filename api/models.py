@@ -328,8 +328,9 @@ class Agent(Base):
     manager_id = Column(JSON, nullable=True)
     current_address = Column(Text)
     delivery_type = Column(Enum('Delivery', 'Return', 'Both'), nullable=False)
-    pickup_routing_mode = Column(Boolean, default=False)  # 0 = auto, 1 = manual
-    delivery_routing_mode = Column(Boolean, default=False)
+    pickup_routing_mode = Column(Boolean, nullable=True)
+    delivery_routing_mode = Column(Boolean, nullable=True)
+    servicing_country = Column(String(50))
     servicing_state = Column(String(50))
     servicing_city = Column(String(50))
     servicing_zip = Column(JSON)
@@ -350,13 +351,12 @@ class Agent(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    agent_to_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
-
 class AgentManager(Base):
     __tablename__ = 'agent_manager'
 
     manager_id = Column(Integer, primary_key=True, autoincrement=True)
     manager_name = Column(String(100))
+    servicing_country = Column(String(50))
     servicing_state = Column(String(50))
     servicing_city = Column(String(50))
     servicing_zip = Column(JSON)

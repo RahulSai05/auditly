@@ -36,7 +36,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Literal
 from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData, func, and_
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
@@ -200,8 +200,9 @@ class AgentCreate(BaseModel):
     manager_id: Optional[dict] = None
     current_address: Optional[str] = None
     delivery_type: str  # 'Delivery', 'Return', or 'Both'
-    pickup_routing_mode: Optional[bool] = False
-    delivery_routing_mode: Optional[bool] = False
+    pickup_routing_mode: Optional[bool] = None
+    delivery_routing_mode: Optional[bool] = None
+    servicing_country: Optional[str] = None
     servicing_state: Optional[str] = None
     servicing_city: Optional[str] = None
     servicing_zip:  Optional[list] = None
@@ -228,6 +229,7 @@ def create_agent(agent: AgentCreate, db: Session = Depends(get_db)):
         delivery_type=agent.delivery_type,
         pickup_routing_mode=agent.pickup_routing_mode,
         delivery_routing_mode=agent.delivery_routing_mode,
+        servicing_country = agent.servicing_country,
         servicing_state=agent.servicing_state,
         servicing_city=agent.servicing_city,
         servicing_zip=agent.servicing_zip,
@@ -394,8 +396,9 @@ def update_work_schedule(request: UpdateScheduleRequest, db: Session = Depends(g
     
 class UpdateRoutingModesRequest(BaseModel):
     agent_id: int
-    pickup_routing_mode: Optional[conint(ge=0, le=1)] = None  # Accepts only 0 or 1
+    pickup_routing_mode: Optional[conint(ge=0, le=1)] = None
     delivery_routing_mode: Optional[conint(ge=0, le=1)] = None
+    delivery_type: Optional[Literal["Delivery", "Return", "Both"]] = None
 
 @app.post("/api/update-routing-modes")
 def update_routing_modes(request: UpdateRoutingModesRequest, db: Session = Depends(get_db)):
@@ -406,32 +409,44 @@ def update_routing_modes(request: UpdateRoutingModesRequest, db: Session = Depen
     try:
         if request.pickup_routing_mode is not None:
             agent.pickup_routing_mode = bool(request.pickup_routing_mode)
+        else:
+            agent.pickup_routing_mode = None
+
         if request.delivery_routing_mode is not None:
             agent.delivery_routing_mode = bool(request.delivery_routing_mode)
+        else:
+            agent.delivery_routing_mode = None
+
+        if request.delivery_type is not None:
+            agent.delivery_type = request.delivery_type
 
         db.commit()
+        db.refresh(agent)
+
         return {
             "message": "Routing modes updated successfully",
             "agent_id": agent.agent_id,
-            "pickup_routing_mode": int(agent.pickup_routing_mode),
-            "delivery_routing_mode": int(agent.delivery_routing_mode)
+            "pickup_routing_mode": int(agent.pickup_routing_mode) if agent.pickup_routing_mode is not None else None,
+            "delivery_routing_mode": int(agent.delivery_routing_mode) if agent.delivery_routing_mode is not None else None,
+            "delivery_type": agent.delivery_type
         }
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error updating routing modes: {e}")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error updating routing modes: {str(e)}")
     
-
 class ManagerCreate(BaseModel):
     manager_name: str
     servicing_state: Optional[str] = None
     servicing_city: Optional[str] = None
     servicing_zip: Optional[list] = None
+    servicing_country: Optional[str] = None
     permanent_address: Optional[str] = None
     permanent_address_state: Optional[str] = None
     permanent_address_city: Optional[str] = None
     delivery_type: str
-    pickup_routing_mode: Optional[bool] = False
-    delivery_routing_mode: Optional[bool] = False
+    pickup_routing_mode: Optional[bool] = None
+    delivery_routing_mode: Optional[bool] = None
     permanent_address_zip: Optional[str] = None
     address: Optional[str] = None
     is_verified: Optional[bool] = False
@@ -452,6 +467,7 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
         servicing_state=manager.servicing_state,
         servicing_city=manager.servicing_city,
         servicing_zip=manager.servicing_zip,
+        servicing_country=manager.servicing_country,
         permanent_address=manager.permanent_address,
         permanent_address_state=manager.permanent_address_state,
         permanent_address_city=manager.permanent_address_city,
@@ -483,6 +499,7 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
             servicing_state=manager.servicing_state,
             servicing_city=manager.servicing_city,
             servicing_zip=manager.servicing_zip,
+            servicing_country=manager.servicing_country,
             permanent_adress=manager.permanent_address,
             permanent_address_state=manager.permanent_address_state,
             permanent_address_city=manager.permanent_address_city,
@@ -588,42 +605,110 @@ def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_d
 class ManagerStateRequest(BaseModel):
     manager_id: int
 
-@app.post("/api/sale-items-by-manager-state")
-def get_sale_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+# @app.post("/api/sale-items-by-manager-state")
+# def get_sale_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+#     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+#     if not manager:
+#         raise HTTPException(status_code=404, detail="Manager not found")
+
+#     servicing_state = manager.servicing_state
+
+#     sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == servicing_state).all()
+
+#     return {
+#         "manager_state": servicing_state,
+#         "sale_items": [
+#             {
+#                 "id": item.id,
+#                 "sales_order": item.original_sales_order_number,
+#                 "order_line": item.original_sales_order_line,
+#                 "serial_number": item.serial_number,
+#                 "sscc_number": item.sscc_number,
+#                 "account_number": item.account_number,
+#                 "customer_email": item.customer_email,
+#                 "shipped_to_city": item.shipped_to_city,
+#                 "shipped_to_state": item.shipped_to_state,
+#                 "shipped_to_zip": item.shipped_to_zip,
+#                 "status": item.status,
+#                 "date_purchased": item.date_purchased,
+#                 "date_shipped": item.date_shipped,
+#                 "date_delivered": item.date_delivered,
+#                 "item": {
+#                     "item_number": item.item.item_number if item.item else None,
+#                     "description": item.item.item_description if item.item else None,
+#                     "category": item.item.category if item.item else None
+#                 }
+#             } for item in sale_items
+#         ]
+#     }
+
+@app.post("/api/sale-items/by-manager-grade-region")
+def get_sale_items_by_manager_region(request: ManagerStateRequest, db: Session = Depends(get_db)):
     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
 
-    servicing_state = manager.servicing_state
+    if not manager.manager_grade:
+        raise HTTPException(status_code=400, detail="Manager grade not set")
 
-    sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == servicing_state).all()
+    query = db.query(SaleItemData)
+
+    if manager.manager_grade == "c1":
+        query = query.filter(SaleItemData.shipped_to_city == manager.servicing_city)
+    elif manager.manager_grade == "c2":
+        query = query.filter(SaleItemData.shipped_to_state == manager.servicing_state)
+    elif manager.manager_grade == "c3":
+        query = query.filter(SaleItemData.shipped_to_country == manager.servicing_country)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid manager grade")
+
+    sale_items = query.all()
+    result = []
+
+    for item in sale_items:
+        assigned_agent = None
+        if item.delivery_agent_id:
+            agent = db.query(Agent).filter(Agent.agent_id == item.delivery_agent_id).first()
+            if agent:
+                assigned_agent = {
+                    "agent_id": agent.agent_id,
+                    "agent_name": agent.agent_name
+                }
+
+        result.append({
+            "id": item.id,
+            "sales_order": item.original_sales_order_number,
+            "order_line": item.original_sales_order_line,
+            "serial_number": item.serial_number,
+            "sscc_number": item.sscc_number,
+            "account_number": item.account_number,
+            "customer_email": item.customer_email,
+            "shipped_to_city": item.shipped_to_city,
+            "shipped_to_state": item.shipped_to_state,
+            "shipped_to_country": item.shipped_to_country,
+            "shipped_to_zip": item.shipped_to_zip,
+            "status": item.status,
+            "date_purchased": item.date_purchased,
+            "date_shipped": item.date_shipped,
+            "date_delivered": item.date_delivered,
+            "assigned_agent": assigned_agent,
+            "item": {
+                "item_number": item.item.item_number if item.item else None,
+                "description": item.item.item_description if item.item else None,
+                "category": item.item.category if item.item else None
+            }
+        })
 
     return {
-        "manager_state": servicing_state,
-        "sale_items": [
-            {
-                "id": item.id,
-                "sales_order": item.original_sales_order_number,
-                "order_line": item.original_sales_order_line,
-                "serial_number": item.serial_number,
-                "sscc_number": item.sscc_number,
-                "account_number": item.account_number,
-                "customer_email": item.customer_email,
-                "shipped_to_city": item.shipped_to_city,
-                "shipped_to_state": item.shipped_to_state,
-                "shipped_to_zip": item.shipped_to_zip,
-                "status": item.status,
-                "date_purchased": item.date_purchased,
-                "date_shipped": item.date_shipped,
-                "date_delivered": item.date_delivered,
-                "item": {
-                    "item_number": item.item.item_number if item.item else None,
-                    "description": item.item.item_description if item.item else None,
-                    "category": item.item.category if item.item else None
-                }
-            } for item in sale_items
-        ]
+        "manager_grade": manager.manager_grade,
+        "region": {
+            "city": manager.servicing_city,
+            "state": manager.servicing_state,
+            "country": manager.servicing_country
+        },
+        "sale_items": result
     }
+
 
 @app.get("/api/agent-zip-codes/{agent_id}")
 def get_agent_zip_codes(agent_id: int, db: Session = Depends(get_db)):
@@ -716,42 +801,111 @@ def get_return_items_by_zip(request: ReturnItemByZip, db: Session = Depends(get_
         ]
     }
 
-@app.post("/api/return-items-by-manager-state")
-def get_return_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+# @app.post("/api/return-items-by-manager-state")
+# def get_return_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
+#     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+#     if not manager:
+#         raise HTTPException(status_code=404, detail="Manager not found")
+
+#     servicing_state = manager.servicing_state
+
+#     return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == servicing_state).all()
+
+#     return {
+#         "manager_state": servicing_state,
+#         "return_items": [
+#             {
+#                 "id": item.id,
+#                 "return_order": item.return_order_number,
+#                 "order_line": item.return_order_line,
+#                 "item_id": item.item_id,
+#                 "return_condition": item.return_condition,
+#                 "return_carrier": item.return_carrier,
+#                 "return_destination": item.return_destination,
+#                 "return_state": item.return_state,
+#                 "return_zip": item.return_zip,
+#                 "status": item.status,
+#                 "date_purchased": item.date_purchased,
+#                 "date_shipped": item.date_shipped,
+#                 "date_delivered": item.date_delivered,
+#                 "return_created_date": item.return_created_date,
+#                 "return_received_date": item.return_received_date,
+#                 "item": {
+#                     "item_number": item.item.item_number if item.item else None,
+#                     "description": item.item.item_description if item.item else None,
+#                     "category": item.item.category if item.item else None
+#                 }
+#             } for item in return_items
+#         ]
+#     }
+
+@app.post("/api/return-items/by-manager-grade-region")
+def get_return_items_by_manager_region(request: ManagerStateRequest, db: Session = Depends(get_db)):
     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
 
-    servicing_state = manager.servicing_state
+    if not manager.manager_grade:
+        raise HTTPException(status_code=400, detail="Manager grade not set")
 
-    return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == servicing_state).all()
+    query = db.query(ReturnItemData)
+
+    if manager.manager_grade == "c1":
+        query = query.filter(ReturnItemData.return_city == manager.servicing_city)
+    elif manager.manager_grade == "c2":
+        query = query.filter(ReturnItemData.return_state == manager.servicing_state)
+    elif manager.manager_grade == "c3":
+        query = query.filter(ReturnItemData.return_country == manager.servicing_country)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid manager grade")
+
+    return_items = query.all()
+    result = []
+
+    for item in return_items:
+        assigned_agent = None
+        if item.return_agent_id:
+            agent = db.query(Agent).filter(Agent.agent_id == item.return_agent_id).first()
+            if agent:
+                assigned_agent = {
+                    "agent_id": agent.agent_id,
+                    "agent_name": agent.agent_name
+                }
+
+        result.append({
+            "id": item.id,
+            "return_order": item.return_order_number,
+            "order_line": item.return_order_line,
+            "item_id": item.item_id,
+            "return_condition": item.return_condition,
+            "return_carrier": item.return_carrier,
+            "return_destination": item.return_destination,
+            "return_city": item.return_city,
+            "return_state": item.return_state,
+            "return_country": item.return_country,
+            "return_zip": item.return_zip,
+            "status": item.status,
+            "date_purchased": item.date_purchased,
+            "date_shipped": item.date_shipped,
+            "date_delivered": item.date_delivered,
+            "return_created_date": item.return_created_date,
+            "return_received_date": item.return_received_date,
+            "assigned_agent": assigned_agent,
+            "item": {
+                "item_number": item.item.item_number if item.item else None,
+                "description": item.item.item_description if item.item else None,
+                "category": item.item.category if item.item else None
+            }
+        })
 
     return {
-        "manager_state": servicing_state,
-        "return_items": [
-            {
-                "id": item.id,
-                "return_order": item.return_order_number,
-                "order_line": item.return_order_line,
-                "item_id": item.item_id,
-                "return_condition": item.return_condition,
-                "return_carrier": item.return_carrier,
-                "return_destination": item.return_destination,
-                "return_state": item.return_state,
-                "return_zip": item.return_zip,
-                "status": item.status,
-                "date_purchased": item.date_purchased,
-                "date_shipped": item.date_shipped,
-                "date_delivered": item.date_delivered,
-                "return_created_date": item.return_created_date,
-                "return_received_date": item.return_received_date,
-                "item": {
-                    "item_number": item.item.item_number if item.item else None,
-                    "description": item.item.item_description if item.item else None,
-                    "category": item.item.category if item.item else None
-                }
-            } for item in return_items
-        ]
+        "manager_grade": manager.manager_grade,
+        "region": {
+            "city": manager.servicing_city,
+            "state": manager.servicing_state,
+            "country": manager.servicing_country
+        },
+        "return_items": result
     }
 
    
@@ -3805,7 +3959,7 @@ def assign_agent_to_order(request: SalesAgentAssignmentRequest, db: Session = De
         raise HTTPException(status_code=404, detail="Sale item not found")
 
     order.delivery_agent_id = request.agent_id
-    order.status = "Assigned to Agent"
+    order.status = "Agent Assigned"
 
     db.commit()
     db.refresh(order)
@@ -3830,7 +3984,7 @@ def assign_agent_to_return_order(request: ReturnAgentAssignmentRequest, db: Sess
 
     return_order.return_agent_id = request.agent_id
     # return_order.return_agent_type = request.agent_type
-    return_order.status = "Assigned to Agent"
+    return_order.status = "Agent Assigned"
 
     db.commit()
     db.refresh(return_order)
@@ -3869,42 +4023,6 @@ def get_available_managers(request: ManagerStateFilterRequest, db: Session = Dep
             for m in managers
         ]
     }
-
-
-
-# @app.post("/api/available-managers-by-zip")
-# def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
-#     # managers = db.query(AgentManager).filter(AgentManager.servicing_city == request.servicing_city, AgentManager.servicing_state == request.servicing_state).filter(
-#     #     # AgentManager.servicing_zip.contains(f'"{request.zip_code}"'),
-#     #     AgentManager.approved_by_auditly_user_id.isnot(None),
-#     #     AgentManager.manager_grade.in_(["c1", "c2", "c3"])
-#     # ).all()
-
-#     managers = db.query(AgentManager).filter(
-#         or_(
-#             AgentManager.servicing_city == request.servicing_city,
-#             AgentManager.servicing_state == request.servicing_state
-#         ),
-#         AgentManager.approved_by_auditly_user_id.isnot(None),
-#         AgentManager.manager_grade.in_(["c1", "c2", "c3"])
-#     ).all()
-
-#     grouped = {"c1": [], "c2": [], "c3": []}
-
-#     for m in managers:
-#         manager_info = {
-#             "manager_id": m.manager_id,
-#             "manager_name": m.manager_name,
-#             "servicing_state": m.servicing_state,
-#             "servicing_city": m.servicing_city,
-#             "servicing_zip": m.servicing_zip,
-#             "gender": m.gender,
-#             "manager_grade": m.manager_grade,
-#             "work_schedule": m.work_schedule
-#         }
-#         grouped[m.manager_grade].append(manager_info)
-
-#     return {"managers": grouped}
 
 class ManagerZipFilterRequest(BaseModel):
     agent_id: Optional[int] = None
@@ -4245,3 +4363,122 @@ def get_best_route(data: AddressRequest):
 
     except Exception as parse_err:
         raise HTTPException(status_code=500, detail="Error parsing route data from Google API response")
+    
+
+
+class SaleAgentFilterRequest(BaseModel):
+    manager_id: str
+    shipped_to_zip: str
+
+@app.post("/api/agents/manual-sale/by-manager-and-zip")
+def get_matching_agents(
+    request: SaleAgentFilterRequest,
+    db: Session = Depends(get_db)
+):
+    agents = db.query(Agent).filter(
+        and_(
+            Agent.delivery_routing_mode == True,
+            Agent.manager_id != None,
+            Agent.servicing_zip != None
+        )
+    ).all()
+
+    matching_agents = [
+        agent for agent in agents
+        if request.manager_id in (agent.manager_id or [])
+        and request.shipped_to_zip in (agent.servicing_zip or [])
+    ]
+
+    result = []
+    for agent in matching_agents:
+        total_sales_orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).count()
+        total_return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).count()
+        
+        result.append({
+            "agent_id": agent.agent_id,
+            "agent_name": agent.agent_name,
+            "servicing_zip": agent.servicing_zip,
+            "delivery_routing_mode": agent.delivery_routing_mode,
+            "manager_id": agent.manager_id,
+            "total_sales_orders": total_sales_orders,
+            "total_return_orders": total_return_orders
+        })
+
+    return result
+
+
+class ReturnAgentFilterRequest(BaseModel):
+    manager_id: str
+    return_to_zip: str
+
+@app.post("/api/agents/manual-return/by-manager-and-zip")
+def get_matching_return_agents(
+    request: ReturnAgentFilterRequest,
+    db: Session = Depends(get_db)
+):
+    agents = db.query(Agent).filter(
+        and_(
+            Agent.pickup_routing_mode == True,
+            Agent.manager_id != None,
+            Agent.servicing_zip != None
+        )
+    ).all()
+
+    matching_agents = [
+        agent for agent in agents
+        if request.manager_id in (agent.manager_id or [])
+        and request.return_to_zip in (agent.servicing_zip or [])
+    ]
+
+    result = []
+    for agent in matching_agents:
+        total_sales_orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).count()
+        total_return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).count()
+        
+        result.append({
+            "agent_id": agent.agent_id,
+            "agent_name": agent.agent_name,
+            "servicing_zip": agent.servicing_zip,
+            "pickup_routing_mode": agent.pickup_routing_mode,
+            "manager_id": agent.manager_id,
+            "total_sales_orders": total_sales_orders,
+            "total_return_orders": total_return_orders
+        })
+
+    return result
+
+
+@app.post("/api/unassign-sales-order/{order_id}")
+def unassign_sales_order(order_id: int, db: Session = Depends(get_db)):
+    sale_order = db.query(SaleItemData).filter(SaleItemData.id == order_id).first()
+
+    if not sale_order:
+        raise HTTPException(status_code=404, detail="Sales order not found")
+
+    if sale_order.status != "Agent Assigned":
+        raise HTTPException(status_code=400, detail="Order is not currently assigned to any agent")
+
+    # Unassign agent and reset status
+    sale_order.delivery_agent_id = None
+    sale_order.status = "Pending Agent Assignment"
+
+    db.commit()
+    return {"message": "Sales order unassigned successfully"}
+
+
+@app.post("/api/unassign-return-order/{order_id}")
+def unassign_return_order(order_id: int, db: Session = Depends(get_db)):
+    return_order = db.query(ReturnItemData).filter(ReturnItemData.id == order_id).first()
+
+    if not return_order:
+        raise HTTPException(status_code=404, detail="Return order not found")
+
+    if return_order.status != "Agent Assigned":
+        raise HTTPException(status_code=400, detail="Return order is not currently assigned to any agent")
+
+    # Unassign agent and reset status
+    return_order.return_agent_id = None
+    return_order.status = "Pending Agent Assignment"
+
+    db.commit()
+    return {"message": "Return order unassigned successfully"}
