@@ -14,6 +14,7 @@ import {
   Info,
   Settings,
   Cpu,
+  Edit,
 } from "lucide-react";
 
 interface DayOption {
@@ -46,18 +47,24 @@ const Schedule: React.FC = () => {
   };
 
   const [days, setDays] = useState<DayOption[]>(defaultDays);
+  const [currentSchedule, setCurrentSchedule] = useState<string[]>([]);
+  const [currentWeekDays, setCurrentWeekDays] = useState<DayOption[]>(defaultDays);
+  const [isEditingCurrent, setIsEditingCurrent] = useState(false);
   const [routingModes, setRoutingModes] = useState<RoutingModes>(defaultRoutingModes);
   const [loading, setLoading] = useState({
     schedule: false,
-    routing: false
+    routing: false,
+    currentSchedule: false
   });
   const [error, setError] = useState({
     schedule: null as string | null,
-    routing: null as string | null
+    routing: null as string | null,
+    currentSchedule: null as string | null
   });
   const [successMessage, setSuccessMessage] = useState({
     schedule: null as string | null,
-    routing: null as string | null
+    routing: null as string | null,
+    currentSchedule: null as string | null
   });
   const [isLastWorkingDay, setIsLastWorkingDay] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -65,6 +72,7 @@ const Schedule: React.FC = () => {
 
   useEffect(() => {
     if (agentId) {
+      fetchCurrentSchedule(agentId);
       fetchSchedule(agentId);
       checkLastWorkingDay(agentId);
       fetchRoutingModes(agentId);
@@ -73,6 +81,86 @@ const Schedule: React.FC = () => {
       setLoading(prev => ({...prev, schedule: false}));
     }
   }, [agentId]);
+
+  const fetchCurrentSchedule = async (agentId: number) => {
+    try {
+      setLoading(prev => ({...prev, currentSchedule: true}));
+      const response = await fetch(`/api/agent/work-schedule/${agentId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch current schedule");
+      }
+      const data = await response.json();
+      const daysArray = data.work_schedule?.days?.split(',').map(Number) || [];
+      
+      setCurrentSchedule(
+        defaultDays
+          .filter(day => daysArray.includes(day.id))
+          .map(day => day.name)
+      );
+      
+      // Also set the current week days for editing
+      setCurrentWeekDays(
+        defaultDays.map(day => ({
+          ...day,
+          selected: daysArray.includes(day.id)
+        }))
+      );
+    } catch (err) {
+      setError(prev => ({...prev, currentSchedule: "Failed to fetch current schedule"}));
+    } finally {
+      setLoading(prev => ({...prev, currentSchedule: false}));
+    }
+  };
+
+  const updateCurrentWeekSchedule = async () => {
+    if (!agentId) return;
+
+    try {
+      setLoading(prev => ({...prev, currentSchedule: true}));
+      setError(prev => ({...prev, currentSchedule: null}));
+
+      const selectedDays = currentWeekDays
+        .filter(day => day.selected)
+        .map(day => day.id)
+        .sort((a, b) => a - b);
+
+      if (selectedDays.length === 0) {
+        throw new Error("Please select at least one working day");
+      }
+
+      const response = await fetch("/api/agent/update-curent-week-work-schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          agent_id: agentId,
+          work_schedule: {
+            days: selectedDays.join(","),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update current schedule");
+      }
+
+      const successData = await response.json();
+      setSuccessMessage(prev => ({...prev, currentSchedule: successData.message || "Current week schedule updated successfully!"}));
+      setTimeout(() => setSuccessMessage(prev => ({...prev, currentSchedule: null})), 3000);
+      
+      // Exit edit mode
+      setIsEditingCurrent(false);
+      // Refresh the displayed schedule
+      await fetchCurrentSchedule(agentId);
+    } catch (err) {
+      setError(prev => ({...prev, currentSchedule: err instanceof Error ? err.message : "Update failed"}));
+      setTimeout(() => setError(prev => ({...prev, currentSchedule: null})), 3000);
+    } finally {
+      setLoading(prev => ({...prev, currentSchedule: false}));
+    }
+  };
 
   const fetchSchedule = async (agentId: number) => {
     try {
@@ -87,7 +175,7 @@ const Schedule: React.FC = () => {
 
   const fetchRoutingModes = async (agentId: number) => {
     try {
-      const response = await fetch(`/api/agent/${agentId}/routing-modes`);
+      const response = await fetch(`/api/update-routing-modes/${agentId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch routing modes");
       }
@@ -227,6 +315,7 @@ const Schedule: React.FC = () => {
       setTimeout(() => setSuccessMessage(prev => ({...prev, schedule: null})), 3000);
       
       await checkLastWorkingDay(agentId);
+      await fetchCurrentSchedule(agentId);
     } catch (err) {
       setError(prev => ({...prev, schedule: err instanceof Error ? err.message : "Update failed"}));
       setTimeout(() => setError(prev => ({...prev, schedule: null})), 3000);
@@ -272,8 +361,118 @@ const Schedule: React.FC = () => {
               </div>
             </div>
 
-            {/* Schedule Section */}
+            {/* Current Schedule Section */}
             <div className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  Current Work Schedule
+                </h2>
+                {!isEditingCurrent ? (
+                  <button
+                    onClick={() => setIsEditingCurrent(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsEditingCurrent(false);
+                        setCurrentWeekDays(defaultDays.map(day => ({
+                          ...day,
+                          selected: currentSchedule.includes(day.name)
+                        })));
+                      }}
+                      className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={updateCurrentWeekSchedule}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      disabled={loading.currentSchedule}
+                    >
+                      {loading.currentSchedule ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {loading.currentSchedule ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                </div>
+              ) : error.currentSchedule ? (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-100 text-red-800">
+                  <XCircle className="w-5 h-5" />
+                  <span className="font-medium">{error.currentSchedule}</span>
+                </div>
+              ) : (
+                <div className="bg-blue-50 rounded-lg p-4">
+                  {isEditingCurrent ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {currentWeekDays.map((day) => (
+                        <motion.div
+                          key={day.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setCurrentWeekDays(currentWeekDays.map(d => 
+                            d.id === day.id ? { ...d, selected: !d.selected } : d
+                          ))}
+                          className={`px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                            day.selected
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 hover:bg-gray-200"
+                          }`}
+                        >
+                          {day.name}
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : currentSchedule.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {currentSchedule.map((day, index) => (
+                        <motion.span
+                          key={index}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {day}
+                        </motion.span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">No schedule set for current week</p>
+                  )}
+                </div>
+              )}
+
+              <AnimatePresence>
+                {successMessage.currentSchedule && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mt-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-100 text-green-800"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span className="font-medium">{successMessage.currentSchedule}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Next Week Schedule Section */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-500" />
+                Update Next Week's Schedule
+              </h2>
+
               <div className="mb-6">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -321,7 +520,7 @@ const Schedule: React.FC = () => {
 
               <div className="mb-4">
                 <h3 className="font-medium text-gray-800 mb-2">
-                  Selected Days:
+                  Selected Days for Next Week:
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {days.filter(day => day.selected).length > 0 ? (

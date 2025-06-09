@@ -4482,3 +4482,76 @@ def unassign_return_order(order_id: int, db: Session = Depends(get_db)):
 
     db.commit()
     return {"message": "Return order unassigned successfully"}
+
+
+@app.get("/api/agent/work-schedule/{agent_id}")
+def get_agent_work_schedule(agent_id: int, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == agent_id).first()
+
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    return {
+        "work_schedule": agent.work_schedule
+    }
+
+
+class WorkScheduleUpdateRequest(BaseModel):
+    agent_id: int
+    work_schedule: dict  
+
+# @app.post("/api/agent/update-curent-week-work-schedule")
+# def update_agent_work_schedule(request: WorkScheduleUpdateRequest, db: Session = Depends(get_db)):
+#     agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+
+#     if not agent:
+#         raise HTTPException(status_code=404, detail="Agent not found")
+
+#     agent.work_schedule = request.work_schedule
+#     db.commit()
+#     db.refresh(agent)
+
+#     return {
+#         "message": "Work schedule updated successfully",
+#         "agent_id": agent.agent_id,
+#         "work_schedule": agent.work_schedule
+#     }
+
+
+
+@app.post("/api/agent/update-curent-week-work-schedule")
+def update_agent_work_schedule(request: WorkScheduleUpdateRequest, db: Session = Depends(get_db)):
+    agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
+
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    # Update work schedule
+    agent.work_schedule = request.work_schedule
+    db.commit()
+    db.refresh(agent)
+
+    # Notify all managers
+    manager_ids = agent.manager_id if isinstance(agent.manager_id, list) else [agent.manager_id]
+
+    for mid in manager_ids:
+        if mid is None:
+            continue
+
+        # Get manager user mapping ID
+        manager = db.query(AgentManager).filter(AgentManager.manager_id == mid).first()
+        if manager and manager.manager_user_mapping_id:
+            notification = NotificationTable(
+                auditly_user_id=manager.manager_user_mapping_id,
+                notification_message=f"Agent '{agent.agent_name}' has updated their work schedule. Please reassign their current orders if needed.",
+                created_at=datetime.now()
+            )
+            db.add(notification)
+
+    db.commit()
+
+    return {
+        "message": "Work schedule updated successfully and notifications sent to manager(s)",
+        "agent_id": agent.agent_id,
+        "work_schedule": agent.work_schedule
+    }
