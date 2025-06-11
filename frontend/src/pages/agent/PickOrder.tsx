@@ -622,12 +622,23 @@ const PickOrder: React.FC = () => {
                                     </div>
                                   )}
                                   
-                                  {item.serial_number && (
+                                  {isSalesItem && item.serial_number && (
                                     <div className="flex items-center gap-2 text-sm">
                                       <Hash className="w-4 h-4 text-slate-400" />
                                       <span className="text-slate-600">
                                         Serial: <code className="bg-slate-100 px-2 py-1 rounded font-mono text-xs">
                                           {item.serial_number}
+                                        </code>
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {!isSalesItem && item.item?.item_number && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <Hash className="w-4 h-4 text-slate-400" />
+                                      <span className="text-slate-600">
+                                        Item #: <code className="bg-slate-100 px-2 py-1 rounded font-mono text-xs">
+                                          {item.item.item_number}
                                         </code>
                                       </span>
                                     </div>
