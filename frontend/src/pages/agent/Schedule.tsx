@@ -15,6 +15,12 @@ import {
   Settings,
   Cpu,
   Edit,
+  Clock,
+  AlertCircle,
+  Save,
+  RefreshCw,
+  User,
+  MapPin,
 } from "lucide-react";
 
 interface DayOption {
@@ -70,6 +76,32 @@ const Schedule: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const agentId = useSelector((state: RootState) => state.ids.agentId);
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    })
+  };
+
   useEffect(() => {
     if (agentId) {
       fetchCurrentSchedule(agentId);
@@ -98,7 +130,6 @@ const Schedule: React.FC = () => {
           .map(day => day.name)
       );
       
-      // Also set the current week days for editing
       setCurrentWeekDays(
         defaultDays.map(day => ({
           ...day,
@@ -150,9 +181,7 @@ const Schedule: React.FC = () => {
       setSuccessMessage(prev => ({...prev, currentSchedule: successData.message || "Current week schedule updated successfully!"}));
       setTimeout(() => setSuccessMessage(prev => ({...prev, currentSchedule: null})), 3000);
       
-      // Exit edit mode
       setIsEditingCurrent(false);
-      // Refresh the displayed schedule
       await fetchCurrentSchedule(agentId);
     } catch (err) {
       setError(prev => ({...prev, currentSchedule: err instanceof Error ? err.message : "Update failed"}));
@@ -263,7 +292,6 @@ const Schedule: React.FC = () => {
 
       const successData = await response.json();
       setSuccessMessage(prev => ({...prev, routing: successData.message || "Routing preferences saved successfully!"}));
-      // Reset routing modes after successful save
       setRoutingModes(defaultRoutingModes);
       setTimeout(() => setSuccessMessage(prev => ({...prev, routing: null})), 3000);
     } catch (err) {
@@ -310,7 +338,6 @@ const Schedule: React.FC = () => {
 
       const successData = await response.json();
       setSuccessMessage(prev => ({...prev, schedule: successData.message || "Schedule saved successfully!"}));
-      // Reset days selection after successful save
       setDays(defaultDays);
       setTimeout(() => setSuccessMessage(prev => ({...prev, schedule: null})), 3000);
       
@@ -326,525 +353,300 @@ const Schedule: React.FC = () => {
 
   if (loading.schedule && !agentId) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-8 flex justify-center items-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
           className="text-blue-600"
         >
-          <Loader2 className="w-8 h-8" />
+          <Loader2 className="w-12 h-12" />
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-8">
+      <div className="max-w-4xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-blue-50 overflow-hidden"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
         >
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 10 }}
-                  className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
-                >
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                </motion.div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Work Schedule
-                </h1>
-              </div>
+          <div className="p-8">
+            {/* Header Section */}
+            <div className="text-center mb-12">
+              <motion.div
+                initial={{ scale: 0.8, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 20,
+                }}
+                className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
+              >
+                <Calendar className="w-10 h-10 text-blue-600" />
+              </motion.div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-700">
+                Work Schedule
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Manage your work schedule and routing preferences
+              </p>
             </div>
 
-            {/* Current Schedule Section */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  Current Work Schedule
-                </h2>
-                {!isEditingCurrent ? (
-                  <button
-                    onClick={() => setIsEditingCurrent(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setIsEditingCurrent(false);
-                        setCurrentWeekDays(defaultDays.map(day => ({
-                          ...day,
-                          selected: currentSchedule.includes(day.name)
-                        })));
-                      }}
-                      className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={updateCurrentWeekSchedule}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                      disabled={loading.currentSchedule}
-                    >
-                      {loading.currentSchedule ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {loading.currentSchedule ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                </div>
-              ) : error.currentSchedule ? (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-100 text-red-800">
-                  <XCircle className="w-5 h-5" />
-                  <span className="font-medium">{error.currentSchedule}</span>
-                </div>
-              ) : (
-                <div className="bg-blue-50 rounded-lg p-4">
-                  {isEditingCurrent ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {currentWeekDays.map((day) => (
-                        <motion.div
-                          key={day.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setCurrentWeekDays(currentWeekDays.map(d => 
-                            d.id === day.id ? { ...d, selected: !d.selected } : d
-                          ))}
-                          className={`px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                            day.selected
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          }`}
-                        >
-                          {day.name}
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : currentSchedule.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {currentSchedule.map((day, index) => (
-                        <motion.span
-                          key={index}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                        >
-                          {day}
-                        </motion.span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-600">No schedule set for current week</p>
-                  )}
-                </div>
+            {/* Alert Messages */}
+            <AnimatePresence>
+              {(error.schedule || error.routing || error.currentSchedule) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-800 border border-red-100"
+                >
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="font-medium">
+                    {error.schedule || error.routing || error.currentSchedule}
+                  </span>
+                </motion.div>
               )}
 
-              <AnimatePresence>
-                {successMessage.currentSchedule && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="mt-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-100 text-green-800"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span className="font-medium">{successMessage.currentSchedule}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Next Week Schedule Section */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-500" />
-                Update Next Week's Schedule
-              </h2>
-
-              <div className="mb-6">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-full flex justify-between items-center px-4 py-3 bg-blue-50 rounded-lg"
+              {(successMessage.schedule || successMessage.routing || successMessage.currentSchedule) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-6 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-50 text-green-800 border border-green-100"
                 >
-                  <span className="font-medium text-gray-800">
-                    Select Working Days
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="font-medium">
+                    {successMessage.schedule || successMessage.routing || successMessage.currentSchedule}
                   </span>
-                  {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
-                </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2"
-                    >
-                      {days.map((day) => (
-                        <motion.div
-                          key={day.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => toggleDaySelection(day.id)}
-                          className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-                            day.selected
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          }`}
-                        >
-                          {day.name}
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="font-medium text-gray-800 mb-2">
-                  Selected Days for Next Week:
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {days.filter(day => day.selected).length > 0 ? (
-                    days
-                      .filter(day => day.selected)
-                      .map(day => (
-                        <motion.span
-                          key={day.id}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                        >
-                          {day.name}
-                        </motion.span>
-                      ))
-                  ) : (
-                    <span className="text-gray-500">No days selected</span>
-                  )}
-                </div>
-              </div>
-
-              <AnimatePresence>
-                {error.schedule && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-100 text-red-800"
-                  >
-                    <XCircle className="w-5 h-5" />
-                    <span className="font-medium">{error.schedule}</span>
-                  </motion.div>
-                )}
-
-                {successMessage.schedule && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-100 text-green-800"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span className="font-medium">{successMessage.schedule}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <motion.button
-                whileHover={isLastWorkingDay ? { scale: 1.02 } : {}}
-                whileTap={isLastWorkingDay ? { scale: 0.98 } : {}}
-                onClick={handleSubmit}
-                disabled={loading.schedule || !isLastWorkingDay}
-                className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 ${
-                  loading.schedule
-                    ? "bg-blue-200 text-blue-700"
-                    : isLastWorkingDay
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+            {/* Status Banner */}
+            {!isLastWorkingDay && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 p-4 bg-yellow-50 rounded-xl border border-yellow-100"
               >
-                {loading.schedule ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Saving...
-                  </>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">Schedule Updates Restricted</p>
+                    <p className="text-yellow-600">You can only update your schedule and routing preferences on your last working day of the week.</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="space-y-8">
+              {/* Current Schedule Section */}
+              <motion.div
+                custom={0}
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                className="bg-slate-50 rounded-xl border border-slate-100 p-6"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-slate-800 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    </div>
+                    Current Work Schedule
+                  </h2>
+                  {!isEditingCurrent ? (
+                    <button
+                      onClick={() => setIsEditingCurrent(true)}
+                      className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setIsEditingCurrent(false);
+                          setCurrentWeekDays(defaultDays.map(day => ({
+                            ...day,
+                            selected: currentSchedule.includes(day.name)
+                          })));
+                        }}
+                        className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={updateCurrentWeekSchedule}
+                        disabled={loading.currentSchedule}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors"
+                      >
+                        {loading.currentSchedule ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        Save
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                {loading.currentSchedule ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                  </div>
                 ) : (
-                  <>
-                    <CheckCircle2 className="w-5 h-5" />
-                    {isLastWorkingDay ? "Save Schedule" : "Updates allowed only on your last working day"}
-                  </>
-                )}
-              </motion.button>
-            </div>
-
-            {/* Routing Modes Section */}
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-blue-500" />
-                Routing Mode Preferences
-              </h3>
-              
-              <div className="space-y-4">
-                {/* Delivery Type Selection */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Truck className="w-5 h-5 text-gray-600" />
-                    <span className="text-gray-700">Delivery Type</span>
+                  <div className="bg-white rounded-lg p-4">
+                    {isEditingCurrent ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {currentWeekDays.map((day) => (
+                          <motion.button
+                            key={day.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setCurrentWeekDays(currentWeekDays.map(d => 
+                              d.id === day.id ? { ...d, selected: !d.selected } : d
+                            ))}
+                            className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                              day.selected
+                                ? "bg-blue-600 text-white shadow-md"
+                                : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                            }`}
+                          >
+                            {day.name}
+                          </motion.button>
+                        ))}
+                      </div>
+                    ) : currentSchedule.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {currentSchedule.map((day, index) => (
+                          <motion.span
+                            key={index}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium"
+                          >
+                            {day}
+                          </motion.span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-slate-500">
+                        <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>No schedule set for current week</p>
+                      </div>
+                    )}
                   </div>
-                  <select
-                    value={routingModes.deliveryType || ""}
-                    onChange={(e) =>
-                      setRoutingModes((prev) => ({
-                        ...prev,
-                        deliveryType: e.target.value as "Delivery" | "Pickup" | "Both",
-                      }))
-                    }
-                    disabled={!isLastWorkingDay}
-                    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                )}
+              </motion.div>
+
+              {/* Next Week Schedule Section */}
+              <motion.div
+                custom={1}
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                className="bg-slate-50 rounded-xl border border-slate-100 p-6"
+              >
+                <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                  </div>
+                  Update Next Week's Schedule
+                </h2>
+
+                <div className="space-y-6">
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="w-full flex justify-between items-center px-4 py-3 bg-white rounded-lg border border-slate-200 hover:border-blue-200 transition-colors"
                   >
-                    <option value="">Select delivery type</option>
-                    <option value="Delivery">Delivery</option>
-                    <option value="Pickup">Pickup</option>
-                    <option value="Both">Both</option>
-                  </select>
-                </div>
+                    <span className="font-medium text-slate-800">
+                      Select Working Days
+                    </span>
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-slate-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-slate-600" />
+                    )}
+                  </motion.button>
 
-                {/* Show only Pickup routing mode when Pickup is selected */}
-                {routingModes.deliveryType === "Pickup" && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <PackageCheck className="w-5 h-5 text-gray-600" />
-                      <span className="text-gray-700">Pickup Routing Mode</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleRoutingModeChange("pickup", 0)}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                          routingModes.pickup === 0
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                        disabled={!isLastWorkingDay}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
                       >
-                        <Cpu className="w-4 h-4" />
-                        Auto
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleRoutingModeChange("pickup", 1)}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                          routingModes.pickup === 1
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                        disabled={!isLastWorkingDay}
-                      >
-                        <Settings className="w-4 h-4" />
-                        Manual
-                      </motion.button>
+                        {days.map((day) => (
+                          <motion.button
+                            key={day.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => toggleDaySelection(day.id)}
+                            className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                              day.selected
+                                ? "bg-blue-600 text-white shadow-md"
+                                : "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200"
+                            }`}
+                          >
+                            {day.name}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="bg-white rounded-lg p-4">
+                    <h3 className="font-medium text-slate-800 mb-3">
+                      Selected Days for Next Week:
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {days.filter(day => day.selected).length > 0 ? (
+                        days
+                          .filter(day => day.selected)
+                          .map(day => (
+                            <motion.span
+                              key={day.id}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium"
+                            >
+                              {day.name}
+                            </motion.span>
+                          ))
+                      ) : (
+                        <span className="text-slate-500">No days selected</span>
+                      )}
                     </div>
                   </div>
-                )}
 
-                {/* Show only Delivery routing mode when Delivery is selected */}
-                {routingModes.deliveryType === "Delivery" && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Truck className="w-5 h-5 text-gray-600" />
-                      <span className="text-gray-700">Delivery Routing Mode</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleRoutingModeChange("delivery", 0)}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                          routingModes.delivery === 0
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                        disabled={!isLastWorkingDay}
-                      >
-                        <Cpu className="w-4 h-4" />
-                        Auto
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleRoutingModeChange("delivery", 1)}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                          routingModes.delivery === 1
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                        disabled={!isLastWorkingDay}
-                      >
-                        <Settings className="w-4 h-4" />
-                        Manual
-                      </motion.button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Show both routing modes when Both is selected */}
-                {routingModes.deliveryType === "Both" && (
-                  <>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <PackageCheck className="w-5 h-5 text-gray-600" />
-                        <span className="text-gray-700">Pickup Routing Mode</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleRoutingModeChange("pickup", 0)}
-                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                            routingModes.pickup === 0
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                          disabled={!isLastWorkingDay}
-                        >
-                          <Cpu className="w-4 h-4" />
-                          Auto
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleRoutingModeChange("pickup", 1)}
-                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                            routingModes.pickup === 1
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                          disabled={!isLastWorkingDay}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Manual
-                        </motion.button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <Truck className="w-5 h-5 text-gray-600" />
-                        <span className="text-gray-700">Delivery Routing Mode</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleRoutingModeChange("delivery", 0)}
-                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                            routingModes.delivery === 0
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                          disabled={!isLastWorkingDay}
-                        >
-                          <Cpu className="w-4 h-4" />
-                          Auto
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleRoutingModeChange("delivery", 1)}
-                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                            routingModes.delivery === 1
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200"
-                          } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
-                          disabled={!isLastWorkingDay}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Manual
-                        </motion.button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="mt-3 flex items-start gap-2 text-sm text-gray-500">
-                  <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    <strong>Auto</strong>: Routes are optimized automatically by the system.<br />
-                    <strong>Manual</strong>: You have full control over your routing sequence.<br />
-                    Changes can only be made on your last working day of the week.
-                  </p>
-                </div>
-
-                <AnimatePresence>
-                  {error.routing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-100 text-red-800"
-                    >
-                      <XCircle className="w-5 h-5" />
-                      <span className="font-medium">{error.routing}</span>
-                    </motion.div>
-                  )}
-
-                  {successMessage.routing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-green-100 text-green-800"
-                    >
-                      <CheckCircle2 className="w-5 h-5" />
-                      <span className="font-medium">{successMessage.routing}</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {routingModes.deliveryType && (
                   <motion.button
                     whileHover={isLastWorkingDay ? { scale: 1.02 } : {}}
                     whileTap={isLastWorkingDay ? { scale: 0.98 } : {}}
-                    onClick={updateRoutingModes}
-                    disabled={
-                      loading.routing ||
-                      !isLastWorkingDay ||
-                      (routingModes.deliveryType === "Pickup" && routingModes.pickup === null) ||
-                      (routingModes.deliveryType === "Delivery" && routingModes.delivery === null) ||
-                      (routingModes.deliveryType === "Both" && (routingModes.pickup === null || routingModes.delivery === null))
-                    }
-                    className={`w-full mt-4 py-3 rounded-xl flex items-center justify-center gap-2 ${
-                      loading.routing
+                    onClick={handleSubmit}
+                    disabled={loading.schedule || !isLastWorkingDay}
+                    className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-all ${
+                      loading.schedule
                         ? "bg-blue-200 text-blue-700"
-                        : isLastWorkingDay && 
-                          ((routingModes.deliveryType === "Pickup" && routingModes.pickup !== null) ||
-                           (routingModes.deliveryType === "Delivery" && routingModes.delivery !== null) ||
-                           (routingModes.deliveryType === "Both" && routingModes.pickup !== null && routingModes.delivery !== null))
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : isLastWorkingDay
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                        : "bg-slate-300 text-slate-500 cursor-not-allowed"
                     }`}
                   >
-                    {loading.routing ? (
+                    {loading.schedule ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
@@ -852,19 +654,190 @@ const Schedule: React.FC = () => {
                     ) : (
                       <>
                         <CheckCircle2 className="w-5 h-5" />
-                        Save Routing Preferences
+                        {isLastWorkingDay ? "Save Schedule" : "Updates allowed only on your last working day"}
                       </>
                     )}
                   </motion.button>
-                )}
-              </div>
-            </div>
+                </div>
+              </motion.div>
 
-            {!isLastWorkingDay && (
-              <div className="mt-6 text-center text-sm text-gray-500">
-                You can only update your schedule and routing preferences on your last working day of the week.
-              </div>
-            )}
+              {/* Routing Modes Section */}
+              <motion.div
+                custom={2}
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                className="bg-slate-50 rounded-xl border border-slate-100 p-6"
+              >
+                <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-purple-600" />
+                  </div>
+                  Routing Mode Preferences
+                </h2>
+                
+                <div className="space-y-6">
+                  {/* Delivery Type Selection */}
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Truck className="w-5 h-5 text-slate-600" />
+                      <span className="font-medium text-slate-700">Delivery Type</span>
+                    </div>
+                    <select
+                      value={routingModes.deliveryType || ""}
+                      onChange={(e) =>
+                        setRoutingModes((prev) => ({
+                          ...prev,
+                          deliveryType: e.target.value as "Delivery" | "Pickup" | "Both",
+                        }))
+                      }
+                      disabled={!isLastWorkingDay}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select delivery type</option>
+                      <option value="Delivery">Delivery</option>
+                      <option value="Pickup">Pickup</option>
+                      <option value="Both">Both</option>
+                    </select>
+                  </div>
+
+                  {/* Routing Mode Options */}
+                  {routingModes.deliveryType && (
+                    <div className="space-y-4">
+                      {(routingModes.deliveryType === "Pickup" || routingModes.deliveryType === "Both") && (
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <PackageCheck className="w-5 h-5 text-slate-600" />
+                            <span className="font-medium text-slate-700">Pickup Routing Mode</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleRoutingModeChange("pickup", 0)}
+                              disabled={!isLastWorkingDay}
+                              className={`px-4 py-3 rounded-lg flex items-center gap-2 font-medium transition-all ${
+                                routingModes.pickup === 0
+                                  ? "bg-blue-600 text-white shadow-md"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                              } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <Cpu className="w-4 h-4" />
+                              Auto
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleRoutingModeChange("pickup", 1)}
+                              disabled={!isLastWorkingDay}
+                              className={`px-4 py-3 rounded-lg flex items-center gap-2 font-medium transition-all ${
+                                routingModes.pickup === 1
+                                  ? "bg-blue-600 text-white shadow-md"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                              } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <User className="w-4 h-4" />
+                              Manual
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+
+                      {(routingModes.deliveryType === "Delivery" || routingModes.deliveryType === "Both") && (
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Truck className="w-5 h-5 text-slate-600" />
+                            <span className="font-medium text-slate-700">Delivery Routing Mode</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleRoutingModeChange("delivery", 0)}
+                              disabled={!isLastWorkingDay}
+                              className={`px-4 py-3 rounded-lg flex items-center gap-2 font-medium transition-all ${
+                                routingModes.delivery === 0
+                                  ? "bg-blue-600 text-white shadow-md"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                              } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <Cpu className="w-4 h-4" />
+                              Auto
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleRoutingModeChange("delivery", 1)}
+                              disabled={!isLastWorkingDay}
+                              className={`px-4 py-3 rounded-lg flex items-center gap-2 font-medium transition-all ${
+                                routingModes.delivery === 1
+                                  ? "bg-blue-600 text-white shadow-md"
+                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                              } ${!isLastWorkingDay ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <User className="w-4 h-4" />
+                              Manual
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Info Box */}
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-2">Routing Mode Information:</p>
+                        <ul className="space-y-1">
+                          <li><strong>Auto:</strong> Routes are optimized automatically by the system</li>
+                          <li><strong>Manual:</strong> You have full control over your routing sequence</li>
+                          <li><strong>Note:</strong> Changes can only be made on your last working day of the week</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {routingModes.deliveryType && (
+                    <motion.button
+                      whileHover={isLastWorkingDay ? { scale: 1.02 } : {}}
+                      whileTap={isLastWorkingDay ? { scale: 0.98 } : {}}
+                      onClick={updateRoutingModes}
+                      disabled={
+                        loading.routing ||
+                        !isLastWorkingDay ||
+                        (routingModes.deliveryType === "Pickup" && routingModes.pickup === null) ||
+                        (routingModes.deliveryType === "Delivery" && routingModes.delivery === null) ||
+                        (routingModes.deliveryType === "Both" && (routingModes.pickup === null || routingModes.delivery === null))
+                      }
+                      className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-all ${
+                        loading.routing
+                          ? "bg-blue-200 text-blue-700"
+                          : isLastWorkingDay && 
+                            ((routingModes.deliveryType === "Pickup" && routingModes.pickup !== null) ||
+                             (routingModes.deliveryType === "Delivery" && routingModes.delivery !== null) ||
+                             (routingModes.deliveryType === "Both" && routingModes.pickup !== null && routingModes.delivery !== null))
+                          ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                          : "bg-slate-300 text-slate-500 cursor-not-allowed"
+                      }`}
+                    >
+                      {loading.routing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-5 h-5" />
+                          Save Routing Preferences
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </motion.div>
       </div>
