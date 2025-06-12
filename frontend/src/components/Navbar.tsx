@@ -45,7 +45,7 @@ export function Navbar() {
     setUserData(parsedToken ? { ...parsedToken, id: userId } : null);
   
     if (userId) {
-      fetch("https://auditlyai.com/api/users")
+      fetch("http://localhost:8000/api/users")
         .then((res) => res.json())
         .then((data) => {
           const thisUser = data.data.find((u) => u.user_id == userId);
@@ -83,7 +83,7 @@ export function Navbar() {
   const fetchNotifications = async () => {
     try {
       const response = await fetch(
-        `https://auditlyai.com/api/get-notifications?user_id=${userData.id}`
+        `http://localhost:8000/api/get-notifications?user_id=${userData.id}`
       );
       if (!response.ok) throw new Error("Failed to fetch notifications");
       const data = await response.json();
@@ -99,7 +99,7 @@ export function Navbar() {
   const markAsRead = async (notificationId) => {
     try {
       const response = await fetch(
-        `https://auditlyai.com/api/update-notification/${notificationId}`,
+        `http://localhost:8000/api/update-notification/${notificationId}`,
         {
           method: "PUT",
         }
@@ -162,8 +162,6 @@ export function Navbar() {
   };
 
 
-  isInspectionUser && !isAdmin && !isAgent && !isManager);
-
 
   const NavLink = ({ to, icon: Icon, children }) => (
     <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -177,6 +175,7 @@ export function Navbar() {
       </Link>
     </motion.li>
   );
+
 
 
   return (
