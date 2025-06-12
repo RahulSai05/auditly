@@ -45,7 +45,7 @@ export function Navbar() {
     setUserData(parsedToken ? { ...parsedToken, id: userId } : null);
   
     if (userId) {
-      fetch("http://localhost:8000/api/users")
+      fetch("https://auditlyai.com/api/users")
         .then((res) => res.json())
         .then((data) => {
           const thisUser = data.data.find((u) => u.user_id == userId);
@@ -83,7 +83,7 @@ export function Navbar() {
   const fetchNotifications = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/get-notifications?user_id=${userData.id}`
+        `https://auditlyai.com/api/get-notifications?user_id=${userData.id}`
       );
       if (!response.ok) throw new Error("Failed to fetch notifications");
       const data = await response.json();
@@ -99,7 +99,7 @@ export function Navbar() {
   const markAsRead = async (notificationId) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/update-notification/${notificationId}`,
+        `https://auditlyai.com/api/update-notification/${notificationId}`,
         {
           method: "PUT",
         }
