@@ -1,6 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
 import { addItem } from "../../store/slices/itemSlice";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -13,14 +14,73 @@ const GetAll: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
+    const { orderNumber } = useParams();
+
+
+    useEffect(() => {
+        const savedOrder = localStorage.getItem("selectedReturnOrderNumber");
+        const finalOrderNumber = orderNumber || savedOrder;
+      
+        if (finalOrderNumber) {
+          setSearchQuery(finalOrderNumber);
+          fetchDetailsFromValue(finalOrderNumber);
+          if (savedOrder) {
+            localStorage.removeItem("selectedReturnOrderNumber");
+          }
+        }
+      }, [orderNumber]);
+      
+      
+      
+      
+    const fetchDetailsFromValue = async (query: string): Promise<void> => {
+        setIsLoading(true);
+        setError("");
+        try {
+          const response = await axios.get(
+            "https://auditlyai.com/api/item_order_instance",
+            { params: { identifier: query } }
+          );
+      
+          if (response.status === 200) {
+            const data = response.data;
+      
+            if (!data.customer_id) {
+              throw new Error("Customer ID not found in response.");
+            }
+      
+            setProductData(data);
+            setIsFetched(true);
+            localStorage.setItem('lastItemId', data.item_id.toString());
+            localStorage.setItem('lastCustomerId', data.customer_id.toString());
+            dispatch(addItem(data));
+          }
+        } catch (err: any) {
+          console.error("API error:", err);
+          setProductData(null);
+          setIsFetched(true);
+      
+          if (err.response && err.response.status === 404) {
+            setError("We couldn't find a return with that number. Please check your return order number and try again.");
+          } else if (err.message === "Customer ID not found in response.") {
+            setError("Invalid product data received. Please contact support.");
+          } else if (err.message.includes("Network Error")) {
+            setError("Network error. Please check your connection and try again.");
+          } else {
+            setError("An error occurred. Please try again later.");
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
     const dispatch = useDispatch();
     const router = useNavigate();
 
-    // Format address helper function
     const formatAddress = (address: any) => {
-        return `${address.street_number}, ${address.city}, ${address.state}, ${address.country}`;
-    };
+        if (!address) return "N/A";
+        return `${address.street_number || ""}, ${address.city || ""}, ${address.state || ""}, ${address.country || ""}`;
+      };
 
     const fetchDetails = async (): Promise<void> => {
         setIsLoading(true);
@@ -67,7 +127,6 @@ const GetAll: React.FC = () => {
     const handleNext = () => {
         if (productData) {
             const itemId = localStorage.getItem('lastItemId');
-            console.log('Item ID from Local Storage:', itemId);
             router('/return/details');
         }
     };

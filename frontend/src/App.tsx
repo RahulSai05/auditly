@@ -5,12 +5,12 @@ import Home from "./pages/Home";
 import HelpCenter from "./pages/HelpCenter";
 import Options from "./pages/Options";
 import GetAll from "./pages/manual/GetAll";
-import Details from "./pages/manual/return /Details";
-import Inspection from "./pages/manual/return /Inspection";
-import UploadMedia from "./pages/manual/return /Uploadmedia";
-import Compare from "./pages/manual/return /Compare";
-import Review from "./pages/manual/return /Review";
-import Done from "./pages/manual/return /Done";
+import Details from "./pages/manual/return/Details";
+import Inspection from "./pages/manual/return/Inspection";
+import UploadMedia from "./pages/manual/return/Uploadmedia";
+import Compare from "./pages/manual/return/Compare";
+import Review from "./pages/manual/return/Review";
+import Done from "./pages/manual/return/Done";
 import Scan from "./pages/auto/Scan";
 import Onboard from "./pages/inspection/Onboard";
 import InspectionData from "./pages/inspection/InspectionData";
@@ -103,7 +103,11 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
-  if (!userData) return null;
+  // if (!userData) return null;
+  if (!userData) {
+  console.warn("UserData not ready, blocking inspection route.");
+  return <LoadingScreen />; // Prevent false redirects
+}
 
   const isInspectionUser = userData && Array.isArray(userData["User Type"]) &&
     userData["User Type"].includes("inspection_user");
@@ -151,7 +155,6 @@ export default function App(): JSX.Element {
   }, [location.pathname]); // Sync state with localStorage
 
   useEffect(() => {
-    console.log("Updated userData:", userData);
   }, [userData]); // Log changes
 
   useEffect(() => {
@@ -173,13 +176,11 @@ export default function App(): JSX.Element {
             ? data.data.filter((user: any) => user?.user_name === userData["User Name"])[0]
             : null;
             
-          console.log("API returned userExistsData:", userExistsData);
           if (userExists && userExistsData) {
 
             if (userExistsData.agent_id) {
               localStorage.setItem("agentId", userExistsData.agent_id.toString());
               dispatch(setAgentId(userExistsData.agent_id));
-              console.log("Agent ID set:", userExistsData.agent_id);
             } else {
               localStorage.removeItem("agentId");
               dispatch(setAgentId(null));
@@ -188,7 +189,6 @@ export default function App(): JSX.Element {
             if (userExistsData.manager_id) {
               localStorage.setItem("managerId", userExistsData.manager_id.toString());
               dispatch(setManagerId(userExistsData.manager_id));
-              console.log("Manager ID set:", userExistsData.manager_id);
             } else {
               localStorage.removeItem("managerId");
               dispatch(setManagerId(null));
@@ -203,15 +203,12 @@ export default function App(): JSX.Element {
               const userType = requiredUserTypes[i];
 
               if (userType === "reports_user" && !userExistsData.is_reports_user) {
-                console.log("Missing required permission: reports_user");
                 isAuthorized = false;
                 break;
               } else if (userType === "admin" && !userExistsData.is_admin) {
-                console.log("Missing required permission: admin");
                 isAuthorized = false;
                 break;
               } else if (userType === "inspection_user" && !userExistsData.is_inspection_user) {
-                console.log("Missing required permission: inspection_user");
                 isAuthorized = false;
                 break;
               }
@@ -221,26 +218,20 @@ export default function App(): JSX.Element {
             if (isAuthorized) {
               // Check if user has reports_user permission
               if (userExistsData.is_reports_user && !requiredUserTypes.includes("reports_user")) {
-                console.log("User has unauthorized permission: reports_user");
                 isAuthorized = false;
               }
 
               // Check if user has admin permission
               if (userExistsData.is_admin && !requiredUserTypes.includes("admin")) {
-                console.log("User has unauthorized permission: admin");
                 isAuthorized = false;
               }
 
               // Check if user has inspection_user permission
               if (userExistsData.is_inspection_user && !requiredUserTypes.includes("inspection_user")) {
-                console.log("User has unauthorized permission: inspection_user");
                 isAuthorized = false;
               }
             }
 
-            console.log("User exists data:", userExistsData);
-            console.log("User types required:", userData["User Type"]);
-            console.log("User authorized with exact permissions:", isAuthorized);
 
             if (!isAuthorized) {
                 localStorage.removeItem("token");
@@ -248,13 +239,11 @@ export default function App(): JSX.Element {
                 navigate("/login", { replace: true });
             }
           } else if (!userExists) {
-            console.log("User does not exist");
             localStorage.removeItem("token");
             localStorage.removeItem("usertype");
             navigate("/login");
           }
         } else {
-           console.log("Invalid user state");
            localStorage.removeItem("token");
            localStorage.removeItem("usertype");
            navigate("/login", { replace: true });
@@ -267,7 +256,6 @@ export default function App(): JSX.Element {
     };
 
     const timer = setTimeout(() => {
-      console.log("Checking user validity...");
       checkUserValidity();
     }, 200);
 
@@ -288,7 +276,6 @@ export default function App(): JSX.Element {
 
 
   useEffect(() => {
-    console.log(itemData);
   }, [itemData]);
 
   if (checkingUserValidity && !authRoutes.includes(location.pathname)) {
@@ -496,6 +483,11 @@ export default function App(): JSX.Element {
         <Route path="/help-center" element={
           <InspectionRoute>
             <HelpCenter />
+          </InspectionRoute>
+        } />
+        <Route path="/option/manual/:orderNumber" element={
+          <InspectionRoute>
+            <GetAll />
           </InspectionRoute>
         } />
         <Route path="/option/manual" element={

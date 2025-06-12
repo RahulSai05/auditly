@@ -67,7 +67,6 @@ const ItemImages: React.FC = () => {
       url = `${backendUrl}/images/search?item_description=${encodeURIComponent(searchTerm)}`;
     }
 
-    console.log("Making request to:", url); // For debugging
 
     const response = await axios.get(url);
     const data = response.data;
@@ -75,7 +74,6 @@ const ItemImages: React.FC = () => {
     data.back_image_path = `${staticUrl}${data.back_image_path}`;
     setItemData(data);
   } catch (err: any) {
-    console.error("API Error:", err); // For debugging
     setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
   } finally {
     setLoading(false);

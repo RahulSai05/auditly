@@ -46,11 +46,9 @@ const Login = () => {
 
       // Redirect based on the user role
       if (isAdmin && isInspectionUser && isReportUser) {
-        console.log("all done");
 
         navigate('/')
       } else if (isAdmin) {
-        console.log("all done");
         navigate('/admin/settings/connectors/inbound');
       } else if (isInspectionUser) {
         navigate('/');

@@ -272,7 +272,6 @@ const MappingRules: React.FC = () => {
             setMappingName(response.data.mapping_name);
           }
         } catch (error) {
-          console.log("No existing mapping found");
         }
       }
     };

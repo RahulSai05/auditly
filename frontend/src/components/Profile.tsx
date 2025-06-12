@@ -22,7 +22,6 @@ export function Profile() {
     if (!userData) return;
     try {
       // Mock API call
-      console.log("Logging out user:", userData["User Name"]);
       localStorage.removeItem("token");
       setUserData(null);
       navigate("/login"); // Use navigate for redirection

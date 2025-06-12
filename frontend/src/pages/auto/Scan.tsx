@@ -100,13 +100,11 @@ const Scan = () => {
               videoRef.current,
               (result: Result | null, err) => {
                 if (result) {
-                  console.log("Barcode detected:", result.getText());
                   fetchDetails(result.getText());
                   stopScanning();
                 }
                 if (err) {
                   if (err instanceof NotFoundException) {
-                    console.log("No barcode detected. Keep trying...");
                   } else {
                     console.error("Error:", err);
                     setErrorMessage(

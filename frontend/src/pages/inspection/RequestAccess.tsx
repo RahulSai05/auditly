@@ -479,7 +479,6 @@ const RequestAccess: React.FC = () => {
         additional_info_2: agentForm.additional_info_2 || null,
         additional_info_3: agentForm.additional_info_3 || null
       };
-      console.log("Submitting payload:", payload); // 👈 add this
 
       const response = await fetch("/api/create-agent/", {
         method: "POST",
