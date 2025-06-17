@@ -21,8 +21,7 @@ const ItemImages: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = "https://auditlyai.com/api"; // API endpoint
-  const staticUrl = "https://auditlyai.com"; // Root domain for static files
+  const staticUrl = "https://auditlyai.com"; 
 
   const containerVariants = {
     hidden: { opacity: 0 },

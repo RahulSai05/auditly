@@ -4309,23 +4309,86 @@ def add_servicing_zip(request: AddServicingZipRequest, db: Session = Depends(get
     }
 
 
-class AddressRequest(BaseModel):
+# class AddressRequest(BaseModel):
+#     addresses: List[str]
+
+# @app.post("/api/best-route")
+# def get_best_route(data: AddressRequest):
+#     if len(data.addresses) < 2:
+#         raise HTTPException(
+#             status_code=400,
+#             detail="At least 2 addresses are required."
+#         )
+
+#     origin = data.addresses[0]
+#     destination = data.addresses[-1]
+#     waypoints = data.addresses[1:-1]
+#     waypoints_str = "|".join(waypoints)
+
+#     # Construct the URL
+#     url = (
+#         f"https://maps.googleapis.com/maps/api/directions/json"
+#         f"?origin={origin}&destination={destination}"
+#         f"&waypoints=optimize:true|{waypoints_str}"
+#         f"&key={GOOGLE_API_KEY}"
+#     )
+
+#     try:
+#         res = requests.get(url)
+#         res_json = res.json()
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail="Failed to fetch route from Google Maps API")
+
+#     if res_json.get("status") != "OK":
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Google API error: {res_json.get('error_message') or res_json.get('status') or 'Unknown'}"
+#         )
+
+#     try:
+#         optimized_order = res_json["routes"][0]["waypoint_order"]
+#         ordered_addresses = [origin] + [waypoints[i] for i in optimized_order] + [destination]
+#         legs = res_json["routes"][0]["legs"]
+
+#         total_distance_km = round(sum(leg["distance"]["value"] for leg in legs) / 1000, 2)
+#         total_duration_minutes = round(sum(leg["duration"]["value"] for leg in legs) / 60, 2)
+#         route_summary = res_json["routes"][0].get("summary", "No route summary")
+
+#         return {
+#             "ordered_addresses": ordered_addresses,
+#             "total_distance_km": total_distance_km,
+#             "total_duration_minutes": total_duration_minutes,
+#             "route_summary": route_summary
+#         }
+
+#     except Exception as parse_err:
+#         raise HTTPException(status_code=500, detail="Error parsing route data from Google API response")
+    
+
+class RoutePreferenceRequest(BaseModel):
+    user_location: str
     addresses: List[str]
+    route_mode: Literal["FIFO", "LIFO"] = "FIFO"
 
 @app.post("/api/best-route")
-def get_best_route(data: AddressRequest):
-    if len(data.addresses) < 2:
-        raise HTTPException(
-            status_code=400,
-            detail="At least 2 addresses are required."
-        )
+def get_best_route(data: RoutePreferenceRequest):
+    if not data.addresses or len(data.addresses) < 1:
+        raise HTTPException(status_code=400, detail="At least 1 order address is required.")
 
-    origin = data.addresses[0]
-    destination = data.addresses[-1]
-    waypoints = data.addresses[1:-1]
-    waypoints_str = "|".join(waypoints)
+    if data.route_mode == "FIFO":
+        origin = data.user_location
+        destination = data.addresses[-1]
+        waypoints = data.addresses
+    else:  # LIFO
+        origin = data.addresses[0]
+        destination = data.user_location
+        waypoints = data.addresses
 
-    # Construct the URL
+    # Remove origin and destination from waypoints
+    waypoints_filtered = [addr for addr in waypoints if addr != origin and addr != destination]
+    waypoints_str = "|".join(waypoints_filtered)
+
+    # Construct the Google Directions API URL
     url = (
         f"https://maps.googleapis.com/maps/api/directions/json"
         f"?origin={origin}&destination={destination}"
@@ -4334,25 +4397,23 @@ def get_best_route(data: AddressRequest):
     )
 
     try:
-        res = requests.get(url)
-        res_json = res.json()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to fetch route from Google Maps API")
+        response = requests.get(url)
+        response_json = response.json()
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to call Google Maps API")
 
-    if res_json.get("status") != "OK":
-        raise HTTPException(
-            status_code=500,
-            detail=f"Google API error: {res_json.get('error_message') or res_json.get('status') or 'Unknown'}"
-        )
+    if response_json.get("status") != "OK":
+        raise HTTPException(status_code=500, detail=f"Google API error: {response_json.get('error_message') or response_json.get('status')}")
 
     try:
-        optimized_order = res_json["routes"][0]["waypoint_order"]
-        ordered_addresses = [origin] + [waypoints[i] for i in optimized_order] + [destination]
-        legs = res_json["routes"][0]["legs"]
+        optimized_order = response_json["routes"][0]["waypoint_order"]
+        ordered_waypoints = [waypoints_filtered[i] for i in optimized_order]
+        ordered_addresses = [origin] + ordered_waypoints + [destination]
 
+        legs = response_json["routes"][0]["legs"]
         total_distance_km = round(sum(leg["distance"]["value"] for leg in legs) / 1000, 2)
         total_duration_minutes = round(sum(leg["duration"]["value"] for leg in legs) / 60, 2)
-        route_summary = res_json["routes"][0].get("summary", "No route summary")
+        route_summary = response_json["routes"][0].get("summary", "No summary")
 
         return {
             "ordered_addresses": ordered_addresses,
@@ -4360,10 +4421,8 @@ def get_best_route(data: AddressRequest):
             "total_duration_minutes": total_duration_minutes,
             "route_summary": route_summary
         }
-
-    except Exception as parse_err:
-        raise HTTPException(status_code=500, detail="Error parsing route data from Google API response")
-    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error parsing Google API response")
 
 
 class SaleAgentFilterRequest(BaseModel):
@@ -4499,25 +4558,6 @@ def get_agent_work_schedule(agent_id: int, db: Session = Depends(get_db)):
 class WorkScheduleUpdateRequest(BaseModel):
     agent_id: int
     work_schedule: dict  
-
-# @app.post("/api/agent/update-curent-week-work-schedule")
-# def update_agent_work_schedule(request: WorkScheduleUpdateRequest, db: Session = Depends(get_db)):
-#     agent = db.query(Agent).filter(Agent.agent_id == request.agent_id).first()
-
-#     if not agent:
-#         raise HTTPException(status_code=404, detail="Agent not found")
-
-#     agent.work_schedule = request.work_schedule
-#     db.commit()
-#     db.refresh(agent)
-
-#     return {
-#         "message": "Work schedule updated successfully",
-#         "agent_id": agent.agent_id,
-#         "work_schedule": agent.work_schedule
-#     }
-
-
 
 @app.post("/api/agent/update-curent-week-work-schedule")
 def update_agent_work_schedule(request: WorkScheduleUpdateRequest, db: Session = Depends(get_db)):
