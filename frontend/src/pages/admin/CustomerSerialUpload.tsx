@@ -125,7 +125,7 @@ function CustomerSerialUpload() {
   };
 
   const downloadTemplateCSV = () => {
-    const csvContent = "item_id,original_sales_order_number,original_sales_order_line,ordered_qty,serial_number,customer_email,account_number,sscc_number,tag_number,vendor_item_number,shipped_from_warehouse,shipped_to_person,shipped_to_billing_address,shipped_to_apt_number,shipped_to_street,shipped_to_city,shipped_to_zip,shipped_to_state,shipped_to_country,dimension_depth,dimension_length,dimension_breadth,dimension_weight,dimension_volume,dimension_size,date_purchased,date_shipped,date_delivered";
+    const csvContent = "item_id,original_sales_order_number,original_sales_order_line,ordered_qty,serial_number,customer_email,account_number,sscc_number,tag_number,vendor_item_number,shipped_from_warehouse,shipped_to_person,shipped_to_billing_address,shipped_to_apt_number,shipped_to_street,shipped_to_city,shipped_to_zip,shipped_to_state,shipped_to_country,dimension_depth,dimension_length,dimension_breadth,dimension_weight,dimension_volume,dimension_size,date_purchased,date_shipped,date_delivered,delivery_type";
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

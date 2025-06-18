@@ -25,6 +25,7 @@ import AdminLayout from "./components/AdminLayout";
 import ItemReturn from "./pages/admin/ItemReturn";
 import CustomerSerials from "./pages/admin/CustomerSerials";
 import ReturnDetails from "./components/ReturnDetails";
+import DeliverySettings from "./components/DeliverySettings";
 import AuditlyInspection from "./pages/admin/AuditlyInspection";
 import UserMaintenance from "./pages/admin/UserMaintenance";
 import CustomerSerialUpload from "./pages/admin/CustomerSerialUpload";
@@ -322,6 +323,11 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/connectors/outbound" element={
             <AdminRoute>
               <Outbound />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/delivery-settings" element={
+            <AdminRoute>
+             <DeliverySettings />
             </AdminRoute>
           } />
           <Route path="/admin/settings/mapping-rules" element={

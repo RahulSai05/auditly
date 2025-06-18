@@ -29,7 +29,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent, AgentManager
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent, AgentManager, DeliveryTypeTime
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -605,43 +605,6 @@ def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_d
 class ManagerStateRequest(BaseModel):
     manager_id: int
 
-# @app.post("/api/sale-items-by-manager-state")
-# def get_sale_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
-#     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
-#     if not manager:
-#         raise HTTPException(status_code=404, detail="Manager not found")
-
-#     servicing_state = manager.servicing_state
-
-#     sale_items = db.query(SaleItemData).filter(SaleItemData.shipped_to_state == servicing_state).all()
-
-#     return {
-#         "manager_state": servicing_state,
-#         "sale_items": [
-#             {
-#                 "id": item.id,
-#                 "sales_order": item.original_sales_order_number,
-#                 "order_line": item.original_sales_order_line,
-#                 "serial_number": item.serial_number,
-#                 "sscc_number": item.sscc_number,
-#                 "account_number": item.account_number,
-#                 "customer_email": item.customer_email,
-#                 "shipped_to_city": item.shipped_to_city,
-#                 "shipped_to_state": item.shipped_to_state,
-#                 "shipped_to_zip": item.shipped_to_zip,
-#                 "status": item.status,
-#                 "date_purchased": item.date_purchased,
-#                 "date_shipped": item.date_shipped,
-#                 "date_delivered": item.date_delivered,
-#                 "item": {
-#                     "item_number": item.item.item_number if item.item else None,
-#                     "description": item.item.item_description if item.item else None,
-#                     "category": item.item.category if item.item else None
-#                 }
-#             } for item in sale_items
-#         ]
-#     }
-
 @app.post("/api/sale-items/by-manager-grade-region")
 def get_sale_items_by_manager_region(request: ManagerStateRequest, db: Session = Depends(get_db)):
     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
@@ -1133,7 +1096,7 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
             "shipped_to_apt_number", "shipped_to_street", "shipped_to_city", "shipped_to_zip",
             "shipped_to_state", "shipped_to_country", "dimension_depth", "dimension_length",
             "dimension_breadth", "dimension_weight", "dimension_volume", "dimension_size",
-            "date_purchased", "date_shipped", "date_delivered"
+            "date_purchased", "date_shipped", "date_delivered", "delivery_type"
         }
 
         if not required_fields.issubset(set(csv_reader.fieldnames)):
@@ -1198,7 +1161,8 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
                     dimension_size=row["dimension_size"],
                     date_purchased=datetime.strptime(row["date_purchased"], "%Y-%m-%d").date(),
                     date_shipped=datetime.strptime(row["date_shipped"], "%Y-%m-%d").date(),
-                    date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date()
+                    date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date(),
+                    delivery_type=row["delivery_type"]
                 )
 
                 db.add(sale_item)
@@ -1245,7 +1209,7 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
             "original_sales_order_number", "return_order_number", "return_order_line", "return_qty",
             "item_id", "return_destination", "return_condition", "return_carrier", "return_warehouse",
             "return_house_number", "return_street", "return_city", "return_zip", "return_state", "return_country",
-            "date_purchased", "date_shipped", "date_delivered", "return_created_date", "return_received_date"
+            "date_purchased", "date_shipped", "date_delivered", "return_created_date", "return_received_date", "delivery_type"
         }
 
         if not required_fields.issubset(set(csv_reader.fieldnames)):
@@ -1295,7 +1259,8 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
                     date_shipped=datetime.strptime(row["date_shipped"], "%Y-%m-%d").date(),
                     date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date(),
                     return_created_date=datetime.strptime(row["return_created_date"], "%Y-%m-%d").date(),
-                    return_received_date=datetime.strptime(row["return_received_date"], "%Y-%m-%d").date()
+                    return_received_date=datetime.strptime(row["return_received_date"], "%Y-%m-%d").date(),
+                    delivery_type=row["delivery_type"]
                 )
 
                 db.add(return_item)
@@ -3326,6 +3291,8 @@ class SaleItem(BaseModel):
     date_purchased: datetime
     date_shipped: datetime
     date_delivered: datetime
+    delivery_type: Optional[str] = None
+
 
 class DatabaseJsonSaleItem(BaseModel):
     onboard_token: str
@@ -3386,6 +3353,7 @@ class ReturnItem(BaseModel):
     date_delivered: datetime
     return_created_date: datetime
     return_received_date: datetime
+    delivery_type: Optional[str] = None
 
 class DatabaseJsonReturnItem(BaseModel):
     onboard_token: str
@@ -3727,6 +3695,7 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
 
     result = []
     address_list = []
+    total_delivery_time_sum = 0
 
     for order in orders:
         # Compose full address
@@ -3738,6 +3707,13 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
 
         full_address = f"{street}, {city}, {state}, {zip_code}, {country}".strip(", ")
         address_list.append(full_address)
+
+
+        delivery_time_entry = db.query(DeliveryTypeTime).filter(
+            DeliveryTypeTime.delivery_type == order.delivery_type
+        ).first()
+        delivery_time = delivery_time_entry.delivery_time if delivery_time_entry else 0
+        total_delivery_time_sum += delivery_time
 
         result.append({
             "id": order.id,
@@ -3779,6 +3755,7 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
             }
         })
     result.append({"address_list": address_list})
+    result.append({"total_delivery_time": total_delivery_time_sum})
     return result
 
 
@@ -3789,8 +3766,9 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
     if not return_orders:
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
 
-    result = []
+    orders = []
     address_list = []
+    total_delivery_time_sum = 0
 
     for return_order in return_orders:
         sales_order = db.query(SaleItemData).filter(
@@ -3798,6 +3776,7 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
             SaleItemData.original_sales_order_line == return_order.return_order_line
         ).first()
 
+        # Build address
         street = return_order.return_street or (sales_order.shipped_to_street if sales_order else "")
         city = return_order.return_city or (sales_order.shipped_to_city if sales_order else "")
         state = return_order.return_state or (sales_order.shipped_to_state if sales_order else "")
@@ -3807,13 +3786,19 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
         full_address = f"{street}, {city}, {state}, {zip_code}, {country}".strip(", ")
         address_list.append(full_address)
 
-        order_data = {
+        delivery_time_entry = db.query(DeliveryTypeTime).filter(
+            DeliveryTypeTime.delivery_type == return_order.delivery_type
+        ).first()
+        delivery_time = delivery_time_entry.delivery_time if delivery_time_entry else 0
+        total_delivery_time_sum += delivery_time
+
+        orders.append({
             "id": return_order.id,
             "item_id": return_order.item_id,
             "original_sales_order_number": return_order.original_sales_order_number,
             "original_sales_order_line": return_order.return_order_line,
             "ordered_qty": return_order.return_qty,
-            "serial_number": return_order.serial_number if hasattr(return_order, "serial_number") else None,
+            "serial_number": getattr(return_order, "serial_number", None),
             "sscc_number": sales_order.sscc_number if sales_order else None,
             "tag_number": sales_order.tag_number if sales_order else None,
             "vendor_item_number": sales_order.vendor_item_number if sales_order else None,
@@ -3839,6 +3824,7 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
             "date_delivered": return_order.date_delivered or (sales_order.date_delivered if sales_order else None),
             "status": return_order.status or "Return Requested",
             "delivery_agent_id": agent_id,
+            "delivery_type": return_order.delivery_type,
             "item": {
                 "item_number": return_order.item.item_number if return_order.item else None,
                 "item_description": return_order.item.item_description if return_order.item else None,
@@ -3853,12 +3839,13 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
                 "return_created_date": return_order.return_created_date,
                 "return_received_date": return_order.return_received_date
             }
-        }
+        })
 
-        result.append(order_data)
-    result.append({"address_list": address_list})
-    return result
-
+    return {
+        "orders": orders,
+        "address_list": address_list,
+        "total_delivery_time": total_delivery_time_sum
+    }
 
 class SalesOrderAgentFilterRequest(BaseModel):
     sales_order_id: int
@@ -4309,66 +4296,11 @@ def add_servicing_zip(request: AddServicingZipRequest, db: Session = Depends(get
     }
 
 
-# class AddressRequest(BaseModel):
-#     addresses: List[str]
-
-# @app.post("/api/best-route")
-# def get_best_route(data: AddressRequest):
-#     if len(data.addresses) < 2:
-#         raise HTTPException(
-#             status_code=400,
-#             detail="At least 2 addresses are required."
-#         )
-
-#     origin = data.addresses[0]
-#     destination = data.addresses[-1]
-#     waypoints = data.addresses[1:-1]
-#     waypoints_str = "|".join(waypoints)
-
-#     # Construct the URL
-#     url = (
-#         f"https://maps.googleapis.com/maps/api/directions/json"
-#         f"?origin={origin}&destination={destination}"
-#         f"&waypoints=optimize:true|{waypoints_str}"
-#         f"&key={GOOGLE_API_KEY}"
-#     )
-
-#     try:
-#         res = requests.get(url)
-#         res_json = res.json()
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail="Failed to fetch route from Google Maps API")
-
-#     if res_json.get("status") != "OK":
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Google API error: {res_json.get('error_message') or res_json.get('status') or 'Unknown'}"
-#         )
-
-#     try:
-#         optimized_order = res_json["routes"][0]["waypoint_order"]
-#         ordered_addresses = [origin] + [waypoints[i] for i in optimized_order] + [destination]
-#         legs = res_json["routes"][0]["legs"]
-
-#         total_distance_km = round(sum(leg["distance"]["value"] for leg in legs) / 1000, 2)
-#         total_duration_minutes = round(sum(leg["duration"]["value"] for leg in legs) / 60, 2)
-#         route_summary = res_json["routes"][0].get("summary", "No route summary")
-
-#         return {
-#             "ordered_addresses": ordered_addresses,
-#             "total_distance_km": total_distance_km,
-#             "total_duration_minutes": total_duration_minutes,
-#             "route_summary": route_summary
-#         }
-
-#     except Exception as parse_err:
-#         raise HTTPException(status_code=500, detail="Error parsing route data from Google API response")
-    
-
 class RoutePreferenceRequest(BaseModel):
     user_location: str
     addresses: List[str]
     route_mode: Literal["FIFO", "LIFO"] = "FIFO"
+    delivery_time: int
 
 @app.post("/api/best-route")
 def get_best_route(data: RoutePreferenceRequest):
@@ -4418,7 +4350,7 @@ def get_best_route(data: RoutePreferenceRequest):
         return {
             "ordered_addresses": ordered_addresses,
             "total_distance_km": total_distance_km,
-            "total_duration_minutes": total_duration_minutes,
+            "total_duration_minutes": total_duration_minutes+data.delivery_time,
             "route_summary": route_summary
         }
     except Exception as e:
@@ -4594,4 +4526,55 @@ def update_agent_work_schedule(request: WorkScheduleUpdateRequest, db: Session =
         "message": "Work schedule updated successfully and notifications sent to manager(s)",
         "agent_id": agent.agent_id,
         "work_schedule": agent.work_schedule
+    }
+
+class DeliveryTypeTimeCreate(BaseModel):
+    delivery_type: str
+    delivery_time: int
+
+@app.post("/api/delivery-type-time/add")
+def add_delivery_type_time(payload: DeliveryTypeTimeCreate, db: Session = Depends(get_db)):
+    new_entry = DeliveryTypeTime(
+        delivery_type=payload.delivery_type,
+        delivery_time=payload.delivery_time
+    )
+    db.add(new_entry)
+    db.commit()
+    db.refresh(new_entry)
+    return {
+        "message": "Delivery type time added successfully",
+        "id": new_entry.id
+    }
+
+
+@app.get("/api/delivery-type-time/{delivery_type}")
+def get_delivery_time(delivery_type: str, db: Session = Depends(get_db)):
+    record = db.query(DeliveryTypeTime).filter(DeliveryTypeTime.delivery_type == delivery_type).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Delivery type not found")
+
+    return {
+        "delivery_type": record.delivery_type,
+        "delivery_time": record.delivery_time
+    }
+
+class DeliveryTypeTimeUpdate(BaseModel):
+    delivery_type: str
+    delivery_time: int
+
+
+@app.put("/api/delivery-type-time/update")
+def update_delivery_time_by_type(payload: DeliveryTypeTimeUpdate, db: Session = Depends(get_db)):
+    record = db.query(DeliveryTypeTime).filter(DeliveryTypeTime.delivery_type == payload.delivery_type).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Delivery type not found")
+
+    record.delivery_time = payload.delivery_time
+    db.commit()
+    db.refresh(record)
+
+    return {
+        "message": "Delivery time updated successfully",
+        "delivery_type": record.delivery_type,
+        "delivery_time": record.delivery_time
     }

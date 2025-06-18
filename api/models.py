@@ -260,6 +260,7 @@ class SaleItemData(Base):
     status = Column(String(100), default="Pending Agent Assignment")
     delivery_agent_id = Column(Integer)
     delivery_agent_type = Column(String(50))
+    delivery_type = Column(String(50))
 
 
     item = relationship("Item", back_populates="sale_item_data", lazy="joined")
@@ -292,6 +293,8 @@ class ReturnItemData(Base):
     status = Column(String(100), default="Pending Agent Assignment")
     return_agent_id = Column(Integer)
     return_agent_type = Column(String(50))
+    delivery_type = Column(String(50))
+
 
     item = relationship("Item", back_populates="return_item_data", lazy="joined")
 
@@ -319,6 +322,12 @@ class NotificationTable(Base):
     read_at = Column(DateTime, default=None)
     created_at = Column(DateTime, default=func.current_timestamp())
 
+class DeliveryTypeTime(Base):
+    __tablename__ = 'delivery_type_time'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    delivery_type = Column(String(255))
+    delivery_time = Column(Integer)
 
 class Agent(Base):
     __tablename__ = "agent"

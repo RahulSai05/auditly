@@ -85,6 +85,7 @@ const ScheduledDeliveries: React.FC = () => {
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
   const [addressMap, setAddressMap] = useState<Record<string, Order>>({});
+  const [deliveryTime, setDeliveryTime] = useState<number>(0);
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
@@ -109,8 +110,15 @@ const ScheduledDeliveries: React.FC = () => {
         throw new Error(`Failed to fetch orders: ${response.status} - ${message}`);
       }
   
-      const data = await response.json();
-      setOrders(data);
+      const raw = await response.json();
+
+      const ordersOnly = raw.filter(entry => entry?.id); 
+      const deliveryTimeEntry = raw.find(entry => entry?.total_delivery_time !== undefined);
+      const deliveryTime = deliveryTimeEntry?.total_delivery_time || 0;
+      
+      setOrders(ordersOnly);
+      setDeliveryTime(deliveryTime);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch orders");
     } finally {
@@ -124,8 +132,12 @@ const ScheduledDeliveries: React.FC = () => {
       const response = await fetch("/api/best-route", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_location: userLocation, addresses, route_mode: routeMode }),
-      });
+        body: JSON.stringify({
+          user_location: userLocation,
+          addresses,
+          route_mode: routeMode,
+          delivery_time: deliveryTime, 
+        }),      });
   
       const result = await response.json();
   
@@ -151,7 +163,6 @@ const ScheduledDeliveries: React.FC = () => {
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
     );
     const data = await response.json();
-    console.log("✅ Got route back:", data);
 
     if (data.status === "OK" && data.results.length > 0) {
       return data.results[0].formatted_address;

@@ -481,6 +481,25 @@ const AdminLayout = () => {
 
                   <motion.li variants={itemVariants}>
                     <NavLink
+                      to="/admin/settings/delivery-settings"
+                      className={({ isActive }) =>
+                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                      }
+                      onClick={handleLinkClick}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Truck className="w-5 h-5 mr-2" />
+                      </motion.div>
+                      Delivery-Return Settings
+                    </NavLink>
+                  </motion.li>
+                      
+
+                  <motion.li variants={itemVariants}>
+                    <NavLink
                       to="/admin/agent/agent-manger-list"
                       className={({ isActive }) =>
                         `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`

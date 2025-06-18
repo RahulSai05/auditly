@@ -133,7 +133,7 @@ function ItemReturn() {
   };
 
   const downloadTemplateCSV = () => {
-    const csvContent = "original_sales_order_number,return_order_number,return_order_line,return_qty,item_id,return_destination,return_condition,return_carrier,return_warehouse,return_house_number,return_street,return_city,return_zip,return_state,return_country,date_purchased,date_shipped,date_delivered,return_created_date,return_received_date";
+    const csvContent = "original_sales_order_number,return_order_number,return_order_line,return_qty,item_id,return_destination,return_condition,return_carrier,return_warehouse,return_house_number,return_street,return_city,return_zip,return_state,return_country,date_purchased,date_shipped,date_delivered,return_created_date,return_received_date,delivery_type";
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

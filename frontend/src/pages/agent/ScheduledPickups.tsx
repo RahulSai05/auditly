@@ -96,6 +96,7 @@ const ScheduledPickups: React.FC = () => {
   const actualOrderCount = Math.max((routeInfo?.ordered_orders?.length || 0) - 1, 0);
   const [routeLoading, setRouteLoading] = useState(false);<p>Total Orders Found: {actualOrderCount}</p>
   const [routeError, setRouteError] = useState<string | null>(null);
+  const [totalDeliveryTime, setTotalDeliveryTime] = useState(0);
   const [addressMap, setAddressMap] = useState<Record<string, Order>>({});
   const navigate = useNavigate();
 
@@ -103,7 +104,7 @@ const ScheduledPickups: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+  
       const agentId = localStorage.getItem("agentId");
       if (!agentId) {
         throw new Error("Agent ID not found. Please log in again.");
@@ -112,29 +113,42 @@ const ScheduledPickups: React.FC = () => {
       const response = await fetch(`/api/agent/return-orders/${agentId}`);
   
       if (response.status === 404) {
-        setOrders([]); 
+        setOrders([]);
         return;
       }
   
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(`Failed to fetch pickup orders: ${response.status} - ${message}`);
+        throw new Error(`Failed to fetch return orders: ${response.status} - ${message}`);
       }
   
       const data = await response.json();
-      setOrders(data);
+  
+      // ✅ Set orders, total delivery time, and optionally address map
+      setOrders(data.orders || []);
+      setTotalDeliveryTime(data.total_delivery_time || 0);
+  
+      const map: Record<string, Order> = {};
+      (data.orders || []).forEach(order => {
+        const address = `${order.shipped_to_street}, ${order.shipped_to_city}, ${order.shipped_to_state}, ${order.shipped_to_zip}, ${order.shipped_to_country}`;
+        map[address.toLowerCase().trim()] = order;
+      });
+      setAddressMap(map);
+  
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch pickup orders");
+      setError(err instanceof Error ? err.message : "Failed to fetch return orders");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+
   const fetchOptimizedRoute = async (
     userLocation: string,
     addresses: string[],
-    routeMode: "FIFO" | "LIFO"
+    routeMode: "FIFO" | "LIFO",
+    deliveryTime: number
   ) => {
     console.log("📡 Sending /api/best-route request...");
   
@@ -151,6 +165,7 @@ const ScheduledPickups: React.FC = () => {
           user_location: userLocation,
           addresses,
           route_mode: routeMode,
+          delivery_time: deliveryTime 
         }),
       });
   
@@ -190,8 +205,8 @@ const ScheduledPickups: React.FC = () => {
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
     );
     const data = await response.json();
-    console.log("✅ Got geocode back:", data);
-
+    setOrders(data.orders || []);
+    setTotalDeliveryTime(data.total_delivery_time || 0);
     if (data.status === "OK" && data.results.length > 0) {
       return data.results[0].formatted_address;
     } else {
@@ -284,7 +299,7 @@ const ScheduledPickups: React.FC = () => {
             route_mode: routeMode,
           });
   
-          await fetchOptimizedRoute(userLocation, addresses, routeMode);
+          await fetchOptimizedRoute(userLocation, addresses, routeMode, totalDeliveryTime);
         } catch (error) {
           console.error("❌ Error during reverse geocoding or optimization:", error);
           setRouteError("Something went wrong while resolving your location.");
