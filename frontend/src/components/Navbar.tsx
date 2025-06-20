@@ -36,6 +36,13 @@ export function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [approvedAgentId, setApprovedAgentId] = useState<string | null>(null);
+  const [approvedManagerId, setApprovedManagerId] = useState<string | null>(null);
+  const [isApproved, setIsApproved] = useState<boolean>(false);
+  const isApprovedAgent = isAgent && approvedAgentId && approvedAgentId !== "null";
+  const isApprovedManager = isManager && approvedManagerId && approvedManagerId !== "null";
+  
+  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -44,13 +51,28 @@ export function Navbar() {
     const parsedToken = token ? JSON.parse(token) : null;
     setUserData(parsedToken ? { ...parsedToken, id: userId } : null);
   
+    if (parsedToken) {
+      const approvedAgent = localStorage.getItem("approved_agent_id") || null;
+      const approvedManager = localStorage.getItem("approved_manager_id") || null;
+  
+      setApprovedAgentId(approvedAgent);
+      setApprovedManagerId(approvedManager);
+  
+      console.log("is_agent:", parsedToken.is_agent);
+      console.log("is_manager:", parsedToken.is_manager);
+      console.log("approved_agent_id:", approvedAgent);
+      console.log("approved_manager_id:", approvedManager);
+  
+      setIsApproved(approvedAgent !== null || approvedManager !== null);
+    }
+  
     if (userId) {
       fetch("https://auditlyai.com/api/users")
         .then((res) => res.json())
         .then((data) => {
           const thisUser = data.data.find((u) => u.user_id == userId);
           if (thisUser) {
-            setIsAgent(thisUser.is_agent);  
+            setIsAgent(thisUser.is_agent);
             setIsManager(thisUser.is_manager);
             setIsAdmin(thisUser.is_admin);
             setIsReportUser(thisUser.is_reports_user);
@@ -241,11 +263,11 @@ export function Navbar() {
                 {isInspectionUser && (
                   <NavLink to="/admin/settings/item-master-upload" icon={FileUp}>Manual Data Ingestion</NavLink>
                 )}
-                {userData && isAgent &&  (
+                {userData && isApprovedAgent && (
                   <NavLink to="/admin/agent/schedule" icon={UserCog}>Agent Dashboard</NavLink>
                 )}
 
-                {userData && isManager && (
+                {userData && isApprovedManager && (
                   <NavLink to="/manager/assign-deliveries" icon={Shield}>Manager Dashboard</NavLink>
                 )}
                 <NavLink to="/help-center" icon={MessageCircleQuestion}>Help Center</NavLink>

@@ -33,6 +33,7 @@ import EmailConfigurations from "./pages/admin/EmailConfigurations";
 import Inbound from "./pages/admin/Inbound";
 import LanguageSettings from "./pages/admin/LanguageSettings";
 import Outbound from "./pages/admin/Outbound";
+import OnboardingAgentManagers from "./pages/admin/OnboardingAgentManagers";
 import Schedule from "./pages/agent/Schedule";
 import AssignDeliveries from "./pages/manager/AssignDeliveries";
 import ManagerTeamView from "./pages/manager/ManagerTeamView";
@@ -333,6 +334,11 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/mapping-rules" element={
             <AdminRoute>
               <MappingRules />
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings/onboarding-agent-managers" element={
+            <AdminRoute>
+              <OnboardingAgentManagers />
             </AdminRoute>
           } />
           <Route path="/admin/settings/api-configurations" element={

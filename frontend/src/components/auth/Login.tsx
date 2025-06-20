@@ -67,18 +67,15 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: "", type: "" });
-
+  
     try {
       if (!otpSent) {
         // Step 1: Send username and password to get OTP
-        const { data } = await axios.post(
-          "https://auditlyai.com/api/login",
-          {
-            user_name: formData.user_name,
-            password: formData.password,
-          }
-        );
-
+        const { data } = await axios.post("https://auditlyai.com/api/login", {
+          user_name: formData.user_name,
+          password: formData.password,
+        });
+  
         if (data.message === "Invalid Username or Password") {
           setMessage({ text: "Invalid username or password", type: "error" });
         } else {
@@ -90,30 +87,27 @@ const Login = () => {
         }
       } else {
         // Step 2: Verify OTP
-        const { data } = await axios.post(
-          "https://auditlyai.com/api/verify-login-otp",
-          {
-            user_name: formData.user_name,
-            login_otp: formData.otp,
-          }
-        );
-
+        const { data } = await axios.post("https://auditlyai.com/api/verify-login-otp", {
+          user_name: formData.user_name,
+          login_otp: formData.otp,
+        });
+  
         if (data.message === "Login Successfull") {
-          localStorage.setItem("token", JSON.stringify(data.data));
-          localStorage.setItem("userType", data.data.user_type); // Store user 
-          localStorage.setItem("userId", data.data["User ID"]);     // Store user ID
-          setUserData(data.data)
+          const userData = data.data;
+  
+          localStorage.setItem("token", JSON.stringify(userData));
+          localStorage.setItem("userType", userData.user_type);
+          localStorage.setItem("userId", userData["User ID"]);
+          localStorage.setItem("approved_agent_id", userData.approved_agent_id || "");
+          localStorage.setItem("approved_manager_id", userData.approved_manager_id || "");
+  
+          setUserData(userData);
           setMessage({
             text: "Login successful! Redirecting...",
             type: "success",
           });
-
-        } else {
-          setMessage({ text: "Invalid OTP", type: "error" });
         }
       }
-
-
     } catch (error: any) {
       setMessage({
         text: error.response?.data?.message || "Login failed!",
@@ -121,11 +115,9 @@ const Login = () => {
       });
     } finally {
       setLoading(false);
-
-
     }
   };
-
+  
   // Enhanced animation variants
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },

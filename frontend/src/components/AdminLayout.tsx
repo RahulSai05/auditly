@@ -34,31 +34,58 @@ import { Clipboard as ClipboardIcon } from "lucide-react";
 const AdminLayout = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connectorsOpen, setConnectorsOpen] = useState(false);
-  const [apiConfigOpen, setApiConfigOpen] = useState(false); // New state for API Config dropdown
+  const [apiConfigOpen, setApiConfigOpen] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
-  const [isManager, setIsManager] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const [isManager, setIsManager] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isReportUser, setIsReportUser] = useState(false);
+  const [isInspectionUser, setIsInspectionUser] = useState(false);
+
+  const [approvedAgentId, setApprovedAgentId] = useState<string | null>(null);
+  const [approvedManagerId, setApprovedManagerId] = useState<string | null>(null);
+
   const [userData, setUserData] = useState(() => {
     const userDataString = localStorage.getItem("token");
     return userDataString ? JSON.parse(userDataString) : null;
   });
 
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isReportUser, setIsReportUser] = useState(false);
-  const [isInspectionUser, setIsInspectionUser] = useState(false);
+  const isApprovedAgent = isAgent && approvedAgentId !== null;
+  const isApprovedManager = isManager && approvedManagerId !== null;
 
   useEffect(() => {
-    if (userData && Array.isArray(userData["User Type"])) {
-      setIsAdmin(userData["User Type"].includes("admin"));
-      setIsReportUser(userData["User Type"].includes("reports_user"));
-      setIsInspectionUser(userData["User Type"].includes("inspection_user"));
-      setIsManager(userData.is_manager);      
+    const token = localStorage.getItem("token");
+    if (token) {
+      const parsed = JSON.parse(token);
+
+      const userTypeArray = Array.isArray(parsed["User Type"]) ? parsed["User Type"] : [];
+
+      setIsAgent(parsed.is_agent || false);
+      setIsManager(parsed.is_manager || false);
+      setIsAdmin(userTypeArray.includes("admin"));
+      setIsReportUser(userTypeArray.includes("reports_user"));
+      setIsInspectionUser(userTypeArray.includes("inspection_user"));
+
+      const approvedAgent = localStorage.getItem("approved_agent_id");
+      const approvedManager = localStorage.getItem("approved_manager_id");
+
+      setApprovedAgentId(approvedAgent);
+      setApprovedManagerId(approvedManager);
+
+      console.log("isAgent:", parsed.is_agent);
+      console.log("isManager:", parsed.is_manager);
+      console.log("approvedAgentId:", approvedAgent);
+      console.log("approvedManagerId:", approvedManager);
     }
   }, [userData]);
+
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -496,6 +523,25 @@ const AdminLayout = () => {
                       Delivery-Return Settings
                     </NavLink>
                   </motion.li>
+
+
+                  <motion.li variants={itemVariants}>
+                    <NavLink
+                      to="/admin/settings/onboarding-agent-managers"
+                      className={({ isActive }) =>
+                        `${nestedLinkStyle} ${isActive ? activeLinkStyle : ""}`
+                      }
+                      onClick={handleLinkClick}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Truck className="w-5 h-5 mr-2" />
+                      </motion.div>
+                      Onboard Agent Manager
+                    </NavLink>
+                  </motion.li>
                       
 
                   <motion.li variants={itemVariants}>
@@ -773,7 +819,7 @@ const AdminLayout = () => {
 )}
 
 {/* Agent Section – shown only if inspection user AND agent */}
-{isInspectionUser && userData?.is_agent && (
+{isInspectionUser && isApprovedAgent && (
   <motion.li variants={itemVariants}>
     <motion.button
       onClick={() => setAgentOpen(!agentOpen)}
@@ -859,7 +905,7 @@ const AdminLayout = () => {
   </motion.li>
 )}
 
-          {isInspectionUser && isManager && (
+{isInspectionUser && isApprovedManager && (
   <motion.li variants={itemVariants}>
     <motion.button
       onClick={() => setManagerOpen(!managerOpen)}

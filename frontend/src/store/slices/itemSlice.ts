@@ -17,6 +17,8 @@ interface ItemState {
   item_id: number | null;
   agentId: number | null;
   managerId: number | null;
+  approvedAgentId: number | null;
+  approvedManagerId: number | null;
   powerBiUsers: PowerBiUser[];
   powerBiUsersLoading: boolean;
   powerBiUsersError: string | null;
@@ -30,6 +32,8 @@ const initialState: ItemState = {
   item_id: null,
   agentId: null,
   managerId: null,
+  approvedAgentId: null,
+  approvedManagerId: null,
   powerBiUsers: [],
   powerBiUsersLoading: false,
   powerBiUsersError: null,
@@ -140,7 +144,23 @@ const itemSlice = createSlice({
       } else {
         localStorage.removeItem("managerId");
       }
-    }
+    },
+    setApprovedAgentId: (state, action: PayloadAction<number | null>) => {
+      state.approvedAgentId = action.payload;
+      if (action.payload !== null) {
+        localStorage.setItem("approved_agent_id", action.payload.toString());
+      } else {
+        localStorage.removeItem("approved_agent_id");
+      }
+    },
+    setApprovedManagerId: (state, action: PayloadAction<number | null>) => {
+      state.approvedManagerId = action.payload;
+      if (action.payload !== null) {
+        localStorage.setItem("approved_manager_id", action.payload.toString());
+      } else {
+        localStorage.removeItem("approved_manager_id");
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -164,7 +184,6 @@ const itemSlice = createSlice({
   },
 });
 
-
 export const {
   addItem,
   clearItem,
@@ -173,10 +192,16 @@ export const {
   setCustomerId,
   setItemId,
   setAgentId,
-  setManagerId
+  setManagerId,
+  setApprovedAgentId,
+  setApprovedManagerId,
 } = itemSlice.actions;
 
 export const selectPowerBiUsers = (state: RootState) => state.ids.powerBiUsers;
 export const selectPowerBiUsersLoading = (state: RootState) => state.ids.powerBiUsersLoading;
 export const selectPowerBiUsersError = (state: RootState) => state.ids.powerBiUsersError;
+
+export const selectApprovedAgentId = (state: RootState) => state.ids.approvedAgentId;
+export const selectApprovedManagerId = (state: RootState) => state.ids.approvedManagerId;
+
 export default itemSlice.reducer;

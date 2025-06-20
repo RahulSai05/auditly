@@ -37,7 +37,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
-from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData, func, and_
+from sqlalchemy import distinct, desc, or_, inspect, text, Table, MetaData, func, and_, cast, String
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
@@ -1632,6 +1632,48 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
+# @app.post("/api/verify-login-otp")
+# async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
+#     """
+#     API for verifying OTP to login
+#     """ 
+#     auditly_user_name = request.user_name
+#     login_otp = request.login_otp
+
+#     user_data = db.query(AuditlyUser).filter(
+#         AuditlyUser.auditly_user_name == auditly_user_name,
+#         AuditlyUser.reset_otp == login_otp
+#     ).first()
+
+#     if user_data:
+#         user_data.last_login_time = datetime.now()
+#         db.commit()
+#         db.refresh(user_data)
+
+#         return {
+#             "message": "Login Successfull",
+#             "data": {
+#                 "User ID": user_data.auditly_user_id,
+#                 "User Name": user_data.auditly_user_name,
+#                 "User Type": [
+#                     key for key, val in {
+#                         "reports_user": user_data.is_reports_user,
+#                         "admin": user_data.is_admin,
+#                         "inspection_user": user_data.is_inspection_user
+#                     }.items() if val
+#                 ],
+#                 "is_admin": user_data.is_admin,
+#                 "is_agent": user_data.is_agent,
+#                 "is_manager": user_data.is_manager,
+#                 "is_inspection_user": user_data.is_inspection_user
+#             }
+#         }
+#     else:
+#         return {
+#             "message": "Invalid User Name or otp"
+#         }
+
+
 @app.post("/api/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
     """
@@ -1645,33 +1687,54 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
         AuditlyUser.reset_otp == login_otp
     ).first()
 
-    if user_data:
-        user_data.last_login_time = datetime.now()
-        db.commit()
-        db.refresh(user_data)
+    if not user_data:
+        return { "message": "Invalid User Name or otp" }
 
-        return {
-            "message": "Login Successfull",
-            "data": {
-                "User ID": user_data.auditly_user_id,
-                "User Name": user_data.auditly_user_name,
-                "User Type": [
-                    key for key, val in {
-                        "reports_user": user_data.is_reports_user,
-                        "admin": user_data.is_admin,
-                        "inspection_user": user_data.is_inspection_user
-                    }.items() if val
-                ],
-                "is_admin": user_data.is_admin,
-                "is_agent": user_data.is_agent,
-                "is_manager": user_data.is_manager,
-                "is_inspection_user": user_data.is_inspection_user
-            }
+    user_data.last_login_time = datetime.now()
+    db.commit()
+    db.refresh(user_data)
+
+    # Initialize approval IDs
+    approved_agent_id = None
+    approved_manager_id = None
+
+    # Fetch agent approval ID
+    if user_data.is_agent:
+        agent_record = db.query(Agent).filter(
+            Agent.agent_to_user_mapping_id == user_data.auditly_user_id
+        ).first()
+        if agent_record and agent_record.approved_by_auditly_user_id is not None:
+            approved_agent_id = agent_record.approved_by_auditly_user_id
+
+    # Fetch manager approval ID
+    if user_data.is_manager:
+        manager_record = db.query(AgentManager).filter(
+            AgentManager.manager_user_mapping_id == user_data.auditly_user_id
+        ).first()
+        if manager_record and manager_record.approved_by_auditly_user_id is not None:
+            approved_manager_id = manager_record.approved_by_auditly_user_id
+
+    return {
+        "message": "Login Successfull",
+        "data": {
+            "User ID": user_data.auditly_user_id,
+            "User Name": user_data.auditly_user_name,
+            "User Type": [
+                key for key, val in {
+                    "reports_user": user_data.is_reports_user,
+                    "admin": user_data.is_admin,
+                    "inspection_user": user_data.is_inspection_user
+                }.items() if val
+            ],
+            "is_admin": user_data.is_admin,
+            "is_agent": user_data.is_agent,
+            "is_manager": user_data.is_manager,
+            "is_inspection_user": user_data.is_inspection_user,
+            "approved_agent_id": approved_agent_id,
+            "approved_manager_id": approved_manager_id
         }
-    else:
-        return {
-            "message": "Invalid User Name or otp"
-        }
+    }
+
 
 
 @app.post("/api/logout")
@@ -1903,6 +1966,9 @@ Audit team
 
     save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path)
 
+    return_data.status = "Completed"
+    db.commit()
+    db.refresh(return_data)
     return {
         "front_similarity": float(front_similarity),
         "back_similarity": float(back_similarity),
@@ -4111,21 +4177,40 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
     managers: List[AgentManager] = db.query(AgentManager).all()
     result = []
 
-    # Create lookup from manager_id to manager_name
+    # Manager lookup maps
     manager_id_name_map = {m.manager_id: m.manager_name for m in managers}
-
-    # Get manager_user_mapping_ids from AgentManager
     manager_user_ids = {m.manager_user_mapping_id for m in managers}
-
-    # Track which user mapping IDs have been processed to avoid duplicates
     processed_user_ids = set()
+
+    # Reporting maps
+    manager_id_to_agents = {}
+    manager_id_to_managers = {}
+
+    for agent in agents:
+        if agent.manager_id:
+            for mid in agent.manager_id:
+                manager_id_to_agents.setdefault(mid, []).append(agent)
+
+    for manager in managers:
+        if manager.reporting_manager_id:
+            for mid in manager.reporting_manager_id:
+                manager_id_to_managers.setdefault(mid, []).append(manager)
+
+    def serialize_servicing(obj):
+        return {
+            "id": getattr(obj, "agent_id", None) or getattr(obj, "manager_id", None),
+            "name": getattr(obj, "agent_name", None) or getattr(obj, "manager_name", None),
+            "servicing_city": obj.servicing_city,
+            "servicing_state": obj.servicing_state,
+            "servicing_zip": ", ".join(str(z) for z in obj.servicing_zip) if obj.servicing_zip else None
+        }
 
     for agent in agents:
         agent_user_id = agent.agent_to_user_mapping_id
         is_manager = agent_user_id in manager_user_ids
         agent_roles = "Both" if is_manager else "Agent"
 
-        # Resolve manager names (if agent has manager_id list)
+        # Manager names
         manager_names = []
         if agent.manager_id:
             try:
@@ -4133,23 +4218,30 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
                     if mid in manager_id_name_map:
                         manager_names.append(manager_id_name_map[mid])
             except Exception:
-                pass  # skip if manager_id is malformed
+                pass
+
+        sales_orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).all()
+        return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).all()
 
         result.append({
             "agent_id": agent.agent_id,
             "agent_name": agent.agent_name,
             "agent_roles": agent_roles,
             "manager": ", ".join(manager_names) if manager_names else None,
-            "agent_servicing_zip": ", ".join(agent.servicing_zip) if agent.servicing_zip else None,
+            "agent_servicing_zip": ", ".join(str(zipcode) for zipcode in agent.servicing_zip) if agent.servicing_zip else None,
             "agent_servicing_city": agent.servicing_city,
             "agent_servicing_state": agent.servicing_state,
-            "agent_servicing_country": "USA"
+            "agent_servicing_country": "USA",
+            "sales_orders": [serialize_sale_order(o) for o in sales_orders],
+            "return_orders": [serialize_return_order(o) for o in return_orders],
+            "reports": {
+                "agents_reporting": [serialize_servicing(a) for a in manager_id_to_agents.get(agent.agent_id, [])],
+                "managers_reporting": [serialize_servicing(m) for m in manager_id_to_managers.get(agent.agent_id, [])]
+            } if is_manager else {}
         })
 
-        # Mark this user mapping ID as processed
         processed_user_ids.add(agent_user_id)
 
-    # Add standalone managers who are not agents
     for manager in managers:
         if manager.manager_user_mapping_id not in processed_user_ids:
             result.append({
@@ -4157,16 +4249,47 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
                 "agent_name": manager.manager_name,
                 "agent_roles": "Manager",
                 "manager": manager.manager_name,
-                "agent_servicing_zip": ", ".join(manager.servicing_zip) if manager.servicing_zip else None,
+                "agent_servicing_zip": ", ".join(str(zipcode) for zipcode in manager.servicing_zip) if manager.servicing_zip else None,
                 "agent_servicing_city": manager.servicing_city,
                 "agent_servicing_state": manager.servicing_state,
-                "agent_servicing_country": "USA"
+                "agent_servicing_country": "USA",
+                "sales_orders": [],
+                "return_orders": [],
+                "reports": {
+                    "agents_reporting": [serialize_servicing(a) for a in manager_id_to_agents.get(manager.manager_id, [])],
+                    "managers_reporting": [serialize_servicing(m) for m in manager_id_to_managers.get(manager.manager_id, [])]
+                }
             })
 
     if not result:
         raise HTTPException(status_code=404, detail="No agents or managers found")
 
     return result
+
+def serialize_sale_order(order: SaleItemData):
+    return {
+        "id": order.id,
+        "original_sales_order_number": order.original_sales_order_number,
+        "serial_number": order.serial_number,
+        "shipped_to_city": order.shipped_to_city,
+        "shipped_to_state": order.shipped_to_state,
+        "shipped_to_zip": order.shipped_to_zip,
+        "date_purchased": order.date_purchased,
+        "date_shipped": order.date_shipped,
+        "date_delivered": order.date_delivered
+    }
+
+def serialize_return_order(order: ReturnItemData):
+    return {
+        "id": order.id,
+        "return_order_number": order.return_order_number,
+        "return_city": order.return_city,
+        "return_state": order.return_state,
+        "return_zip": order.return_zip,
+        "return_created_date": order.return_created_date,
+        "return_received_date": order.return_received_date
+    }
+
 
 @app.get("/api/agents-managers/assigned-to/{manager_id}")
 def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
@@ -4578,3 +4701,153 @@ def update_delivery_time_by_type(payload: DeliveryTypeTimeUpdate, db: Session = 
         "delivery_type": record.delivery_type,
         "delivery_time": record.delivery_time
     }
+
+class InspectionUserUpdate(BaseModel):
+    auditly_user_id: int
+    is_inspection_user: bool
+    approver_id: int
+
+@app.put("/api/users/update-inspection-status")
+def update_inspection_user_status(payload: InspectionUserUpdate, db: Session = Depends(get_db)):
+    user = db.query(AuditlyUser).filter(AuditlyUser.auditly_user_id == payload.auditly_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # ✅ Check if user is linked to Agent
+    agent = db.query(Agent).filter(Agent.agent_to_user_mapping_id == payload.auditly_user_id).first()
+
+    if agent:
+        if not payload.is_inspection_user:
+            # ❌ Check for assigned sales or return orders
+            has_sales = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).first()
+            has_returns = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).first()
+
+            if has_sales or has_returns:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot update. Sales or return orders are assigned to this agent. Please reassign them first."
+                )
+
+            # ✅ No orders, safe to nullify approval
+            agent.approved_by_auditly_user_id = None
+        else:
+            agent.approved_by_auditly_user_id = payload.approver_id
+
+    # ✅ Check if user is linked to Manager
+    manager = db.query(AgentManager).filter(AgentManager.manager_user_mapping_id == payload.auditly_user_id).first()
+
+    if manager:
+        if not payload.is_inspection_user:
+            # ✅ Safe lookup for agent/manager reportings
+            reporting_agents = db.query(Agent).filter(
+                cast(Agent.manager_id, String).like(f'%{manager.manager_id}%')
+            ).first()
+
+            reporting_managers = db.query(AgentManager).filter(
+                cast(AgentManager.reporting_manager_id, String).like(f'%{manager.manager_id}%')
+            ).first()
+
+            if reporting_agents or reporting_managers:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot update. Agents or managers are reporting to this manager. Please reassign them first."
+                )
+
+            manager.approved_by_auditly_user_id = None
+        else:
+            manager.approved_by_auditly_user_id = payload.approver_id
+
+    # Final update to user table
+    user.is_inspection_user = payload.is_inspection_user
+    db.commit()
+
+    return {"message": "User inspection status updated successfully"}
+
+
+class AdminCreateUserRequest(BaseModel):
+    # admin_auditly_user_id: int
+    user_name: str
+    first_name: str
+    last_name: str
+    gender: str
+    email: str
+    user_company: str
+
+
+@app.post("/api/onboard/agent-manager")
+def admin_create_user(request: AdminCreateUserRequest, db: Session = Depends(get_db)):
+    try:
+        # Check if user already exists
+        existing_user = db.query(AuditlyUser).filter(
+            AuditlyUser.auditly_user_name == request.user_name
+        ).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists.")
+
+        # Default password
+        default_password = "HelloAuditlyAi@123"
+        hashed_password = hash_password_sha256(default_password)
+
+        # Create user
+        new_user = AuditlyUser(
+            auditly_user_name=request.user_name,
+            first_name=request.first_name,
+            last_name=request.last_name,
+            gender=request.gender,
+            email=request.email,
+            password=hashed_password,
+            user_company=request.user_company
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        # Email subject & body
+        subject = f"Your Auditly Account Has Been Created"
+        body = f"""
+Hello {request.first_name},
+
+Your Auditly account has been successfully created by the administrator.
+
+Login Credentials:
+Username: {request.user_name}
+Password: {default_password}
+
+Please log in and change your password upon first login.
+
+Regards,  
+Auditly Team
+        """
+
+        # Send email based on environment
+        if ENV == "DEV":
+            send_email(
+                "rahulgr20@gmail.com",  
+                "fxei hthz bulr slzh",  
+                request.email,        
+                subject,
+                body
+            )
+        elif ENV == "TEST":
+            secret_data = get_secret("test/auditly/secrets")
+            send_email(
+                secret_data["from_email_address"],
+                secret_data["from_email_password"],
+                request.email,
+                subject,
+                body
+            )
+
+        return {
+            "message": "User created and email sent successfully.",
+            "data": {
+                "user_id": new_user.auditly_user_id,
+                "user_name": new_user.auditly_user_name
+            }
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating user: {str(e)}")
