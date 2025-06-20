@@ -4765,30 +4765,29 @@ def update_inspection_user_status(payload: InspectionUserUpdate, db: Session = D
 
 
 class AdminCreateUserRequest(BaseModel):
-    # admin_auditly_user_id: int
     user_name: str
     first_name: str
     last_name: str
     gender: str
     email: str
     user_company: str
-
+    requested_role: str
 
 @app.post("/api/onboard/agent-manager")
 def admin_create_user(request: AdminCreateUserRequest, db: Session = Depends(get_db)):
     try:
-        # Check if user already exists
+        # Step 1: Check for existing username
         existing_user = db.query(AuditlyUser).filter(
             AuditlyUser.auditly_user_name == request.user_name
         ).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already exists.")
 
-        # Default password
+        # Step 2: Set default password
         default_password = "HelloAuditlyAi@123"
         hashed_password = hash_password_sha256(default_password)
 
-        # Create user
+        # Step 3: Create user
         new_user = AuditlyUser(
             auditly_user_name=request.user_name,
             first_name=request.first_name,
@@ -4802,7 +4801,13 @@ def admin_create_user(request: AdminCreateUserRequest, db: Session = Depends(get
         db.commit()
         db.refresh(new_user)
 
-        # Email subject & body
+        # Step 4: Customize email message based on role
+        role_msg = ""
+        if request.requested_role == "Agent":
+            role_msg = "You are requested to be an Agent. Please log in and complete the Agent access request form."
+        elif request.requested_role == "Manager":
+            role_msg = "You are requested to be a Manager. Please log in and complete the Manager access request form."
+
         subject = f"Your Auditly Account Has Been Created"
         body = f"""
 Hello {request.first_name},
@@ -4813,18 +4818,20 @@ Login Credentials:
 Username: {request.user_name}
 Password: {default_password}
 
+{role_msg}
+
 Please log in and change your password upon first login.
 
 Regards,  
 Auditly Team
         """
 
-        # Send email based on environment
+        # Step 5: Send email
         if ENV == "DEV":
             send_email(
-                "rahulgr20@gmail.com",  
-                "fxei hthz bulr slzh",  
-                request.email,        
+                "rahulgr20@gmail.com",
+                "fxei hthz bulr slzh",
+                request.email,
                 subject,
                 body
             )
@@ -4842,7 +4849,8 @@ Auditly Team
             "message": "User created and email sent successfully.",
             "data": {
                 "user_id": new_user.auditly_user_id,
-                "user_name": new_user.auditly_user_name
+                "user_name": new_user.auditly_user_name,
+                "requested_role": request.requested_role
             }
         }
 
