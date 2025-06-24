@@ -10,6 +10,7 @@ class Brand(Base):
     id = Column(Integer, primary_key=True, index=True)
     brand_name = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    organization = Column(String(255), nullable=True)
     items = relationship("Item", back_populates="brand", cascade="all, delete-orphan")  # One-to-many relationship
 
 
@@ -22,7 +23,7 @@ class Item(Base):
     brand_id = Column(Integer, ForeignKey("brand.id", ondelete="CASCADE"), nullable=False)
     category = Column(String(255), default="Mattress", nullable=True)
     configuration = Column(String(255), default="USA", nullable=True)
-
+    organization = Column(String(255), nullable=True)
     brand = relationship("Brand", back_populates="items")
     customer_item_data = relationship("CustomerItemData", back_populates="item")
     sale_item_data = relationship("SaleItemData", back_populates="item")
@@ -35,6 +36,7 @@ class OnboardUser(Base):
     onboard_name = Column(String(255))
     onboard_email = Column(String(255))
     token = Column(String(255))
+    organization = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=func.current_timestamp())
     customer_user_id = Column(String(255))
 
@@ -61,6 +63,7 @@ class AuditlyUser(Base):
     user_company = Column(String(255), nullable=True)
     is_agent  = Column(Boolean, default=False)
     is_manager  = Column(Boolean, default=False)
+    organization = Column(String(255), nullable=True)
 
 
 
@@ -104,6 +107,7 @@ class CustomerItemData(Base):
     date_shipped = Column(DateTime)
     date_delivered = Column(DateTime)
     return_created_date = Column(DateTime)
+    organization = Column(String(255), nullable=True)
     item = relationship("Item", back_populates="customer_item_data", lazy="joined")
 
     
@@ -122,6 +126,7 @@ class CustomerData(Base):
     not_new_condition = Column(Boolean, default=False)
     bio_stains = Column(Boolean, default=False)
     package_stains = Column(Boolean, default=False)
+    organization = Column(String(255), nullable=True)
     sale_item_data_id = Column(Integer, ForeignKey("sale_item_data.id"), nullable=True)
     #customer_item_data = Foreign key referencing customer_item_data(id)
     # customer_item_data = relationship("customer_item_data", back_populates="CustomerDatas")
@@ -135,6 +140,7 @@ class BaseData(Base):
     base_front_image = Column(String(5555))  # Path to the front image
     base_back_image = Column(String(5555))  # Path to the back image
     base_to_item_mapping = Column(Integer, ForeignKey('item.id'))  
+    organization = Column(String(255), nullable=True)
 
 
 
@@ -144,6 +150,7 @@ class ReturnDestination(Base):
     id = Column(Integer, primary_key=True, autoincrement=True) 
     sealy_pickup = Column(Boolean, default=False)
     returns_processing = Column(Boolean, default=False)
+    organization = Column(String(255), nullable=True)
     return_order_mapping_key = Column(Integer, ForeignKey("customer_item_data.id"), nullable=True)
 
 class CustomerItemCondition(Base):
@@ -159,28 +166,9 @@ class CustomerItemCondition(Base):
     ack_number = Column(String(100))
     difference_front_image = Column(String(5555))
     difference_back_image = Column(String(5555))
+    organization = Column(String(255), nullable=True)
     customer_item_condition_mapping_id = Column(Integer, ForeignKey("sale_item_data.id"), nullable=True)
     
-class SalesData(Base):
-    __tablename__ = 'sales_data'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    SalesOrder = Column(String(255))
-    CustomerAccount = Column(String(255))
-    Name = Column(String(255))
-    ReturnReasonCode = Column(String(255))
-    ReturnStatus = Column(String(255))
-    RMANumber = Column(String(255))
-    InvoiceAccount = Column(String(255))
-    OrderType = Column(String(255))
-    CustomerRequisition = Column(String(255))
-    Status = Column(String(255))
-    ProjectID = Column(String(255))
-    DoNotProcess = Column(String(255))
-    Legacy = Column(String(255))
-    Segment = Column(String(255))
-    Subsegment = Column(String(255))
-
 
 
 class PowerBiUser(Base):
@@ -198,6 +186,7 @@ class PowerBiUser(Base):
     token_expiry = Column(DateTime)  # Added for token expiration
     tenant_id = Column(String)      # Added for Azure tenant ID
     connection_type = Column(String)
+    organization = Column(String(255), nullable=True)
 
 
 
@@ -213,6 +202,7 @@ class PowerBiSqlMapping(Base):
     date_filter_value = Column((DateTime), nullable=True)
     power_bi_sql_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
     bi_user_mapping_id = Column(Integer, ForeignKey('power_bi_user.power_bi_id'))
+    organization = Column(String(255), nullable=True)
 
 
 class CronJobTable(Base):
@@ -223,6 +213,7 @@ class CronJobTable(Base):
     cron_expression = Column(String(255))
     auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
     bi_user_mapping_id = Column(Integer, ForeignKey('power_bi_user.power_bi_id'))
+    organization = Column(String(255), nullable=True)
 
 
 class SaleItemData(Base):
@@ -261,6 +252,7 @@ class SaleItemData(Base):
     delivery_agent_id = Column(Integer)
     delivery_agent_type = Column(String(50))
     delivery_type = Column(String(50))
+    organization = Column(String(255), nullable=True)
 
 
     item = relationship("Item", back_populates="sale_item_data", lazy="joined")
@@ -294,7 +286,7 @@ class ReturnItemData(Base):
     return_agent_id = Column(Integer)
     return_agent_type = Column(String(50))
     delivery_type = Column(String(50))
-
+    organization = Column(String(255), nullable=True)
 
     item = relationship("Item", back_populates="return_item_data", lazy="joined")
 
@@ -312,6 +304,7 @@ class TeamEmail(Base):
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp()
     )
+    organization = Column(String(255), nullable=True)
 
 class NotificationTable(Base):
     __tablename__ = 'notification_table'
@@ -321,6 +314,7 @@ class NotificationTable(Base):
     notification_message = Column(String(255))
     read_at = Column(DateTime, default=None)
     created_at = Column(DateTime, default=func.current_timestamp())
+    organization = Column(String(255), nullable=True)
 
 class DeliveryTypeTime(Base):
     __tablename__ = 'delivery_type_time'
@@ -328,6 +322,7 @@ class DeliveryTypeTime(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     delivery_type = Column(String(255))
     delivery_time = Column(Integer)
+    organization = Column(String(255), nullable=True)
 
 class Agent(Base):
     __tablename__ = "agent"
@@ -359,6 +354,7 @@ class Agent(Base):
     approved_by_auditly_user_id = Column(Integer)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    organization = Column(String(255), nullable=True)
 
 class AgentManager(Base):
     __tablename__ = 'agent_manager'
@@ -385,21 +381,10 @@ class AgentManager(Base):
     additional_info_1 = Column(Text)
     additional_info_2 = Column(Text)
     reporting_manager_id = Column(JSON)
-
+    organization = Column(String(255), nullable=True)
+    
     approved_by_auditly_user_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'), nullable=True)
     manager_user_mapping_id = Column(Integer, ForeignKey('auditly_user.auditly_user_id'))
+    
 
 
-
-class UserManager(Base):
-    __tablename__ = "user_manager"
-
-    manager_id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100))
-    email = Column(String(100), unique=True)
-    role = Column(Enum('RegionalManager', 'Admin'))
-    address_state = Column(String(50))
-    address_city = Column(String(50))
-    address_zip = Column(String(20))
-    created_at = Column(DateTime, default=func.current_timestamp())
-    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())

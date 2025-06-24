@@ -8,7 +8,7 @@ interface FormData {
   last_name: string;
   gender: string;
   email: string;
-  user_company: string;
+  organization: string;
   requested_role: "Agent" | "Manager" | "";
 }
 
@@ -19,7 +19,7 @@ const OnboardingAgentManagers: React.FC = () => {
     last_name: "",
     gender: "",
     email: "",
-    user_company: "",
+    organization: "",
     requested_role: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,7 +74,7 @@ const OnboardingAgentManagers: React.FC = () => {
         last_name: "",
         gender: "",
         email: "",
-        user_company: "",
+        organization: "",
         requested_role: "",
       });
     } catch (err) {
@@ -104,7 +104,7 @@ const OnboardingAgentManagers: React.FC = () => {
       formData.last_name &&
       formData.gender &&
       formData.email &&
-      formData.user_company &&
+      formData.organization &&
       formData.requested_role
     );
   };
@@ -357,7 +357,7 @@ const OnboardingAgentManagers: React.FC = () => {
 
                 {/* Company */}
                 <div>
-                  <label htmlFor="user_company" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
                     Company <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -366,9 +366,9 @@ const OnboardingAgentManagers: React.FC = () => {
                     </div>
                     <input
                       type="text"
-                      id="user_company"
-                      name="user_company"
-                      value={formData.user_company}
+                      id="organization"
+                      name="organization"
+                      value={formData.organization}
                       onChange={handleChange}
                       required
                       className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

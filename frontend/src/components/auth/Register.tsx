@@ -28,7 +28,7 @@ interface FormData {
   gender: string;
   email: string;
   password: string;
-  user_company: string;
+  organization: string;
 }
 
 const Register = () => {
@@ -40,7 +40,7 @@ const Register = () => {
     gender: "", // Default to empty (required field)
     email: "",
     password: "",
-    user_company: "",
+    organization: "",
   });
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -344,8 +344,8 @@ const Register = () => {
                   </div>
                   <input
                     type="text"
-                    name="user_company"
-                    value={formData.user_company}
+                    name="organization"
+                    value={formData.organization}
                     onChange={handleChange}
                     className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     required

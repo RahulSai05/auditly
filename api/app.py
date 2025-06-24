@@ -29,7 +29,7 @@ from jwt import decode as jwt_decode
 from email_body import _login_email_body, _forget_password_email_body, _generate_inspection_email_body, _generate_inspection_email_subject
 from request_models import CompareImagesRequest, AuditlyUserRequest, LoginRequest, VerifyLogin, LogoutRequest, ForgetPassword, ResettPassword, ReceiptSearchRequest, UpdateProfileRequest, Onboard, UpdateUserTypeRequest, ReceiptSearch
 from database import engine, SessionLocal
-from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, SalesData, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent, AgentManager, DeliveryTypeTime
+from models import Base, Item, CustomerItemData, CustomerData, BaseData, ReturnDestination, CustomerItemCondition, AuditlyUser, Brand, OnboardUser, PowerBiUser, PowerBiSqlMapping, TeamEmail, CronJobTable, SaleItemData, ReturnItemData, NotificationTable, Agent, AgentManager, DeliveryTypeTime
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -1559,7 +1559,7 @@ async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):
         gender = request.gender
         email = request.email
         password = request.password
-        user_company = request.user_company
+        organization = request.organization
 
 
         # Check if the username already exists
@@ -1576,7 +1576,7 @@ async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):
             gender = gender,
             email = email,
             password = hashed_password,
-            user_company = user_company
+            organization = organization
 
         )
         db.add(new_user)
@@ -2141,36 +2141,6 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
 
 
-@app.get("/api/sales-data")
-async def get_sales_data(db: Session = Depends(get_db)):
-    try:
-        sales_data = db.query(SalesData).all()
-        return {
-            "message": "Data retrieved successfully.",
-            "data": [
-                {
-                    "SalesOrder": data.SalesOrder,
-                    "CustomerAccount": data.CustomerAccount,
-                    "Name": data.Name,
-                    "ReturnReasonCode": data.ReturnReasonCode,
-                    "ReturnStatus": data.ReturnStatus,
-                    "RMANumber": data.RMANumber,
-                    "InvoiceAccount": data.InvoiceAccount,
-                    "OrderType": data.OrderType,
-                    "CustomerRequisition": data.CustomerRequisition,
-                    "Status": data.Status,
-                    "ProjectID": data.ProjectID,
-                    "DoNotProcess": data.DoNotProcess,
-                    "Legacy": data.Legacy,
-                    "Segment": data.Segment,
-                    "Subsegment": data.Subsegment
-                } for data in sales_data
-            ]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {str(e)}")
-
-
 @app.get("/api/return-data")
 def get_full_return_data(db: Session = Depends(get_db)):
     results = db.query(
@@ -2227,7 +2197,7 @@ def get_users(db: Session = Depends(get_db)):
                 "is_inspection_user": user.is_inspection_user,
                 "is_manager": is_manager,
                 "is_agent": user.is_agent,
-                "user_company": user.user_company,
+                "organization": user.organization,
                 "agent_id": agent_id,
                 "manager_id": manager_id
             })
@@ -4770,7 +4740,7 @@ class AdminCreateUserRequest(BaseModel):
     last_name: str
     gender: str
     email: str
-    user_company: str
+    organization: str
     requested_role: str
 
 @app.post("/api/onboard/agent-manager")
@@ -4795,7 +4765,7 @@ def admin_create_user(request: AdminCreateUserRequest, db: Session = Depends(get
             gender=request.gender,
             email=request.email,
             password=hashed_password,
-            user_company=request.user_company
+            organization=request.organization
         )
         db.add(new_user)
         db.commit()

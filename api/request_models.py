@@ -13,7 +13,7 @@ class AuditlyUserRequest(BaseModel):
     gender: str
     email: str
     password: str
-    user_company: str
+    organization: str
 
 class LoginRequest(BaseModel):
     user_name : str

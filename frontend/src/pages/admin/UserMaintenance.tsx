@@ -10,7 +10,7 @@ interface User {
   last_name: string;
   gender: string;
   email: string;
-  user_company: string;
+  organization: string;
   is_admin: boolean;
   is_inspection_user: boolean;
   is_reports_user: boolean;
@@ -432,7 +432,7 @@ const UserMaintenance: React.FC = () => {
                           {user.email}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {user.user_company}
+                          {user.organization}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <input
