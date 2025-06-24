@@ -87,6 +87,8 @@ const ScheduledDeliveries: React.FC = () => {
   const [addressMap, setAddressMap] = useState<Record<string, Order>>({});
   const [deliveryTime, setDeliveryTime] = useState<number>(0);
   const navigate = useNavigate();
+  const [routeMode, setRouteMode] = useState<"FIFO" | "LIFO">("FIFO");
+
 
   const fetchOrders = async () => {
     try {
@@ -217,11 +219,11 @@ const ScheduledDeliveries: React.FC = () => {
   
           console.log("📌 Resolved address:", userLocation);
   
-          const routeMode = window.confirm(
-            "🧭 Optimize Route\n\nDo you want to START the route from your current location?\n\nClick OK to start the route at your location.\nClick Cancel to END the route at your location."
-          )
-            ? "FIFO"
-            : "LIFO";
+          // const routeMode = window.confirm(
+          //   "🧭 Optimize Route\n\nDo you want to START the route from your current location?\n\nClick OK to start the route at your location.\nClick Cancel to END the route at your location."
+          // )
+          //   ? "FIFO"
+          //   : "LIFO";
   
           console.log("📦 Selected route mode:", routeMode);
   
@@ -380,7 +382,7 @@ const ScheduledDeliveries: React.FC = () => {
             {/* Enhanced Route Optimization Section */}
             <div className="mb-8">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                       <Route className="w-6 h-6 text-blue-600" />
@@ -416,7 +418,60 @@ const ScheduledDeliveries: React.FC = () => {
                       </>
                     )}
                   </motion.button>
-                </div>
+                </div> */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div className="flex items-center gap-4">
+    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+      <Route className="w-6 h-6 text-blue-600" />
+    </div>
+    <div>
+      <h3 className="text-lg font-semibold text-slate-900">Smart Route Optimization</h3>
+      <p className="text-sm text-slate-600">
+        Find the fastest delivery route based on your location
+      </p>
+      <p className="text-xs text-slate-500 mt-1">
+        <strong>FIFO</strong>: Start from your location<br />
+        <strong>LIFO</strong>: End at your location
+      </p>
+    </div>
+  </div>
+
+  <div className="flex flex-col sm:flex-row gap-3 items-center">
+    <select
+      value={routeMode}
+      onChange={(e) => setRouteMode(e.target.value as "FIFO" | "LIFO")}
+      className="px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm font-medium"
+    >
+      <option value="FIFO">Start from your location (FIFO)</option>
+      <option value="LIFO">End at your location (LIFO)</option>
+    </select>
+
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={handleOptimizeRoute}
+      disabled={routeLoading || orders.length < 2}
+      className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold transition-all ${
+        orders.length < 2 
+          ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+          : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-blue-300"
+      }`}
+    >
+      {routeLoading ? (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Optimizing...</span>
+        </>
+      ) : (
+        <>
+          <Navigation className="w-5 h-5" />
+          <span>Optimize Route</span>
+        </>
+      )}
+    </motion.button>
+  </div>
+</div>
+
                 
                 {orders.length < 2 && (
                   <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">

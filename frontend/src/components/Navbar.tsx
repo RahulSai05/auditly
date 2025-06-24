@@ -256,7 +256,6 @@ export function Navbar() {
                 {isReportUser && (
                   <NavLink to="/admin/reports/items" icon={FileText}>Reports</NavLink>
                 )}
-                {/* {isInspectionUser && !isAdmin && !isAgent && !isManager && ( */}
                 {isReportUser && (!isAdmin && (!isAgent || !isManager)) && (
                   <NavLink to="/request-access" icon={ShieldUser}>Request Privilege</NavLink>
                 )}

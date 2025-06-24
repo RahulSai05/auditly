@@ -59,32 +59,35 @@ const AdminLayout = () => {
   const isApprovedAgent = isAgent && approvedAgentId !== null;
   const isApprovedManager = isManager && approvedManagerId !== null;
 
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      const parsed = JSON.parse(token);
-
-      const userTypeArray = Array.isArray(parsed["User Type"]) ? parsed["User Type"] : [];
-
-      setIsAgent(parsed.is_agent || false);
-      setIsManager(parsed.is_manager || false);
-      setIsAdmin(userTypeArray.includes("admin"));
-      setIsReportUser(userTypeArray.includes("reports_user"));
-      setIsInspectionUser(userTypeArray.includes("inspection_user"));
-
-      const approvedAgent = localStorage.getItem("approved_agent_id");
-      const approvedManager = localStorage.getItem("approved_manager_id");
-
-      setApprovedAgentId(approvedAgent);
-      setApprovedManagerId(approvedManager);
-
-      console.log("isAgent:", parsed.is_agent);
-      console.log("isManager:", parsed.is_manager);
-      console.log("approvedAgentId:", approvedAgent);
-      console.log("approvedManagerId:", approvedManager);
+    const userId = localStorage.getItem("userId");
+  
+    const parsed = token ? JSON.parse(token) : null;
+    if (parsed) {
+      setUserData({ ...parsed, id: userId });
+      setApprovedAgentId(localStorage.getItem("approved_agent_id"));
+      setApprovedManagerId(localStorage.getItem("approved_manager_id"));
     }
-  }, [userData]);
-
+  
+    if (userId) {
+      fetch("https://auditlyai.com/api/users")
+        .then((res) => res.json())
+        .then((data) => {
+          const thisUser = data.data.find((u) => u.user_id == userId);
+          if (thisUser) {
+            setIsAgent(thisUser.is_agent);
+            setIsManager(thisUser.is_manager);
+            setIsInspectionUser(thisUser.is_inspection_user);
+            setIsReportUser(thisUser.is_reports_user);
+            setIsAdmin(thisUser.is_admin);
+          }
+        })
+        .catch((err) => console.error("Error fetching user info:", err));
+    }
+  }, []);
+  
 
 
   useEffect(() => {
@@ -818,8 +821,9 @@ const AdminLayout = () => {
   </motion.li>
 )}
 
+
 {/* Agent Section – shown only if inspection user AND agent */}
-{isInspectionUser && isApprovedAgent && (
+{isInspectionUser && isAgent && approvedAgentId && approvedAgentId !== "null" && (
   <motion.li variants={itemVariants}>
     <motion.button
       onClick={() => setAgentOpen(!agentOpen)}
@@ -905,7 +909,7 @@ const AdminLayout = () => {
   </motion.li>
 )}
 
-{isInspectionUser && isApprovedManager && (
+{isInspectionUser && isManager && approvedManagerId && approvedManagerId !== "null" && (
   <motion.li variants={itemVariants}>
     <motion.button
       onClick={() => setManagerOpen(!managerOpen)}

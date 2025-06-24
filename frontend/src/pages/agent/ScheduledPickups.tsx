@@ -82,6 +82,8 @@ interface RouteResponse {
   total_distance_km: number;
   total_duration_minutes: number;
   route_summary: string;
+  ordered_orders: Order[]; 
+
 }
 
 const ScheduledPickups: React.FC = () => {
@@ -98,6 +100,7 @@ const ScheduledPickups: React.FC = () => {
   const [routeError, setRouteError] = useState<string | null>(null);
   const [totalDeliveryTime, setTotalDeliveryTime] = useState(0);
   const [addressMap, setAddressMap] = useState<Record<string, Order>>({});
+  const [routeMode, setRouteMode] = useState<"FIFO" | "LIFO">("FIFO");
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
@@ -178,16 +181,49 @@ const ScheduledPickups: React.FC = () => {
         throw new Error(result.detail || "Backend error");
       }
   
-      // 🔄 Map optimized addresses to orders using addressMap
-      const mappedOrders = result.ordered_addresses.map((address: string) => {
-        const key = address.toLowerCase().trim();
-        return addressMap[key];
-      }).filter(Boolean); // Filter out null/undefined
-  
+      console.log("🧭 Backend returned ordered_addresses:", result.ordered_addresses);
+      console.log("📦 addressMap keys:", Object.keys(addressMap));
+
+      const normalize = (addr: string) =>
+        addr.toLowerCase().replace(/,/g, "").replace(/\s+/g, " ").trim();
+      
+      const mappedOrders = result.ordered_addresses.map((addr, idx) => {
+        const normalized = normalize(addr);
+      
+        const matchEntry = Object.entries(addressMap).find(([key]) => {
+          const normalizedKey = normalize(key);
+          return normalized.includes(normalizedKey) || normalizedKey.includes(normalized);
+        });
+      
+        if (!matchEntry) {
+          console.warn(`❌ Could not match address: ${addr}`);
+        }
+      
+        return matchEntry ? matchEntry[1] : null;
+      }).filter(Boolean);
+      
+    
+      const finalOrderedOrders =
+      routeMode === "LIFO" ? [...mappedOrders].reverse() : mappedOrders;  
+      const ordered = [...mappedOrders];
+
+      if (routeMode === "FIFO") {
+        ordered.unshift({
+          ...orders[0],
+          shipped_to_person: "You (Start)",
+        });
+      } else if (routeMode === "LIFO") {
+        ordered.push({
+          ...orders[0],
+          shipped_to_person: "You (End)",
+        });
+      }
+
       setRouteInfo({
         ...result,
-        ordered_orders: mappedOrders,
+        ordered_orders: ordered,
       });
+
     } catch (err: any) {
       console.error("❌ Failed to fetch optimized route:", err);
       setRouteError("Route optimization failed. Please try again.");
@@ -225,22 +261,120 @@ const ScheduledPickups: React.FC = () => {
     fetchOrders();
   };
 
-  const handleOptimizeRoute = async () => {
-    console.log("🟢 Optimize Route button clicked");
+  // const handleOptimizeRoute = async () => {
+  //   console.log("🟢 Optimize Route button clicked");
   
+  //   if (!navigator.geolocation) {
+  //     console.error("❌ Geolocation not supported");
+  //     setRouteError("Geolocation is not supported by your browser.");
+  //     return;
+  //   }
+  
+  //   console.log("📡 Requesting current location...");
+  
+  //   navigator.geolocation.getCurrentPosition(
+  //     async (position) => {
+  //       const lat = position.coords.latitude;
+  //       const lng = position.coords.longitude;
+  //       console.log("📍 Got current location:", lat, lng);
+  
+  //       try {
+  //         const reverseResponse = await fetch(
+  //           `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyAe3LyRvX8fPEDuu7l_c-6kE88yEg37QTE`
+  //         );
+  //         const reverseData = await reverseResponse.json();
+  
+  //         if (
+  //           reverseData.status !== "OK" ||
+  //           !reverseData.results ||
+  //           reverseData.results.length === 0
+  //         ) {
+  //           console.error("❌ Reverse geocoding failed:", reverseData);
+  //           throw new Error("Could not get address from coordinates.");
+  //         }
+  
+  //         const userLocation = reverseData.results[0].formatted_address;
+  //         console.log("📌 Resolved current address:", userLocation);
+  
+  //         await fetchOptimizedRoute(userLocation, addresses, routeMode, totalDeliveryTime);
+
+
+  
+  //         const validOrders = orders.filter(order =>
+  //           order.shipped_to_street &&
+  //           order.shipped_to_city &&
+  //           order.shipped_to_state &&
+  //           order.shipped_to_zip &&
+  //           order.shipped_to_country
+  //         );
+  
+  //         console.log("✅ Valid orders count:", validOrders.length);
+  
+  //         if (validOrders.length < 2) {
+  //           setRouteError("At least 2 valid addresses required for optimization.");
+  //           return;
+  //         }
+  
+  //         const addresses: string[] = [];
+  //         const freshMap: Record<string, Order> = {};
+  
+  //         validOrders.forEach(order => {
+  //           const fullAddress = `${order.shipped_to_street}, ${order.shipped_to_city}, ${order.shipped_to_state}, ${order.shipped_to_zip}, ${order.shipped_to_country}`;
+  //           addresses.push(fullAddress);
+  //           freshMap[fullAddress.toLowerCase().trim()] = order;
+  //         });
+  
+  //         setAddressMap(freshMap);
+  
+  //         console.log("📤 Sending to /api/best-route with:", {
+  //           user_location: userLocation,
+  //           addresses,
+  //           route_mode: routeMode,
+  //         });
+  
+  //         await fetchOptimizedRoute(userLocation, addresses, routeMode, totalDeliveryTime);
+  //       } catch (error) {
+  //         console.error("❌ Error during reverse geocoding or optimization:", error);
+  //         setRouteError("Something went wrong while resolving your location.");
+  //       }
+  //     },
+  //     (error) => {
+  //       console.error("❌ Geolocation error:", error);
+  
+  //       switch (error.code) {
+  //         case error.PERMISSION_DENIED:
+  //           setRouteError("Location access denied. Please allow location access.");
+  //           break;
+  //         case error.POSITION_UNAVAILABLE:
+  //           setRouteError("Location information is unavailable.");
+  //           break;
+  //         case error.TIMEOUT:
+  //           setRouteError("Location request timed out.");
+  //           break;
+  //         default:
+  //           setRouteError("An unknown error occurred while getting your location.");
+  //           break;
+  //       }
+  //     },
+  //     {
+  //       enableHighAccuracy: true,
+  //       timeout: 10000,
+  //       maximumAge: 0,
+  //     }
+  //   );
+  // };
+  
+
+  const handleOptimizeRoute = async () => {
     if (!navigator.geolocation) {
-      console.error("❌ Geolocation not supported");
       setRouteError("Geolocation is not supported by your browser.");
       return;
     }
-  
-    console.log("📡 Requesting current location...");
   
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        console.log("📍 Got current location:", lat, lng);
   
         try {
           const reverseResponse = await fetch(
@@ -253,20 +387,12 @@ const ScheduledPickups: React.FC = () => {
             !reverseData.results ||
             reverseData.results.length === 0
           ) {
-            console.error("❌ Reverse geocoding failed:", reverseData);
             throw new Error("Could not get address from coordinates.");
           }
   
           const userLocation = reverseData.results[0].formatted_address;
-          console.log("📌 Resolved current address:", userLocation);
   
-        const routeMode = window.confirm(
-          "🧭 Optimize Route\n\nWe are starting the route from your current location.\n\nClick OK to start the route at your location. Click Cancel to END the route at your location."
-        )
-          ? "FIFO"  
-          : "LIFO"; 
-
-  
+          // ✅ Declare addresses and map BEFORE using them
           const validOrders = orders.filter(order =>
             order.shipped_to_street &&
             order.shipped_to_city &&
@@ -274,8 +400,6 @@ const ScheduledPickups: React.FC = () => {
             order.shipped_to_zip &&
             order.shipped_to_country
           );
-  
-          console.log("✅ Valid orders count:", validOrders.length);
   
           if (validOrders.length < 2) {
             setRouteError("At least 2 valid addresses required for optimization.");
@@ -293,21 +417,14 @@ const ScheduledPickups: React.FC = () => {
   
           setAddressMap(freshMap);
   
-          console.log("📤 Sending to /api/best-route with:", {
-            user_location: userLocation,
-            addresses,
-            route_mode: routeMode,
-          });
-  
+          // ✅ Use state `routeMode` from dropdown
           await fetchOptimizedRoute(userLocation, addresses, routeMode, totalDeliveryTime);
+  
         } catch (error) {
-          console.error("❌ Error during reverse geocoding or optimization:", error);
           setRouteError("Something went wrong while resolving your location.");
         }
       },
       (error) => {
-        console.error("❌ Geolocation error:", error);
-  
         switch (error.code) {
           case error.PERMISSION_DENIED:
             setRouteError("Location access denied. Please allow location access.");
@@ -445,7 +562,7 @@ const ScheduledPickups: React.FC = () => {
             {/* Enhanced Route Optimization Section */}
             <div className="mb-8">
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-100">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                       <Route className="w-6 h-6 text-blue-600" />
@@ -490,7 +607,70 @@ const ScheduledPickups: React.FC = () => {
                       </>
                     )}
                   </motion.button>
-                </div>
+                </div> */}
+
+<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div className="flex items-center gap-4">
+    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+      <Route className="w-6 h-6 text-blue-600" />
+    </div>
+    <div>
+      <h3 className="text-lg font-semibold text-slate-900">Smart Route Optimization</h3>
+      <p className="text-sm text-slate-600">
+        Find the fastest pickup route based on your location
+      </p>
+      <p className="text-xs text-slate-500 mt-1">
+        <strong>FIFO</strong>: Start from your location<br />
+        <strong>LIFO</strong>: End at your location
+      </p>
+    </div>
+  </div>
+
+  <div className="flex flex-col sm:flex-row gap-3 items-center">
+    <select
+      value={routeMode}
+      onChange={(e) => setRouteMode(e.target.value as "FIFO" | "LIFO")}
+      className="px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm font-medium"
+    >
+      <option value="FIFO">Start from your location (FIFO)</option>
+      <option value="LIFO">End at your location (LIFO)</option>
+    </select>
+
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={handleOptimizeRoute}
+      disabled={
+        routeLoading ||
+        orders.filter(order =>
+          order.shipped_to_street &&
+          order.shipped_to_city &&
+          order.shipped_to_state &&
+          order.shipped_to_zip &&
+          order.shipped_to_country
+        ).length < 2
+      }
+      className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold transition-all ${
+        orders.length < 2
+          ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+          : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-300"
+      }`}
+    >
+      {routeLoading ? (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Optimizing...</span>
+        </>
+      ) : (
+        <>
+          <Navigation className="w-5 h-5" />
+          <span>Optimize Route</span>
+        </>
+      )}
+    </motion.button>
+  </div>
+</div>
+
                 
                 {orders.length < 2 && (
                   <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
@@ -561,7 +741,8 @@ const ScheduledPickups: React.FC = () => {
 
                   {routeInfo?.ordered_addresses?.length >= 2 && (
                     <div className="mb-8 rounded-2xl overflow-hidden border-2 border-green-200 shadow-lg">
-                      <RouteMap addresses={routeInfo.ordered_addresses} />
+                      <RouteMap    key={routeMode}
+                      addresses={routeInfo.ordered_addresses} />
                     </div>
                   )}
 
@@ -586,12 +767,13 @@ const ScheduledPickups: React.FC = () => {
                       Your Pickup Sequence
                     </h4>
                     <div className="space-y-4">
-                      {routeInfo.ordered_addresses.map((address, index) => {
-                        const normalizedAddress = address.toLowerCase().trim();
-                        const matchedOrder = Object.entries(addressMap).find(([key]) =>
-                          normalizedAddress.includes(key.split(",")[0].toLowerCase().trim())
-                        );
-                        const order = matchedOrder ? matchedOrder[1] : undefined;
+                    {routeInfo.ordered_orders?.map((order, index) => {
+                        const fullAddress = `${order.shipped_to_street}, ${order.shipped_to_city}, ${order.shipped_to_state}, ${order.shipped_to_zip}, ${order.shipped_to_country}`;
+                        // const normalizedAddress = address.toLowerCase().trim();
+                        // const matchedOrder = Object.entries(addressMap).find(([key]) =>
+                        //   normalizedAddress.includes(key.split(",")[0].toLowerCase().trim())
+                        // );
+                        // const order = matchedOrder ? matchedOrder[1] : undefined;
 
                         return (
                           <motion.div
@@ -608,7 +790,7 @@ const ScheduledPickups: React.FC = () => {
                               <p className="text-base font-semibold text-slate-900 truncate">
                                 {order?.shipped_to_person || "Location"}
                               </p>
-                              <p className="text-sm text-slate-600 truncate mb-1">{address}</p>
+                              <p className="text-sm text-slate-600 truncate mb-1">{fullAddress}</p>
                               {order && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-lg font-medium">
