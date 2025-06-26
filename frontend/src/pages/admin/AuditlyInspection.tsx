@@ -26,6 +26,7 @@ interface ShippingInfo {
   city: string;
   state: string;
   country: string;
+  organization?: string;
 }
 
 interface ReceiptData {
@@ -335,6 +336,7 @@ const AuditlyInspection = () => {
       try {
         const response = await axios.post<ReceiptData[]>("https://auditlyai.com/api/get-inspection-data", {
           receipt_number: null,
+          organization: localStorage.getItem("organization") || "", 
         });
         
         const uniqueData = response.data.reduce((acc: ReceiptData[], current) => {

@@ -100,6 +100,7 @@ const Login = () => {
           localStorage.setItem("userId", userData["User ID"]);
           localStorage.setItem("approved_agent_id", userData.approved_agent_id || "");
           localStorage.setItem("approved_manager_id", userData.approved_manager_id || "");
+          localStorage.setItem("organization", userData.organization || "");
   
           setUserData(userData);
           setMessage({

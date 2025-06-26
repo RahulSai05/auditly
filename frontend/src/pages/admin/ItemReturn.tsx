@@ -53,11 +53,12 @@ function ItemReturn() {
     setUploadProgress(0);
 
     try {
+      const organization = localStorage.getItem("organization") || "";
       const response = await axios.post<{
         items_added: number;
         rows_skipped: string[];
       }>(
-        "https://auditlyai.com/api/upload-return-items-csv",
+        `https://auditlyai.com/api/upload-return-items-csv/${organization}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -70,7 +71,8 @@ function ItemReturn() {
             }
           },
         }
-      );
+);
+
       
       setCsvFile(null);
       setFileName("");
@@ -97,10 +99,11 @@ function ItemReturn() {
     }
     setIsLoading(true);
     try {
+      const organization = localStorage.getItem("organization") || "";
       const response = await axios.get<ReturnItem[]>(
         "https://auditlyai.com/api/returns-data",
         {
-          params: { query: searchQuery },
+          params: { query: searchQuery, organization },
         }
       );
       setSearchResults(response.data);

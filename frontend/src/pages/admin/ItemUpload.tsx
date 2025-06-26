@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Search, X, Download, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
@@ -12,6 +12,13 @@ function ItemUpload() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [organization, setOrganization] = useState<string | null>(null);
+
+  useEffect(() => {
+    const org = localStorage.getItem("organization");
+    setOrganization(org);
+  }, []);
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,7 +40,7 @@ function ItemUpload() {
 
     try {
       await axios.post(
-        "https://auditlyai.com/api/upload-items-csv",
+        `https://auditlyai.com/api/upload-items-csv/${organization}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

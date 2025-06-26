@@ -15,6 +15,7 @@ const GetAll: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
     const { orderNumber } = useParams();
+    const organization = localStorage.getItem("organization");
 
 
     useEffect(() => {
@@ -37,9 +38,8 @@ const GetAll: React.FC = () => {
         setIsLoading(true);
         setError("");
         try {
-          const response = await axios.get(
-            "https://auditlyai.com/api/item_order_instance",
-            { params: { identifier: query } }
+          const response = await axios.get(`https://auditlyai.com/api/item_order_instance/${organization}`, {
+            params: { identifier: query } }
           );
       
           if (response.status === 200) {
@@ -86,9 +86,8 @@ const GetAll: React.FC = () => {
         setIsLoading(true);
         setError("");
         try {
-            const response = await axios.get(
-                "https://auditlyai.com/api/item_order_instance",
-                { params: { identifier: searchQuery } }
+            const response = await axios.get(`https://auditlyai.com/api/item_order_instance/${organization}`, {
+                params: { identifier: searchQuery } }
             );
 
             if (response.status === 200) {

@@ -219,8 +219,9 @@ const CustomerSerials: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const organization = localStorage.getItem("organization") || "";
         const response = await axios.get<SalesData[]>(
-          "/api/sale-data"
+          `/api/sale-data?organization=${organization}`
         );
         setCustomerData(response.data);
       } catch (error) {
@@ -229,9 +230,10 @@ const CustomerSerials: React.FC = () => {
         setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
   const filteredSalesData = useMemo(() => {
     return customerData.filter((data) => {

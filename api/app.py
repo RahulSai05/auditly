@@ -122,9 +122,9 @@ oauth.register(
 
 
 
-@app.get("/api/item_order_instance")
+@app.get("/api/item_order_instance/{organization}")
 async def get_item_instance_details(
-    identifier: str = Query(..., title="Serial Number or Return Order Number"),
+    organization : str, identifier: str = Query(..., title="Serial Number or Return Order Number"),
     db: Session = Depends(get_db)
 ):
     """
@@ -135,20 +135,20 @@ async def get_item_instance_details(
     item_instance = db.query(SaleItemData).filter(
         (SaleItemData.serial_number == identifier) | 
         (SaleItemData.original_sales_order_number == identifier)
-    ).first()
+        ).filter(SaleItemData.organization == organization).first()
     if item_instance:
-        return_instance = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == item_instance.original_sales_order_number).first()
+        return_instance = db.query(ReturnItemData).filter(ReturnItemData.original_sales_order_number == item_instance.original_sales_order_number).filter(ReturnItemData.organization==organization).first()
     else:
         return_instance = db.query(ReturnItemData).filter(
         (ReturnItemData.return_order_number == identifier)
-    ).first()
+    ).filter(ReturnItemData.organization == organization).first()
         item_instance = db.query(SaleItemData).filter(
             SaleItemData.original_sales_order_number == return_instance.original_sales_order_number
-        ).first()
+        ).filter(SaleItemData.organization == organization).first()
     if not item_instance:
         raise HTTPException(status_code=404, detail="Item Instance not found.")
 
-    item_details = db.query(Item).filter(Item.id == item_instance.item_id).first()
+    item_details = db.query(Item).filter(Item.id == item_instance.item_id).filter(Item.organization == organization).first()
 
     return {
         "original_sales_order_number": item_instance.original_sales_order_number,
@@ -994,10 +994,14 @@ async def get_base_images(id: int, db: Session = Depends(get_db)):
     }
 
 
-@app.post("/api/upload-items-csv")
-async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+@app.post("/api/upload-items-csv/{organization}")
+async def upload_items_csv(
+    organization: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
     """
-    Upload a CSV file to add or update items in the database.
+    Upload a CSV file to add or update items in the database scoped to an organization.
     Skips rows with invalid or duplicate data and returns a summary.
     """
     try:
@@ -1017,13 +1021,11 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
 
         for row in csv_reader:
             try:
-                # Strip and normalize all values in row
                 row = {k.strip().lower(): v.strip() for k, v in row.items()}
 
                 item_number_str = row.get("item_number")
                 brand_id_str = row.get("brand_id")
 
-                # Validate item_number and brand_id
                 if not item_number_str or not item_number_str.isdigit():
                     raise ValueError("Invalid or missing item_number")
                 if not brand_id_str or not brand_id_str.isdigit():
@@ -1032,18 +1034,20 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
                 item_number = int(item_number_str)
                 brand_id = int(brand_id_str)
 
-                # Check for duplicate item_number in the uploaded CSV
                 if item_number in seen_items:
                     raise ValueError(f"Duplicate item_number {item_number} in CSV")
                 seen_items.add(item_number)
 
-                # Check if brand exists
                 brand_exists = db.query(Brand).filter(Brand.id == brand_id).first()
                 if not brand_exists:
                     raise ValueError(f"Brand ID {brand_id} does not exist")
 
-                # Add or update item
-                existing_item = db.query(Item).filter(Item.item_number == item_number).first()
+                # Add or update item scoped by organization
+                existing_item = db.query(Item).filter(
+                    Item.item_number == item_number,
+                    Item.organization == organization
+                ).first()
+
                 if existing_item:
                     existing_item.item_description = row["item_description"]
                     existing_item.brand_id = brand_id
@@ -1057,6 +1061,7 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
                         brand_id=brand_id,
                         category=row["category"],
                         configuration=row["configuration"],
+                        organization=organization
                     )
                     db.add(new_item)
                     added += 1
@@ -1066,7 +1071,7 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
                     "row_data": row,
                     "error": str(row_error)
                 })
-                continue  # move to next row
+                continue
 
         db.commit()
         return {
@@ -1079,8 +1084,13 @@ async def upload_items_csv(file: UploadFile = File(...), db: Session = Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
-@app.post("/api/upload-sale-items-csv")
-async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+
+@app.post("/api/upload-sale-items-csv/{organization}")
+async def upload_sale_items_csv(
+    organization: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
     try:
         content = await file.read()
         decoded_content = content.decode("utf-8")
@@ -1162,20 +1172,19 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
                     date_purchased=datetime.strptime(row["date_purchased"], "%Y-%m-%d").date(),
                     date_shipped=datetime.strptime(row["date_shipped"], "%Y-%m-%d").date(),
                     date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date(),
-                    delivery_type=row["delivery_type"]
+                    delivery_type=row["delivery_type"],
+                    organization=organization
                 )
 
                 db.add(sale_item)
-                db.commit()  # Commit before assignment
+                db.commit()
 
-                # Retrieve inserted record by unique key
                 added_sale_item = db.query(SaleItemData).filter(
                     SaleItemData.original_sales_order_number == order_no,
                     SaleItemData.original_sales_order_line == order_line,
                     SaleItemData.serial_number == serial
                 ).first()
 
-                # Call assignment function
                 _assign_sales_order(db, added_sale_item.id)
 
                 added += 1
@@ -1196,8 +1205,13 @@ async def upload_sale_items_csv(file: UploadFile = File(...), db: Session = Depe
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
-@app.post("/api/upload-return-items-csv")
-async def upload_return_items_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+
+@app.post("/api/upload-return-items-csv/{organization}")
+async def upload_return_items_csv(
+    organization: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
     try:
         content = await file.read()
         decoded_content = content.decode("utf-8")
@@ -1233,7 +1247,8 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
 
                 exists = db.query(ReturnItemData).filter(
                     ReturnItemData.return_order_number == order_number,
-                    ReturnItemData.return_order_line == order_line
+                    ReturnItemData.return_order_line == order_line,
+                    ReturnItemData.organization == organization
                 ).first()
 
                 if exists:
@@ -1260,7 +1275,8 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
                     date_delivered=datetime.strptime(row["date_delivered"], "%Y-%m-%d").date(),
                     return_created_date=datetime.strptime(row["return_created_date"], "%Y-%m-%d").date(),
                     return_received_date=datetime.strptime(row["return_received_date"], "%Y-%m-%d").date(),
-                    delivery_type=row["delivery_type"]
+                    delivery_type=row["delivery_type"],
+                    organization=organization
                 )
 
                 db.add(return_item)
@@ -1268,7 +1284,8 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
 
                 added_return_item = db.query(ReturnItemData).filter(
                     ReturnItemData.return_order_number == order_number,
-                    ReturnItemData.return_order_line == order_line
+                    ReturnItemData.return_order_line == order_line,
+                    ReturnItemData.organization == organization
                 ).first()
 
                 _assign_return_order(db, added_return_item.id)
@@ -1287,6 +1304,7 @@ async def upload_return_items_csv(file: UploadFile = File(...), db: Session = De
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
 
 
 @app.get("/api/search-items")
@@ -1324,8 +1342,9 @@ def update_return_condition(status, return_order_mapping_key, db):
     pass
 
 
-@app.post("/api/upload-base-images/")
+@app.post("/api/upload-base-images/{organization}")
 async def upload_base_images(
+    organization: str,
     item_number: int,
     front_image: UploadFile = File(...),
     back_image: UploadFile = File(...),
@@ -1335,14 +1354,14 @@ async def upload_base_images(
     Upload base front and back images and map them to an item based on item_number.
     """
     if ENV == "TEST":UPLOAD_DIRECTORY = "/home/ec2-user/auditly/static/base_images"   
-    elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/auditly/base_images"   
+    elif ENV == "DEV":UPLOAD_DIRECTORY = "/Users/rahul/Desktop/"   
 
     # Check if the item exists
-    item = db.query(Item).filter(Item.item_number == item_number).first()
+    item = db.query(Item).filter(Item.item_number == item_number).filter(Item.organization == organization).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found for the given item_number")
 
-    base_image_exists = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
+    base_image_exists = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).filter(BaseData.organization == organization).first()
     # Save front image
     front_image_path = os.path.join(UPLOAD_DIRECTORY, front_image.filename)
     with open(front_image_path, "wb") as f:
@@ -1364,13 +1383,12 @@ async def upload_base_images(
         new_base_data = BaseData(
             base_front_image=front_image_path,
             base_back_image=back_image_path,
-            base_to_item_mapping=item.id
+            base_to_item_mapping=item.id,
+            organization=organization
         ) 
         db.add(new_base_data)
         db.commit()
         db.refresh(new_base_data)
-
-    
 
     return {
         "message": "Images uploaded and saved successfully.",
@@ -1382,9 +1400,9 @@ async def upload_base_images(
     }
 
 
-@app.get("/api/items")
-def get_all_items(db: Session = Depends(get_db)):
-    items = db.query(Item).all()
+@app.get("/api/items/{organization}")
+def get_all_items(organization: str, db: Session = Depends(get_db)):
+    items = db.query(Item).filter(Item.organization == organization).all()
 
     return [
         {
@@ -1404,10 +1422,13 @@ def get_all_items(db: Session = Depends(get_db)):
 
 
 @app.get("/api/sale-data")
-def get_all_sale_items(db: Session = Depends(get_db)):
-    results = db.query(
+def get_all_sale_items(
+    db: Session = Depends(get_db),
+    organization: str = Query(...),
+    query: str = Query(None)
+):
+    q = db.query(
         SaleItemData.original_sales_order_number.label("sales_order"),
-        SaleItemData.original_sales_order_line.label("order_line"),
         SaleItemData.account_number,
         SaleItemData.shipped_to_person.label("customer_name"),
         Item.item_description,
@@ -1419,14 +1440,25 @@ def get_all_sale_items(db: Session = Depends(get_db)):
         SaleItemData.date_delivered
     ).join(Item, SaleItemData.item_id == Item.id
     ).join(Brand, Item.brand_id == Brand.id
-    ).all()
+    ).filter(SaleItemData.organization == organization)
 
+    if query:
+        q = q.filter(
+            (SaleItemData.original_sales_order_number.ilike(f"%{query}%")) |
+            (SaleItemData.serial_number.ilike(f"%{query}%")) |
+            (SaleItemData.shipped_to_person.ilike(f"%{query}%"))
+        )
+
+    results = q.all()
     return [dict(row._mapping) for row in results]
 
-
 @app.get("/api/returns-data")
-def get_full_return_data(db: Session = Depends(get_db)):
-    results = db.query(
+def get_full_return_data(
+    organization: str = Query(...),
+    query: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    q = db.query(
         ReturnItemData.return_order_number.label("rma_number"),
         SaleItemData.account_number,
         SaleItemData.shipped_to_person.label("customer_name"),
@@ -1443,11 +1475,19 @@ def get_full_return_data(db: Session = Depends(get_db)):
         SaleItemData, ReturnItemData.original_sales_order_number == SaleItemData.original_sales_order_number
     ).join(
         Item, SaleItemData.item_id == Item.id
-    ).all()
+    ).filter(
+        ReturnItemData.organization == organization
+    )
 
+    if query:
+        q = q.filter(
+            (SaleItemData.original_sales_order_number.ilike(f"%{query}%")) |
+            (SaleItemData.serial_number.ilike(f"%{query}%")) |
+            (SaleItemData.shipped_to_person.ilike(f"%{query}%"))
+        )
+
+    results = q.all()
     return [dict(row._mapping) for row in results]
-
-    
 
 @app.get("/api/item-details/{identifier}")
 async def get_item_details(
@@ -1544,9 +1584,6 @@ async def get_item_details(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving item details: {str(e)}")
 
-
-
-
 @app.post("/api/register")
 async def register(request: AuditlyUserRequest, db: Session = Depends(get_db)):   
     """
@@ -1632,47 +1669,6 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
-# @app.post("/api/verify-login-otp")
-# async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
-#     """
-#     API for verifying OTP to login
-#     """ 
-#     auditly_user_name = request.user_name
-#     login_otp = request.login_otp
-
-#     user_data = db.query(AuditlyUser).filter(
-#         AuditlyUser.auditly_user_name == auditly_user_name,
-#         AuditlyUser.reset_otp == login_otp
-#     ).first()
-
-#     if user_data:
-#         user_data.last_login_time = datetime.now()
-#         db.commit()
-#         db.refresh(user_data)
-
-#         return {
-#             "message": "Login Successfull",
-#             "data": {
-#                 "User ID": user_data.auditly_user_id,
-#                 "User Name": user_data.auditly_user_name,
-#                 "User Type": [
-#                     key for key, val in {
-#                         "reports_user": user_data.is_reports_user,
-#                         "admin": user_data.is_admin,
-#                         "inspection_user": user_data.is_inspection_user
-#                     }.items() if val
-#                 ],
-#                 "is_admin": user_data.is_admin,
-#                 "is_agent": user_data.is_agent,
-#                 "is_manager": user_data.is_manager,
-#                 "is_inspection_user": user_data.is_inspection_user
-#             }
-#         }
-#     else:
-#         return {
-#             "message": "Invalid User Name or otp"
-#         }
-
 
 @app.post("/api/verify-login-otp")
 async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
@@ -1731,7 +1727,9 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
             "is_manager": user_data.is_manager,
             "is_inspection_user": user_data.is_inspection_user,
             "approved_agent_id": approved_agent_id,
-            "approved_manager_id": approved_manager_id
+            "approved_manager_id": approved_manager_id,
+            "organization": user_data.organization
+
         }
     }
 
@@ -2141,30 +2139,6 @@ async def update_profile(request: UpdateProfileRequest, db: Session = Depends(ge
         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
 
 
-@app.get("/api/return-data")
-def get_full_return_data(db: Session = Depends(get_db)):
-    results = db.query(
-        ReturnItemData.return_order_number.label("rma_number"),
-        SaleItemData.account_number,
-        SaleItemData.shipped_to_person.label("customer_name"),
-        Item.item_description,
-        Item.configuration,
-        SaleItemData.original_sales_order_number.label("sales_order"),
-        SaleItemData.original_sales_order_line.label("line"),
-        SaleItemData.serial_number,
-        ReturnItemData.date_purchased.label("purchased"),
-        ReturnItemData.date_shipped.label("shipped"),
-        ReturnItemData.date_delivered.label("delivered"),
-        ReturnItemData.return_received_date.label("return_date")
-    ).join(
-        SaleItemData, ReturnItemData.original_sales_order_number == SaleItemData.original_sales_order_number
-    ).join(
-        Item, SaleItemData.item_id == Item.id
-    ).all()
-
-    return [dict(row._mapping) for row in results]
-
-
 
 @app.get("/api/users")
 def get_users(db: Session = Depends(get_db)):
@@ -2365,22 +2339,80 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 
-@app.get("/api/images/search")
+# @app.get("/api/base-images/search")
+# async def get_images_by_item_number_or_description(
+#     item_number: Optional[int] = None,
+#     item_description: Optional[str] = None,
+#     db: Session = Depends(get_db)
+# ):
+#     """
+#     Retrieve base front and back images using either the item number or item description.
+
+#     Args:
+#         item_number (int, optional): The item number to fetch images for.
+#         item_description (str, optional): The item description to search for.
+#         db (Session): The database session dependency.
+
+#     Returns:
+#         dict: Contains the item details and relative image paths.
+#     """
+#     if not item_number and not item_description:
+#         raise HTTPException(
+#             status_code=400,
+#             detail="Either item_number or item_description must be provided"
+#         )
+
+#     # Start building the query
+#     query = db.query(Item)
+    
+#     if item_number:
+#         query = query.filter(Item.item_number == item_number)
+#     if item_description:
+#         query = query.filter(Item.item_description.contains(item_description))
+    
+#     item = query.first()
+    
+#     if not item:
+#         raise HTTPException(status_code=404, detail="Item not found")
+
+#     # Fetch the base image data using the item's ID
+#     base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
+
+#     if not base_data:
+#         raise HTTPException(status_code=404, detail="Base images not found for this item")
+
+#     # Return relative paths for the images
+#     return {
+#         "item_id": item.id,
+#         "item_number": item.item_number,
+#         "item_description": item.item_description,
+#         "brand_id": item.brand_id,
+#         "category": item.category,
+#         "configuration": item.configuration,
+#         "front_image_path": f"/static/base_images/{os.path.basename(base_data.base_front_image)}",
+#         "back_image_path": f"/static/base_images/{os.path.basename(base_data.base_back_image)}",
+#     }
+
+
+@app.get("/api/base-images/search")
 async def get_images_by_item_number_or_description(
     item_number: Optional[int] = None,
     item_description: Optional[str] = None,
+    organization: str = Query(...),
     db: Session = Depends(get_db)
 ):
     """
-    Retrieve base front and back images using either the item number or item description.
+    Retrieve base front and back images using item number or description,
+    filtered by organization.
 
     Args:
-        item_number (int, optional): The item number to fetch images for.
-        item_description (str, optional): The item description to search for.
-        db (Session): The database session dependency.
+        item_number (int, optional): The item number.
+        item_description (str, optional): The item description.
+        organization (str): The organization name (required).
+        db (Session): The DB session.
 
     Returns:
-        dict: Contains the item details and relative image paths.
+        dict: Item details and base image paths.
     """
     if not item_number and not item_description:
         raise HTTPException(
@@ -2388,26 +2420,26 @@ async def get_images_by_item_number_or_description(
             detail="Either item_number or item_description must be provided"
         )
 
-    # Start building the query
-    query = db.query(Item)
-    
+    query = db.query(Item).filter(Item.organization == organization)
+
     if item_number:
         query = query.filter(Item.item_number == item_number)
     if item_description:
         query = query.filter(Item.item_description.contains(item_description))
-    
+
     item = query.first()
-    
+
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    # Fetch the base image data using the item's ID
-    base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item.id).first()
+    base_data = db.query(BaseData).filter(
+        BaseData.base_to_item_mapping == item.id,
+        BaseData.organization == organization
+    ).first()
 
     if not base_data:
         raise HTTPException(status_code=404, detail="Base images not found for this item")
 
-    # Return relative paths for the images
     return {
         "item_id": item.id,
         "item_number": item.item_number,
@@ -2421,55 +2453,136 @@ async def get_images_by_item_number_or_description(
 
 
 
+# @app.post("/api/get-inspection-data")
+# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
+#     # If no receipt number provided, return all
+#     if request.receipt_number is None:
+#         data = db.query(
+#             CustomerItemCondition,
+#             SaleItemData,
+#             ReturnItemData,
+#             Item,
+#             Brand,
+#             BaseData
+#         ).join(
+#             SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
+#         ).join(
+#             Item, SaleItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).outerjoin(
+#             BaseData, BaseData.base_to_item_mapping == Item.id
+#         ).outerjoin(
+#             ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
+#         ).all()
+#     else:
+#         # Filter by receipt number
+#         data = db.query(
+#             CustomerItemCondition,
+#             SaleItemData,
+#             ReturnItemData,
+#             Item,
+#             Brand,
+#             BaseData
+#         ).join(
+#             SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
+#         ).join(
+#             Item, SaleItemData.item_id == Item.id
+#         ).join(
+#             Brand, Item.brand_id == Brand.id
+#         ).outerjoin(
+#             BaseData, BaseData.base_to_item_mapping == Item.id
+#         ).outerjoin(
+#             ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
+#         ).filter(
+#             CustomerItemCondition.ack_number == request.receipt_number
+#         ).first()
+        
+#         data = [data] if data else []
+
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+
+#     receipt_data_list = []
+#     for condition, sale_data, return_data, item, brand, base_data in data:
+#         front_diff_url = f"/api/difference-images/{condition.id}/front" if condition.difference_front_image else None
+#         back_diff_url = f"/api/difference-images/{condition.id}/back" if condition.difference_back_image else None
+
+#         receipt_data = {
+#             "receipt_number": condition.ack_number,
+#             "overall_condition": condition.overall_condition,
+#             "item_description": item.item_description,
+#             "brand_name": brand.brand_name,
+#             "original_sales_order_number": sale_data.original_sales_order_number,
+#             "return_order_number": return_data.return_order_number if return_data else None,
+#             "return_qty": return_data.return_qty if return_data else None,
+#             "shipping_info": {
+#                 "shipped_to_person": sale_data.shipped_to_person,
+#                 "address": sale_data.shipped_to_street,
+#                 "city": sale_data.shipped_to_city,
+#                 "state": sale_data.shipped_to_state,
+#                 "country": sale_data.shipped_to_country
+#             },
+#             "images": {
+#                 "difference_images": {
+#                     "front": front_diff_url,
+#                     "back": back_diff_url
+#                 },
+#                 "similarity_scores": {
+#                     "front": condition.front_similarity,
+#                     "back": condition.back_similarity,
+#                     "average": condition.average_ssi
+#                 }
+#             }
+#         }
+
+#         if base_data:
+#             receipt_data["images"]["base_images"] = {
+#                 "front": f"/api/base-images/{base_data.id}/front",
+#                 "back": f"/api/base-images/{base_data.id}/back"
+#             }
+
+#         receipt_data_list.append(receipt_data)
+
+#     return receipt_data_list
+
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-    # If no receipt number provided, return all
-    if request.receipt_number is None:
-        data = db.query(
-            CustomerItemCondition,
-            SaleItemData,
-            ReturnItemData,
-            Item,
-            Brand,
-            BaseData
-        ).join(
-            SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
-        ).join(
-            Item, SaleItemData.item_id == Item.id
-        ).join(
-            Brand, Item.brand_id == Brand.id
-        ).outerjoin(
-            BaseData, BaseData.base_to_item_mapping == Item.id
-        ).outerjoin(
-            ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
-        ).all()
-    else:
-        # Filter by receipt number
-        data = db.query(
-            CustomerItemCondition,
-            SaleItemData,
-            ReturnItemData,
-            Item,
-            Brand,
-            BaseData
-        ).join(
-            SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
-        ).join(
-            Item, SaleItemData.item_id == Item.id
-        ).join(
-            Brand, Item.brand_id == Brand.id
-        ).outerjoin(
-            BaseData, BaseData.base_to_item_mapping == Item.id
-        ).outerjoin(
-            ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
-        ).filter(
-            CustomerItemCondition.ack_number == request.receipt_number
-        ).first()
-        
+    """
+    Fetch inspection data based on optional receipt_number and required organization.
+    """
+    if not request.organization:
+        raise HTTPException(status_code=400, detail="Organization is required.")
+
+    base_query = db.query(
+        CustomerItemCondition,
+        SaleItemData,
+        ReturnItemData,
+        Item,
+        Brand,
+        BaseData
+    ).join(
+        SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
+    ).join(
+        Item, SaleItemData.item_id == Item.id
+    ).join(
+        Brand, Item.brand_id == Brand.id
+    ).outerjoin(
+        BaseData, BaseData.base_to_item_mapping == Item.id
+    ).outerjoin(
+        ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
+    ).filter(
+        CustomerItemCondition.organization == request.organization
+    )
+
+    if request.receipt_number:
+        data = base_query.filter(CustomerItemCondition.ack_number == request.receipt_number).first()
         data = [data] if data else []
+    else:
+        data = base_query.all()
 
     if not data:
-        raise HTTPException(status_code=404, detail="Data not found based on receipt number")
+        raise HTTPException(status_code=404, detail="Data not found based on receipt number and organization")
 
     receipt_data_list = []
     for condition, sale_data, return_data, item, brand, base_data in data:

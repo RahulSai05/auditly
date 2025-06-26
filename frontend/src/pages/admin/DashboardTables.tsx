@@ -155,8 +155,9 @@ const DashboardTables: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const organization = localStorage.getItem("organization") || "";
         const itemsResponse = await axios.get<Item[]>(
-          "https://auditlyai.com/api/items"
+          `https://auditlyai.com/api/items/${organization}`
         );
         setItems(itemsResponse.data);
       } catch (error) {
@@ -165,9 +166,10 @@ const DashboardTables: React.FC = () => {
         setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
   const clearFilters = () => {
     setSearchFilters({

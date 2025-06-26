@@ -48,36 +48,46 @@ const ItemImages: React.FC = () => {
   };
 
   const fetchItemData = async () => {
-  if (!searchTerm) {
-    setError(`Please enter an item ${searchType === "number" ? "number" : "description"}.`);
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-  setItemData(null);
-
-  try {
-    // Construct the correct URL based on search type
-    let url;
-    if (searchType === "number") {
-      url = `${backendUrl}/images/search?item_number=${encodeURIComponent(searchTerm)}`;
-    } else {
-      url = `${backendUrl}/images/search?item_description=${encodeURIComponent(searchTerm)}`;
+    if (!searchTerm) {
+      setError(`Please enter an item ${searchType === "number" ? "number" : "description"}.`);
+      return;
     }
-
-
-    const response = await axios.get(url);
-    const data = response.data;
-    data.front_image_path = `${staticUrl}${data.front_image_path}`;
-    data.back_image_path = `${staticUrl}${data.back_image_path}`;
-    setItemData(data);
-  } catch (err: any) {
-    setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
-  } finally {
-    setLoading(false);
-  }
-};
+  
+    setLoading(true);
+    setError(null);
+    setItemData(null);
+  
+    try {
+      const organization = localStorage.getItem("organization");
+      if (!organization) {
+        setError("Organization not set. Please log in again.");
+        return;
+      }
+  
+      const params: Record<string, string> = { organization };
+      if (searchType === "number") {
+        params.item_number = searchTerm;
+      } else {
+        params.item_description = searchTerm;
+      }
+  
+      const queryString = new URLSearchParams(params).toString();
+      const url = `/api/base-images/search?${queryString}`; 
+  
+      const response = await axios.get(url);
+  
+      const data = response.data;
+      data.front_image_path = `https://auditlyai.com${data.front_image_path}`;
+      data.back_image_path = `https://auditlyai.com${data.back_image_path}`;
+      setItemData(data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "An unexpected error occurred while fetching the item data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  
   const handleClear = () => {
     setSearchTerm("");
     setItemData(null);

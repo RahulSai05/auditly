@@ -233,9 +233,10 @@ const ReturnDetails: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<ReturnData[]>(
-          "/api/return-data"
-        );
+        const organization = localStorage.getItem("organization") || "";
+        const response = await axios.get<ReturnData[]>("/api/returns-data", {
+          params: { organization },
+        });
         setReturnData(response.data);
       } catch (error) {
         console.error("Error fetching return data:", error);
@@ -243,9 +244,10 @@ const ReturnDetails: React.FC = () => {
         setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
   const filteredReturnData = useMemo(() => {
     return returnData.filter((data) => {

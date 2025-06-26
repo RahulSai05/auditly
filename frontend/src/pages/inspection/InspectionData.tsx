@@ -30,8 +30,10 @@ const ReceiptDataPage: React.FC = () => {
     }
 
     try {
-      const payload: any = { search_user_id: searchUserId };
-      if (token) {
+      const payload: any = {
+        search_user_id: searchUserId,
+        organization: localStorage.getItem("organization") || "",
+      };      if (token) {
         payload.token = token;
       } else if (receiptNumber) {
         payload.receipt_number = receiptNumber;

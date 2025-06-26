@@ -23,6 +23,8 @@ const Scan = () => {
   const dispatch = useDispatch();
   const router = useNavigate();
   const scanningActive = useRef(false);
+  const organization = localStorage.getItem("organization");
+
 
   useEffect(() => {
     return () => stopScanning();
@@ -54,8 +56,7 @@ const Scan = () => {
       setScannedItems((prev) => [...prev, decodedText]);
 
       setIsScanning(false);
-      axios
-        .get(`https://auditlyai.com/api/item_order_instance`, {
+      axios.get(`https://auditlyai.com/api/item_order_instance/${organization}`, {
           params: { identifier: decodedText },
         })
         .then((response) => {

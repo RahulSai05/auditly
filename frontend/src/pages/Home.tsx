@@ -28,19 +28,23 @@ export default function Home() {
       setError("Please enter an inspection number");
       return;
     }
-
+  
+    const org = localStorage.getItem("organization");
+    if (!org) {
+      setError("Organization is missing. Please log in again.");
+      return;
+    }
+  
     setLoading(true);
     setError("");
     try {
-      const response = await axios.post(
-        "/api/get-inspection-data",
-        {
-          receipt_number: receiptNumber,
-        }
-      );
-      
+      const response = await axios.post("/api/get-inspection-data", {
+        receipt_number: receiptNumber,
+        organization: org,
+      });
+  
       if (response.data && response.data.length > 0) {
-        setData(response.data[0]); // Using the first item since we're searching by specific receipt number
+        setData(response.data[0]);
       } else {
         setError("No inspection found with this number. Please check and try again.");
       }
@@ -63,6 +67,7 @@ export default function Home() {
       setLoading(false);
     }
   };
+  
 
   const handleClear = () => {
     setReceiptNumber("");

@@ -61,4 +61,4 @@ class UpdateUserTypeRequest(BaseModel):
 
 class ReceiptSearch(BaseModel):
     receipt_number: Optional[str] = None
-    
+    organization: str

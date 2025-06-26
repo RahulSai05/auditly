@@ -69,8 +69,9 @@ const ItemImageUpload = () => {
 
     setIsLoading(true);
     try {
+      const organization = localStorage.getItem("organization") || "";
       const response = await axios.post(
-        `https://auditlyai.com/api/upload-base-images/?item_number=${itemNumber}`,
+        `https://auditlyai.com/api/upload-base-images/${organization}?item_number=${itemNumber}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
