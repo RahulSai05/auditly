@@ -99,24 +99,25 @@ const UserPermissionRequests = () => {
   const [primaryManagerMap, setPrimaryManagerMap] = useState<Record<number, number | null>>({});
   const [secondaryManagerMap, setSecondaryManagerMap] = useState<Record<number, number | null>>({});
 
-
   const fetchPendingApprovals = async () => {
     try {
       setLoading(true);
+      const organization = localStorage.getItem("organization");
+  
       const [agentsResponse, managersResponse] = await Promise.all([
-        fetch("/api/pending-agent-approval"),
-        fetch("/api/pending-manager-approval"),
+        fetch(`/api/pending-agent-approval/${organization}`),
+        fetch(`/api/pending-manager-approval/${organization}`),
       ]);
-
+  
       if (!agentsResponse.ok || !managersResponse.ok) {
         throw new Error("Failed to fetch approval requests");
       }
-
+  
       const [agentsData, managersData] = await Promise.all([
         agentsResponse.json(),
         managersResponse.json(),
       ]);
-
+  
       setPendingAgents(agentsData.agents || []);
       setPendingManagers(managersData.managers || []);
     } catch (err) {
@@ -125,6 +126,8 @@ const UserPermissionRequests = () => {
       setLoading(false);
     }
   };
+
+  const organization = localStorage.getItem("organization");
 
   const fetchAvailableManagers = async (
     zipCode: string,
@@ -139,6 +142,7 @@ const UserPermissionRequests = () => {
         zip_code: zipCode,
         servicing_city: city,
         servicing_state: state,
+        organization,
       };
   
       if (type === "agent") {

@@ -52,7 +52,8 @@ const apiEndpoints: ApiEndpoint[] = [
           item_description: "High-quality memory foam mattress",
           brand_id: 1,
           category: "Bedding",
-          configuration: "King"
+          configuration: "King",
+          organization: "organization"
         }
       ]
     }
@@ -96,7 +97,8 @@ const apiEndpoints: ApiEndpoint[] = [
           dimension_size: "King",
           date_purchased: "2024-03-15T00:00:00",
           date_shipped: "2024-03-16T00:00:00",
-          date_delivered: "2024-03-18T00:00:00"
+          date_delivered: "2024-03-18T00:00:00",
+          organization: "organization"
         }
       ]
     }
@@ -132,7 +134,8 @@ const apiEndpoints: ApiEndpoint[] = [
           date_shipped: "2024-03-16T00:00:00",
           date_delivered: "2024-03-18T00:00:00",
           return_created_date: "2024-03-25T00:00:00",
-          return_received_date: "2024-03-28T00:00:00"
+          return_received_date: "2024-03-28T00:00:00",
+          organization: "organization"
         }
       ]
     }

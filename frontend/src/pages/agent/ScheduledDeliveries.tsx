@@ -88,6 +88,7 @@ const ScheduledDeliveries: React.FC = () => {
   const [deliveryTime, setDeliveryTime] = useState<number>(0);
   const navigate = useNavigate();
   const [routeMode, setRouteMode] = useState<"FIFO" | "LIFO">("FIFO");
+  const org = localStorage.getItem("organization");
 
 
   const fetchOrders = async () => {
@@ -100,7 +101,7 @@ const ScheduledDeliveries: React.FC = () => {
         throw new Error("Agent ID not found. Please log in again.");
       }
   
-      const response = await fetch(`/api/agent/sales-orders/${agentId}`);
+      const response = await fetch(`/api/agent/sales-orders/${agentId}?organization=${org}`);
   
       if (response.status === 404) {
         setOrders([]); 

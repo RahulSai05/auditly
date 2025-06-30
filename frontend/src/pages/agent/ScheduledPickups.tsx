@@ -102,6 +102,7 @@ const ScheduledPickups: React.FC = () => {
   const [addressMap, setAddressMap] = useState<Record<string, Order>>({});
   const [routeMode, setRouteMode] = useState<"FIFO" | "LIFO">("FIFO");
   const navigate = useNavigate();
+  const org = localStorage.getItem("organization");
 
   const fetchOrders = async () => {
     try {
@@ -113,7 +114,7 @@ const ScheduledPickups: React.FC = () => {
         throw new Error("Agent ID not found. Please log in again.");
       }
   
-      const response = await fetch(`/api/agent/return-orders/${agentId}`);
+      const response = await fetch(`/api/agent/return-orders/${agentId}?organization=${org}`);
   
       if (response.status === 404) {
         setOrders([]);

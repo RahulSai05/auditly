@@ -77,6 +77,7 @@ interface ManagerFormState {
   additional_info_2: string;
 }
 
+const organization = localStorage.getItem("organization");
 
 interface SuccessData {
   id: number;
@@ -296,7 +297,7 @@ const RequestAccess: React.FC = () => {
     permanent_address_city: "",
     permanent_address_zip: "",
     gender: "",
-    dob: "",
+    dob: "",  
     work_schedule: "",
     agent_to_user_mapping_id: "",
     additional_info_1: "",
@@ -477,7 +478,8 @@ const RequestAccess: React.FC = () => {
         agent_to_user_mapping_id: agentForm.agent_to_user_mapping_id ? parseInt(agentForm.agent_to_user_mapping_id) : null,
         additional_info_1: agentForm.additional_info_1 || null,
         additional_info_2: agentForm.additional_info_2 || null,
-        additional_info_3: agentForm.additional_info_3 || null
+        additional_info_3: agentForm.additional_info_3 || null,
+        organization: localStorage.getItem("organization"),
       };
 
       const response = await fetch("/api/create-agent/", {
@@ -537,7 +539,8 @@ const RequestAccess: React.FC = () => {
           : null,
       
         additional_info_1: managerForm.additional_info_1 || null,
-        additional_info_2: managerForm.additional_info_2 || null
+        additional_info_2: managerForm.additional_info_2 || null,
+        organization: localStorage.getItem("organization"),
       };      
 
       const response = await fetch("/api/create-manager/", {

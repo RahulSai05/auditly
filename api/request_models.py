@@ -5,7 +5,8 @@ from sqlalchemy import Date
 class CompareImagesRequest(BaseModel):
     customer_id: int
     item_id: int
-
+    organization: str
+    
 class AuditlyUserRequest(BaseModel):
     user_name : str
     first_name: str

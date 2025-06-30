@@ -219,6 +219,8 @@ class AgentCreate(BaseModel):
     additional_info_1: Optional[str] = None
     additional_info_2: Optional[str] = None
     additional_info_3: Optional[str] = None
+    organization: Optional[str] = None  # ✅ NEW FIELD
+
 
 @app.post("/api/create-agent/")
 def create_agent(agent: AgentCreate, db: Session = Depends(get_db)):
@@ -245,7 +247,8 @@ def create_agent(agent: AgentCreate, db: Session = Depends(get_db)):
         agent_to_user_mapping_id=agent.agent_to_user_mapping_id,
         additional_info_1=agent.additional_info_1,
         additional_info_2=agent.additional_info_2,
-        additional_info_3=agent.additional_info_3
+        additional_info_3=agent.additional_info_3,
+        organization=agent.organization
     )
 
     db.add(new_agent)
@@ -253,13 +256,17 @@ def create_agent(agent: AgentCreate, db: Session = Depends(get_db)):
     db.refresh(new_agent)
     return {"message": "Agent created successfully", "agent_id": new_agent.agent_id}
 
-@app.get("/api/pending-agent-approval")
-def pending_agent_approval(db: Session = Depends(get_db)):
+@app.get("/api/pending-agent-approval/{organization}")
+def pending_agent_approval(organization: str, db: Session = Depends(get_db)):
     agents = db.query(Agent, AuditlyUser).join(
         AuditlyUser, Agent.agent_to_user_mapping_id == AuditlyUser.auditly_user_id
     ).filter(
-        AuditlyUser.is_agent == False
+        and_(
+            AuditlyUser.is_agent == False,
+            Agent.organization == organization
+        )
     ).all()
+
     result = [
         {
             "agent": {
@@ -290,10 +297,11 @@ def pending_agent_approval(db: Session = Depends(get_db)):
     ]
     return {"agents": result}
 
+
 class AgentApprovalRequest(BaseModel):
     agent_id: int
     approver_id: int
-    manager_ids: List[str]  # ✅ correct name for matching frontend payload
+    manager_ids: List[str]
 
 @app.post("/api/approve-agent")
 def approve_agent(request: AgentApprovalRequest, db: Session = Depends(get_db)):
@@ -458,6 +466,7 @@ class ManagerCreate(BaseModel):
     manager_user_mapping_id: Optional[int] = None
     additional_info_1: Optional[str] = None
     additional_info_2: Optional[str] = None
+    organization: Optional[str] = None
 
 
 @app.post("/api/create-manager/")
@@ -481,7 +490,8 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
         company_id=manager.company_id,
         manager_user_mapping_id=manager.manager_user_mapping_id,
         additional_info_1=manager.additional_info_1,
-        additional_info_2=manager.additional_info_2
+        additional_info_2=manager.additional_info_2,
+        organization=manager.organization
     )
 
     db.add(new_manager)
@@ -512,8 +522,8 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
             agent_to_user_mapping_id=manager.manager_user_mapping_id,
             additional_info_1=manager.additional_info_1,
             additional_info_2=manager.additional_info_2,
+            organization=manager.organization
         )
-
         db.add(new_agent)
         db.commit()
         db.refresh(new_agent)
@@ -526,15 +536,15 @@ def create_manager(manager: ManagerCreate, db: Session = Depends(get_db)):
         "agent_id": agent_id
     }
 
-
-@app.get("/api/pending-manager-approval")
-def pending_manager_approval(db: Session = Depends(get_db)):
+@app.get("/api/pending-manager-approval/{organization}")
+def pending_manager_approval(organization: str, db: Session = Depends(get_db)):
     managers = db.query(AgentManager, AuditlyUser).join(
         AuditlyUser, AgentManager.manager_user_mapping_id == AuditlyUser.auditly_user_id
     ).filter(
         and_(
             AuditlyUser.is_manager == False,
-            AgentManager.approved_by_auditly_user_id.is_(None)
+            AgentManager.approved_by_auditly_user_id.is_(None),
+            AgentManager.organization == organization
         )
     ).all()
 
@@ -570,8 +580,9 @@ def pending_manager_approval(db: Session = Depends(get_db)):
         }
         for manager, user in managers
     ]
+
     return {"managers": result}
-    
+
 class ManagerApprovalRequest(BaseModel):
     manager_id: int
     approver_id: int
@@ -602,19 +613,25 @@ def approve_manager(request: ManagerApprovalRequest, db: Session = Depends(get_d
     db.commit()
     return {"message": "Manager approved, role updated, and approver recorded successfully"}
 
-class ManagerStateRequest(BaseModel):
+
+class SaleItemManagerStateRequest(BaseModel):
     manager_id: int
+    organization: str
 
 @app.post("/api/sale-items/by-manager-grade-region")
-def get_sale_items_by_manager_region(request: ManagerStateRequest, db: Session = Depends(get_db)):
-    manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+def get_sale_items_by_manager_region(request: SaleItemManagerStateRequest, db: Session = Depends(get_db)):
+    manager = db.query(AgentManager).filter(
+        AgentManager.manager_id == request.manager_id,
+        AgentManager.organization == request.organization
+    ).first()
+
     if not manager:
-        raise HTTPException(status_code=404, detail="Manager not found")
+        raise HTTPException(status_code=404, detail="Manager not found for this organization")
 
     if not manager.manager_grade:
         raise HTTPException(status_code=400, detail="Manager grade not set")
 
-    query = db.query(SaleItemData)
+    query = db.query(SaleItemData).filter(SaleItemData.organization == request.organization)
 
     if manager.manager_grade == "c1":
         query = query.filter(SaleItemData.shipped_to_city == manager.servicing_city)
@@ -688,14 +705,17 @@ def get_agent_zip_codes(agent_id: int, db: Session = Depends(get_db)):
 
 class SaleItemByZip(BaseModel):
     agent_id: int
-    zip_code: list
+    zip_code: list[int]
+    organization: str
+
 
 @app.post("/api/sale-items-by-zip")
 def get_sale_items_by_zip(request: SaleItemByZip, db: Session = Depends(get_db)):
 
     sale_items = db.query(SaleItemData).filter(
     SaleItemData.shipped_to_zip.in_(request.zip_code),
-    SaleItemData.delivery_agent_id.is_(None)  
+    SaleItemData.delivery_agent_id.is_(None),
+    SaleItemData.organization == request.organization
 ).all()
     return {
         "delivery_zip": request.zip_code,
@@ -727,12 +747,15 @@ def get_sale_items_by_zip(request: SaleItemByZip, db: Session = Depends(get_db))
 class ReturnItemByZip(BaseModel):
     agent_id: int
     zip_code: list[int]
+    organization: str
+
 
 @app.post("/api/return-items-by-zip")
 def get_return_items_by_zip(request: ReturnItemByZip, db: Session = Depends(get_db)):
     return_items = db.query(ReturnItemData).filter(
     ReturnItemData.return_zip.in_(request.zip_code),
-    ReturnItemData.return_agent_id.is_(None)  
+    ReturnItemData.return_agent_id.is_(None),
+    ReturnItemData.organization == request.organization
 ).all()
     return {
         "return_zip": request.zip_code,
@@ -763,55 +786,24 @@ def get_return_items_by_zip(request: ReturnItemByZip, db: Session = Depends(get_
             } for item in return_items
         ]
     }
-
-# @app.post("/api/return-items-by-manager-state")
-# def get_return_items_by_manager_state(request: ManagerStateRequest, db: Session = Depends(get_db)):
-#     manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
-#     if not manager:
-#         raise HTTPException(status_code=404, detail="Manager not found")
-
-#     servicing_state = manager.servicing_state
-
-#     return_items = db.query(ReturnItemData).filter(ReturnItemData.return_state == servicing_state).all()
-
-#     return {
-#         "manager_state": servicing_state,
-#         "return_items": [
-#             {
-#                 "id": item.id,
-#                 "return_order": item.return_order_number,
-#                 "order_line": item.return_order_line,
-#                 "item_id": item.item_id,
-#                 "return_condition": item.return_condition,
-#                 "return_carrier": item.return_carrier,
-#                 "return_destination": item.return_destination,
-#                 "return_state": item.return_state,
-#                 "return_zip": item.return_zip,
-#                 "status": item.status,
-#                 "date_purchased": item.date_purchased,
-#                 "date_shipped": item.date_shipped,
-#                 "date_delivered": item.date_delivered,
-#                 "return_created_date": item.return_created_date,
-#                 "return_received_date": item.return_received_date,
-#                 "item": {
-#                     "item_number": item.item.item_number if item.item else None,
-#                     "description": item.item.item_description if item.item else None,
-#                     "category": item.item.category if item.item else None
-#                 }
-#             } for item in return_items
-#         ]
-#     }
+class ReturnItemManagerStateRequest(BaseModel):
+    manager_id: int
+    organization: str
 
 @app.post("/api/return-items/by-manager-grade-region")
-def get_return_items_by_manager_region(request: ManagerStateRequest, db: Session = Depends(get_db)):
-    manager = db.query(AgentManager).filter(AgentManager.manager_id == request.manager_id).first()
+def get_return_items_by_manager_region(request: ReturnItemManagerStateRequest, db: Session = Depends(get_db)):
+    manager = db.query(AgentManager).filter(
+        AgentManager.manager_id == request.manager_id,
+        AgentManager.organization == request.organization
+    ).first()
+
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
 
     if not manager.manager_grade:
         raise HTTPException(status_code=400, detail="Manager grade not set")
 
-    query = db.query(ReturnItemData)
+    query = db.query(ReturnItemData).filter(ReturnItemData.organization == request.organization)
 
     if manager.manager_grade == "c1":
         query = query.filter(ReturnItemData.return_city == manager.servicing_city)
@@ -870,8 +862,6 @@ def get_return_items_by_manager_region(request: ManagerStateRequest, db: Session
         },
         "return_items": result
     }
-
-   
 
 @app.post("/api/upload-customer-images")
 async def upload_customer_images(
@@ -1836,11 +1826,6 @@ async def reset_password(request: ResettPassword, db: Session = Depends(get_db))
     #     raise HTTPException(status_code=500, detail=f"Error processing search: {str(e)}")
 
 
-
-
-
-
-
 @app.post("/api/compare-images/")
 async def compare_images(request: CompareImagesRequest, db: Session = Depends(get_db)):
     """
@@ -1848,6 +1833,7 @@ async def compare_images(request: CompareImagesRequest, db: Session = Depends(ge
     """
     customer_id = request.customer_id
     item_id = request.item_id
+    organization = request.organization
 
     base_data = db.query(BaseData).filter(BaseData.base_to_item_mapping == item_id).first()
     if not base_data:
@@ -1962,7 +1948,7 @@ Audit team
 
     overall_condition = classify_condition(front_similarity, back_similarity, average_ssi)
 
-    save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path)
+    save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path, organization)
 
     return_data.status = "Completed"
     db.commit()
@@ -1981,7 +1967,8 @@ Audit team
     }
 
 
-def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path):
+
+def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, average_ssi, overall_condition, db, customer_id, receipt_number, front_diff_image_path, back_diff_image_path, organization):
     new_item_condition = CustomerItemCondition(
         front_similarity=front_similarity,
         back_similarity=back_similarity,
@@ -1992,7 +1979,8 @@ def save_item_condition(front_similarity, back_similarity, ssi_front, ssi_back, 
         customer_item_condition_mapping_id=customer_id,
         ack_number=receipt_number,
         difference_front_image=front_diff_image_path,
-        difference_back_image=back_diff_image_path
+        difference_back_image=back_diff_image_path,
+        organization=organization
     )
     db.add(new_item_condition)
     db.commit()
@@ -2452,100 +2440,6 @@ async def get_images_by_item_number_or_description(
     }
 
 
-
-# @app.post("/api/get-inspection-data")
-# async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
-#     # If no receipt number provided, return all
-#     if request.receipt_number is None:
-#         data = db.query(
-#             CustomerItemCondition,
-#             SaleItemData,
-#             ReturnItemData,
-#             Item,
-#             Brand,
-#             BaseData
-#         ).join(
-#             SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
-#         ).join(
-#             Item, SaleItemData.item_id == Item.id
-#         ).join(
-#             Brand, Item.brand_id == Brand.id
-#         ).outerjoin(
-#             BaseData, BaseData.base_to_item_mapping == Item.id
-#         ).outerjoin(
-#             ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
-#         ).all()
-#     else:
-#         # Filter by receipt number
-#         data = db.query(
-#             CustomerItemCondition,
-#             SaleItemData,
-#             ReturnItemData,
-#             Item,
-#             Brand,
-#             BaseData
-#         ).join(
-#             SaleItemData, CustomerItemCondition.customer_item_condition_mapping_id == SaleItemData.id
-#         ).join(
-#             Item, SaleItemData.item_id == Item.id
-#         ).join(
-#             Brand, Item.brand_id == Brand.id
-#         ).outerjoin(
-#             BaseData, BaseData.base_to_item_mapping == Item.id
-#         ).outerjoin(
-#             ReturnItemData, SaleItemData.original_sales_order_number == ReturnItemData.original_sales_order_number
-#         ).filter(
-#             CustomerItemCondition.ack_number == request.receipt_number
-#         ).first()
-        
-#         data = [data] if data else []
-
-#     if not data:
-#         raise HTTPException(status_code=404, detail="Data not found based on receipt number")
-
-#     receipt_data_list = []
-#     for condition, sale_data, return_data, item, brand, base_data in data:
-#         front_diff_url = f"/api/difference-images/{condition.id}/front" if condition.difference_front_image else None
-#         back_diff_url = f"/api/difference-images/{condition.id}/back" if condition.difference_back_image else None
-
-#         receipt_data = {
-#             "receipt_number": condition.ack_number,
-#             "overall_condition": condition.overall_condition,
-#             "item_description": item.item_description,
-#             "brand_name": brand.brand_name,
-#             "original_sales_order_number": sale_data.original_sales_order_number,
-#             "return_order_number": return_data.return_order_number if return_data else None,
-#             "return_qty": return_data.return_qty if return_data else None,
-#             "shipping_info": {
-#                 "shipped_to_person": sale_data.shipped_to_person,
-#                 "address": sale_data.shipped_to_street,
-#                 "city": sale_data.shipped_to_city,
-#                 "state": sale_data.shipped_to_state,
-#                 "country": sale_data.shipped_to_country
-#             },
-#             "images": {
-#                 "difference_images": {
-#                     "front": front_diff_url,
-#                     "back": back_diff_url
-#                 },
-#                 "similarity_scores": {
-#                     "front": condition.front_similarity,
-#                     "back": condition.back_similarity,
-#                     "average": condition.average_ssi
-#                 }
-#             }
-#         }
-
-#         if base_data:
-#             receipt_data["images"]["base_images"] = {
-#                 "front": f"/api/base-images/{base_data.id}/front",
-#                 "back": f"/api/base-images/{base_data.id}/back"
-#             }
-
-#         receipt_data_list.append(receipt_data)
-
-#     return receipt_data_list
-
 @app.post("/api/get-inspection-data")
 async def get_receipt_data(request: ReceiptSearch, db: Session = Depends(get_db)):
     """
@@ -2643,6 +2537,7 @@ async def get_difference_image(condition_id: int, image_type: str, db: Session =
         raise HTTPException(status_code=404, detail="Image file not found")
     
     return FileResponse(image_path)
+
 
 @app.get("/api/base-images/{base_data_id}/{image_type}")
 async def get_base_image(base_data_id: int, image_type: str, db: Session = Depends(get_db)):
@@ -3393,7 +3288,7 @@ def upload_database_json_item(data_base_json_item: DatabaseJsonItem, db: Session
         raise HTTPException(status_code=404, detail="Invalid user or token.")
 
     # Define a list of valid column names
-    valid_column_names = ["item_number", "item_description", "brand_id", "category", "configuration"]
+    valid_column_names = ["item_number", "item_description", "brand_id", "category", "configuration", "organization"]
     
     # Process each item in the provided JSON data
     for row in json_data:
@@ -3441,7 +3336,7 @@ class SaleItem(BaseModel):
     date_shipped: datetime
     date_delivered: datetime
     delivery_type: Optional[str] = None
-
+    organization: str
 
 class DatabaseJsonSaleItem(BaseModel):
     onboard_token: str
@@ -3503,6 +3398,7 @@ class ReturnItem(BaseModel):
     return_created_date: datetime
     return_received_date: datetime
     delivery_type: Optional[str] = None
+    organization: str
 
 class DatabaseJsonReturnItem(BaseModel):
     onboard_token: str
@@ -3837,8 +3733,11 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
 
 
 @app.get("/api/agent/sales-orders/{agent_id}")
-def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
-    orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent_id).all()
+def get_agent_orders_with_item(agent_id: int,     organization: str = Query(...), db: Session = Depends(get_db)):
+    orders = db.query(SaleItemData).filter(
+        SaleItemData.delivery_agent_id == agent_id,
+        SaleItemData.organization == organization
+    ).all()
     if not orders:
         raise HTTPException(status_code=404, detail="No orders found for this agent")
 
@@ -3857,9 +3756,9 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
         full_address = f"{street}, {city}, {state}, {zip_code}, {country}".strip(", ")
         address_list.append(full_address)
 
-
         delivery_time_entry = db.query(DeliveryTypeTime).filter(
-            DeliveryTypeTime.delivery_type == order.delivery_type
+            DeliveryTypeTime.delivery_type == order.delivery_type,
+            DeliveryTypeTime.organization == organization
         ).first()
         delivery_time = delivery_time_entry.delivery_time if delivery_time_entry else 0
         total_delivery_time_sum += delivery_time
@@ -3909,8 +3808,11 @@ def get_agent_orders_with_item(agent_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/api/agent/return-orders/{agent_id}")
-def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
-    return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent_id).all()
+def get_return_orders_for_agent(agent_id: int, organization: str = Query(...), db: Session = Depends(get_db)):
+    return_orders = db.query(ReturnItemData).filter(
+        ReturnItemData.return_agent_id == agent_id,
+        ReturnItemData.organization == organization
+    ).all()
 
     if not return_orders:
         raise HTTPException(status_code=404, detail="No return orders found for this agent")
@@ -3936,8 +3838,10 @@ def get_return_orders_for_agent(agent_id: int, db: Session = Depends(get_db)):
         address_list.append(full_address)
 
         delivery_time_entry = db.query(DeliveryTypeTime).filter(
-            DeliveryTypeTime.delivery_type == return_order.delivery_type
+            DeliveryTypeTime.delivery_type == return_order.delivery_type,
+            DeliveryTypeTime.organization == organization
         ).first()
+
         delivery_time = delivery_time_entry.delivery_time if delivery_time_entry else 0
         total_delivery_time_sum += delivery_time
 
@@ -4166,6 +4070,7 @@ class ManagerZipFilterRequest(BaseModel):
     zip_code: str
     servicing_city: str
     servicing_state: str
+    organization: str 
 
 @app.post("/api/available-managers-by-zip")
 def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session = Depends(get_db)):
@@ -4185,14 +4090,15 @@ def get_available_managers_by_zip(request: ManagerZipFilterRequest, db: Session 
             raise HTTPException(status_code=404, detail="Manager not found")
         excluded_user_id = manager.manager_user_mapping_id
 
-    # Step 3: Query eligible managers (city or state match + approved)
+    # Step 3: Query eligible managers (city or state match + approved + org)
     managers = db.query(AgentManager).filter(
         or_(
             AgentManager.servicing_city == request.servicing_city,
             AgentManager.servicing_state == request.servicing_state
         ),
         AgentManager.approved_by_auditly_user_id.isnot(None),
-        AgentManager.manager_grade.in_(["c1", "c2", "c3"])
+        AgentManager.manager_grade.in_(["c1", "c2", "c3"]),
+        AgentManager.organization == request.organization
     )
 
     # Step 4: Exclude current user's mapping_id if available
@@ -4255,9 +4161,11 @@ def assign_managers_to_agent(request: ManagerAssignmentRequest, db: Session = De
         raise HTTPException(status_code=400, detail=f"Error: {e}")
 
 @app.get("/api/agents-managers/all")
-def get_all_agents_and_managers(db: Session = Depends(get_db)):
-    agents: List[Agent] = db.query(Agent).all()
-    managers: List[AgentManager] = db.query(AgentManager).all()
+def get_all_agents_and_managers(
+    organization: str = Query(...),
+    db: Session = Depends(get_db)):
+    agents: List[Agent] = db.query(Agent).filter(Agent.organization == organization).all()
+    managers: List[AgentManager] = db.query(AgentManager).filter(AgentManager.organization == organization).all()
     result = []
 
     # Manager lookup maps
@@ -4303,8 +4211,16 @@ def get_all_agents_and_managers(db: Session = Depends(get_db)):
             except Exception:
                 pass
 
-        sales_orders = db.query(SaleItemData).filter(SaleItemData.delivery_agent_id == agent.agent_id).all()
-        return_orders = db.query(ReturnItemData).filter(ReturnItemData.return_agent_id == agent.agent_id).all()
+        sales_orders = db.query(SaleItemData).filter(
+            SaleItemData.delivery_agent_id == agent.agent_id,
+            SaleItemData.organization == organization
+        ).all()
+
+        return_orders = db.query(ReturnItemData).filter(
+            ReturnItemData.return_agent_id == agent.agent_id,
+            ReturnItemData.organization == organization
+        ).all()
+
 
         result.append({
             "agent_id": agent.agent_id,
@@ -4374,11 +4290,87 @@ def serialize_return_order(order: ReturnItemData):
     }
 
 
+# @app.get("/api/agents-managers/assigned-to/{manager_id}")
+# def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
+#     all_users = db.query(AuditlyUser).all()
+#     agents = db.query(Agent).filter(Agent.manager_id.isnot(None)).all()
+#     managers = db.query(AgentManager).filter(AgentManager.reporting_manager_id.isnot(None)).all()
+
+#     user_roles_map = {
+#         u.auditly_user_id: {
+#             "is_agent": u.is_agent,
+#             "is_manager": u.is_manager,
+#             "name": u.auditly_user_name
+#         }
+#         for u in all_users
+#     }
+
+#     result = []
+
+#     # 🔹 AGENTS reporting to this manager
+#     for agent in agents:
+#         try:
+#             raw_mgr_ids = agent.manager_id if isinstance(agent.manager_id, list) else json.loads(agent.manager_id)
+#             mgr_ids = [int(mid) for mid in raw_mgr_ids]
+#         except Exception as e:
+#             logging.warning(f"Invalid manager_id for agent {agent.agent_id}: {agent.manager_id}")
+#             continue
+
+#         if manager_id in mgr_ids:
+#             user_info = user_roles_map.get(agent.agent_to_user_mapping_id)
+#             role = "Both" if user_info and user_info["is_agent"] and user_info["is_manager"] else (
+#                 "Agent" if user_info and user_info["is_agent"] else "Unknown"
+#             )
+#             result.append({
+#                 "agent_id": agent.agent_id,
+#                 "agent_name": agent.agent_name,
+#                 "agent_roles": role,
+#                 "manager_id": manager_id,
+#                 "agent_servicing_zip": ", ".join(agent.servicing_zip) if agent.servicing_zip else None,
+#                 "agent_servicing_city": agent.servicing_city,
+#                 "agent_servicing_state": agent.servicing_state,
+#                 "agent_servicing_country": "USA"
+#             })
+
+#     # 🔹 MANAGERS reporting to this manager
+#     for m in managers:
+#         try:
+#             raw_reporting_ids = m.reporting_manager_id if isinstance(m.reporting_manager_id, list) else json.loads(m.reporting_manager_id)
+#             reporting_ids = [int(rid) for rid in raw_reporting_ids]
+#         except Exception as e:
+#             logging.warning(f"Invalid reporting_manager_id for manager {m.manager_id}: {m.reporting_manager_id}")
+#             continue
+
+#         if manager_id in reporting_ids:
+#             user_info = user_roles_map.get(m.manager_user_mapping_id)
+#             if not user_info:
+#                 continue
+#             result.append({
+#                 "manager_id": m.manager_id,
+#                 "agent_name": m.manager_name,
+#                 "agent_roles": "Manager",
+#                 "manager": manager_id,
+#                 "agent_servicing_zip": ", ".join(m.servicing_zip) if m.servicing_zip else None,
+#                 "agent_servicing_city": m.servicing_city,
+#                 "agent_servicing_state": m.servicing_state,
+#                 "agent_servicing_country": "USA"
+#             })
+
+#     if not result:
+#         raise HTTPException(status_code=404, detail="No agents or managers found reporting to this manager")
+
+#     return result
+
+
 @app.get("/api/agents-managers/assigned-to/{manager_id}")
-def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
-    all_users = db.query(AuditlyUser).all()
-    agents = db.query(Agent).filter(Agent.manager_id.isnot(None)).all()
-    managers = db.query(AgentManager).filter(AgentManager.reporting_manager_id.isnot(None)).all()
+def get_assignments_for_manager(
+    manager_id: int,
+    organization: str = Query(...),  # Mandatory organization query param
+    db: Session = Depends(get_db)
+):
+    all_users = db.query(AuditlyUser).filter(AuditlyUser.organization == organization).all()
+    agents = db.query(Agent).filter(Agent.manager_id.isnot(None), Agent.organization == organization).all()
+    managers = db.query(AgentManager).filter(AgentManager.reporting_manager_id.isnot(None), AgentManager.organization == organization).all()
 
     user_roles_map = {
         u.auditly_user_id: {
@@ -4402,9 +4394,8 @@ def get_assignments_for_manager(manager_id: int, db: Session = Depends(get_db)):
 
         if manager_id in mgr_ids:
             user_info = user_roles_map.get(agent.agent_to_user_mapping_id)
-            role = "Both" if user_info and user_info["is_agent"] and user_info["is_manager"] else (
-                "Agent" if user_info and user_info["is_agent"] else "Unknown"
-            )
+            role = "Unknown"
+
             result.append({
                 "agent_id": agent.agent_id,
                 "agent_name": agent.agent_name,
@@ -4566,6 +4557,8 @@ def get_best_route(data: RoutePreferenceRequest):
 class SaleAgentFilterRequest(BaseModel):
     manager_id: str
     shipped_to_zip: str
+    organization: str
+
 
 @app.post("/api/agents/manual-sale/by-manager-and-zip")
 def get_matching_agents(
@@ -4576,7 +4569,9 @@ def get_matching_agents(
         and_(
             Agent.delivery_routing_mode == True,
             Agent.manager_id != None,
-            Agent.servicing_zip != None
+            Agent.servicing_zip != None,
+            Agent.organization == request.organization  # <-- Add this
+
         )
     ).all()
 
@@ -4607,6 +4602,8 @@ def get_matching_agents(
 class ReturnAgentFilterRequest(BaseModel):
     manager_id: str
     return_to_zip: str
+    organization: str 
+   
 
 @app.post("/api/agents/manual-return/by-manager-and-zip")
 def get_matching_return_agents(
@@ -4617,7 +4614,8 @@ def get_matching_return_agents(
         and_(
             Agent.pickup_routing_mode == True,
             Agent.manager_id != None,
-            Agent.servicing_zip != None
+            Agent.servicing_zip != None,
+            Agent.organization == request.organization
         )
     ).all()
 
@@ -4737,12 +4735,15 @@ def update_agent_work_schedule(request: WorkScheduleUpdateRequest, db: Session =
 class DeliveryTypeTimeCreate(BaseModel):
     delivery_type: str
     delivery_time: int
+    organization: str 
 
 @app.post("/api/delivery-type-time/add")
 def add_delivery_type_time(payload: DeliveryTypeTimeCreate, db: Session = Depends(get_db)):
     new_entry = DeliveryTypeTime(
         delivery_type=payload.delivery_type,
-        delivery_time=payload.delivery_time
+        delivery_time=payload.delivery_time,
+        organization=payload.organization,
+
     )
     db.add(new_entry)
     db.commit()
@@ -4754,10 +4755,18 @@ def add_delivery_type_time(payload: DeliveryTypeTimeCreate, db: Session = Depend
 
 
 @app.get("/api/delivery-type-time/{delivery_type}")
-def get_delivery_time(delivery_type: str, db: Session = Depends(get_db)):
-    record = db.query(DeliveryTypeTime).filter(DeliveryTypeTime.delivery_type == delivery_type).first()
+def get_delivery_time(
+    delivery_type: str,
+    organization: str = Query(...),
+    db: Session = Depends(get_db)
+):
+    record = db.query(DeliveryTypeTime).filter(
+        DeliveryTypeTime.delivery_type == delivery_type,
+        DeliveryTypeTime.organization == organization
+    ).first()
+
     if not record:
-        raise HTTPException(status_code=404, detail="Delivery type not found")
+        raise HTTPException(status_code=404, detail="Delivery type not found for this organization")
 
     return {
         "delivery_type": record.delivery_type,
@@ -4767,15 +4776,20 @@ def get_delivery_time(delivery_type: str, db: Session = Depends(get_db)):
 class DeliveryTypeTimeUpdate(BaseModel):
     delivery_type: str
     delivery_time: int
+    organization: str 
 
 
 @app.put("/api/delivery-type-time/update")
 def update_delivery_time_by_type(payload: DeliveryTypeTimeUpdate, db: Session = Depends(get_db)):
-    record = db.query(DeliveryTypeTime).filter(DeliveryTypeTime.delivery_type == payload.delivery_type).first()
+    record = db.query(DeliveryTypeTime).filter(
+        DeliveryTypeTime.delivery_type == payload.delivery_type,
+        DeliveryTypeTime.organization == payload.organization
+    ).first()
     if not record:
         raise HTTPException(status_code=404, detail="Delivery type not found")
 
     record.delivery_time = payload.delivery_time
+
     db.commit()
     db.refresh(record)
 

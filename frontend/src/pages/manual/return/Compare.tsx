@@ -28,16 +28,20 @@ export default function UploadMedia() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+
     useEffect(() => {
         const fetchData = async () => {
             const itemId = localStorage.getItem('lastItemId');
             const customerId = localStorage.getItem('lastCustomerId');
+            const organization = localStorage.getItem('organization');
+
             
-            if (!itemId || !customerId) {
+            if (!itemId || !customerId || !organization) {
                 setError('Required information is missing. Please go back and try again.');
                 setLoading(false);
                 return;
             }
+            
 
             try {
                 const [comparisonResponse, baseImagesResponse] = await Promise.all([
@@ -46,6 +50,7 @@ export default function UploadMedia() {
                         {
                             customer_id: parseInt(customerId),
                             item_id: parseInt(itemId),
+                            organization: organization
                         },
                         {
                             headers: { "Content-Type": "application/json" },

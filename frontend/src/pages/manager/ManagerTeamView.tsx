@@ -80,7 +80,7 @@ const ManagerTeamView: React.FC = () => {
     Both: <Users className="w-6 h-6" />,
     Unknown: <User className="w-6 h-6 opacity-50" />,
   };
-  
+  const org = localStorage.getItem("organization");
 
   const managerId = useMemo(() => {
     const stored = localStorage.getItem("managerId");
@@ -92,7 +92,7 @@ const ManagerTeamView: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/agents-managers/assigned-to/${managerId}`);
+      const response = await fetch(`/api/agents-managers/assigned-to/${managerId}?organization=${org}`);
       if (!response.ok) {
         throw new Error("Failed to fetch team members");
       }

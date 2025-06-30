@@ -95,6 +95,7 @@ const PickOrder: React.FC = () => {
   
   const agentId = localStorage.getItem("agentId");
   const parsedAgentId = agentId ? parseInt(agentId) : null;
+  const org = localStorage.getItem("organization");
 
   // Animation variants
   const containerVariants = {
@@ -155,6 +156,7 @@ const PickOrder: React.FC = () => {
           body: JSON.stringify({
             agent_id: parseInt(agentId),
             zip_code: zipData.servicing_zip,
+            organization: org,
           }),
         });
 
@@ -172,6 +174,7 @@ const PickOrder: React.FC = () => {
           body: JSON.stringify({
             agent_id: parseInt(agentId),
             zip_code: zipData.servicing_zip,
+            organization: org,
           }),
         });
 

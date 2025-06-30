@@ -71,6 +71,7 @@ const AssignDeliveries: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "city" | "order">("date");
   const [fetchingAgents, setFetchingAgents] = useState(false);
+  const org = localStorage.getItem("organization"); 
 
   useEffect(() => {
     const id = localStorage.getItem("managerId");
@@ -93,13 +94,13 @@ const AssignDeliveries: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ manager_id: managerId }),
+        body: JSON.stringify({
+          manager_id: managerId,
+          organization: org,
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch sale items");
-      }
-
+      if (!response.ok) throw new Error("Failed to fetch sale items");
       const data = await response.json();
       setSaleItems(data.sale_items);
     } catch (err) {
@@ -108,6 +109,7 @@ const AssignDeliveries: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const fetchEligibleAgents = async (zipCode: string) => {
     if (!managerId) return;
@@ -123,7 +125,8 @@ const AssignDeliveries: React.FC = () => {
         },
         body: JSON.stringify({
           manager_id: managerId,
-          shipped_to_zip: zipCode.toString()
+          shipped_to_zip: zipCode.toString(),
+          organization: org,
         }),
       });
 

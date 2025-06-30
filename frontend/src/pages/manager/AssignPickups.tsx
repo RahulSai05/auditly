@@ -75,6 +75,7 @@ const AssignPickups: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "state" | "order">("date");
   const [fetchingAgents, setFetchingAgents] = useState(false);
+  const organization = localStorage.getItem("organization") || "";
 
   useEffect(() => {
     const id = localStorage.getItem("managerId");
@@ -97,7 +98,7 @@ const AssignPickups: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ manager_id: managerId }),
+        body: JSON.stringify({ manager_id: managerId, organization: organization}),
       });
 
       if (!response.ok) {
@@ -127,7 +128,8 @@ const AssignPickups: React.FC = () => {
         },
         body: JSON.stringify({
           manager_id: managerId,
-          return_to_zip: zipCode.toString()
+          return_to_zip: zipCode.toString(),
+          organization: organization,
         }),
       });
 

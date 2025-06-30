@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Save, Truck, Home, ShoppingBag, Clock, CheckCircle2} from "lucide-react";
+import { Loader2, Save, Truck, Home, ShoppingBag, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 
 const DeliverySettings: React.FC = () => {
   const [deliveryType, setDeliveryType] = useState("home"); 
   const [deliveryTime, setDeliveryTime] = useState<number>(60);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
+  
   useEffect(() => {
     const fetchDeliveryTime = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/delivery-type-time/${deliveryType}`);
-        const data = await res.json();
+        const org = localStorage.getItem("organization");
+
+        if (!org) {
+          console.error("Organization not set in localStorage");
+          setNotification({ type: "error", message: "Organization missing from session" });
+          return;
+        }
+        
+        const res = await fetch(`/api/delivery-type-time/${deliveryType}?organization=${org}`);
+                const data = await res.json();
   
         if (!res.ok) throw new Error(data.detail || "Failed to fetch delivery time");
         setDeliveryTime(data.delivery_time);
@@ -37,6 +45,7 @@ const DeliverySettings: React.FC = () => {
 
     
     try {
+      const org = localStorage.getItem("organization");
       const res = await fetch("/api/delivery-type-time/update", {
         method: "PUT",
         headers: {
@@ -44,7 +53,8 @@ const DeliverySettings: React.FC = () => {
         },
         body: JSON.stringify({
           delivery_type: deliveryType,
-          delivery_time: deliveryTime
+          delivery_time: deliveryTime,
+          organization: org,
         })
       });
 
