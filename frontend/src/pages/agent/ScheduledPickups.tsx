@@ -621,8 +621,8 @@ const ScheduledPickups: React.FC = () => {
         Find the fastest pickup route based on your location
       </p>
       <p className="text-xs text-slate-500 mt-1">
-        <strong>FIFO</strong>: Start from your location<br />
-        <strong>LIFO</strong>: End at your location
+        <strong>FIFO</strong>: Start from HUB/DC Address<br />
+        <strong>LIFO</strong>: End at HUB/DC Address
       </p>
     </div>
   </div>
@@ -633,8 +633,8 @@ const ScheduledPickups: React.FC = () => {
       onChange={(e) => setRouteMode(e.target.value as "FIFO" | "LIFO")}
       className="px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm font-medium"
     >
-      <option value="FIFO">Start from your location (FIFO)</option>
-      <option value="LIFO">End at your location (LIFO)</option>
+      <option value="FIFO">Start from HUB/DC Address (FIFO)</option>
+      <option value="LIFO">End at HUB/DC Address (LIFO)</option>
     </select>
 
     <motion.button

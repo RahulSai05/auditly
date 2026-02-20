@@ -3732,21 +3732,100 @@ def _assign_return_order(db: Session = Depends(get_db), return_order_id = None):
     return return_message
 
 
+# @app.get("/api/agent/sales-orders/{agent_id}")
+# def get_agent_orders_with_item(agent_id: int,     organization: str = Query(...), db: Session = Depends(get_db)):
+#     orders = db.query(SaleItemData).filter(
+#         SaleItemData.delivery_agent_id == agent_id,
+#         SaleItemData.organization == organization
+#     ).all()
+#     if not orders:
+#         raise HTTPException(status_code=404, detail="No orders found for this agent")
+
+#     result = []
+#     address_list = []
+#     total_delivery_time_sum = 0
+
+#     for order in orders:
+#         # Compose full address
+#         street = order.shipped_to_street or ""
+#         city = order.shipped_to_city or ""
+#         state = order.shipped_to_state or ""
+#         zip_code = order.shipped_to_zip or ""
+#         country = order.shipped_to_country or "USA"
+
+#         full_address = f"{street}, {city}, {state}, {zip_code}, {country}".strip(", ")
+#         address_list.append(full_address)
+
+#         delivery_time_entry = db.query(DeliveryTypeTime).filter(
+#             DeliveryTypeTime.delivery_type == order.delivery_type,
+#             DeliveryTypeTime.organization == organization
+#         ).first()
+#         delivery_time = delivery_time_entry.delivery_time if delivery_time_entry else 0
+#         total_delivery_time_sum += delivery_time
+
+#         result.append({
+#             "id": order.id,
+#             "item_id": order.item_id,
+#             "serial_number": order.serial_number,
+#             "original_sales_order_number": order.original_sales_order_number,
+#             "original_sales_order_line": order.original_sales_order_line,
+#             "ordered_qty": order.ordered_qty,
+#             "sscc_number": order.sscc_number,
+#             "tag_number": order.tag_number,
+#             "vendor_item_number": order.vendor_item_number,
+#             "shipped_from_warehouse": order.shipped_from_warehouse,
+#             "shipped_to_person": order.shipped_to_person,
+#             "shipped_to_billing_address": order.shipped_to_billing_address,
+#             "account_number": order.account_number,
+#             "customer_email": order.customer_email,
+#             "shipped_to_apt_number": order.shipped_to_apt_number,
+#             "shipped_to_street": street,
+#             "shipped_to_city": city,
+#             "shipped_to_zip": zip_code,
+#             "shipped_to_state": state,
+#             "shipped_to_country": country,
+#             "dimension_depth": order.dimension_depth,
+#             "dimension_length": order.dimension_length,
+#             "dimension_breadth": order.dimension_breadth,
+#             "dimension_weight": order.dimension_weight,
+#             "dimension_volume": order.dimension_volume,
+#             "dimension_size": order.dimension_size,
+#             "date_purchased": order.date_purchased,
+#             "date_shipped": order.date_shipped,
+#             "date_delivered": order.date_delivered,
+#             "status": order.status,
+#             "delivery_agent_id": order.delivery_agent_id,
+#             "item": {
+#                 "item_number": order.item.item_number if order.item else None,
+#                 "item_description": order.item.item_description if order.item else None,
+#                 "category": order.item.category if order.item else None,
+#                 "configuration": order.item.configuration if order.item else None
+#             }
+#         })
+#     result.append({"address_list": address_list})
+#     result.append({"total_delivery_time": total_delivery_time_sum})
+#     return result
+
+
 @app.get("/api/agent/sales-orders/{agent_id}")
-def get_agent_orders_with_item(agent_id: int,     organization: str = Query(...), db: Session = Depends(get_db)):
-    orders = db.query(SaleItemData).filter(
+def get_agent_orders_with_item(
+    agent_id: int,
+    organization: str = Query(...),
+    db: Session = Depends(get_db)
+):
+    db_orders = db.query(SaleItemData).filter(
         SaleItemData.delivery_agent_id == agent_id,
         SaleItemData.organization == organization
     ).all()
-    if not orders:
+
+    if not db_orders:
         raise HTTPException(status_code=404, detail="No orders found for this agent")
 
     result = []
     address_list = []
     total_delivery_time_sum = 0
 
-    for order in orders:
-        # Compose full address
+    for order in db_orders:
         street = order.shipped_to_street or ""
         city = order.shipped_to_city or ""
         state = order.shipped_to_state or ""
@@ -3760,6 +3839,7 @@ def get_agent_orders_with_item(agent_id: int,     organization: str = Query(...)
             DeliveryTypeTime.delivery_type == order.delivery_type,
             DeliveryTypeTime.organization == organization
         ).first()
+
         delivery_time = delivery_time_entry.delivery_time if delivery_time_entry else 0
         total_delivery_time_sum += delivery_time
 
@@ -3795,6 +3875,7 @@ def get_agent_orders_with_item(agent_id: int,     organization: str = Query(...)
             "date_delivered": order.date_delivered,
             "status": order.status,
             "delivery_agent_id": order.delivery_agent_id,
+            "delivery_type": order.delivery_type,
             "item": {
                 "item_number": order.item.item_number if order.item else None,
                 "item_description": order.item.item_description if order.item else None,
@@ -3802,9 +3883,12 @@ def get_agent_orders_with_item(agent_id: int,     organization: str = Query(...)
                 "configuration": order.item.configuration if order.item else None
             }
         })
-    result.append({"address_list": address_list})
-    result.append({"total_delivery_time": total_delivery_time_sum})
-    return result
+
+    return {
+        "orders": result,
+        "address_list": address_list,
+        "total_delivery_time": total_delivery_time_sum
+    }
 
 
 @app.get("/api/agent/return-orders/{agent_id}")
