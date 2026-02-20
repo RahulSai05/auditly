@@ -990,6 +990,7 @@ import {
   ChevronDown,
   Ruler,
   Route,
+  Play,
   Loader2,
   AlertCircle,
   RefreshCw,
@@ -1796,13 +1797,208 @@ const ScheduledDeliveries: React.FC = () => {
                             transition={{ duration: 0.4 }}
                             className="border-t-2 border-blue-100"
                           >
-                            {/* Paste your existing expanded section JSX here unchanged */}
-                            {/* ... */}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  ))}
+                           <div className="p-8 space-y-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                              {/* Enhanced Order Information */}
+                              <div className="space-y-8">
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
+                                  <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                      <Package className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    Order Details
+                                  </h4>
+                                  <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-500 mb-1">Order Number</p>
+                                      <p className="text-base font-semibold text-slate-800">{order.original_sales_order_number || "-"}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-500 mb-1">Line Number</p>
+                                      <p className="text-base font-semibold text-slate-800">{order.original_sales_order_line || "-"}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-500 mb-1">Serial Number</p>
+                                      <p className="text-base font-semibold text-slate-800">{order.serial_number || "-"}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-500 mb-1">SSCC Number</p>
+                                      <p className="text-base font-semibold text-slate-800">{order.sscc_number || "-"}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Enhanced Shipping Details */}
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
+                                  <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                      <MapPin className="w-5 h-5 text-green-600" />
+                                    </div>
+                                    Delivery Address
+                                  </h4>
+                                  <div className="space-y-4">
+                                    <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
+                                      <Home className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
+                                      <div className="flex-1">
+                                        <p className="text-base font-semibold text-slate-800 mb-1">
+                                          {order.shipped_to_street || "Address not specified"}
+                                        </p>
+                                        {order.shipped_to_apt_number && (
+                                          <p className="text-sm text-slate-600 mb-1">Apartment: {order.shipped_to_apt_number}</p>
+                                        )}
+                                        <p className="text-base text-slate-700">
+                                          {order.shipped_to_city}, {order.shipped_to_state} {order.shipped_to_zip}
+                                        </p>
+                                        <p className="text-sm text-slate-500">{order.shipped_to_country}</p>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                        <User className="w-5 h-5 text-blue-500" />
+                                        <div>
+                                          <p className="text-xs text-slate-500">Recipient</p>
+                                          <p className="text-sm font-semibold text-slate-800">{order.shipped_to_person || "-"}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                        <Mail className="w-5 h-5 text-blue-500" />
+                                        <div>
+                                          <p className="text-xs text-slate-500">Email</p>
+                                          <p className="text-sm font-semibold text-slate-800">{order.customer_email || "-"}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Enhanced Item Details */}
+                              <div className="space-y-8">
+                                {order.item && (
+                                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
+                                    <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
+                                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <Box className="w-5 h-5 text-purple-600" />
+                                      </div>
+                                      Item Information
+                                    </h4>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <p className="text-sm font-medium text-slate-500 mb-1">Description</p>
+                                        <p className="text-base font-semibold text-slate-800">{order.item.item_description || "-"}</p>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <p className="text-sm font-medium text-slate-500 mb-1">Item Number</p>
+                                          <p className="text-sm font-semibold text-slate-800">{order.item.item_number || "-"}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-medium text-slate-500 mb-1">Category</p>
+                                          <p className="text-sm font-semibold text-slate-800">{order.item.category || "-"}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Enhanced Dimensions */}
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
+                                  <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                      <Ruler className="w-5 h-5 text-orange-600" />
+                                    </div>
+                                    Package Details
+                                  </h4>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-3 bg-slate-50 rounded-xl">
+                                      <p className="text-xs text-slate-500">Size</p>
+                                      <p className="text-sm font-semibold text-slate-800">{order.dimension_size || "-"}</p>
+                                    </div>
+                                    <div className="p-3 bg-slate-50 rounded-xl">
+                                      <p className="text-xs text-slate-500">Weight</p>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {order.dimension_weight ? `${order.dimension_weight} kg` : "-"}
+                                      </p>
+                                    </div>
+                                    <div className="p-3 bg-slate-50 rounded-xl">
+                                      <p className="text-xs text-slate-500">Volume</p>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {order.dimension_volume ? `${order.dimension_volume} m³` : "-"}
+                                      </p>
+                                    </div>
+                                    <div className="p-3 bg-slate-50 rounded-xl">
+                                      <p className="text-xs text-slate-500">Dimensions</p>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {order.dimension_length && order.dimension_breadth && order.dimension_depth
+                                          ? `${order.dimension_length} × ${order.dimension_breadth} × ${order.dimension_depth} cm`
+                                          : "-"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Enhanced Timeline */}
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100">
+                                  <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                      <Calendar className="w-5 h-5 text-indigo-600" />
+                                    </div>
+                                    Delivery Timeline
+                                  </h4>
+                                  <div className="space-y-4">
+                                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium text-slate-700">Order Purchased</p>
+                                        <p className="text-xs text-slate-500">{formatDate(order.date_purchased)}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium text-slate-700">Shipped</p>
+                                        <p className="text-xs text-slate-500">{formatDate(order.date_shipped)}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                      <div className={`w-3 h-3 rounded-full ${order.date_delivered ? 'bg-purple-500' : 'bg-slate-300'}`}></div>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium text-slate-700">
+                                          {order.date_delivered ? 'Delivered' : 'Pending Delivery'}
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                          {order.date_delivered ? formatDate(order.date_delivered) : 'Awaiting delivery'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                                      <p className="text-sm font-medium text-blue-800">Quantity: {order.ordered_qty} item(s)</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="pt-6 border-t border-blue-200 flex justify-end">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => {
+                                  const salesOrder = order.original_sales_order_number;
+                                  navigate(`/option/manual/${salesOrder}`);
+                                }}
+                                className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-blue-300 font-semibold text-lg"
+                              >
+                                <Play className="w-6 h-6" />
+                                Start Inspection
+                              </motion.button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
               </div>
             )}
           </div>
