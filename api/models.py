@@ -64,7 +64,7 @@ class AuditlyUser(Base):
     is_agent  = Column(Boolean, default=False)
     is_manager  = Column(Boolean, default=False)
     organization = Column(String(255), nullable=True)
-
+    is_active = Column(Boolean, default=False, nullable=False)
 
 
 

@@ -1717,6 +1717,7 @@ async def verify_login_otp(request: VerifyLogin, db: Session = Depends(get_db)):
             "is_manager": user_data.is_manager,
             "is_inspection_user": user_data.is_inspection_user,
             "approved_agent_id": approved_agent_id,
+            "is_active": user_data.is_active,
             "approved_manager_id": approved_manager_id,
             "organization": user_data.organization
 

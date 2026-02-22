@@ -600,6 +600,7 @@ import ScheduledDeliveries from "./pages/agent/ScheduledDeliveries";
 import ScheduledPickups from "./pages/agent/ScheduledPickups";
 import PickOrder from "./pages/agent/PickOrder";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
+import IsVerified from "./components/auth/isverified";
 import LoadingScreen from "./components/LoadingScreen";
 import ApiEndpoint from "./pages/admin/ApiEndpoint";
 import Login from "./components/auth/Login";
@@ -674,20 +675,50 @@ const InspectionRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 };
 
 // Auth verification component
+// const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+//   const isLoggedIn = localStorage.getItem("token") !== null;
+//   const location = useLocation();
+
+//   const isauthroute = authRoutes.includes(location.pathname);
+
+//   if (!isLoggedIn && !isauthroute) {
+//     return <Navigate to="/login" state={{ from: location }} replace />;
+//   }
+
+//   return <>{children}</>;
+// };
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const isLoggedIn = localStorage.getItem("token") !== null;
+  const tokenString = localStorage.getItem("token");
   const location = useLocation();
 
   const isauthroute = authRoutes.includes(location.pathname);
 
-  if (!isLoggedIn && !isauthroute) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!tokenString && !isauthroute) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (tokenString) {
+    const userData = JSON.parse(tokenString);
+
+    // 🔥 If user is not approved, always send to access-denied
+    if (userData.is_active === false && location.pathname !== "/access-denied") {
+      return <Navigate to="/access-denied" replace />;
+    }
   }
 
   return <>{children}</>;
 };
 
-const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
+// const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/edit-profile"];
+const authRoutes = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/edit-profile",
+  "/access-denied",
+];
 
 const RoleRedirect: React.FC = () => {
   const tokenString = localStorage.getItem("token");
@@ -871,7 +902,7 @@ export default function App(): JSX.Element {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-
+        <Route path="/access-denied" element={<IsVerified />} />
         {/* Protected Routes with AdminLayout - Authentication Required */}
         <Route element={
           <ProtectedRoute>
