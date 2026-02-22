@@ -601,6 +601,7 @@ import ScheduledPickups from "./pages/agent/ScheduledPickups";
 import PickOrder from "./pages/agent/PickOrder";
 import ApiConfigurations from "./pages/admin/ApiConfigurations";
 import IsVerified from "./components/auth/isverified";
+import PendingUserApprovals from "./pages/admin/PendingUserApprovals";
 import LoadingScreen from "./components/LoadingScreen";
 import ApiEndpoint from "./pages/admin/ApiEndpoint";
 import Login from "./components/auth/Login";
@@ -938,6 +939,11 @@ export default function App(): JSX.Element {
           <Route path="/admin/settings/mapping-rules" element={
             <AdminRoute>
               <MappingRules />
+            </AdminRoute>
+          } />
+          <Route path="/admin/user-approvals" element={
+            <AdminRoute>
+              <PendingUserApprovals />
             </AdminRoute>
           } />
           <Route path="/admin/settings/onboarding-agent-managers" element={

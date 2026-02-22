@@ -1757,6 +1757,45 @@ def _gen_otp():
     otp = random.randint(100000, 999999)
     return otp
 
+@app.get("/api/admin/pending-users")
+def get_pending_users(db: Session = Depends(get_db)):
+    users = (
+        db.query(AuditlyUser)
+        .filter(AuditlyUser.is_active == False)
+        .order_by(AuditlyUser.created_at.desc())
+        .all()
+    )
+
+    return {
+        "message": "Success",
+        "data": [
+            {
+                "auditly_user_id": u.auditly_user_id,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "email": u.email,
+                "created_at": str(u.created_at) if u.created_at else None,  # optional
+            }
+            for u in users
+        ],
+    }
+
+class ApproveUserRequest(BaseModel):
+    auditly_user_id: int
+
+@app.post("/api/admin/approve-user")
+def approve_user(payload: ApproveUserRequest, db: Session = Depends(get_db)):
+    user = (
+        db.query(AuditlyUser)
+        .filter(AuditlyUser.auditly_user_id == payload.auditly_user_id)
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_active = True
+    db.commit()
+    return {"message": "User approved"}
 
 
 @app.post("/api/forget-password")
